@@ -9,9 +9,10 @@
 // Dependencies
 const programsHelper = require(MODULES_BASE_PATH + "/programs/helper");
 const solutionsHelper = require(MODULES_BASE_PATH + "/solutions/helper");
-const sunbirdService = require(ROOT_PATH + "/generics/services/sunbird");
 const userRolesHelper = require(MODULES_BASE_PATH + "/user-roles/helper");
 const entitiesHelper = require(MODULES_BASE_PATH + "/entities/helper");
+const improvementProjectService = require(ROOT_PATH + "/generics/services/improvement-project");
+const userService = require(ROOT_PATH + "/generics/services/users");
 
 /**
     * UsersHelper
@@ -310,45 +311,6 @@ module.exports = class UsersHelper {
     }
 
     /**
-    * Get user organisations and root organisations.
-    * @method
-    * @name getUserOrganisationsAndRootOrganisations
-    * @param {string} userId - logged in user Id.
-    * @param {object} userToken - Logged in user token.
-    * @returns {Array} - Get user organisations and root organisations.
-    */
-
-    static getUserOrganisationsAndRootOrganisations(userId, userToken) {
-        return new Promise(async (resolve, reject) => {
-            try {
-
-                const userProfileData =
-                    await sunbirdService.userProfile(userId, userToken);
-
-                const createdFor =
-                    userProfileData.organisations.map(
-                        organisation => {
-                            return organisation.organisationId
-                        }
-                    );
-
-                const rootOrganisations = [userProfileData.rootOrgId];
-
-                return resolve({
-                    message: constants.apiResponses.USER_ORGANISATIONS_FETCHED,
-                    result: {
-                        createdFor: createdFor,
-                        rootOrganisations: rootOrganisations
-                    }
-                });
-
-            } catch (error) {
-                return reject(error);
-            }
-        })
-    }
-
-    /**
       * Entities mapping form data.
       * @method
       * @name entitiesMappingForm
@@ -438,60 +400,6 @@ module.exports = class UsersHelper {
         })
     }
 
-    /**
-      * To search the users
-      * @method
-      * @name isSystemAdmin
-      * @param {String} searchText search text
-      * @param {String} token user access token
-      * @returns {Object} returns a user details.
-     */
-
-    static search(searchText, token) {
-        return new Promise(async (resolve, reject) => {
-            try {
-
-                let searchFields = ['userName', 'email', 'phone'];
-                let userInfo;
-                for (let index = 0; index < searchFields.length; index++) {
-                    let userFilters = {};
-                    userFilters[searchFields[index]] = searchText;
-                    let userSearchResult =
-                        await sunbirdService.userSearch(userFilters, token);
-                    if (userSearchResult
-                        && userSearchResult.result
-                        && userSearchResult.result.count
-                        && userSearchResult.result.count > 0) {
-                        userInfo = userSearchResult.result.content;
-                        break;
-                    }
-                }
-                if (userInfo) {
-
-                    let userData = {
-                        lastName:userInfo[0].lastName,
-                        maskedPhone:userInfo[0].maskedPhone,
-                        email:userInfo[0].email,
-                        identifier:userInfo[0].identifier,
-                        userName:userInfo[0].userName
-                    }
-                    
-                    return resolve({
-                        result: userData,
-                        message: constants.apiResponses.USER_EXTENSION_FETCHED
-                    });
-                } else {
-                    return resolve({
-                        result: {},
-                        message: constants.apiResponses.USER_NOT_FOUND
-                    });
-                }
-            } catch (error) {
-                return reject(error);
-            }
-        })
-    }
-
       /**
       * User targeted solutions.
       * @method
@@ -504,39 +412,90 @@ module.exports = class UsersHelper {
       * @returns {Object} targeted user solutions.
      */
 
-    static solutions( programId,requestedData,pageSize,pageNo,search ) {
+    static solutions( programId,requestedData,pageSize,pageNo,search,token ) {
         return new Promise(async (resolve, reject) => {
             try {
-                
+
+                let programData = await programsHelper.programDocuments({
+                    _id : programId
+                },["name"]);
+
+                if( !programData.length > 0 ) {
+                    return resolve({
+                        status : httpStatusCode["bad_request"].status,
+                        message : constants.apiResponses.PROGRAM_NOT_FOUND
+                    })
+                }
+
                 let autoTargetedSolutions = 
                 await solutionsHelper.forUserRoleAndLocation(
                     requestedData,
                     "",
                     "",
                     programId,
-                    pageSize,
-                    pageNo,
+                    constants.common.DEFAULT_PAGE_SIZE,
+                    constants.common.DEFAULT_PAGE_NO,
                     search
                 );
 
-                if( autoTargetedSolutions.data.data && autoTargetedSolutions.data.data.length > 0 ) {
-                    autoTargetedSolutions.data["programName"] = autoTargetedSolutions.data.data[0].programName;
-                    autoTargetedSolutions.data["programId"] = autoTargetedSolutions.data.data[0].programId;
+                let totalCount = 0;
+                let mergedData = [];
 
-                    autoTargetedSolutions.data.data = 
-                    autoTargetedSolutions.data.data.map( targetedData => {
+                if( autoTargetedSolutions.data.data && autoTargetedSolutions.data.data.length > 0 ) {
+                    
+                    totalCount = autoTargetedSolutions.data.count;
+
+                    mergedData = autoTargetedSolutions.data.data;
+
+                    mergedData = 
+                    mergedData.map( targetedData => {
                         delete targetedData.programId;
                         delete targetedData.programName;
                         return targetedData;
                     });
                 }
+                    
+                let importedProjects = 
+                await improvementProjectService.importedProjects(
+                    token,
+                    programId
+                );
 
-                autoTargetedSolutions.data["description"] = constants.common.TARGETED_SOLUTION_TEXT;
+                if( importedProjects.success ) {
+                    
+                    if( importedProjects.data && importedProjects.data.length > 0 ) {
+                        
+                        totalCount += importedProjects.data.length;
+
+
+                        importedProjects.data.forEach(importedProject => {
+                            let data = importedProject.solutionInformation;
+                            data["projectTemplateId"] = importedProject.projectTemplateId;
+                            data["type"] = constants.common.IMPROVEMENT_PROJECT;
+                            mergedData.push(data);
+                        });
+
+                    }
+                }
+
+                if( mergedData.length > 0 ) {
+                    let startIndex = pageSize * (pageNo - 1);
+                    let endIndex = startIndex + pageSize;
+                    mergedData = mergedData.slice(startIndex,endIndex) 
+                }
+
+                let result = {
+                    programName : programData[0].name,
+                    programId : programId,
+                    description : constants.common.TARGETED_SOLUTION_TEXT,
+                    data : mergedData,
+                    count : totalCount
+                }
 
                 return resolve({
                     message : constants.apiResponses.PROGRAM_SOLUTIONS_FETCHED,
                     success : true,
-                    data : autoTargetedSolutions.data
+                    data : result
                 })
             } catch (error) {
                 return resolve({
@@ -799,5 +758,43 @@ module.exports = class UsersHelper {
       }
     })
    } 
+
+       /**
+    * Get user organisations and root organisations.
+    * @method
+    * @name getUserOrganisationsAndRootOrganisations
+    * @param {string} userId - logged in user Id.
+    * @param {object} userToken - Logged in user token.
+    * @returns {Array} - Get user organisations and root organisations.
+    */
+
+    static getUserOrganisationsAndRootOrganisations(userId, userToken) {
+        return new Promise(async (resolve, reject) => {
+            try {
+
+                const userProfileData = await userService.profile(userId, userToken);
+
+                const createdFor =
+                userProfileData.organisations.map(
+                    organisation => {
+                        return organisation.organisationId
+                    }
+                );
+    
+                const rootOrganisations = [userProfileData.rootOrgId];
+    
+                return resolve({
+                    message: constants.apiResponses.USER_ORGANISATIONS_FETCHED,
+                    result: {
+                        createdFor: createdFor,
+                        rootOrganisations: rootOrganisations
+                    }
+                });
+    
+                } catch (error) {
+                    return reject(error);
+                }
+        })
+    }
 
 };

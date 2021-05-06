@@ -18,23 +18,25 @@ let objectId = mongoose.Types.ObjectId;
  * Mongodb connection.
  * @function 
  * @name databaseConfiguration
- * @param {Object} config - All mongodb configurations data.
  * @return {Object} consisting of database,createModel,ObjectId and models.
  */
 
-var databaseConfiguration = function (config) {
+var databaseConfiguration = function () {
 
   mongoose.set('useCreateIndex', true);
   mongoose.set('useFindAndModify', false);
   mongoose.set('useUnifiedTopology', true);
   
   var db = mongoose.createConnection(
-    config.host + "/" + config.database,
-    config.options
+    process.env.MONGODB_URL,
+    {
+      useNewUrlParser: true
+    }
   );
+
   db.on("error", console.error.bind(console, "connection error:"));
   db.once("open", function () {
-    logger.info("Connected to database!");
+    console.log("Connected to database!");
   });
 
   var createModel = function (opts) {
@@ -57,7 +59,7 @@ var databaseConfiguration = function (config) {
         opts.options.expireAfterSeconds ||
         opts.options.expireAfterSeconds === 0
       ) {
-        logger.info("Expire Configured for " + opts.name);
+        console.log("Expire Configured for " + opts.name);
         schema.plugin(mongooseTtl, {
           ttl: opts.options.expireAfterSeconds * 1000
         });

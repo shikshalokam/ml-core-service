@@ -11,9 +11,6 @@
 const fs = require("fs");
 const path = require("path");
 let requireAll = require("require-all");
-var bunyan = require("bunyan"),
-  bunyanFormat = require('bunyan-format'),
-  formatOut = bunyanFormat({ outputMode: 'short' });
 
 gen = Object.assign(global, {});
 
@@ -29,25 +26,16 @@ module.exports = function () {
   global.GENERIC_HELPERS_PATH = ROOT_PATH + "/generics/helpers";
   global._ = require("lodash");
   gen.utils = require(ROOT_PATH + "/generics/helpers/utils");
-  global.config = require(".");
-
-  global.ENABLE_DEBUG_LOGGING = 
-  process.env.ENABLE_DEBUG_LOGGING 
-  || process.env.DEFAULT_ENABLE_DEBUG_LOGGING;
+  require(".");
 
   global.locales = [];
 
   global.httpStatusCode = 
-  require(ROOT_PATH + process.env.PATH_TO_HTTP_STATUS_CODE);
-
-
-  global.REQUEST_TIMEOUT_FOR_REPORTS = 
-  process.env.REQUEST_TIMEOUT_FOR_REPORTS || 
-  process.env.DEFAULT_REQUEST_TIMEOUT_FOR_REPORTS;
+  require(ROOT_PATH + "/generics/http-status-codes");
 
   // bootstrap all models
   global.models = requireAll({
-    dirname: ROOT_PATH + process.env.PATH_TO_MODELS,
+    dirname: ROOT_PATH + "/models",
     filter: /(.+)\.js$/,
     resolve: function (Model) {
       return Model;
@@ -55,11 +43,13 @@ module.exports = function () {
   });
 
   //load base v1 controllers
+  fs.readdirSync( ROOT_PATH + "/controllers/v1/").forEach(function (file) {
+    checkWhetherFolderExistsOrNor(ROOT_PATH + "/controllers/v1/", file);
+  });
 
-  let pathToController = ROOT_PATH + process.env.CONTROLLER_PATH;
-
-  fs.readdirSync(pathToController).forEach(function (file) {
-    checkWhetherFolderExistsOrNor(ROOT_PATH + process.env.CONTROLLER_PATH, file);
+   //load base v2 controllers
+   fs.readdirSync( ROOT_PATH + "/controllers/v2/").forEach(function (file) {
+    checkWhetherFolderExistsOrNor(ROOT_PATH + "/controllers/v2/", file);
   });
 
   function checkWhetherFolderExistsOrNor(pathToFolder, file) {
@@ -97,26 +87,6 @@ module.exports = function () {
     }
   });
 
-  // load language files
-  fs.readdirSync(ROOT_PATH + process.env.LANGUAGE_PATH)
-  .forEach(function (file) {
-    if (file.match(/\.json$/) !== null) {
-      var name = file.replace('.json', '');
-      global.locales.push(name)
-    }
-  });
-
-  // Load all kafka consumer files
-  fs.readdirSync(ROOT_PATH + process.env.PATH_TO_KAFKA_CONSUMERS)
-  .forEach(function (file) {
-    if (file.match(/\.js$/) !== null) {
-      var name = file.replace('-consumer.js', '');
-      name=name.replace('-','');
-       global[name + 'Consumer'] = 
-      require(ROOT_PATH + process.env.PATH_TO_KAFKA_CONSUMERS + file);
-    }
-  });
-
   // Load all message constants
   global.constants = new Array
   fs.readdirSync(ROOT_PATH + "/generics/constants")
@@ -128,21 +98,5 @@ module.exports = function () {
       require(ROOT_PATH + "/generics/constants/" + file);
     }
   });
-
-  let loggerPath = ROOT_PATH + "/logs/" + process.pid + "-all.log";
-  // Load logger file
-  global.logger = bunyan.createLogger({
-    name: 'information',
-    level: "debug",
-    streams: [{
-      stream: formatOut
-    }, {
-      type: "rotating-file",
-      path: loggerPath,
-      period: "1d", // daily rotation
-      count: 3 // keep 3 back copies
-    }]
-  });
-
 
 };

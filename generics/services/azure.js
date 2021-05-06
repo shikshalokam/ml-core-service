@@ -1,7 +1,7 @@
 const { BlobServiceClient, generateBlobSASQueryParameters, BlobSASPermissions, StorageSharedKeyCredential } = require('@azure/storage-blob');
 const AZURE_ACCOUNT_NAME = (process.env.AZURE_ACCOUNT_NAME && process.env.AZURE_ACCOUNT_NAME != "") ? process.env.AZURE_ACCOUNT_NAME : "";
 const AZURE_ACCOUNT_KEY = (process.env.AZURE_ACCOUNT_KEY && process.env.AZURE_ACCOUNT_KEY != "") ? process.env.AZURE_ACCOUNT_KEY : "";
-const AZURE_LINK_EXPIRY_TIME = (process.env.AZURE_LINK_EXPIRY_TIME && process.env.AZURE_LINK_EXPIRY_TIME != "") ? process.env.AZURE_LINK_EXPIRY_TIME : 31536600;
+
 // The name of the container that the files will be uploaded to.
 const AZURE_STORAGE_CONTAINER = (process.env.AZURE_STORAGE_CONTAINER && process.env.AZURE_STORAGE_CONTAINER != "") ? process.env.AZURE_STORAGE_CONTAINER : "sl-dev-storage";
 

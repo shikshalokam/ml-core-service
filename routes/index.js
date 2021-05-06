@@ -7,44 +7,16 @@
 
 // dependencies
 const authenticator = require(ROOT_PATH + "/generics/middleware/authenticator");
-const slackClient = require(ROOT_PATH + "/generics/helpers/slack-communications");
 const pagination = require(ROOT_PATH + "/generics/middleware/pagination");
 const fs = require("fs");
 const inputValidator = require(ROOT_PATH + "/generics/middleware/validator");
 const dataSetUpload = require(ROOT_PATH + "/generics/middleware/dataSetUpload");
-const setLanguage = require(ROOT_PATH + "/generics/middleware/set-language");
-var i18next = require("i18next");
-var i18NextMiddleware = require("i18next-express-middleware");
-let nodeFsBackend = require('i18next-node-fs-backend');
-
-i18next.use(nodeFsBackend).init({
-  fallbackLng: global.locales[0],
-  lowerCaseLng: true,
-  preload: global.locales,
-  backend: {
-    loadPath: ROOT_PATH + '/locales/{{lng}}.json',
-  },
-  saveMissing: true
-});
 
 module.exports = function (app) {
 
-  const APPLICATION_BASE_URL = 
-  gen.utils.checkIfEnvDataExistsOrNot("APPLICATION_BASE_URL");
-  
-  app.use(
-    i18NextMiddleware.handle(i18next, {
-      removeLngFromUrl: false
-    })
-  );
-
-  if (process.env.NODE_ENV !== "testing") {
-    app.use(APPLICATION_BASE_URL, authenticator);
-  }
-
-  app.use(APPLICATION_BASE_URL, dataSetUpload);
-  app.use(APPLICATION_BASE_URL, pagination);
-  app.use(APPLICATION_BASE_URL, setLanguage);
+  app.use(authenticator);
+  app.use(dataSetUpload);
+  app.use(pagination);
 
   var router = async function (req, res, next) {
 
@@ -117,10 +89,10 @@ module.exports = function (app) {
             count: result.count,
             failed: result.failed
           });
-        }
 
-        if(ENABLE_DEBUG_LOGGING === "ON") {
-          logger.info("Response:", result);
+          console.log('-------------------Response log starts here-------------------');
+          console.log("%j",result);
+          console.log('-------------------Response log ends here-------------------');
         }
 
       }
@@ -130,54 +102,16 @@ module.exports = function (app) {
           message: error.message
         });
 
-        if ( error.status !== httpStatusCode.bad_request.status ) {
-          
-          let customFields = {
-            appDetails: '',
-            userDetails: "NON_LOGGED_IN_USER"
-          };
-  
-          if (req.userDetails) {
-            customFields = {
-              appDetails: req.headers["user-agent"],
-              userDetails: req.userDetails.firstName + " - " + req.userDetails.lastName + " - " + req.userDetails.email
-            };
-          }
-  
-          let toLogObject = {
-            slackErrorName: process.env.SLACK_ERROR_NAME,
-            color: process.env.SLACK_ERROR_MESSAGE_COLOR,
-            method: req.method,
-            url: req.url,
-            body: req.body && !_.isEmpty(req.body) ? req.body : "not provided",
-            errorMsg: "not provided",
-            errorStack: "not provided"
-          };
-  
-          if (error.message) {
-            toLogObject["errorMsg"] = JSON.stringify(error.message);
-          } else if (error.errorObject) {
-            toLogObject["errorMsg"] = error.errorObject.message;
-            toLogObject["errorStack"] = error.errorObject.stack;
-          }
-  
-          slackClient.sendMessageToSlack(_.merge(toLogObject, customFields));
-        }
-        if(ENABLE_DEBUG_LOGGING === "ON") {
-          logger.error("Error Response:", error);
-        }
+        console.log("error is",error);
         
       };
     }
   };
 
-  app.all(APPLICATION_BASE_URL + "api/:version/:controller/:method", inputValidator, router);
-
-  app.all(APPLICATION_BASE_URL + "api/:version/:controller/:file/:method", inputValidator, router);
-
-  app.all(APPLICATION_BASE_URL + "api/:version/:controller/:method/:_id", inputValidator, router);
-  app.all(APPLICATION_BASE_URL + "api/:version/:controller/:file/:method/:_id", inputValidator, router);
-
+  app.all("/api/:version/:controller/:method", inputValidator, router);
+  app.all("/api/:version/:controller/:file/:method", inputValidator, router);
+  app.all("/api/:version/:controller/:method/:_id", inputValidator, router);
+  app.all("/api/:version/:controller/:file/:method/:_id", inputValidator, router);
 
   app.use((req, res, next) => {
     res.status(httpStatusCode["not_found"].status).send(httpStatusCode["not_found"].message);

@@ -186,7 +186,7 @@ module.exports = class FilesHelper {
           let file = "";
           
           if( folderPath && folderPath !== '' ) {
-            file = folderPath + fileNames[pointerToFileNames]; 
+            file = folderPath + "/" + fileNames[pointerToFileNames]; 
           } else {
             file = fileNames[pointerToFileNames]
           }
