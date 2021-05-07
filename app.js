@@ -8,7 +8,7 @@
  console.log(process.env.APPLICATION_PORT)
  console.log(process.env.APPLICATION_ENV)
  console.log(process.env.MONGODB_URL)
- console.log(Uprocess.env.USER_SERVICE_URL)
+ console.log(process.env.USER_SERVICE_URL)
  console.log(process.env.INTERNAL_ACCESS_TOKEN)
  console.log(process.env.KAFKA_COMMUNICATIONS_ON_OFF)
  console.log(process.env.KAFKA_URL)
