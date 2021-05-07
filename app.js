@@ -4,32 +4,7 @@
  * created-date : 09-Dec-2019
  * Description : Root file.
  */
- console.log("-------Deployment testing starts here------------------");
- console.log(process.env.APPLICATION_PORT)
- console.log(process.env.APPLICATION_ENV)
- console.log(process.env.MONGODB_URL)
- console.log(process.env.INTERNAL_ACCESS_TOKEN)
- console.log(process.env.CLOUD_STORAGE)
- console.log(process.env.GCP_PATH)
- console.log(process.env.GCP_BUCKET_NAME)
- console.log(process.env.AZURE_ACCOUNT_NAME)
- console.log(process.env.AZURE_ACCOUNT_KEY)
- console.log(process.env.AZURE_STORAGE_CONTAINER)
- console.log(process.env.AWS_ACCESS_KEY_ID)
- console.log(process.env.AWS_SECRET_ACCESS_KEY)
- console.log(process.env.AWS_BUCKET_NAME)
- console.log(process.env.AWS_BUCKET_REGION)
- console.log(process.env.AWS_BUCKET_ENDPOINT)
- console.log(process.env.KEYCLOAK_PUBLIC_KEY_PATH)
- console.log(process.env.ML_SURVEY_SERVICE_URL)
- console.log(process.env.ML_PROJECT_SERVICE_URL)
- console.log(process.env.ELASTICSEARCH_COMMUNICATIONS_ON_OFF)
- console.log(process.env.ELASTICSEARCH_HOST_URL)
- console.log(process.env.ELASTICSEARCH_ENTITIES_INDEX)
- console.log(process.env.USER_SERVICE_URL)
- console.log("-------Deployment testing ends   here------------------");
 
- 
 require("dotenv").config();
 
 //express
