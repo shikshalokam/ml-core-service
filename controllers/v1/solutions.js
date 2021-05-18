@@ -795,7 +795,8 @@ module.exports = class Solutions extends Abstract {
                   req.pageSize,
                   req.pageNo,
                   req.searchText,
-                  req.query.filter
+                  req.query.filter,
+                  req.query.surveyReportPage ? req.query.surveyReportPage : ""
               );
 
               observations["result"] = observations.data;

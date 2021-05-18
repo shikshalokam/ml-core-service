@@ -22,7 +22,8 @@ const request = require('request');
 var assignedProjects = function ( token,search = "",filter = "" ) {
 
     let url = 
-    process.env.ML_PROJECT_SERVICE_URL +
+    process.env.IMPROVEMENT_SERVICE_HOST +
+    process.env.IMPROVEMENT_SERVICE_BASE_URL + "api/v1" +
     constants.endpoints.GET_USER_ASSIGNED_PROJECT + "?search=" + search;
     
     if( filter !== "" ) {
@@ -82,7 +83,8 @@ var assignedProjects = function ( token,search = "",filter = "" ) {
 var importedProjects = function ( token,programId = "" ) {
 
     let url = 
-    process.env.ML_PROJECT_SERVICE_URL +
+    process.env.IMPROVEMENT_SERVICE_HOST +
+    process.env.IMPROVEMENT_SERVICE_BASE_URL + "api/v1" +
     constants.endpoints.IMPORTED_PROJECT;
 
     if( programId !== "" ) {
