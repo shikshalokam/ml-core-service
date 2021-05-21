@@ -5,7 +5,6 @@
  * Description : Files validator.
  */
 
-
 module.exports = (req) => {
 
     let filesValidator = {
