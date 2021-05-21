@@ -813,4 +813,61 @@ module.exports = class Solutions extends Abstract {
       })
   }
 
+  /**
+  * @api {get} /kendra/api/v1/solutions/listByProgramId/:programId
+  * @apiVersion 1.0.0
+  * @apiName List solutions by program id
+  * @apiGroup Solutions
+  * @apiSampleRequest /kendra/api/v1/solutions/listByProgramId/5fa28620b6bd9b757dc4e932
+  * @apiHeader {String} X-authenticated-user-token Authenticity token  
+  * @apiUse successBody
+  * @apiUse errorBody
+  * @apiParamExample {json} Response:
+  * {
+    "message": "Solutions lists fetched successfully",
+    "status": 200,
+    "result": [
+        {
+            "_id": "5fa28620b6bd9b757dc4e943",
+            "isRubricDriven": false,
+            "externalId": "eb670a66-1e5e-11eb-a3bf-000d3af02677-OBSERVATION-TEMPLATE-1604486688116",
+            "name": "स्कूल सुरक्षा चेकलिस्ट",
+            "description": "स्कूल सुरक्षा चेकलिस्ट",
+            "type": "observation",
+            "subType": "school"
+        }
+    ]
+}
+  */
+
+   /**
+   * List solutions by program id.
+   * @method
+   * @name listByProgramId
+   * @param {Object} req - requested data.
+   * @param {String} req.params._id - program id .
+   * @returns {Array}
+   */
+
+    async listByProgramId(req) {
+      return new Promise(async (resolve, reject) => {
+        try {
+  
+          let solutionData = await solutionsHelper.listByProgramId(
+            req.params._id
+          );
+          solutionData["result"] = solutionData.data;
+  
+          return resolve(solutionData);
+        }
+        catch (error) {
+          reject({
+            status: error.status || httpStatusCode.internal_server_error.status,
+            message: error.message || httpStatusCode.internal_server_error.message,
+            errorObject: error
+          })
+        }
+      })
+    }
+
 }

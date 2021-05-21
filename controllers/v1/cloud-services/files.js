@@ -121,7 +121,7 @@ module.exports = class Files {
     })
    }
 
-      /**
+    /**
      * @api {post} /kendra/api/v1/cloud-services/files/getDownloadableUrl  
      * Get downloadable URL.
      * @apiVersion 1.0.0

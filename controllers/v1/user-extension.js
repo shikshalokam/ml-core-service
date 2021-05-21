@@ -482,4 +482,187 @@ module.exports = class UserExtension extends Abstract {
     })
   }
 
+    /**
+  * @api {get} /kendra/api/v1/user-extension/platformRoles/:id List of user platform roles
+  * @apiVersion 1.0.0
+  * @apiName List of user platform roles
+  * @apiGroup User Extension
+  * @apiHeader {String} X-authenticated-user-token Authenticity token
+  * @apiSampleRequest /kendra/api/v1/user-extension/platformRoles/01c04166-a65e-4e92-a87b-a9e4194e771d
+  * @apiUse successBody
+  * @apiUse errorBody
+  * @apiParamExample {json} Response:
+  * {
+    "message": "List of user platform roles",
+    "status": 200,
+    "result": [
+        {
+            "_id": "60a4cf511a549c634b475663",
+            "code": "PM"
+        }
+    ]
+  }
+**/
+
+
+  /**
+   * List of user platform roles
+   * @method
+   * @name platformRoles
+   * @returns {Array} List of user platform roles
+   */
+
+   platformRoles(req) {
+    return new Promise(async (resolve, reject) => {
+
+      try {
+
+        let userPlatformRoles = await userExtensionHelper.platformRoles(
+          (req.params._id && req.params._id != "") ? req.params._id : req.userDetails.userId
+        );
+        
+        userPlatformRoles["result"] = userPlatformRoles.data;
+        return resolve(userPlatformRoles);
+
+      } catch (error) {
+
+        return reject({
+          status: error.status || httpStatusCode.internal_server_error.status,
+          message: error.message || httpStatusCode.internal_server_error.message,
+          errorObject: error
+        })
+      }
+
+
+    })
+  }
+   
+    /**
+  * @api {get} /kendra/api/v1/user-extension/programsByPlatformRoles?role=:role List of programs for platform user
+  * @apiVersion 1.0.0
+  * @apiName List of programs for platform user
+  * @apiGroup User Extension
+  * @apiHeader {String} X-authenticated-user-token Authenticity token
+  * @apiSampleRequest /kendra/api/v1/user-extension/programsByPlatformRoles?role=PM
+  * @apiUse successBody
+  * @apiUse errorBody
+  * @apiParamExample {json} Response:
+  * {
+    "message": "List of programs for platform user",
+    "status": 200,
+    "result": [
+        {
+            "_id": "5f34e44681871d939950bca6",
+            "externalId": "TN-Program-1597301830708",
+            "name": "TN-Program",
+            "description": "TN01-Mantra4Change-APSWREIS School Leader Feedback",
+            "role": "PM"
+        },
+        {
+            "_id": "5fa28620b6bd9b757dc4e932",
+            "externalId": "SLDP-1604486688019",
+            "name": "SLDP",
+            "description": "स्कूल सुरक्षा चेकलिस्ट",
+            "role": "PGM"
+        }
+    ]
+  }
+**/
+
+
+  /**
+   * List of programs for platform user
+   * @method
+   * @name programsByPlatformRoles
+   * @returns {Array} List of programs for platform user
+   */
+
+   programsByPlatformRoles(req) {
+    return new Promise(async (resolve, reject) => {
+
+      try {
+
+        let programs = await userExtensionHelper.programsByPlatformRoles(
+          req.userDetails.userId,
+          req.query.role
+        );
+        
+        programs["result"] = programs.data;
+        return resolve(programs);
+
+      } catch (error) {
+
+        return reject({
+          status: error.status || httpStatusCode.internal_server_error.status,
+          message: error.message || httpStatusCode.internal_server_error.message,
+          errorObject: error
+        })
+      }
+
+
+    })
+  }
+
+    /**
+  * @api {get} /kendra/api/v1/user-extension/solutions/:programId?role=:role List of solutions for platform user program
+  * @apiVersion 1.0.0
+  * @apiName List of solutions for platform user program
+  * @apiGroup User Extension
+  * @apiHeader {String} X-authenticated-user-token Authenticity token
+  * @apiSampleRequest /kendra/api/v1/user-extension/solutions/5f34e44681871d939950bca6?role=PM
+  * @apiUse successBody
+  * @apiUse errorBody
+  * @apiParamExample {json} Response:
+  * {
+    "message": "Solutions lists fetched successfully",
+    "status": 200,
+    "result": [
+        {
+            "_id": "5f34e44681871d939950bca7",
+            "isRubricDriven": false,
+            "externalId": "dea0b95a-dd11-11ea-a3bf-000d3af02677-OBSERVATION-TEMPLATE-1597301830736",
+            "name": "TN01-Mantra4Change-APSWREIS School Leader Feedback",
+            "description": "TN01-Mantra4Change-APSWREIS School Leader Feedback",
+            "type": "observation",
+            "subType": "school"
+        }
+    ]
+  }
+**/
+
+
+  /**
+   * List of solutions for platform user program
+   * @method
+   * @name solutions
+   * @returns {Array} List of solutions for platform user program
+   */
+
+  solutions(req) {
+    return new Promise(async (resolve, reject) => {
+
+      try {
+
+        let programs = await userExtensionHelper.solutions(
+          req.userDetails.userId,
+          req.params._id,
+          req.query.role
+        );
+        
+        programs["result"] = programs.data;
+        return resolve(programs);
+
+      } catch (error) {
+
+        return reject({
+          status: error.status || httpStatusCode.internal_server_error.status,
+          message: error.message || httpStatusCode.internal_server_error.message,
+          errorObject: error
+        })
+      }
+
+
+    })
+  }
+
 };

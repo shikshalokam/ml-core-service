@@ -1468,7 +1468,7 @@ module.exports = class SolutionsHelper {
         })
       }
     })
-   } 
+   }
 
 };
 

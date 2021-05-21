@@ -26,6 +26,10 @@ module.exports = {
       isDeleted: {
         type: Boolean,
         default: false
+      },
+      isAPlatformRole: {
+        type: Boolean,
+        default: false
       }
     }
   };
