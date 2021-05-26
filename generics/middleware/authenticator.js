@@ -122,7 +122,7 @@ module.exports = async function (req, res, next) {
 
   const kid = decoded.header.kid;
   let cert = "";
-  let path = keycloakPublicKeyPath + kid + '.pem';
+  let path = keycloakPublicKeyPath + kid;
   
   if (fs.existsSync(path)) {
 
