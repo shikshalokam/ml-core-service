@@ -123,12 +123,15 @@ module.exports = async function (req, res, next) {
   const kid = decoded.header.kid;
   let cert = "";
   let path = keycloakPublicKeyPath + kid;
-  
+  console.log(path)
   if (fs.existsSync(path)) {
 
     cert = fs.readFileSync(path);
-    jwt.verify(token, cert, { algorithm: 'RS256' }, function (err, decode) {
+    console.log(token)
 
+    jwt.verify(token, cert, { algorithms: ['sha1', 'RS256', 'HS256'] }, function (err, decode) {
+      console.log(err)
+      console.log(decode)
       if (err) {
         return res.status(401).send(invalidTokenMsg);
       }
