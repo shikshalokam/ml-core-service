@@ -9,6 +9,8 @@
 const keycloakPublicKeyPath = process.env.KEYCLOAK_PUBLIC_KEY_PATH + "/";
 const jwt = require('jsonwebtoken');
 const fs = require('fs');
+const PEM_FILE_BEGIN_STRING = "-----BEGIN PUBLIC KEY-----";
+const PEM_FILE_END_STRING = "-----END PUBLIC KEY-----";
 
 var invalidTokenMsg = {
   "status" : 'ERR_TOKEN_FIELD_MISSING',
@@ -123,15 +125,21 @@ module.exports = async function (req, res, next) {
   const kid = decoded.header.kid;
   let cert = "";
   let path = keycloakPublicKeyPath + kid;
-  console.log(path)
+
   if (fs.existsSync(path)) {
 
+    // Check if access key file has begin and end block, else append it.
+    let accessKeyFile  = await fs.readFileSync(path);
+    if(accessKeyFile) {
+      if(!accessKeyFile.includes(PEM_FILE_BEGIN_STRING)){
+        await fs.writeFileSync(path,PEM_FILE_BEGIN_STRING+"\n"+accessKeyFile.toString()+"\n"+PEM_FILE_END_STRING)
+      }      
+    }
+
     cert = fs.readFileSync(path);
-    console.log(token)
 
     jwt.verify(token, cert, { algorithms: ['sha1', 'RS256', 'HS256'] }, function (err, decode) {
-      console.log(err)
-      console.log(decode)
+
       if (err) {
         return res.status(401).send(invalidTokenMsg);
       }
