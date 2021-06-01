@@ -1027,54 +1027,6 @@ static updateUserRolesInEntitiesElasticSearch(userId = "", userRoles = []) {
 
    }
 
-   /**
-   * List of user platform roles
-   * @method
-   * @name platformRoles
-   * @param {String} userId - Logged in user id.
-   * @returns {Array} 
-   */
-
-  static platformRoles(userId) {
-    return new Promise(async (resolve, reject) => {
-        try {
-            
-            const userInformation = await this.userExtensionDocument
-            (
-                { 
-                    userId: userId,
-                    status: constants.common.ACTIVE,
-                    "platformRoles": {$exists: true,$not: {$size: 0}} 
-               },
-               {
-                   "platformRoles.roleId": 1,"platformRoles.code": 1
-                }
-            );
-   
-           if (!userInformation) {
-               return resolve({
-                   message: constants.apiResponses.NOT_FOUND_USER_PLATFORM_ROLES,
-                   result: []
-               })
-           }
-   
-           const result = userInformation.platformRoles.map(user=> {
-               return {
-                   _id: user.roleId,
-                   code: user.code,
-               }
-           });
-   
-           return resolve({
-               message: constants.apiResponses.USER_PLATFORM_ROLES,
-               data: result
-           });
-        } catch(error) {
-            return reject(error);
-        }
-    })
-  }
-
     /**
    * List of programs for platform user
    * @method
@@ -1088,7 +1040,7 @@ static updateUserRolesInEntitiesElasticSearch(userId = "", userRoles = []) {
         return new Promise(async (resolve, reject) => {
             try {
 
-                let updateQuery = {
+                let projection = {
                     "platformRoles": 1
                 };
 
@@ -1098,13 +1050,11 @@ static updateUserRolesInEntitiesElasticSearch(userId = "", userRoles = []) {
                 }
 
                 if (role) {
-                    findQuery["platformRoles.code"] = role;
-                    updateQuery = {
-                        "platformRoles": {$elemMatch: {code: role}}
-                    }
+                    let roleArray = role.split(',');
+                    findQuery["platformRoles.code"] =  {$in: roleArray};
                 }
                 
-                const userInformation = await this.userExtensionDocument(findQuery,updateQuery);
+                const userInformation = await this.userExtensionDocument(findQuery,projection);
        
                 if (!userInformation) {
                    return resolve({
@@ -1117,14 +1067,27 @@ static updateUserRolesInEntitiesElasticSearch(userId = "", userRoles = []) {
                 if (userInformation.platformRoles && userInformation.platformRoles.length > 0) {
                     let programIds = [];
                     let programMapToRole = {};
-                    userInformation.platformRoles.forEach(platformRole=> {
-                        if (platformRole.programs && platformRole.programs.length > 0) {
-                            platformRole.programs.forEach(program => {
-                                programMapToRole[program.toString()] = platformRole.code;
-                                programIds.push(program);
-                            })
+                    
+                    for(let platformRole=0; platformRole < userInformation.platformRoles.length; platformRole++) {
+
+                        const currentRole = userInformation.platformRoles[platformRole];
+                        if (currentRole.programs && currentRole.programs.length > 0) {
+
+                            if (role) {
+                                let roleArray = role.split(',');
+                                
+                                if (!roleArray.includes(currentRole.code)) {
+                                    continue;
+                                }
+                            }
+
+                            for( let program = 0; program < currentRole.programs.length;program++) {
+                                programMapToRole[currentRole.programs[program].toString()] = currentRole.code;
+                                programIds.push(currentRole.programs[program]);
+                            }
+
                         }
-                    })
+                    }
 
                     const programData = await programsHelper.programDocuments({
                         _id: {$in: programIds},
@@ -1190,7 +1153,7 @@ static updateUserRolesInEntitiesElasticSearch(userId = "", userRoles = []) {
                 const programDocuments = await programsHelper.programDocuments({
                    _id: programId,
                    status: constants.common.ACTIVE 
-                },["externalId","name","description"]);
+                },["components"]);
 
                 if (!programDocuments.length > 0) {
                     return resolve({
@@ -1200,6 +1163,7 @@ static updateUserRolesInEntitiesElasticSearch(userId = "", userRoles = []) {
                 }
 
                 const solutionDocuments = await solutionsHelper.solutionDocuments({
+                    _id: {$in: programDocuments[0].components},
                     programId: programId,
                     isReusable: false
                 },[
