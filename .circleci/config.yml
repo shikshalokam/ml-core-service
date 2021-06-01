@@ -3,7 +3,7 @@ jobs:
   build:
     docker:
       - image: circleci/node:10.0.0
-    working_directory: ~/project/
+    working_directory: ~/project
     steps:
       - checkout
       - restore_cache:
@@ -21,8 +21,17 @@ jobs:
       - run:
           name: Executing unit test cases
           command: npm test
+      
+      - run: 
+          name: Install sonar scanner
+          command: 'sudo npm install -g sonarqube-scanner'
+          
+      - run: 
+          name: Sonar scanner
+          command: |
+                  sonar-scanner
 workflows:
   version: 2
-  build:
+  build_and_test:
     jobs:
       - build
