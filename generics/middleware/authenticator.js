@@ -6,53 +6,18 @@
  */
 
 // dependencies
-const jwtDecode = require('jwt-decode');
-const slackClient = require("../helpers/slack-communications");
-const interceptor = require("./lib/api-interceptor");
-const messageUtil = require("./lib/message-util");
-let responseCode = require("../http-status-codes");
-const shikshalokam = require("../helpers/shikshalokam");
+const keycloakPublicKeyPath = process.env.KEYCLOAK_PUBLIC_KEY_PATH + "/";
+const jwt = require('jsonwebtoken');
+const fs = require('fs');
+const PEM_FILE_BEGIN_STRING = "-----BEGIN PUBLIC KEY-----";
+const PEM_FILE_END_STRING = "-----END PUBLIC KEY-----";
 
-var reqMsg = messageUtil.REQUEST;
-var keyCloakConfig = {
-  authServerUrl: process.env.sunbird_keycloak_auth_server_url,
-  realm: process.env.sunbird_keycloak_realm,
-  clientId: process.env.sunbird_keycloak_client_id,
-  public: process.env.sunbird_keycloak_public
+var invalidTokenMsg = {
+  "status" : 'ERR_TOKEN_FIELD_MISSING',
+  "message" : 'Required field token is missing',
+  "currentDate" : new Date().toISOString()
 };
 
-var cacheConfig = {
-  store: process.env.sunbird_cache_store,
-  ttl: process.env.sunbird_cache_ttl
-};
-
-var respUtil = function (resp) {
-  return {
-    status: resp.errCode,
-    message: resp.errMsg,
-    currentDate: new Date().toISOString()
-  };
-};
-
-var tokenAuthenticationFailureMessageToSlack = function (req, token, msg) {
-  let jwtInfomration = jwtDecode(token)
-  jwtInfomration["x-authenticated-user-token"] = token
-  const tokenByPassAllowedLog = {
-    method: req.method,
-    url: req.url,
-    headers: req.headers,
-    body: req.body,
-    errorMsg: msg,
-    customFields:
-      jwtInfomration,
-    slackErrorName: process.env.SLACK_ERROR_NAME,
-    color: process.env.SLACK_ERROR_MESSAGE_COLOR
-  }
-
-  slackClient.sendMessageToSlack(tokenByPassAllowedLog)
-}
-
-var apiInterceptor = new interceptor(keyCloakConfig, cacheConfig);
 var removedHeaders = [
   "host",
   "origin",
@@ -69,14 +34,6 @@ var removedHeaders = [
   "connection"
 ];
 
-async function getAllRoles(obj) {
-  let roles = await obj.roles;
-  await _.forEach(obj.organisations, async value => {
-    roles = await roles.concat(value.roles);
-  });
-  return roles;
-}
-
 module.exports = async function (req, res, next) {
 
   removedHeaders.forEach(function (e) {
@@ -84,8 +41,6 @@ module.exports = async function (req, res, next) {
   });
 
   var token = req.headers["x-authenticated-user-token"];
-  if (!req.rspObj) req.rspObj = {};
-  var rspObj = req.rspObj;
 
   if (req.path.includes("slack")) {
     next();
@@ -126,10 +81,7 @@ module.exports = async function (req, res, next) {
 
   if ( !token && performInternalAccessTokenCheck) {
     if (req.headers["internal-access-token"] !== process.env.INTERNAL_ACCESS_TOKEN) {
-      rspObj.errCode = reqMsg.TOKEN.MISSING_CODE;
-      rspObj.errMsg = reqMsg.TOKEN.MISSING_MESSAGE;
-      rspObj.responseCode = responseCode.unauthorized;
-      return res.status(httpStatusCode["unauthorized"].status).send(respUtil(rspObj));
+      return res.status(httpStatusCode["unauthorized"].status).send(invalidTokenMsg);
     } else {
       next();
       return;
@@ -157,70 +109,64 @@ module.exports = async function (req, res, next) {
       req.path.includes(mandatoryInternalAccessApiPaths[path]) && 
       req.headers["internal-access-token"] !== process.env.INTERNAL_ACCESS_TOKEN
     ) {
-      rspObj.errCode = reqMsg.TOKEN.MISSING_CODE;
-      rspObj.errMsg = reqMsg.TOKEN.MISSING_MESSAGE;
-      rspObj.responseCode = responseCode.unauthorized;
-      return res.status(httpStatusCode["unauthorized"].status).send(respUtil(rspObj));
+      return res.status(httpStatusCode["unauthorized"].status).send(invalidTokenMsg);
     }
   }
 
   if (!token) {
-    rspObj.errCode = reqMsg.TOKEN.MISSING_CODE;
-    rspObj.errMsg = reqMsg.TOKEN.MISSING_MESSAGE;
-    rspObj.responseCode = responseCode.unauthorized;
-    return res.status(httpStatusCode["unauthorized"].status).send(respUtil(rspObj));
+    return res.status(httpStatusCode["unauthorized"].status).send(invalidTokenMsg);
   }
 
-  apiInterceptor.validateToken(token, function (err, tokenData) {
+  var decoded = jwt.decode(token, { complete: true });
+  if(decoded === null || decoded.header === undefined){
+    return res.status(HTTP_STATUS_CODE["unauthorized"].status).send(invalidTokenMsg);
+  }
 
-    if (err) {
-      rspObj.errCode = reqMsg.TOKEN.INVALID_CODE;
-      rspObj.errMsg = reqMsg.TOKEN.INVALID_MESSAGE;
-      rspObj.responseCode = responseCode.UNAUTHORIZED_ACCESS;
+  const kid = decoded.header.kid;
+  let cert = "";
+  let path = keycloakPublicKeyPath + kid;
+  
+  if (fs.existsSync(path)) {
 
-      tokenAuthenticationFailureMessageToSlack(
-        req,
-        token, "TOKEN VERIFICATION WITH KEYCLOAK FAILED"
-      );
-      return res.status(httpStatusCode["unauthorized"].status).send(respUtil(rspObj));
-    } else {
-      req.rspObj.userId = tokenData.userId;
-      req.rspObj.userToken = req.headers["x-authenticated-user-token"];
-      delete req.headers["x-authenticated-userid"];
-      delete req.headers["x-authenticated-user-token"];
-      // rspObj.telemetryData.actor = utilsService.getTelemetryActorData(req);
-      req.headers["x-authenticated-userid"] = tokenData.userId;
-      req.rspObj = rspObj;
-      shikshalokam
-        .userInfo(token, tokenData.userId)
-        .then(async userDetails => {
-          if (userDetails.responseCode == "OK") {
-            req.userDetails = userDetails.result.response;
-            req.userDetails.userToken = req.rspObj.userToken
-            req.userDetails.allRoles = await getAllRoles(req.userDetails);
-            next();
-          } else {
-            tokenAuthenticationFailureMessageToSlack(
-              req,
-              token,
-              "TOKEN VERIFICATION - FAILED TO GET USER DETAIL FROM Kendra SERVICE"
-            );
+    let accessKeyFile  = await fs.readFileSync(path);
 
-            rspObj.errCode = reqMsg.TOKEN.INVALID_CODE;
-            rspObj.errMsg = reqMsg.TOKEN.INVALID_MESSAGE;
-            rspObj.responseCode = responseCode.UNAUTHORIZED_ACCESS;
-            return res.status(httpStatusCode["unauthorized"].status).send(respUtil(rspObj));
-          }
-        })
-        .catch(error => {
-          tokenAuthenticationFailureMessageToSlack(
-            req,
-            token,
-            "TOKEN VERIFICATION - ERROR FETCHING USER DETAIL FROM Kendra SERVICE"
-          );
-
-          return res.status(httpStatusCode["unauthorized"].status).send(error);
-        });
+    if(accessKeyFile) {
+      if(!accessKeyFile.includes(PEM_FILE_BEGIN_STRING)){
+        await fs.writeFileSync(path,PEM_FILE_BEGIN_STRING+"\n"+accessKeyFile+"\n"+PEM_FILE_END_STRING)
+      }   
     }
-  });
+
+    cert = fs.readFileSync(path);
+    jwt.verify(token, cert, { algorithms: ['sha1', 'RS256', 'HS256'] }, function (err, decode) {
+
+      if (err) {
+        return res.status(401).send(invalidTokenMsg);
+      }
+
+      if (decode !== undefined) {
+        const expiry = decode.exp;
+        const now = new Date();
+        if (now.getTime() > expiry * 1000) {
+          return res.status(401).send(invalidTokenMsg);
+        }
+
+        req.userDetails = {
+          userToken : token,
+          id : decode.sub.split(":").pop(),
+          userId : decode.sub.split(":").pop(),
+          userName : decode.preferred_username,
+          email : decode.email,
+          firstName : decode.name
+        }
+        next();
+      
+      } else {
+        return res.status(401).send(invalidTokenMsg);
+      }
+
+    });
+  } else {
+    return res.status(401).send(invalidTokenMsg);
+  }
+
 };

@@ -9,7 +9,7 @@
 
 const request = require('request');
 const slackClient = 
-require(ROOT_PATH + "/generics/helpers/slack-communications");
+    require(ROOT_PATH + "/generics/helpers/slack-communications");
 
 /**
   * Samiksha api for getting all the pending assessments. 
