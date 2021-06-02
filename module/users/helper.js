@@ -439,60 +439,6 @@ module.exports = class UsersHelper {
         })
     }
 
-    /**
-      * To search the users
-      * @method
-      * @name isSystemAdmin
-      * @param {String} searchText search text
-      * @param {String} token user access token
-      * @returns {Object} returns a user details.
-     */
-
-    static search(searchText, token) {
-        return new Promise(async (resolve, reject) => {
-            try {
-
-                let searchFields = ['userName', 'email', 'phone'];
-                let userInfo;
-                for (let index = 0; index < searchFields.length; index++) {
-                    let userFilters = {};
-                    userFilters[searchFields[index]] = searchText;
-                    let userSearchResult =
-                        await sunbirdService.userSearch(userFilters, token);
-                    if (userSearchResult
-                        && userSearchResult.result
-                        && userSearchResult.result.count
-                        && userSearchResult.result.count > 0) {
-                        userInfo = userSearchResult.result.content;
-                        break;
-                    }
-                }
-                if (userInfo) {
-
-                    let userData = {
-                        lastName:userInfo[0].lastName,
-                        maskedPhone:userInfo[0].maskedPhone,
-                        email:userInfo[0].email,
-                        identifier:userInfo[0].identifier,
-                        userName:userInfo[0].userName
-                    }
-                    
-                    return resolve({
-                        result: userData,
-                        message: constants.apiResponses.USER_EXTENSION_FETCHED
-                    });
-                } else {
-                    return resolve({
-                        result: {},
-                        message: constants.apiResponses.USER_NOT_FOUND
-                    });
-                }
-            } catch (error) {
-                return reject(error);
-            }
-        })
-    }
-
       /**
       * User targeted solutions.
       * @method
