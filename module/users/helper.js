@@ -326,8 +326,8 @@ module.exports = class UsersHelper {
                 const userProfileData =
                     await userService.profile(userToken,userId);
 
-                if (!response.status) {
-                    return resolve({message: response.message});
+                if (!userProfileData.status) {
+                    return resolve({message: userProfileData.message});
                 }
 
                 const createdFor =

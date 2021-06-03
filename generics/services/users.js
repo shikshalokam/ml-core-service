@@ -42,6 +42,7 @@ const profile = function ( token,userId = "" ) {
                     if( response.status === httpStatusCode['ok'].status ) {
                         result["data"] = response.result;
                     } else {
+                        result["message"] = response.message;
                         result.success = false;
                     }
 
