@@ -208,6 +208,11 @@ function checkValidUUID(str) {
   return validateUUID;
 }
 
+function convertStringToBoolean(stringData) {
+  let stringToBoolean = (stringData === "TRUE" || stringData === "true");
+  return stringToBoolean;
+}
+
 module.exports = {
   camelCaseToTitleCase : camelCaseToTitleCase,
   lowerCase : lowerCase,
@@ -220,5 +225,6 @@ module.exports = {
   checkIfURLIsSunbirdAPI : checkIfURLIsSunbirdAPI,
   epochTime : epochTime,
   valueParser : valueParser,
-  checkValidUUID : checkValidUUID
+  checkValidUUID : checkValidUUID,
+  convertStringToBoolean : convertStringToBoolean
 };

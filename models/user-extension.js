@@ -49,6 +49,7 @@ module.exports = {
       metaInformation : {
         type : Object,
         default : {}
-      }
+      },
+      platformRoles: Array
     }
 }

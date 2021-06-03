@@ -5,7 +5,6 @@
  * Description : All User related information including sys_admin.
  */
 
-
 // Dependencies
 const programsHelper = require(MODULES_BASE_PATH + "/programs/helper");
 const solutionsHelper = require(MODULES_BASE_PATH + "/solutions/helper");
@@ -13,6 +12,7 @@ const userRolesHelper = require(MODULES_BASE_PATH + "/user-roles/helper");
 const entitiesHelper = require(MODULES_BASE_PATH + "/entities/helper");
 const improvementProjectService = require(ROOT_PATH + "/generics/services/improvement-project");
 const userService = require(ROOT_PATH + "/generics/services/users");
+
 
 /**
     * UsersHelper
@@ -305,6 +305,49 @@ module.exports = class UsersHelper {
 
             } catch (error) {
                 console.log(error);
+                return reject(error);
+            }
+        })
+    }
+
+    /**
+    * Get user organisations and root organisations.
+    * @method
+    * @name getUserOrganisationsAndRootOrganisations
+    * @param {string} userId - logged in user Id.
+    * @param {object} userToken - Logged in user token.
+    * @returns {Array} - Get user organisations and root organisations.
+    */
+
+    static getUserOrganisationsAndRootOrganisations(userId, userToken) {
+        return new Promise(async (resolve, reject) => {
+            try {
+
+                const userProfileData =
+                    await userService.profile(userToken,userId);
+
+                if (!userProfileData.status) {
+                    return resolve({message: userProfileData.message});
+                }
+
+                const createdFor =
+                    userProfileData.organisations.map(
+                        organisation => {
+                            return organisation.organisationId
+                        }
+                    );
+
+                const rootOrganisations = [userProfileData.rootOrgId];
+
+                return resolve({
+                    message: constants.apiResponses.USER_ORGANISATIONS_FETCHED,
+                    result: {
+                        createdFor: createdFor,
+                        rootOrganisations: rootOrganisations
+                    }
+                });
+
+            } catch (error) {
                 return reject(error);
             }
         })
@@ -758,43 +801,5 @@ module.exports = class UsersHelper {
       }
     })
    } 
-
-       /**
-    * Get user organisations and root organisations.
-    * @method
-    * @name getUserOrganisationsAndRootOrganisations
-    * @param {string} userId - logged in user Id.
-    * @param {object} userToken - Logged in user token.
-    * @returns {Array} - Get user organisations and root organisations.
-    */
-
-    static getUserOrganisationsAndRootOrganisations(userId, userToken) {
-        return new Promise(async (resolve, reject) => {
-            try {
-
-                const userProfileData = await userService.profile(userId, userToken);
-
-                const createdFor =
-                userProfileData.organisations.map(
-                    organisation => {
-                        return organisation.organisationId
-                    }
-                );
-    
-                const rootOrganisations = [userProfileData.rootOrgId];
-    
-                return resolve({
-                    message: constants.apiResponses.USER_ORGANISATIONS_FETCHED,
-                    result: {
-                        createdFor: createdFor,
-                        rootOrganisations: rootOrganisations
-                    }
-                });
-    
-                } catch (error) {
-                    return reject(error);
-                }
-        })
-    }
 
 };

@@ -649,7 +649,9 @@ module.exports = class SolutionsHelper {
             "programId",
             "externalId",
             "projectTemplateId",
-            "type"
+            "type",
+            "language",
+            "creator"
           ]  
         );
       
@@ -795,7 +797,9 @@ module.exports = class SolutionsHelper {
             "isAPrivateProgram",
             "projectTemplateId",
             "entityType",
-            "entityTypeId"
+            "entityTypeId",
+            "language",
+            "creator"
           ]
         );
 
@@ -1200,7 +1204,7 @@ module.exports = class SolutionsHelper {
    * @returns {Object} - Details of the solution.
    */
 
-  static targetedSolutions(requestedData,solutionType,userToken,pageSize,pageNo,search,filter) {
+  static targetedSolutions(requestedData,solutionType,userToken,pageSize,pageNo,search,filter, surveyReportPage = "") {
     return new Promise(async (resolve, reject) => {
         try {
 
@@ -1208,7 +1212,8 @@ module.exports = class SolutionsHelper {
             solutionType,
             userToken,
             search,
-            filter
+            filter,
+            surveyReportPage
           );
 
           let totalCount = 0;
@@ -1247,7 +1252,7 @@ module.exports = class SolutionsHelper {
                     );
 
                     mergedData = mergedData.map( data => {
-                        if( data.programId && programs[data.programId.toString()] ) {
+                        if( data.programId && programs[data.programId.toString()]) {
                             data.programName = programs[data.programId.toString()].name;
                         }
                         return data;
@@ -1271,16 +1276,25 @@ module.exports = class SolutionsHelper {
             }
           }
 
-          let targetedSolutions = 
-          await this.forUserRoleAndLocation(
-            requestedData,
-            solutionType,
-            "",
-            "",
-            constants.common.DEFAULT_PAGE_SIZE,
-            constants.common.DEFAULT_PAGE_NO,
-            search
-          )
+          let targetedSolutions = {
+            success : false
+          };
+
+          surveyReportPage = gen.utils.convertStringToBoolean(surveyReportPage);
+
+          if ( !surveyReportPage ) {
+              
+            targetedSolutions = 
+            await this.forUserRoleAndLocation(
+              requestedData,
+              solutionType,
+              "",
+              "",
+              constants.common.DEFAULT_PAGE_SIZE,
+              constants.common.DEFAULT_PAGE_NO,
+              search
+            ); 
+          }
 
         if( targetedSolutions.success ) {
 
@@ -1292,6 +1306,7 @@ module.exports = class SolutionsHelper {
                     targetedSolutions.data.data.forEach(targetedSolution => {
                         targetedSolution.solutionId = targetedSolution._id;
                         targetedSolution._id = "";
+                        targetedSolution["creator"] = targetedSolution.creator ? targetedSolution.creator : "";
                         
                         if ( solutionType === constants.common.SURVEY ) {
                           targetedSolution.isCreator = false;
@@ -1338,7 +1353,7 @@ module.exports = class SolutionsHelper {
    * @returns {Object} - Details of the solution.
    */
 
-  static assignedUserSolutions(solutionType,userToken,search,filter ) {
+  static assignedUserSolutions(solutionType,userToken,search,filter, surveyReportPage = "" ) {
     return new Promise(async (resolve, reject) => {
       try {
 
@@ -1358,7 +1373,8 @@ module.exports = class SolutionsHelper {
           await assessmentService.assignedSurveys(
             userToken,
             search,
-            filter
+            filter,
+            surveyReportPage
           );
 
         } else {
@@ -1452,7 +1468,7 @@ module.exports = class SolutionsHelper {
         })
       }
     })
-   } 
+   }
 
 };
 
