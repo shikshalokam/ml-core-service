@@ -22,8 +22,7 @@ const profile = function ( token,userId = "" ) {
             const options = {
                 headers : {
                     "content-type": "application/json",
-                    "x-authenticated-user-token" : token,
-                    "authorization": process.env.AUTHORIZATION
+                    "x-authenticated-user-token" : token
                 }
             };
 

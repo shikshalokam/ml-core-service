@@ -131,10 +131,6 @@ let enviromentVariables = {
   "USER_SERVICE_URL" : {
     "message" : "Sunbird environment base url",
     "optional" : false
-  },
-  "AUTHORIZATION" : {
-    "message": "Sunbird authorization",
-    "optional": false
   }
 }
 
