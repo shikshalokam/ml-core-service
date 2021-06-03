@@ -21,11 +21,10 @@ module.exports = {
     SUNBIRD_CREATE_CONTENT : "/content/v1/create",
     SUNBIRD_UPLOAD_CONTENT : "/content/v1/upload",
     SUNBIRD_ORGANISATION_LISTS : "/organisations/list",
-    GET_USER_PROFILE : "/users/getProfile",
-    SUNBIRD_LEARNING_RESOURCE_LIST : "/learningResources/list",
     SUNBIRD_USER_SEARCH :"/users/search",
     GET_USER_ASSIGNED_OBSERVATION : "/observations/userAssigned",
     GET_USER_ASSIGNED_SURVEY : "/surveys/userAssigned",
     GET_USER_ASSIGNED_PROJECT : "/userProjects/userAssigned",
-    IMPORTED_PROJECT : "/userProjects/importedProjects"
+    IMPORTED_PROJECT : "/userProjects/importedProjects",
+    SUNBIRD_USER_READ: "/api/user/v1/read"
 }

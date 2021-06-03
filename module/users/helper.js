@@ -5,14 +5,14 @@
  * Description : All User related information including sys_admin.
  */
 
-
 // Dependencies
 const programsHelper = require(MODULES_BASE_PATH + "/programs/helper");
 const solutionsHelper = require(MODULES_BASE_PATH + "/solutions/helper");
-const sunbirdService = require(ROOT_PATH + "/generics/services/sunbird");
 const userRolesHelper = require(MODULES_BASE_PATH + "/user-roles/helper");
 const entitiesHelper = require(MODULES_BASE_PATH + "/entities/helper");
 const improvementProjectService = require(ROOT_PATH + "/generics/services/improvement-project");
+const userService = require(ROOT_PATH + "/generics/services/users");
+
 
 /**
     * UsersHelper
@@ -324,7 +324,11 @@ module.exports = class UsersHelper {
             try {
 
                 const userProfileData =
-                    await sunbirdService.userProfile(userId, userToken);
+                    await userService.profile(userToken,userId);
+
+                if (!response.status) {
+                    return resolve({message: response.message});
+                }
 
                 const createdFor =
                     userProfileData.organisations.map(

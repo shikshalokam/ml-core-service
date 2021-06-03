@@ -119,7 +119,7 @@ module.exports = async function (req, res, next) {
 
   var decoded = jwt.decode(token, { complete: true });
   if(decoded === null || decoded.header === undefined){
-    return res.status(HTTP_STATUS_CODE["unauthorized"].status).send(invalidTokenMsg);
+    return res.status(httpStatusCode["unauthorized"].status).send(invalidTokenMsg);
   }
 
   const kid = decoded.header.kid;
