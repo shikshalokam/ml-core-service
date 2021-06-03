@@ -22,7 +22,8 @@ const profile = function ( token,userId = "" ) {
             const options = {
                 headers : {
                     "content-type": "application/json",
-                    "x-authenticated-user-token" : token
+                    "x-authenticated-user-token" : token,
+                    "authorization": process.env.AUTHORIZATION
                 }
             };
 
@@ -40,7 +41,7 @@ const profile = function ( token,userId = "" ) {
 
                     let response = JSON.parse(data.body);
                     if( response.status === httpStatusCode['ok'].status ) {
-                        result["data"] = response.result;
+                        result["data"] = response.result.response;
                     } else {
                         result["message"] = response.message;
                         result.success = false;
