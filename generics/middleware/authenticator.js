@@ -9,6 +9,8 @@
 const keycloakPublicKeyPath = process.env.KEYCLOAK_PUBLIC_KEY_PATH + "/";
 const jwt = require('jsonwebtoken');
 const fs = require('fs');
+const PEM_FILE_BEGIN_STRING = "-----BEGIN PUBLIC KEY-----";
+const PEM_FILE_END_STRING = "-----END PUBLIC KEY-----";
 
 var invalidTokenMsg = {
   "status" : 'ERR_TOKEN_FIELD_MISSING',
@@ -117,17 +119,26 @@ module.exports = async function (req, res, next) {
 
   var decoded = jwt.decode(token, { complete: true });
   if(decoded === null || decoded.header === undefined){
-    return res.status(HTTP_STATUS_CODE["unauthorized"].status).send(invalidTokenMsg);
+    return res.status(httpStatusCode["unauthorized"].status).send(invalidTokenMsg);
   }
 
   const kid = decoded.header.kid;
   let cert = "";
-  let path = keycloakPublicKeyPath + kid + '.pem';
+  let path = keycloakPublicKeyPath + kid;
   
   if (fs.existsSync(path)) {
 
-    cert = fs.readFileSync(path);
-    jwt.verify(token, cert, { algorithm: 'RS256' }, function (err, decode) {
+    let accessKeyFile  = await fs.readFileSync(path);
+
+    if(accessKeyFile) {
+      if(!accessKeyFile.includes(PEM_FILE_BEGIN_STRING)){
+        cert = PEM_FILE_BEGIN_STRING+"\n"+accessKeyFile+"\n"+PEM_FILE_END_STRING;
+      }else {
+        cert = fs.readFileSync(path);
+      }  
+    }
+
+    jwt.verify(token, cert, { algorithms: ['sha1', 'RS256', 'HS256'] }, function (err, decode) {
 
       if (err) {
         return res.status(401).send(invalidTokenMsg);

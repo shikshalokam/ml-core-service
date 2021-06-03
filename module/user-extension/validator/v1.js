@@ -11,6 +11,9 @@ module.exports = (req) => {
         updateProfileRoles : function () {
             req.checkBody('stateId').exists().withMessage("State id is required");
             req.checkBody('roles').exists().withMessage("Roles data is required");
+        },
+        solutions: function () {
+            req.checkParams('_id').exists().withMessage('Required program id');
         }
     }
 

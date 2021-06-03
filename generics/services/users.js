@@ -13,7 +13,7 @@ const profile = function ( token,userId = "" ) {
     return new Promise(async (resolve, reject) => {
         try {
 
-            let url = userServiceUrl + CONSTANTS.endpoints.USER_READ;
+            let url = userServiceUrl + constants.endpoints.USER_READ;
 
             if( userId !== "" ) {
                 url = url + "/" + userId;
@@ -39,9 +39,10 @@ const profile = function ( token,userId = "" ) {
                 } else {
 
                     let response = JSON.parse(data.body);
-                    if( response.status === HTTP_STATUS_CODE['ok'].status ) {
-                        result["data"] = response.result;
+                    if( response.status === httpStatusCode['ok'].status ) {
+                        result["data"] = response.result.response;
                     } else {
+                        result["message"] = response.message;
                         result.success = false;
                     }
 

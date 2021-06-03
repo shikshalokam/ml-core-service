@@ -164,7 +164,7 @@ module.exports = class Users extends Abstract {
             "_id": "5edf0d14c57dab7f639f3e0d",
             "externalId": "EF-DCPCR-2018-001-TEMPLATE-2020-06-09 09:46:20",
             "name": "My program",
-            "description": "DCPCR Assessment Framework 2018",
+            "description": "DCPCR Assessment Frramework 2018",
             "isAPrivateProgram" : false
         }
      ]}
@@ -396,6 +396,71 @@ module.exports = class Users extends Abstract {
         })
     }
 
+     /**
+     * @api {get} /kendra/api/v1/users/getUserOrganisationsAndRootOrganisations
+     * Get organisation and root organisation
+     * @apiVersion 1.0.0
+     * @apiGroup Users
+     * @apiHeader {String} X-authenticated-user-token Authenticity token
+     * @apiSampleRequest /kendra/api/v1/users/getUserOrganisationsAndRootOrganisations
+     * @apiUse successBody
+     * @apiUse errorBody
+     * @apiParamExample {json} Response:
+     * {
+    "message": "User organisations fetched successfully",
+    "status": 200,
+    "result": {
+        "createdFor": [
+            "01305447637218918413"
+        ],
+        "rootOrganisations": [
+            "01305447637218918413"
+        ]
+    }
+    }
+    */
+
+    /**
+      * Organisations and root organisations.
+      * @method
+      * @name getUserOrganisationsAndRootOrganisations
+      * @param  {Request} req request body.
+      * @returns {JSON} Organisations and root organisations of user.
+     */
+
+    getUserOrganisationsAndRootOrganisations(req) {
+
+        return new Promise(async (resolve, reject) => {
+
+            try {
+
+                const userOrganisations = 
+                await usersHelper.getUserOrganisationsAndRootOrganisations(
+                    (req.params._id && req.params._id != "") ? 
+                    req.params._id : 
+                    req.userDetails.id,
+                    req.userDetails.userToken
+                );
+
+                resolve(userOrganisations);
+
+            } catch (error) {
+
+                return reject({
+                    status: 
+                    error.status || 
+                    httpStatusCode["internal_server_error"].status,
+
+                    message: 
+                    error.message || 
+                    httpStatusCode["internal_server_error"].message
+                })
+
+            }
+
+
+        })
+    }
 
    /**
   * @api {post} /kendra/api/v1/users/solutions/:programId?page=:page&limit=:limit&search=:searchText
@@ -488,14 +553,13 @@ module.exports = class Users extends Abstract {
     });
   }
 
-
 /**
      * @api {post} /kendra/api/v1/users/programs?page=:page&limit=:limit&search=:search 
      * Program List
      * @apiVersion 1.0.0
      * @apiGroup Users
      * @apiHeader {String} X-authenticated-user-token Authenticity token
-     * @apiSampleRequest /kendra/api/v1/users/programs?page=:page&limit=:limit&search=:search 
+     * @apiSampleRequest /kendra/api/v1/users/programs?isAPrivateProgram=true&page=:page&limit=:limit&search=:search 
      * @apiUse successBody
      * @apiUse errorBody
      * @apiParamExample {json} Request:
@@ -532,6 +596,7 @@ module.exports = class Users extends Abstract {
       * @param {String} req.pageNo - pageNo
       * @param {String} req.pageSize - pageSize
       * @param {String} req.searchText - searchText
+      * @param {String} req.query.isAPrivateProgram - isAPrivateProgram
       * @returns {Object} list of targeted user programs. 
      */
 
@@ -539,19 +604,29 @@ module.exports = class Users extends Abstract {
       return new Promise(async (resolve, reject) => {
 
         try {
+
+          let isAPrivateProgram = gen.utils.convertStringToBoolean(req.query.isAPrivateProgram);
+
+          if(isAPrivateProgram){
+
+            let programsData = await usersHelper.privatePrograms(req.userDetails.userId);
+            return resolve(programsData);
+
+          } else {
+            
+            let programs = 
+              await usersHelper.programs( 
+                  req.body,
+                  req.pageNo,
+                  req.pageSize,
+                  req.searchText
+              );
+
+              programs.result = programs.data;
+              return resolve(programs);
+
+          }
           
-          let programs = 
-          await usersHelper.programs( 
-              req.body,
-              req.pageNo,
-              req.pageSize,
-              req.searchText
-          );
-
-          programs.result = programs.data;
-         
-          return resolve(programs);
-
         } catch (error) {
 
             return reject({
@@ -687,72 +762,6 @@ module.exports = class Users extends Abstract {
             });
           }
         });
-    }
-
-        /**
-     * @api {get} /kendra/api/v1/users/getUserOrganisationsAndRootOrganisations
-     * Get organisation and root organisation
-     * @apiVersion 1.0.0
-     * @apiGroup Users
-     * @apiHeader {String} X-authenticated-user-token Authenticity token
-     * @apiSampleRequest /kendra/api/v1/users/getUserOrganisationsAndRootOrganisations
-     * @apiUse successBody
-     * @apiUse errorBody
-     * @apiParamExample {json} Response:
-     * {
-    "message": "User organisations fetched successfully",
-    "status": 200,
-    "result": {
-        "createdFor": [
-            "01305447637218918413"
-        ],
-        "rootOrganisations": [
-            "01305447637218918413"
-        ]
-    }
-    }
-    */
-
-    /**
-      * Organisations and root organisations.
-      * @method
-      * @name getUserOrganisationsAndRootOrganisations
-      * @param  {Request} req request body.
-      * @returns {JSON} Organisations and root organisations of user.
-     */
-
-    getUserOrganisationsAndRootOrganisations(req) {
-
-        return new Promise(async (resolve, reject) => {
-
-            try {
-
-                const userOrganisations = 
-                await usersHelper.getUserOrganisationsAndRootOrganisations(
-                    (req.params._id && req.params._id != "") ? 
-                    req.params._id : 
-                    req.userDetails.id,
-                    req.userDetails.userToken
-                );
-
-                resolve(userOrganisations);
-
-            } catch (error) {
-
-                return reject({
-                    status: 
-                    error.status || 
-                    httpStatusCode["internal_server_error"].status,
-
-                    message: 
-                    error.message || 
-                    httpStatusCode["internal_server_error"].message
-                })
-
-            }
-
-
-        })
     }
 };
 
