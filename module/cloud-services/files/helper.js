@@ -53,7 +53,7 @@ module.exports = class FilesHelper {
                 for( let pointerToPayload = 0; pointerToPayload < payloadIds.length; pointerToPayload++ ) {
                     
                     let payloadId = payloadIds[pointerToPayload];
-                    let folderPath = "project/" + payloadId + "/" + userId + "/" + gen.utils.generateUniqueId();
+                    let folderPath = "project/" + payloadId + "/" + userId + "/" + gen.utils.generateUniqueId() + "/";
                     let imagePayload = 
                     await filesHelpers.preSignedUrls(
                         payloadData[payloadId].files,
@@ -85,7 +85,7 @@ module.exports = class FilesHelper {
               folderPath = "reports/"
 
             } else {
-              folderPath = "survey/" + payloadIds[0] + "/" + userId + "/" + gen.utils.generateUniqueId();
+              folderPath = "survey/" + payloadIds[0] + "/" + userId + "/" + gen.utils.generateUniqueId() + "/";
             }
             
             let imagePayload = await filesHelpers.preSignedUrls(
