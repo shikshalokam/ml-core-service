@@ -39,11 +39,12 @@ var databaseConfiguration = function () {
     console.log("Connected to database!");
   });
 
+  let schema = {};
   var createModel = function (opts) {
     if (typeof opts.schema.__proto__.instanceOfSchema === "undefined") {
-      var schema = mongoose.Schema(opts.schema, opts.options);
+      schema = mongoose.Schema(opts.schema, opts.options);
     } else {
-      var schema = opts.schema;
+      schema = opts.schema;
     }
 
     schema.plugin(mongooseTimeStamp, {
@@ -66,8 +67,7 @@ var databaseConfiguration = function () {
       }
     }
     
-    var model = db.model(opts.name, schema, opts.name);
-    return model;
+    return db.model(opts.name, schema, opts.name);
   };
 
   return {

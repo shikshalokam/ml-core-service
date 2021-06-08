@@ -28,8 +28,6 @@ module.exports = class Files {
      * @apiSuccess {String} result Data
      */
 
-    constructor() { }
-
     static get name() {
         return "files";
     }

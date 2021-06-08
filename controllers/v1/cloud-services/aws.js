@@ -28,8 +28,6 @@ module.exports = class Aws {
      * @apiSuccess {String} result Data
      */
 
-    constructor() { }
-
     static get name() {
         return "aws";
     }
