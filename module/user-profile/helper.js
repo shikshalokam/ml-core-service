@@ -23,7 +23,7 @@ module.exports = class UserProfileHelper {
         return new Promise(async (resolve, reject) => {
             try {
 
-                if( queryParameter === "all" ) {
+                if( queryParameter == "all" ) {
                     queryParameter = {};
                 };
 

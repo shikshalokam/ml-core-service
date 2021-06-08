@@ -38,7 +38,7 @@ module.exports = class EntityTypesHelper {
                     });
                 }
     
-                if( skipFields !== "none" ) {
+                if( skipFields != "none" ) {
                   skipFields.forEach(field=>{
                     projection[field] = 0;
                   })
