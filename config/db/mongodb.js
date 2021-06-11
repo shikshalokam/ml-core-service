@@ -26,12 +26,16 @@ var databaseConfiguration = function () {
   mongoose.set('useCreateIndex', true);
   mongoose.set('useFindAndModify', false);
   mongoose.set('useUnifiedTopology', true);
+
+  let options = {useNewUrlParser: true};
+
+  if ( process.env.REPLICA_SET_NAME && process.env.REPLICA_SET_NAME !== "") {
+    options["replset"] = {rs_name: process.env.REPLICA_SET_NAME };
+  }
   
   var db = mongoose.createConnection(
     process.env.MONGODB_URL,
-    {
-      useNewUrlParser: true
-    }
+    options
   );
 
   db.on("error", console.error.bind(console, "connection error:"));
