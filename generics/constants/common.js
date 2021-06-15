@@ -56,5 +56,8 @@ module.exports = {
   "CREATED_BY_ME" : "createdByMe",
   "DEFAULT_PAGE_SIZE" : 100,
   "DEFAULT_PAGE_NO" : 1,
-  "DHITI" : "dhiti"
+  "DHITI" : "dhiti",
+  "CREATE_OBSERVATION": "/create-observation/",
+  "TAKE_SURVEY" : "/take-survey/",
+  "CREATE_PROJECT" : "/create-project/"
 };

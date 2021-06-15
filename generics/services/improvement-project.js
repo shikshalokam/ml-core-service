@@ -130,7 +130,75 @@ var importedProjects = function ( token,programId = "" ) {
 
 }
 
+/**
+  * Get project detail by link.
+  * @function
+  * @name getProjectDetailByLink
+  * @param {String} token - logged in user token.
+  * @param {String} link - link
+  * @param {Object} bodyData - bodyData
+  * @returns {Promise} returns a promise.
+*/
+
+var getProjectDetailByLink = function ( solutionId, token, bodyData = "" ) {
+
+    let getProjectDetailByLinkUrl = 
+    process.env.ML_PROJECT_SERVICE_URL + 
+    constants.endpoints.GET_PROJECT_DETAILS_BY_LINK + "?solutionId=" + solutionId;
+
+    return new Promise((resolve, reject) => {
+        try {
+
+            const improvementProjectCallback = function (err, data) {
+
+                let result = {
+                    success : true,
+                    message: "",
+                    status:""
+                };
+
+                if (err) {
+                    result.success = false;
+                } else {
+
+                    let response = data.body;
+
+                    if( response.status === httpStatusCode['ok'].status ) {
+                        result["data"] = response.result;
+                        
+                    } else {
+                        result.success = false;
+                    }
+
+                    result.message = response.message;
+                    result.status = response.status;
+                }
+
+                return resolve(result);
+            }
+
+            let options = {
+                headers : {
+                    "content-type": "application/json",
+                    "x-authenticated-user-token" : token
+                }
+            };
+
+            if( bodyData !== "" ) {
+                options.json = bodyData
+            } 
+
+            request.post(getProjectDetailByLinkUrl, options, improvementProjectCallback);
+
+        } catch (error) {
+            return reject(error);
+        }
+    })
+
+}
+
 module.exports = {
     assignedProjects : assignedProjects,
-    importedProjects : importedProjects
+    importedProjects : importedProjects,
+    getProjectDetailByLink : getProjectDetailByLink
 }

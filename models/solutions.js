@@ -86,6 +86,7 @@ module.exports = {
         default : "Domains",
         type : String
       },
-      criteriaLevelReport : Boolean
+      criteriaLevelReport : Boolean,
+      link: String
     }
   };

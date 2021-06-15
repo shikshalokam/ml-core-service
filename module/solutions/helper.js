@@ -13,6 +13,8 @@ const entitiesHelper = require(MODULES_BASE_PATH + "/entities/helper");
 const userRolesHelper = require(MODULES_BASE_PATH + "/user-roles/helper");
 const assessmentService = require(ROOT_PATH + '/generics/services/samiksha');
 const improvementProjectService = require(ROOT_PATH + '/generics/services/improvement-project');
+const appsHelper = require(MODULES_BASE_PATH + "/apps/helper");
+const appsPortalBaseUrl = (process.env.APP_PORTAL_BASE_URL && process.env.APP_PORTAL_BASE_URL !== "") ? process.env.APP_PORTAL_BASE_URL + "/" : "https://apps.shikshalokam.org/";
 
 /**
     * SolutionsHelper
@@ -67,6 +69,53 @@ module.exports = class SolutionsHelper {
         }
     });
   }
+
+   /**
+    * Update solution document.
+    * @method
+    * @name updateSolutionDocument
+    * @param {Object} query - query to find document
+    * @param {Object} updateObject - fields to update
+    * @returns {String} - message.
+    */
+
+   static updateSolutionDocument(query= {}, updateObject= {}) {
+    return new Promise(async (resolve, reject) => {
+        try {
+
+            if (Object.keys(query).length == 0) {
+                throw new Error(constants.apiResponses.UPDATE_QUERY_REQUIRED)
+            }
+
+            if (Object.keys(updateObject).length == 0) {
+                throw new Error (constants.apiResponses.UPDATE_OBJECT_REQUIRED)
+            }
+
+            let updateResponse = await database.models.solutions.updateOne
+            (
+                query,
+                updateObject
+            )
+            
+            if (updateResponse.nModified == 0) {
+                throw new Error(constants.apiResponses.FAILED_TO_UPDATE)
+            }
+
+            return resolve({
+                success: true,
+                message: constants.apiResponses.UPDATED_DOCUMENT_SUCCESSFULLY,
+                data: true
+            });
+
+        } catch (error) {
+            return resolve({
+                success: false,
+                message: error.message,
+                data: false
+            });
+        }
+    });
+}
 
   /**
    * Create solution.
@@ -1469,6 +1518,173 @@ module.exports = class SolutionsHelper {
       }
     })
    }
+
+   /**
+   * Get link by solution id
+   * @method
+   * @name getLink
+   * @param {String} solutionId - solution Id.
+   * @returns {Object} - Details of the solution.
+   */
+
+   static getLink( solutionId, appName ) {
+    return new Promise(async (resolve, reject) => {
+      try {
+
+        let solutionData = await this.solutionDocuments({
+                                _id : solutionId,
+                                isReusable : false,
+                                isAPrivateProgram: false
+                                },[
+                                    "link","type","author"
+                              ]);
+
+        if(!Array.isArray(solutionData) || solutionData.length < 1) {
+            return resolve({
+                message: constants.apiResponses.SOLUTION_NOT_FOUND,
+                result: {}
+            });
+        }
+
+        let appDetails = await appsHelper.getDetails(appName);
+
+        if(!appDetails || !appDetails.data){
+          throw new Error(constants.apiResponses.APP_DETAILS_NOT_FOUND);
+        }
+
+        let link;
+
+        if(!solutionData[0].link){
+
+          let updateLink = await gen.utils.md5Hash(solutionData[0]._id + "###" + solutionData[0].author);
+
+          let updateSolution = await this.updateSolutionDocument
+                (
+                    { _id : solutionId },
+                    { $set : { link : updateLink } }
+                );
+
+          link = await gen.utils.generateLink(appsPortalBaseUrl, appName, updateLink, solutionData[0].type);
+
+        } else {
+          link = await gen.utils.generateLink(appsPortalBaseUrl, appName, solutionData[0].link, solutionData[0].type);
+        }
+
+        return resolve({
+            success : true,
+            message: constants.apiResponses.LINK_GENERATED,
+            result: link
+        });
+
+      } catch(error) {
+        return resolve({
+          success : false,
+          status : error.status ? 
+          error.status : httpStatusCode['internal_server_error'].status,
+          message : error.message
+        })
+      }
+    })
+   }
+
+  /**
+   * Get Details By solution link
+   * @method
+   * @name getDetailsByLink
+   * @param {String} link - link.
+   * @param {String} requestingUserAuthToken - Requesting user auth token.
+   * @param {Object} bodyData - request body data.
+   * @returns {Object} data.
+   */
+
+   static getDetailsByLink( link = "", requestingUserAuthToken = "", userId = "", bodyData = {} ) {
+    return new Promise(async (resolve, reject) => {
+      try {
+
+        if (link == "") {
+            throw new Error(constants.apiResponses.LINK_REQUIRED_CHECK)
+        }
+
+        if (requestingUserAuthToken == "") {
+            throw new Error(constants.apiResponses.REQUIRED_USER_AUTH_TOKEN)
+        }
+
+        if (userId == "") {
+            throw new Error(constants.apiResponses.USER_ID_REQUIRED_CHECK)
+        }
+
+        let solutionData = await this.solutionDocuments({
+                    link: link,
+                    isReusable : false,
+                    status: { $ne : constants.common.IN_ACTIVE }
+                },[
+                    "type","status", "endDate"
+                ]);
+
+        if(!Array.isArray(solutionData) || solutionData.length < 1){
+            return resolve({
+                message: constants.apiResponses.INVALID_LINK,
+                result: []
+            });  
+        }
+
+        if(solutionData[0].status != constants.common.ACTIVE) {
+            return resolve({
+                message: constants.apiResponses.LINK_IS_EXPIRED,
+                result: []
+            });   
+        }
+
+        if (solutionData[0].endDate && new Date() > new Date(solutionData[0].endDate)) {
+            if (solutionData[0].status == constants.common.ACTIVE) {
+                await this.updateSolutionDocument
+                (
+                    { link : link },
+                    { $set : { status: constants.common.IN_ACTIVE } }
+                )
+            }
+
+            return resolve({
+                message: constants.apiResponses.LINK_IS_EXPIRED,
+                result: []
+            });
+        }
+
+        let detailFromLink;
+
+        if(solutionData[0].type == constants.common.OBSERVATION){
+            detailFromLink = await assessmentService.getObservationDetailByLink(link, requestingUserAuthToken, bodyData);
+        }
+
+        if(solutionData[0].type == constants.common.SURVEY){
+            detailFromLink = await assessmentService.getSurveyDetailByLink(link, requestingUserAuthToken, bodyData);
+        }
+
+        if(solutionData[0].type == constants.common.IMPROVEMENT_PROJECT){
+            detailFromLink = await improvementProjectService.getProjectDetailByLink(solutionData[0]._id, requestingUserAuthToken, bodyData);
+        }
+
+        if(!detailFromLink || !detailFromLink.data){
+          return resolve(detailFromLink)
+        }
+
+        return resolve({
+            success : detailFromLink.status ? detailFromLink.status : false,
+            message: detailFromLink.message ? detailFromLink.message : "",
+            result: detailFromLink.data ? detailFromLink.data : ""
+          });
+
+      } catch(error) {
+        return resolve({
+          success : false,
+          status : error.status ? 
+          error.status : httpStatusCode['internal_server_error'].status,
+          message : error.message
+        })
+      }
+    })
+   }
+
 
 };
 

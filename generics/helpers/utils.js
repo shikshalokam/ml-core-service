@@ -7,6 +7,7 @@
 
 // Dependencies
 const {validate : uuidValidate,v4 : uuidV4} = require('uuid');
+const md5 = require("md5");
 
  /**
   * convert string to camelCaseToTitleCase.
@@ -213,6 +214,31 @@ function convertStringToBoolean(stringData) {
   return stringToBoolean;
 }
 
+/**
+  * md5 hash
+  * @function
+  * @name md5Hash
+  * @returns {String} returns uuid.  
+*/
+
+function md5Hash(value) {
+  return md5(value);
+}
+
+function generateLink(appsPortalBaseUrl,appName, solutionLink, type) {
+
+  let link;
+  if(type == constants.common.OBSERVATION){
+    link = appsPortalBaseUrl + appName + constants.common.CREATE_OBSERVATION + solutionLink;
+  }else if(type == constants.common.SURVEY){
+    link = appsPortalBaseUrl + appName + constants.common.TAKE_SURVEY + solutionLink;
+  }else{
+    link = appsPortalBaseUrl + appName + constants.common.CREATE_PROJECT + solutionLink;
+  }
+  
+  return link;
+}
+
 module.exports = {
   camelCaseToTitleCase : camelCaseToTitleCase,
   lowerCase : lowerCase,
@@ -226,5 +252,7 @@ module.exports = {
   epochTime : epochTime,
   valueParser : valueParser,
   checkValidUUID : checkValidUUID,
-  convertStringToBoolean : convertStringToBoolean
+  convertStringToBoolean : convertStringToBoolean,
+  md5Hash : md5Hash,
+  generateLink : generateLink
 };

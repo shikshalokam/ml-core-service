@@ -870,4 +870,142 @@ module.exports = class Solutions extends Abstract {
       })
     }
 
+  /**
+  * @api {get} /kendra/api/v1/solutions/getLink/:solutionId?appName=appName
+  * @apiVersion 1.0.0
+  * @apiName Get link by solution id
+  * @apiGroup Solutions
+  * @apiSampleRequest /kendra/api/v1/solutions/getLink/5fa28620b6bd9b757dc4e932?samiksha
+  * @apiHeader {String} X-authenticated-user-token Authenticity token  
+  * @apiUse successBody
+  * @apiUse errorBody
+  * @apiParamExample {json} Response:
+  * {
+    "message": "Solution Link generated successfully",
+    "status": 200,
+    "result": "https://apps.shikshalokam.org/samiksha/create-observation/38cd93bdb87489c3890fe0ab00e7d406"
+    }
+  */
+
+   /**
+   * Get link by solution id.
+   * @method
+   * @name getLink
+   * @param {Object} req - requested data.
+   * @param {String} req.params._id - solution Id
+   * @param {String} req.query.appName - app Name
+   * @returns {Array}
+   */
+
+    async getLink(req) {
+      return new Promise(async (resolve, reject) => {
+        try {
+  
+          let solutionData = await solutionsHelper.getLink(
+            req.params._id,
+            req.query.appName
+          );
+  
+          return resolve(solutionData);
+
+        }
+        catch (error) {
+          reject({
+            status: error.status || httpStatusCode.internal_server_error.status,
+            message: error.message || httpStatusCode.internal_server_error.message,
+            errorObject: error
+          })
+        }
+      })
+    }
+
+  /**
+  * @api {post} /kendra/api/v1/solutions/getDetailsByLink/:link
+  * @apiVersion 1.0.0
+  * @apiName Get resource shareable link
+  * @apiGroup Solutions
+  * @apiSampleRequest /kendra/api/v1/solutions/getDetailsByLink/4feefb622c5b5ea5d3f8f0d9db2a86af
+  * @apiHeader {String} X-authenticated-user-token Authenticity token  
+  * @apiUse successBody
+  * @apiUse errorBody
+  * @apiParamExample {json} Request-Body:
+  * {
+      "role" : "HM",
+      "state" : "236f5cff-c9af-4366-b0b6-253a1789766a",
+      "district" : "1dcbc362-ec4c-4559-9081-e0c2864c2931",
+      "school" : "c5726207-4f9f-4f45-91f1-3e9e8e84d824"
+    }
+  * @apiParamExample {json} Response:
+    {
+        "message": "Observation solution link verified successfully",
+        "status": 200,
+        "result": [
+            {
+                "_id": "5f6853f293734140ccce90cf",
+                "entities": [
+                    "5f636fa2916c13367d8ff835"
+                ],
+                "createdFor": [],
+                "rootOrganisations": [],
+                "isAPrivateProgram": false,
+                "deleted": false,
+                "status": "published",
+                "solutionId": "5f64651f916c13367d8ff83f",
+                "solutionExternalId": "PRIYANKA-3-FRAMWORK-OBSERVATION-1",
+                "programId": "5f634e31577d2ce1ed942c65",
+                "programExternalId": "MY-ASSESSMENT-PROGRAM2",
+                "frameworkId": "5f6349c4577d2ce1ed942a56",
+                "frameworkExternalId": "PRIYANKA-3-FRAMWORK",
+                "entityTypeId": "5d15a959e9185967a6d5e8a6",
+                "entityType": "school",
+                "createdBy": "01c04166-a65e-4e92-a87b-a9e4194e771d",
+                "startDate": "2020-09-21T07:19:14.618Z",
+                "endDate": "2021-09-21T07:19:14.618Z",
+                "name": "Priyanka Observation solution",
+                "description": "Priyanka Observation description",
+                "updatedAt": "2020-09-21T07:19:14.648Z",
+                "createdAt": "2020-09-21T07:19:14.648Z",
+                "__v": 0,
+                "link": "a325411f49158bc21b7f08d33aad5c02"
+            }
+        ]
+    }
+    */
+
+   /**
+   * Get Details By solution link
+   * @method
+   * @name getDetailsByLink
+   * @param {String} req.params._id - link
+   * @param {String} requestingUserAuthToken - Requesting user auth token.
+   * @param {Object} bodyData - request body data.
+   * @returns {Object} data.
+   */
+
+    async getDetailsByLink(req) {
+      return new Promise(async (resolve, reject) => {
+        try {
+  
+          let solutionData = await solutionsHelper.getDetailsByLink(
+            req.params._id,
+            req.userDetails.userToken,
+            req.userDetails.userId,
+            req.body
+          );
+  
+          return resolve(solutionData);
+
+        }
+        catch (error) {
+          reject({
+            status: error.status || httpStatusCode.internal_server_error.status,
+            message: error.message || httpStatusCode.internal_server_error.message,
+            errorObject: error
+          })
+        }
+      })
+    }
+
+
+
 }

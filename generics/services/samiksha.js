@@ -131,7 +131,139 @@ var assignedSurveys = function ( token,search = "",filter = "" ) {
 
 }
 
+/**
+  * Get observation detail by link.
+  * @function
+  * @name getObservationDetailByLink
+  * @param {String} token - logged in user token.
+  * @param {String} link - link
+  * @param {Object} bodyData - bodyData
+  * @returns {Promise} returns a promise.
+*/
+
+var getObservationDetailByLink = function ( link, token, bodyData = "" ) {
+
+    let getObservationDetailByLinkUrl = 
+    process.env.ML_SURVEY_SERVICE_URL + 
+    constants.endpoints.GET_OBSERVATION_DETAILS_BY_LINK + "/" + link;
+
+    return new Promise((resolve, reject) => {
+        try {
+
+            const assessmentCallback = function (err, data) {
+
+                let result = {
+                    success : true,
+                    message: "",
+                    status:""
+                };
+
+                if (err) {
+                    result.success = false;
+                } else {
+                    let response = data.body
+                    if( response.status === httpStatusCode['ok'].status ) {
+                        result["data"] = response.result;
+                    } else {
+                        result.success = false;  
+                    }
+
+                    result.message = response.message;
+                    result.status = response.status;
+                }
+
+                return resolve(result);
+            }
+
+            let options = {
+                headers : {
+                    "content-type": "application/json",
+                    "x-authenticated-user-token" : token
+                }
+            };
+
+            if( bodyData !== "" ) {
+                options.json = bodyData
+            } 
+
+            request.post(getObservationDetailByLinkUrl, options, assessmentCallback);
+
+        } catch (error) {
+            return reject(error);
+        }
+    })
+
+}
+
+/**
+  * Get survey detail by link.
+  * @function
+  * @name getSurveyDetailByLink
+  * @param {String} token - logged in user token.
+  * @param {String} link - link
+  * @param {Object} bodyData - bodyData
+  * @returns {Promise} returns a promise.
+*/
+
+var getSurveyDetailByLink = function ( link, token, bodyData = "" ) {
+
+    let getSurveyDetailByLinkUrl = 
+    process.env.ML_SURVEY_SERVICE_URL + 
+    constants.endpoints.GET_SURVEY_DETAILS_BY_LINK + "/" + link;
+
+    return new Promise((resolve, reject) => {
+        try {
+
+            const assessmentCallback = function (err, data) {
+
+                let result = {
+                    success : true,
+                    message: "",
+                    status:""
+                };
+
+                if (err) {
+                    result.success = false;
+                } else {
+
+                    let response = data.body;
+                    
+                    if( response.status === httpStatusCode['ok'].status ) {
+                        result["data"] = response.result;
+                    } else {
+                        result.success = false;
+                    }
+
+                    result.message = response.message;
+                    result.status = response.status;
+                }
+
+                return resolve(result);
+            }
+
+            let options = {
+                headers : {
+                    "content-type": "application/json",
+                    "x-authenticated-user-token" : token
+                }
+            };
+
+            if( bodyData !== "" ) {
+                options.json = bodyData
+            } 
+
+            request.post(getSurveyDetailByLinkUrl, options, assessmentCallback);
+
+        } catch (error) {
+            return reject(error);
+        }
+    })
+
+}
+
 module.exports = {
     assignedObservations : assignedObservations,
-    assignedSurveys : assignedSurveys
+    assignedSurveys : assignedSurveys,
+    getObservationDetailByLink : getObservationDetailByLink,
+    getSurveyDetailByLink : getSurveyDetailByLink
 };
