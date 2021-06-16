@@ -1,3 +1,2 @@
 # ml-core-service
-Centralised Service to support other Services
-
+Centralised Service to support other Services.
