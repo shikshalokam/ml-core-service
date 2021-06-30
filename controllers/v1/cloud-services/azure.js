@@ -28,8 +28,6 @@ module.exports = class Azure {
      * @apiSuccess {String} result Data
      */
 
-    constructor() { }
-
     static get name() {
         return "azure";
     }

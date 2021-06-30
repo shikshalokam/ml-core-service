@@ -171,7 +171,7 @@ module.exports = class FilesHelper {
 
         let cloudStorage = process.env.CLOUD_STORAGE
 
-        if (storageName !== '') {
+        if (storageName != '') {
           cloudStorage = storageName
         }
 

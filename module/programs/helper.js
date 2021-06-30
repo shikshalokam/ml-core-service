@@ -45,7 +45,7 @@ module.exports = class ProgramsHelper {
                 });
             }
 
-            if( skipFields !== "none" ) {
+            if( skipFields != "none" ) {
               skipFields.forEach(field=>{
                 projection[field] = 0;
               })

@@ -81,7 +81,6 @@ module.exports = function (app) {
             message: result.message,
             status: result.status ? result.status : httpStatusCode["ok"].status,
             result: result.data,
-            result: result.result,
             additionalDetails: result.additionalDetails,
             pagination: result.pagination,
             totalCount: result.totalCount,

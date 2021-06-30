@@ -48,7 +48,7 @@ module.exports = class SolutionsHelper {
                 });
             }
 
-            if( skipFields !== "none" ) {
+            if( skipFields != "none" ) {
               skipFields.forEach(field=>{
                 projection[field] = 0;
               })

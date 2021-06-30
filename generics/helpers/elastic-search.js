@@ -743,10 +743,7 @@ var getLanguageData = function (languageId = "") {
 
       if (languageId == "") throw new Error("Invalid language id.");
 
-      const languageDocument = await getData(languageId, {
-        index: COMMON_LANGUAGE_INDEX,
-        type: COMMON_LANGUGAE_TYPE
-      });
+      const languageDocument = await getData(languageId);
 
       return resolve(languageDocument);
 

@@ -28,8 +28,6 @@ module.exports = class Gcp {
      * @apiSuccess {String} result Data
      */
 
-    constructor() { }
-
     static get name() {
         return "gcp";
     }

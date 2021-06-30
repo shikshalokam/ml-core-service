@@ -26,12 +26,20 @@ var databaseConfiguration = function () {
   mongoose.set('useCreateIndex', true);
   mongoose.set('useFindAndModify', false);
   mongoose.set('useUnifiedTopology', true);
+
+  let options = {useNewUrlParser: true};
+
+  if (process.env.REPLICA_SET_NAME && process.env.REPLICA_SET_NAME !== "") {
+    options["replset"] = {rs_name: process.env.REPLICA_SET_NAME };
+
+    if (process.env.REPLICA_SET_READ_PREFERENCE && process.env.REPLICA_SET_READ_PREFERENCE !== "") {
+      options["replset"]["readPreference"] = process.env.readPreference;
+    }
+  }
   
   var db = mongoose.createConnection(
     process.env.MONGODB_URL,
-    {
-      useNewUrlParser: true
-    }
+    options
   );
 
   db.on("error", console.error.bind(console, "connection error:"));
@@ -39,11 +47,12 @@ var databaseConfiguration = function () {
     console.log("Connected to database!");
   });
 
+  let schema = {};
   var createModel = function (opts) {
     if (typeof opts.schema.__proto__.instanceOfSchema === "undefined") {
-      var schema = mongoose.Schema(opts.schema, opts.options);
+      schema = mongoose.Schema(opts.schema, opts.options);
     } else {
-      var schema = opts.schema;
+      schema = opts.schema;
     }
 
     schema.plugin(mongooseTimeStamp, {
@@ -66,8 +75,7 @@ var databaseConfiguration = function () {
       }
     }
     
-    var model = db.model(opts.name, schema, opts.name);
-    return model;
+    return db.model(opts.name, schema, opts.name);
   };
 
   return {
