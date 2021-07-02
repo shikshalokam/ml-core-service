@@ -1527,13 +1527,13 @@ module.exports = class SolutionsHelper {
    * @returns {Object} - Details of the solution.
    */
 
-   static getLink( solutionId, appName ) {
+   static getLink( solutionId, appName, userId ) {
     return new Promise(async (resolve, reject) => {
       try {
 
         let solutionData = await this.solutionDocuments({
                                 _id : solutionId,
-                                isReusable : false,
+                                isReusable : false
                                 isAPrivateProgram: false
                                 },[
                                     "link","type","author"
@@ -1558,12 +1558,10 @@ module.exports = class SolutionsHelper {
 
           let updateLink = await gen.utils.md5Hash(solutionData[0]._id + "###" + solutionData[0].author);
 
-          let updateSolution = await this.updateSolutionDocument
-                (
-                    { _id : solutionId },
-                    { $set : { link : updateLink } }
-                );
+          let updateObj =  { link : updateLink };
 
+          let updateSolution = await this.update(solutionId,updateObj, userId );
+  
           link = await gen.utils.generateLink(appsPortalBaseUrl, appName, updateLink, solutionData[0].type);
 
         } else {
@@ -1637,11 +1635,10 @@ module.exports = class SolutionsHelper {
 
         if (solutionData[0].endDate && new Date() > new Date(solutionData[0].endDate)) {
             if (solutionData[0].status == constants.common.ACTIVE) {
-                await this.updateSolutionDocument
-                (
-                    { link : link },
-                    { $set : { status: constants.common.IN_ACTIVE } }
-                )
+
+                let updateObj =  { status: constants.common.IN_ACTIVE };
+
+                let updateSolution = await this.update(solutionData[0]._id, updateObj, userId );
             }
 
             return resolve({
@@ -1661,7 +1658,7 @@ module.exports = class SolutionsHelper {
         }
 
         if(solutionData[0].type == constants.common.IMPROVEMENT_PROJECT){
-            detailFromLink = await improvementProjectService.getProjectDetailByLink(solutionData[0]._id, requestingUserAuthToken, bodyData);
+            detailFromLink = await improvementProjectService.getDetail(solutionData[0]._id, requestingUserAuthToken, bodyData);
         }
 
         if(!detailFromLink || !detailFromLink.data){

@@ -903,7 +903,8 @@ module.exports = class Solutions extends Abstract {
   
           let solutionData = await solutionsHelper.getLink(
             req.params._id,
-            req.query.appName
+            req.query.appName,
+            req.userDetails.userId
           );
   
           return resolve(solutionData);
@@ -922,7 +923,7 @@ module.exports = class Solutions extends Abstract {
   /**
   * @api {post} /kendra/api/v1/solutions/getDetailsByLink/:link
   * @apiVersion 1.0.0
-  * @apiName Get resource shareable link
+  * @apiName Get Details From Link
   * @apiGroup Solutions
   * @apiSampleRequest /kendra/api/v1/solutions/getDetailsByLink/4feefb622c5b5ea5d3f8f0d9db2a86af
   * @apiHeader {String} X-authenticated-user-token Authenticity token  

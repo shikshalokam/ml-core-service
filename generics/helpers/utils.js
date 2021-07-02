@@ -225,13 +225,19 @@ function md5Hash(value) {
   return md5(value);
 }
 
+/**
+  * Generate Link
+  * @function
+  * @name generateLink
+  * @returns {String} returns link.  
+*/
 function generateLink(appsPortalBaseUrl,appName, solutionLink, type) {
 
   let link;
   if(type == constants.common.OBSERVATION){
     link = appsPortalBaseUrl + appName + constants.common.CREATE_OBSERVATION + solutionLink;
   }else if(type == constants.common.SURVEY){
-    link = appsPortalBaseUrl + appName + constants.common.TAKE_SURVEY + solutionLink;
+    link = appsPortalBaseUrl + appName + constants.common.CREATE_SURVEY + solutionLink;
   }else{
     link = appsPortalBaseUrl + appName + constants.common.CREATE_PROJECT + solutionLink;
   }

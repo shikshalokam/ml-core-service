@@ -133,14 +133,14 @@ var importedProjects = function ( token,programId = "" ) {
 /**
   * Get project detail by link.
   * @function
-  * @name getProjectDetailByLink
+  * @name getDetail
   * @param {String} token - logged in user token.
   * @param {String} link - link
   * @param {Object} bodyData - bodyData
   * @returns {Promise} returns a promise.
 */
 
-var getProjectDetailByLink = function ( solutionId, token, bodyData = "" ) {
+var getDetail = function ( solutionId, token, bodyData = "" ) {
 
     let getProjectDetailByLinkUrl = 
     process.env.ML_PROJECT_SERVICE_URL + 
@@ -200,5 +200,5 @@ var getProjectDetailByLink = function ( solutionId, token, bodyData = "" ) {
 module.exports = {
     assignedProjects : assignedProjects,
     importedProjects : importedProjects,
-    getProjectDetailByLink : getProjectDetailByLink
+    getDetail : getDetail
 }

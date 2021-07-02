@@ -58,6 +58,6 @@ module.exports = {
   "DEFAULT_PAGE_NO" : 1,
   "DHITI" : "dhiti",
   "CREATE_OBSERVATION": "/create-observation/",
-  "TAKE_SURVEY" : "/take-survey/",
+  "CREATE_SURVEY" : "/create-survey/",
   "CREATE_PROJECT" : "/create-project/"
 };
