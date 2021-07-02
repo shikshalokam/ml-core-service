@@ -167,4 +167,13 @@ module.exports = {
   "USER_PLATFORM_ROLES": "List of user platform roles" ,
   "USER_PLATFORM_ROLE_NOT_FOUND": "Not found user platform role",
   "PLATFORM_USER_PROGRAMS": "List of programs for platform user",
+  "LINK_GENERATED": "Link generated successfully",
+  "LINK_REQUIRED_CHECK": "Link is required",
+  "REQUIRED_USER_AUTH_TOKEN": "User auth token is required",
+  "INVALID_LINK": "Invalid link",
+  "LINK_IS_EXPIRED": "Link is expired",
+  "UPDATE_QUERY_REQUIRED": "Update query is required",
+  "UPDATE_OBJECT_REQUIRED": "Update object is required",
+  "FAILED_TO_UPDATE": "Failed to update the document",
+  "UPDATED_DOCUMENT_SUCCESSFULLY": "Document updated successfully",
 };

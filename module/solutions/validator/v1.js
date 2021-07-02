@@ -49,7 +49,13 @@ module.exports = (req) => {
         },
         targetedEntity : function () {
             req.checkParams("_id").exists().withMessage("required solution id");
-        }
+        },
+        getLink : function () {
+            req.checkParams("_id").exists().withMessage("required solution id");
+        },
+        getDetailsByLink : function () {
+            req.checkParams('_id').exists().withMessage("required link")
+        },
     }
 
     if (solutionsValidator[req.params.method]) {

@@ -22,8 +22,11 @@ module.exports = {
     SUNBIRD_UPLOAD_CONTENT : "/content/v1/upload",
     SUNBIRD_ORGANISATION_LISTS : "/organisations/list",
     SUNBIRD_USER_SEARCH :"/users/search",
-    GET_USER_ASSIGNED_OBSERVATION : "/observations/userAssigned",
+    GET_USER_ASSIGNED_OBSERVATION : "/v1/observations/userAssigned",
     GET_USER_ASSIGNED_SURVEY : "/surveys/userAssigned",
     GET_USER_ASSIGNED_PROJECT : "/userProjects/userAssigned",
-    IMPORTED_PROJECT : "/userProjects/importedProjects"
+    IMPORTED_PROJECT : "/userProjects/importedProjects",
+    GET_OBSERVATION_DETAILS_BY_LINK : "/v1/solutions/verifyLink",
+    GET_SURVEY_DETAILS_BY_LINK : "/v1/surveys/getDetailsByLink",
+    GET_PROJECT_DETAILS_BY_LINK : "/v1/userProjects/details"
 }
