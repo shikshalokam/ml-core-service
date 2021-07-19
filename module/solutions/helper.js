@@ -1533,7 +1533,7 @@ module.exports = class SolutionsHelper {
 
         let solutionData = await this.solutionDocuments({
                                 _id : solutionId,
-                                isReusable : false
+                                isReusable : false,
                                 isAPrivateProgram: false
                                 },[
                                     "link","type","author"
