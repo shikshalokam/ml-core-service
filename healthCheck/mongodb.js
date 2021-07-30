@@ -17,6 +17,7 @@ function health_check() {
             return resolve(false)
         });
         db.once("open", function() {
+            // Just for comment
             db.close(function(){});
             return resolve(true);    
         });
