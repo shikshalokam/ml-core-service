@@ -5,6 +5,7 @@ node('build-slave') {
         String ANSI_BOLD = "\u001B[1m"
         String ANSI_RED = "\u001B[31m"
         String ANSI_YELLOW = "\u001B[33m"
+
         ansiColor('xterm') {
             timestamps {
                 stage('Checkout') {
@@ -19,8 +20,8 @@ node('build-slave') {
                 commit_hash = sh(script: 'git rev-parse --short HEAD', returnStdout: true).trim()
                 build_tag = sh(script: "echo " + params.github_release_tag.split('/')[-1] + "_" + commit_hash + "_" + env.BUILD_NUMBER, returnStdout: true).trim()
                 echo "build_tag: " + build_tag
-            }
-            stage('Build') {
+
+                stage('Build') {
                    env.NODE_ENV = "build"
                    print "Environment will be : ${env.NODE_ENV}"
                    sh('git submodule update --init')
@@ -32,6 +33,7 @@ node('build-slave') {
                 stage('ArchiveArtifacts') {
                 archiveArtifacts "metadata.json"
                 currentBuild.description = "${build_tag}"
+               }
             }
         }
     }
