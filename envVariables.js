@@ -131,6 +131,10 @@ let enviromentVariables = {
   "USER_SERVICE_URL" : {
     "message" : "Sunbird environment base url",
     "optional" : false
+  },
+  "CSV_REPORTS_PATH" : {
+    "message" : "CSV Report Path",
+    "optional" : false
   }
 }
 
