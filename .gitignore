@@ -60,6 +60,9 @@ typings/
 # Ignore all credentials gcp,fcm
 config/credentials/*
 
+# Ignore public directory
+public/*
+
 # next.js build output
 .next
 
