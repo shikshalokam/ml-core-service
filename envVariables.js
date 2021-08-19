@@ -134,7 +134,8 @@ let enviromentVariables = {
   },
   "CSV_REPORTS_PATH" : {
     "message" : "CSV Report Path",
-    "optional" : true
+    "optional" : true,
+    "default": "public/reports"
   }
 }
 
