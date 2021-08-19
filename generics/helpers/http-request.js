@@ -20,7 +20,6 @@ var convert = require('xml-js');
     * @class
 */
 var Request = class Request {
-    constructor() {}
 
     /**
       * 
