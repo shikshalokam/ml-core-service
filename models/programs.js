@@ -12,17 +12,12 @@ module.exports = {
       language: [String],
       keywords: [String],
       concepts: ["json"],
-      createdFor: [String],
       imageCompression: {},
       components: ["json"],
       components: ["json"],
       isAPrivateProgram : {
         default : false,
         type : Boolean
-      },
-      rootOrganisations : {
-        type : [String],
-        default : []
       },
       scope : {
         entityType : String,
