@@ -10,8 +10,6 @@ module.exports = (req) => {
     let programsValidator = {
 
         create : function () {
-            req.checkBody('createdFor').exists().withMessage("required organisation created for id");
-            req.checkBody('rootOrganisations').exists().withMessage("required root organisations id");
             req.checkBody('externalId').exists().withMessage("required program externalId");
             req.checkBody('name').exists().withMessage("required program name");
         },

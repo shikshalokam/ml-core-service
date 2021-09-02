@@ -100,10 +100,6 @@ module.exports = class Programs extends Abstract {
       ],
       "keywords" : [],
       "concepts" : [],
-      "createdFor" : [ 
-          "0126427034137395203", 
-          "0124487522476933120"
-      ],
       "userId":"a082787f-8f8f-42f2-a706-35457ca6f1fd",
       "imageCompression" : {
           "quality" : 10
@@ -184,10 +180,6 @@ module.exports = class Programs extends Abstract {
       ],
       "keywords" : [],
       "concepts" : [],
-      "createdFor" : [ 
-          "0126427034137395203", 
-          "0124487522476933120"
-      ],
       "userId":"a082787f-8f8f-42f2-a706-35457ca6f1fd",
       "imageCompression" : {
           "quality" : 10

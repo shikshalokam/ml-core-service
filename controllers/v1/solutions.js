@@ -23,7 +23,6 @@ module.exports = class Solutions extends Abstract {
     * "language" : [],
     * "keywords" : [],
     * "concepts" : [],
-    * "createdFor" : ["01305447637218918413"],
     "themes" : [],
     "flattenedThemes" : [],
     "entities" : [ 
@@ -34,9 +33,6 @@ module.exports = class Solutions extends Abstract {
     "enableQuestionReadOut" : false,
     "allowMultipleAssessemts" : false,
     "isDeleted" : false,
-    "rootOrganisations" : [ 
-        "01305447637218918413"
-    ],
     "programExternalId" : "AMAN_TEST_123-1607937244986",
     "entityType" : "school",
     "type" : "improvementProject",
@@ -571,7 +567,6 @@ module.exports = class Solutions extends Abstract {
             " Courses "
         ],
         "concepts": [],
-        "createdFor": [],
         "themes": [
             {
                 "type": "theme",
@@ -600,7 +595,6 @@ module.exports = class Solutions extends Abstract {
         "isAPrivateProgram": false,
         "allowMultipleAssessemts": false,
         "isDeleted": false,
-        "rootOrganisations": [],
         "deleted": false,
         "externalId": "99199aec-66b8-11eb-b81d-a08cfd79f8b7-OBSERVATION-TEMPLATE",
         "name": "Enrollment challenges in DIKSHA Courses",

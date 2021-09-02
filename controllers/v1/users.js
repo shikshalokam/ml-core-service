@@ -233,10 +233,8 @@ module.exports = class Users extends Abstract {
                 "keywords 2"
             ],
             "concepts": [],
-            "createdFor": [],
             "components": [],
             "isAPrivateProgram": true,
-            "rootOrganisations": [],
             "_id": "5f44b08cdbe917732246149f",
             "deleted": false,
             "externalId": "Test project program-1598337164794",
@@ -255,7 +253,6 @@ module.exports = class Users extends Abstract {
             "language": [],
             "keywords": [],
             "concepts": [],
-            "createdFor": [],
             "themes": [],
             "flattenedThemes": [],
             "entities": [],
@@ -266,7 +263,6 @@ module.exports = class Users extends Abstract {
             "isAPrivateProgram": false,
             "allowMultipleAssessemts": false,
             "isDeleted": false,
-            "rootOrganisations": [],
             "_id": "5f44b08cdbe91773224614a0",
             "deleted": false,
             "name": "Test project solution",
@@ -377,72 +373,6 @@ module.exports = class Users extends Abstract {
                 );
 
                 resolve(entitiesMappingData);
-
-            } catch (error) {
-
-                return reject({
-                    status: 
-                    error.status || 
-                    httpStatusCode["internal_server_error"].status,
-
-                    message: 
-                    error.message || 
-                    httpStatusCode["internal_server_error"].message
-                })
-
-            }
-
-
-        })
-    }
-
-     /**
-     * @api {get} /kendra/api/v1/users/getUserOrganisationsAndRootOrganisations
-     * Get organisation and root organisation
-     * @apiVersion 1.0.0
-     * @apiGroup Users
-     * @apiHeader {String} X-authenticated-user-token Authenticity token
-     * @apiSampleRequest /kendra/api/v1/users/getUserOrganisationsAndRootOrganisations
-     * @apiUse successBody
-     * @apiUse errorBody
-     * @apiParamExample {json} Response:
-     * {
-    "message": "User organisations fetched successfully",
-    "status": 200,
-    "result": {
-        "createdFor": [
-            "01305447637218918413"
-        ],
-        "rootOrganisations": [
-            "01305447637218918413"
-        ]
-    }
-    }
-    */
-
-    /**
-      * Organisations and root organisations.
-      * @method
-      * @name getUserOrganisationsAndRootOrganisations
-      * @param  {Request} req request body.
-      * @returns {JSON} Organisations and root organisations of user.
-     */
-
-    getUserOrganisationsAndRootOrganisations(req) {
-
-        return new Promise(async (resolve, reject) => {
-
-            try {
-
-                const userOrganisations = 
-                await usersHelper.getUserOrganisationsAndRootOrganisations(
-                    (req.params._id && req.params._id != "") ? 
-                    req.params._id : 
-                    req.userDetails.id,
-                    req.userDetails.userToken
-                );
-
-                resolve(userOrganisations);
 
             } catch (error) {
 
