@@ -140,15 +140,12 @@ module.exports = class UsersHelper {
     * @returns {Array} - Created user program and solution.
     */
 
-    static createProgramAndSolution(userId, data, userToken) {
+    static createProgramAndSolution(userId, data) {
         return new Promise(async (resolve, reject) => {
             try {
 
                 let userPrivateProgram = {};
                 let dateFormat = gen.utils.epochTime();
-
-                const organisationAndRootOrganisations =
-                    await this.getUserOrganisationsAndRootOrganisations(userId, userToken);
 
                 if (data.programId && data.programId !== "") {
 
@@ -185,9 +182,6 @@ module.exports = class UsersHelper {
                                 data.programName,
                         userId: userId
                     }
-
-                    programData.createdFor = organisationAndRootOrganisations.result.createdFor;
-                    programData.rootOrganisations = organisationAndRootOrganisations.result.rootOrganisations;
 
                     userPrivateProgram =
                         await programsHelper.create(
@@ -278,8 +272,6 @@ module.exports = class UsersHelper {
                         solutionDataToBeUpdated["description"] = userPrivateProgram.programDescription;
                     }
 
-                    solutionDataToBeUpdated.createdFor = organisationAndRootOrganisations.result.createdFor;
-                    solutionDataToBeUpdated.rootOrganisations = organisationAndRootOrganisations.result.rootOrganisations;
                     solutionDataToBeUpdated.updatedBy = userId;
 
                     solution = await solutionsHelper.create(solutionDataToBeUpdated);
@@ -305,49 +297,6 @@ module.exports = class UsersHelper {
 
             } catch (error) {
                 console.log(error);
-                return reject(error);
-            }
-        })
-    }
-
-    /**
-    * Get user organisations and root organisations.
-    * @method
-    * @name getUserOrganisationsAndRootOrganisations
-    * @param {string} userId - logged in user Id.
-    * @param {object} userToken - Logged in user token.
-    * @returns {Array} - Get user organisations and root organisations.
-    */
-
-    static getUserOrganisationsAndRootOrganisations(userId, userToken) {
-        return new Promise(async (resolve, reject) => {
-            try {
-
-                const userProfileData =
-                    await userService.profile(userToken,userId);
-
-                if (!userProfileData.status) {
-                    return resolve({message: userProfileData.message});
-                }
-
-                const createdFor =
-                    userProfileData.organisations.map(
-                        organisation => {
-                            return organisation.organisationId
-                        }
-                    );
-
-                const rootOrganisations = [userProfileData.rootOrgId];
-
-                return resolve({
-                    message: constants.apiResponses.USER_ORGANISATIONS_FETCHED,
-                    result: {
-                        createdFor: createdFor,
-                        rootOrganisations: rootOrganisations
-                    }
-                });
-
-            } catch (error) {
                 return reject(error);
             }
         })
