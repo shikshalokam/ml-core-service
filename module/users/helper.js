@@ -11,7 +11,6 @@ const solutionsHelper = require(MODULES_BASE_PATH + "/solutions/helper");
 const userRolesHelper = require(MODULES_BASE_PATH + "/user-roles/helper");
 const entitiesHelper = require(MODULES_BASE_PATH + "/entities/helper");
 const improvementProjectService = require(ROOT_PATH + "/generics/services/improvement-project");
-const userService = require(ROOT_PATH + "/generics/services/users");
 
 
 /**
