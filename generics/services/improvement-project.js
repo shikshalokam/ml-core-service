@@ -7,7 +7,7 @@
 
 //dependencies
 const request = require('request');
-process.env.ML_PROJECT_SERVICE_URL = "http://ml-projects-service:3000"
+process.env.ML_PROJECT_SERVICE_URL = "http://ml-project-service:3000"
 
 /**
   * List of user assigned projects.
