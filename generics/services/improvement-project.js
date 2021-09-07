@@ -7,7 +7,7 @@
 
 //dependencies
 const request = require('request');
-process.env.ML_PROJECT_SERVICE_URL = "http://ml-project-service:3000"
+process.env.ML_PROJECT_SERVICE_URL = "http://ml-projects-service:3000"
 
 /**
   * List of user assigned projects.
@@ -29,6 +29,8 @@ var assignedProjects = function ( token,search = "",filter = "" ) {
     if( filter !== "" ) {
         url = url + "&filter=" + filter;
     }
+
+    console.log("--- url is ----",url);
     
     return new Promise(async (resolve, reject) => {
         try {
@@ -41,9 +43,13 @@ var assignedProjects = function ( token,search = "",filter = "" ) {
 
                 if (err) {
                     result.success = false;
+                    console.log("--- error is ----",err);
                 } else {
                     
                     let response = JSON.parse(data.body);
+
+                    console.log("--- response is ----",response);
+
                     
                     if( response.status === httpStatusCode['ok'].status ) {
                         result["data"] = response.result;
