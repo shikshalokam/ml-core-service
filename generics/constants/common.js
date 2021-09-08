@@ -57,5 +57,6 @@ module.exports = {
   "DEFAULT_PAGE_SIZE" : 100,
   "DEFAULT_PAGE_NO" : 1,
   "DHITI" : "dhiti",
-  "DEFAULT_SURVEY_REMOVED_DAY" : 15
+  "DEFAULT_SURVEY_REMOVED_DAY" : 15,
+  "COURSE" : "course"
 };
