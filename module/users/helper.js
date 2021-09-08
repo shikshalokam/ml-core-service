@@ -443,6 +443,9 @@ module.exports = class UsersHelper {
                     mergedData.map( targetedData => {
                         delete targetedData.programId;
                         delete targetedData.programName;
+                        if( !targetedData.link ){
+                            targetedData.link = "";
+                        }
                         return targetedData;
                     });
                 }

@@ -82,6 +82,7 @@ module.exports = {
         type : String
       },
       criteriaLevelReport : Boolean,
-      license:Object
+      license:Object,
+      link: String
     }
   };

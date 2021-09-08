@@ -669,7 +669,8 @@ module.exports = class SolutionsHelper {
             "type",
             "language",
             "creator",
-            "endDate"
+            "endDate",
+            "link"
           ]  
         );
       
@@ -1333,7 +1334,9 @@ module.exports = class SolutionsHelper {
                     targetedSolution.solutionId = targetedSolution._id;
                     targetedSolution._id = "";
 
-                    if( solutionType !== constants.common.COURSE ) {
+                    if( solutionType == constants.common.COURSE ) {
+                      targetedSolution["link"] = targetedSolution.link ? targetedSolution.link : "";
+                    }else{
                       targetedSolution["creator"] = targetedSolution.creator ? targetedSolution.creator : "";
                     }
                     
