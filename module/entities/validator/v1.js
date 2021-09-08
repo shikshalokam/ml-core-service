@@ -6,12 +6,6 @@ module.exports = (req) => {
         immediateEntities : function () {
             req.checkParams('_id').exists().withMessage("required Entity id");
         },
-        details : function () {
-            req.checkParams('_id').exists().withMessage("required Entity id");
-        },
-        subEntitiesRoles : function() {
-            req.checkParams('_id').exists().withMessage("required Entity id");
-        },
         listByIds : function () {
             req.checkBody('entities').exists().withMessage("required Entity ids")
             .isArray().withMessage("entities should be array")

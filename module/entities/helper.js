@@ -511,44 +511,6 @@ module.exports = class EntitiesHelper {
   }
 
    /**
-   * Entity details information.
-   * @method 
-   * @name details
-   * @param {String} entityId - _id of entity.
-   * @return {Object} - consists of entity details information. 
-   */
-
-  static details( entityId ) {
-    return new Promise(async (resolve, reject) => {
-        try {
-
-            let entityDocument = await this.entityDocuments(
-                {
-                    _id : entityId
-                },
-                "all",
-                ["groups"]
-            );
-
-            if ( !entityDocument[0] ) {
-                return resolve({
-                    status : httpStatusCode.bad_request.status,
-                    message : constants.apiResponses.ENTITY_NOT_FOUND
-                })
-            }
-
-            resolve({
-                message : constants.apiResponses.ENTITY_INFORMATION_FETCHED,
-                result : entityDocument[0]
-            });
-
-        } catch (error) {
-            return reject(error);
-        }
-    })
-  }
-
-   /**
    * List of Entities
    * @method
    * @name list
@@ -577,78 +539,6 @@ module.exports = class EntitiesHelper {
         }
     });
   }
-
-  /** 
-   * List roles by entity type.
-   * @method
-   * @name subEntitiesRoles
-   * @param entityId - entity id.
-   * @returns {Object} List of roles by entity id.
-  */
-
-   static subEntitiesRoles( entityId ) {
-    return new Promise(async (resolve, reject) => {
-        try {
-
-             const entityDocuments = await this.entityDocuments({
-                 _id : entityId
-             },["childHierarchyPath","allowedRoles"]);
-
-             if( !entityDocuments.length > 0 ) {
-                 return resolve({
-                     message : constants.apiResponses.STATE_NOT_FOUND,
-                     result : []
-                 })
-             }
-
-             let queryObject = {};
-
-             if( entityDocuments[0].allowedRoles && entityDocuments[0].allowedRoles.length > 0 ) {
-                queryObject["code"] = {};
-                queryObject["code"]["$in"] = entityDocuments[0].allowedRoles;
-             }
-
-             let lengthOfQuery = Object.keys(queryObject).length;
-
-             if( !lengthOfQuery > 0 ) {
-
-                if (
-                    !entityDocuments[0].childHierarchyPath || 
-                    !entityDocuments[0].childHierarchyPath.length > 0
-                ) {
-                    return resolve({
-                        message : constants.apiResponses.SUB_ENTITY_NOT_FOUND,
-                        result : []
-                    });
-                }
-                
-                queryObject[ "entityTypes.entityType"] = {};
-                queryObject[ "entityTypes.entityType"]["$in"] =
-                entityDocuments[0].childHierarchyPath;
-             }
-            
-            const rolesData = await userRolesHelper.roleDocuments(
-                queryObject,["code","title"]
-            );
-
-            if( !rolesData.length > 0 ) {
-             return resolve({
-                 message : constants.apiResponses.USER_ROLES_NOT_FOUND,
-                 result : []
-             })
-            }
-
-            return resolve({
-                message : constants.apiResponses.USER_ROLES_FETCHED,
-                result : rolesData
-             });
-
-        } catch (error) {
-            return reject(error);
-        }
-    })
-
-}
 
      /** 
    * Sub entity type list.
