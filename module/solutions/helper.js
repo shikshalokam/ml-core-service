@@ -119,7 +119,15 @@ module.exports = class SolutionsHelper {
           solutionData.programName = programData[0].name;
           solutionData.programDescription = programData[0].description;
 
-          if( solutionData.type !== constants.common.COURSE ) {
+          if( solutionData.type == constants.common.COURSE ) {
+
+              if( !solutionData.link ) {
+                return resolve({
+                  status : httpStatusCode.bad_request.status,
+                  message : constants.apiResponses.COURSE_LINK_REQUIRED
+                });
+              }
+          } else {
 
               if( !solutionData.entityType ){
 
@@ -344,12 +352,12 @@ module.exports = class SolutionsHelper {
             }
           }
           
-          if(currentSolutionScope && currentSolutionScope.entities.length > 0 ){
+          if( currentSolutionScope && currentSolutionScope.entities.length > 0 ){
 
             let entitiesIds = currentSolutionScope.entities;
 
-            for(let eachEntity in entitiesIds){
-              if(entitiesIds[eachEntity].toString() == entitiesIds[eachEntity]){
+            for( let eachEntity in entitiesIds ) {
+              if( entitiesIds[eachEntity].toString() == entitiesIds[eachEntity] ) {
                 entitiesIds[eachEntity] = ObjectId(entitiesIds[eachEntity]);
               }
             }
@@ -1325,7 +1333,7 @@ module.exports = class SolutionsHelper {
 
           surveyReportPage = gen.utils.convertStringToBoolean(surveyReportPage);
 
-          if ( !surveyReportPage ||  solutionType == constants.common.COURSE) {
+          if ( !surveyReportPage || solutionType == constants.common.COURSE ) {
 
             targetedSolutions = 
             await this.forUserRoleAndLocation(
@@ -1348,10 +1356,7 @@ module.exports = class SolutionsHelper {
                     targetedSolution.solutionId = targetedSolution._id;
                     targetedSolution._id = "";
 
-                    if( solutionType === constants.common.COURSE ) {
-                      targetedSolution.link = targetedSolution.link ? targetedSolution.link : "";
-                    }else {
-                      delete targetedSolution.link; 
+                    if( solutionType !== constants.common.COURSE ) {
                       targetedSolution["creator"] = targetedSolution.creator ? targetedSolution.creator : "";
                     }
                     

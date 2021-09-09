@@ -167,5 +167,6 @@ module.exports = {
   "USER_PLATFORM_ROLES": "List of user platform roles" ,
   "USER_PLATFORM_ROLE_NOT_FOUND": "Not found user platform role",
   "PLATFORM_USER_PROGRAMS": "List of programs for platform user",
-  "ENTITY_TYPE_REQUIRED": "required entity type"
+  "ENTITY_TYPE_REQUIRED": "required entity type",
+  "COURSE_LINK_REQUIRED" : "Course link is required"
 };
