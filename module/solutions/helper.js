@@ -1348,9 +1348,10 @@ module.exports = class SolutionsHelper {
                     targetedSolution.solutionId = targetedSolution._id;
                     targetedSolution._id = "";
 
-                    if( solutionType == constants.common.COURSE ) {
-                      targetedSolution["link"] = targetedSolution.link ? targetedSolution.link : "";
-                    }else{
+                    if( solutionType === constants.common.COURSE ) {
+                      targetedSolution.link = targetedSolution.link ? targetedSolution.link : "";
+                    }else {
+                      delete targetedSolution.link; 
                       targetedSolution["creator"] = targetedSolution.creator ? targetedSolution.creator : "";
                     }
                     
