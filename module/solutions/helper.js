@@ -186,7 +186,6 @@ module.exports = class SolutionsHelper {
           });
 
           if( !solutionData.excludeScope && programData[0].scope ) {
-            
             let solutionScope = 
             await this.setScope(
               solutionData.programId,
@@ -268,7 +267,6 @@ module.exports = class SolutionsHelper {
             }
 
             if( scopeData.entities && scopeData.entities.length > 0 ) {
-              
               let entities = 
               await entitiesHelper.entityDocuments(
                 {
@@ -301,6 +299,7 @@ module.exports = class SolutionsHelper {
                   entityIds.push(ObjectId(entities[entity]._id));
                 }
               }
+
             } else {
               entityIds = entities.map(entity => {
                 return ObjectId(entity._id);
@@ -344,7 +343,22 @@ module.exports = class SolutionsHelper {
               }
             }
           }
+          
+          if(currentSolutionScope && currentSolutionScope.entities.length > 0 ){
 
+            let entitiesIds = currentSolutionScope.entities;
+
+            for(let eachEntity in entitiesIds){
+              if(entitiesIds[eachEntity].toString() == entitiesIds[eachEntity]){
+                entitiesIds[eachEntity] = ObjectId(entitiesIds[eachEntity]);
+              }
+            }
+
+            delete currentSolutionScope.entities;
+            currentSolutionScope["entities"] = entitiesIds;
+
+          }
+        
           let updateSolution = 
           await database.models.solutions.findOneAndUpdate(
             {
