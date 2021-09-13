@@ -11,7 +11,6 @@ module.exports = (req) => {
 
         create : function () {
             req.checkBody('programExternalId').exists().withMessage("required program externalId");
-            req.checkBody('entityType').exists().withMessage("required entity type");
             req.checkBody('externalId').exists().withMessage("required solution externalId");
             req.checkBody('name').exists().withMessage("required solution name");
             req.checkBody('type').exists().withMessage("required solution type");
