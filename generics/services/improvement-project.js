@@ -41,7 +41,7 @@ var assignedProjects = function ( token,search = "",filter = "" ) {
                 };
 
                 if (err) {
-                    console.log("error is",error);
+                    console.log("error is",err);
                     result.success = false;
                 } else {
                     
