@@ -28,6 +28,8 @@ var assignedProjects = function ( token,search = "",filter = "" ) {
     if( filter !== "" ) {
         url = url + "&filter=" + filter;
     }
+
+    console.log("url is",url);
     
     return new Promise(async (resolve, reject) => {
         try {
@@ -39,10 +41,12 @@ var assignedProjects = function ( token,search = "",filter = "" ) {
                 };
 
                 if (err) {
+                    console.log("error is",error);
                     result.success = false;
                 } else {
                     
                     let response = JSON.parse(data.body);
+                    console.log("response is",response);
                     
                     if( response.status === httpStatusCode['ok'].status ) {
                         result["data"] = response.result;

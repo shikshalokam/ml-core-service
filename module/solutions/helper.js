@@ -119,21 +119,41 @@ module.exports = class SolutionsHelper {
           solutionData.programName = programData[0].name;
           solutionData.programDescription = programData[0].description;
 
-          let entityTypeData = 
-          await entityTypesHelper.entityTypesDocument({
-            name : solutionData.entityType
-          },["_id"]);
+          if( solutionData.type == constants.common.COURSE ) {
 
-          if( !entityTypeData.length > 0 ) {
-            throw {
-              message : constants.apiResponses.ENTITY_TYPES_NOT_FOUND
-            }
+              if( !solutionData.link ) {
+                return resolve({
+                  status : httpStatusCode.bad_request.status,
+                  message : constants.apiResponses.COURSE_LINK_REQUIRED
+                });
+              }
+          } else {
+
+              if( !solutionData.entityType ){
+
+                return resolve({
+                  status : httpStatusCode.bad_request.status,
+                  message : constants.apiResponses.ENTITY_TYPE_REQUIRED
+                });
+                  
+              }
+
+              let entityTypeData = 
+              await entityTypesHelper.entityTypesDocument({
+                name : solutionData.entityType
+              },["_id"]);
+
+              if( !entityTypeData.length > 0 ) {
+                throw {
+                  message : constants.apiResponses.ENTITY_TYPES_NOT_FOUND
+                }
+              }
+
+              solutionData.entityTypeId = entityTypeData[0]._id; 
           }
 
-          solutionData.entityTypeId = entityTypeData[0]._id;
-
           if( solutionData.entities && solutionData.entities.length > 0 ) {
-              
+                  
             let entitiesData = 
             await entitiesHelper.entityDocuments({
               _id : { $in : solutionData.entities }
@@ -174,7 +194,6 @@ module.exports = class SolutionsHelper {
           });
 
           if( !solutionData.excludeScope && programData[0].scope ) {
-            
             let solutionScope = 
             await this.setScope(
               solutionData.programId,
@@ -256,7 +275,6 @@ module.exports = class SolutionsHelper {
             }
 
             if( scopeData.entities && scopeData.entities.length > 0 ) {
-              
               let entities = 
               await entitiesHelper.entityDocuments(
                 {
@@ -289,6 +307,7 @@ module.exports = class SolutionsHelper {
                   entityIds.push(ObjectId(entities[entity]._id));
                 }
               }
+
             } else {
               entityIds = entities.map(entity => {
                 return ObjectId(entity._id);
@@ -332,7 +351,22 @@ module.exports = class SolutionsHelper {
               }
             }
           }
+          
+          if( currentSolutionScope && currentSolutionScope.entities.length > 0 ){
 
+            let entitiesIds = currentSolutionScope.entities;
+
+            for( let eachEntity in entitiesIds ) {
+              if( entitiesIds[eachEntity].toString() == entitiesIds[eachEntity] ) {
+                entitiesIds[eachEntity] = ObjectId(entitiesIds[eachEntity]);
+              }
+            }
+
+            delete currentSolutionScope.entities;
+            currentSolutionScope["entities"] = entitiesIds;
+
+          }
+        
           let updateSolution = 
           await database.models.solutions.findOneAndUpdate(
             {
@@ -657,7 +691,8 @@ module.exports = class SolutionsHelper {
             "type",
             "language",
             "creator",
-            "endDate"
+            "endDate",
+            "link"
           ]  
         );
       
@@ -744,7 +779,7 @@ module.exports = class SolutionsHelper {
           let solutionsSkipped = [];
 
           if(  data.filter.skipSolutions ) {
-            
+
             data.filter.skipSolutions.forEach( solution => {
               solutionsSkipped.push(ObjectId(solution.toString()));
             });
@@ -1298,8 +1333,8 @@ module.exports = class SolutionsHelper {
 
           surveyReportPage = gen.utils.convertStringToBoolean(surveyReportPage);
 
-          if ( !surveyReportPage ) {
-              
+          if ( !surveyReportPage || solutionType == constants.common.COURSE ) {
+
             targetedSolutions = 
             await this.forUserRoleAndLocation(
               requestedData,
@@ -1320,7 +1355,10 @@ module.exports = class SolutionsHelper {
                 targetedSolutions.data.data.forEach(targetedSolution => {
                     targetedSolution.solutionId = targetedSolution._id;
                     targetedSolution._id = "";
-                    targetedSolution["creator"] = targetedSolution.creator ? targetedSolution.creator : "";
+
+                    if( solutionType !== constants.common.COURSE ) {
+                      targetedSolution["creator"] = targetedSolution.creator ? targetedSolution.creator : "";
+                    }
                     
                     if ( solutionType === constants.common.SURVEY ) {
                       targetedSolution.isCreator = false;
@@ -1496,6 +1534,7 @@ function _targetedSolutionTypes() {
   return [ 
     constants.common.OBSERVATION,
     constants.common.SURVEY,
-    constants.common.IMPROVEMENT_PROJECT
+    constants.common.IMPROVEMENT_PROJECT,
+    constants.common.COURSE
   ]
 }
