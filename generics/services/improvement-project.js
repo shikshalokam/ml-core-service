@@ -28,6 +28,8 @@ var assignedProjects = function ( token,search = "",filter = "" ) {
     if( filter !== "" ) {
         url = url + "&filter=" + filter;
     }
+
+    console.log("url is",url);
     
     return new Promise(async (resolve, reject) => {
         try {
