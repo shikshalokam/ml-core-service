@@ -80,7 +80,7 @@ var assignedObservations = function ( token,search = "",filter = "" ) {
   * @returns {Promise} returns a promise.
 */
 
-var assignedSurveys = function ( token,search = "",filter = "" ) {
+var assignedSurveys = function ( token,search = "",filter = "", surveyReportPage = "" ) {
 
     let userAssignedUrl = 
     process.env.ML_SURVEY_SERVICE_URL +
@@ -108,7 +108,6 @@ var assignedSurveys = function ( token,search = "",filter = "" ) {
                 } else {
                     
                     let response = JSON.parse(data.body);
-                    
                     if( response.status === httpStatusCode['ok'].status ) {
                         result["data"] = response.result;
                     } else {
