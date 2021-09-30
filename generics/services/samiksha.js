@@ -89,6 +89,10 @@ var assignedSurveys = function ( token,search = "",filter = "" ) {
     if( filter !== "" ) {
         userAssignedUrl = userAssignedUrl + "&filter=" + filter;
     } 
+
+    if( surveyReportPage !== "" ) {
+        userAssignedUrl = userAssignedUrl + "&surveyReportPage=" + surveyReportPage;
+    } 
     
     return new Promise(async (resolve, reject) => {
         try {
