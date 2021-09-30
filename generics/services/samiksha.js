@@ -108,7 +108,6 @@ var assignedSurveys = function ( token,search = "",filter = "", surveyReportPage
                 } else {
                     
                     let response = JSON.parse(data.body);
-                    console.log(response.result,"response.result")
                     if( response.status === httpStatusCode['ok'].status ) {
                         result["data"] = response.result;
                     } else {
