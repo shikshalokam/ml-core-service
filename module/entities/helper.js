@@ -540,41 +540,6 @@ module.exports = class EntitiesHelper {
     });
   }
 
-     /** 
-   * Sub entity type list.
-   * @method
-   * @name subEntityTypeList
-   * @param entityId - entity id.
-   * @returns {Array} List of sub entity type.
-  */
-
-   static subEntityTypeList( entityId ) {   
-    return new Promise(async (resolve, reject) => {
-        try {
-
-             const entityDocuments = await this.entityDocuments({
-                 _id : entityId
-             },["childHierarchyPath"]);
-
-             if( !entityDocuments.length > 0 ) {
-                 return resolve({
-                     message : constants.apiResponses.ENTITY_NOT_FOUND,
-                     result : []
-                 })
-             }
-             
-             return resolve({
-                 message : constants.apiResponses.ENTITIES_CHILD_HIERACHY_PATH,
-                 result : entityDocuments[0].childHierarchyPath
-             });
-
-        } catch (error) {
-            return reject(error);
-        }
-    })
-
-   }
-
      /**
    * Get users by entityId and role
    * @method

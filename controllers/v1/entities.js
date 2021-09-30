@@ -255,61 +255,6 @@ module.exports = class Entities extends Abstract {
     })
   }
 
-        /**
-    * @api {get} /kendra/api/v1/entities/subEntityTypeList/:entityId
-    * Get entities child hierarchy path.
-    * @apiVersion 1.0.0
-    * @apiGroup Entities
-    * @apiHeader {String} X-authenticated-user-token Authenticity token
-    * @apiSampleRequest /kendra/api/v1/entities/subEntityTypeList/5da829874c67d63cca1bd9d0
-    * @apiUse successBody
-    * @apiUse errorBody
-    * @apiParamExample {json} Response:
-    * {
-    "message": "Entities child hierarchy path fetched successfully",
-    "status": 200,
-    "result": [
-        "district",
-        "block",
-        "cluster",
-        "school"
-    ]
-  }
-    */
-
-    /**
-   * Entities child hierarchy path
-   * @method
-   * @name subEntitiesRoles
-   * @param {String} req.params._id - entityId.         
-   * @returns {JSON} - Entities child hierarchy path
-   */
-
-   subEntityTypeList(req) {
-    return new Promise(async (resolve, reject) => {
-
-      try {
-
-        const subEntityTypeListData = 
-        await entitiesHelper.subEntityTypeList(req.params._id);
-       
-        resolve(subEntityTypeListData);
-
-      } catch (error) {
-
-        return reject({
-          status:
-            error.status ||
-            httpStatusCode["internal_server_error"].status,
-
-          message:
-            error.message ||
-            httpStatusCode["internal_server_error"].message
-        });
-      }
-    });
-  }
-
     /**
   * @api {get} /kendra/api/v1/entities/getUsersByEntityAndRole/:entityId?role=""
   * @apiVersion 1.0.0

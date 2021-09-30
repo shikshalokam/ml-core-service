@@ -14,11 +14,6 @@ module.exports = (req) => {
                 entitiesValidation(entities)
             ).withMessage("invalid entity ids");
         },
-        subEntityTypeList : function () {
-            req.checkParams('_id')
-            .exists()
-            .withMessage("required Entity id");
-        },
         getUsersByEntityAndRole: function () {
             req.checkParams('_id').exists().withMessage("required entity id")
             .isMongoId().withMessage("Invalid entity id");
