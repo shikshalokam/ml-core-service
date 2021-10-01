@@ -116,18 +116,6 @@ let enviromentVariables = {
     "message" : "Required project service API endpoint",
     "optional" : false
   },
-  "ELASTICSEARCH_COMMUNICATIONS_ON_OFF" : {
-    "message" : "Enable/Disable elastic search communications",
-    "optional" : false
-  },
-  "ELASTICSEARCH_HOST_URL" : {
-    "message" : "Elastic search host url",
-    "optional" : false
-  },
-  "ELASTICSEARCH_ENTITIES_INDEX" : {
-    "message" : "Elastic search entities index",
-    "optional" : false
-  },
   "USER_SERVICE_URL" : {
     "message" : "Sunbird environment base url",
     "optional" : false
