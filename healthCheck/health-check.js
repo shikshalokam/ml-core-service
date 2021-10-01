@@ -10,7 +10,6 @@
 const { v1 : uuidv1 } = require('uuid');
 const assessmentHealthCheck = require("./assessments");
 const mongodbHealthCheck = require("./mongodb");
-const elasticSearchHealthCheck = require("./elastic-search");
 
 const obj = {
     MONGO_DB: {
@@ -23,11 +22,6 @@ const obj = {
       FAILED_CODE: 'ASSESSMENT_SERVICE_HEALTH_FAILED',
       FAILED_MESSAGE: 'ASSessment service is not healthy'
     },
-    ELASTIC_SEARCH : {
-        NAME: 'ElasticSearch.db',
-        FAILED_CODE: 'ELASTIC_SEARCH_HEALTH_FAILED',
-        FAILED_MESSAGE: 'Elastic search is not connected'
-    },
     NAME: 'KendraServiceHealthCheck',
     API_VERSION: '1.0'
 }
@@ -37,11 +31,9 @@ let health_check = async function(req,res) {
     let checks = [];
     let mongodbConnection = await mongodbHealthCheck.health_check();
     let assessmentServiceStatus = await assessmentHealthCheck.health_check();
-    let elasticSearchConnection = await elasticSearchHealthCheck.health_check();
 
     checks.push(checkResult("MONGO_DB",mongodbConnection));
     checks.push(checkResult("ASSESSMENT_SERVICE",assessmentServiceStatus));
-    checks.push(checkResult("ELASTIC_SEARCH",elasticSearchConnection));
 
     let checkServices = checks.filter( check => check.healthy === false);
 
