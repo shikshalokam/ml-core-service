@@ -23,9 +23,9 @@ let db_connect = function () {
   * @name elasticsearch_connect
 */
 
-let elasticsearch_connect = function () {
-  global.elasticsearch = require("./db/elastic-search")();
-};
+// let elasticsearch_connect = function () {
+//   global.elasticsearch = require("./db/elastic-search")();
+// };
 
 const configuration = {
   root: require("path").normalize(__dirname + "/.."),
@@ -35,6 +35,6 @@ const configuration = {
 };
 
 db_connect();
-elasticsearch_connect();
+// elasticsearch_connect();
 
 module.exports = configuration;
