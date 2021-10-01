@@ -14,7 +14,7 @@
 const entityTypesHelper = require(MODULES_BASE_PATH + "/entityTypes/helper");
 const entitiesHelper = require(MODULES_BASE_PATH + "/entities/helper");
 const userRolesHelper = require(MODULES_BASE_PATH + "/user-roles/helper");
-const elasticSearch = require(GENERIC_HELPERS_PATH + "/elastic-search");
+// const elasticSearch = require(GENERIC_HELPERS_PATH + "/elastic-search");
 const programsHelper = require(MODULES_BASE_PATH + "/programs/helper");
 const solutionsHelper = require(MODULES_BASE_PATH + "/solutions/helper");
 
@@ -567,11 +567,11 @@ module.exports = class UserExtensionHelper {
                 });
 
                 //update user role in elasticsearch
-                if (requestedData.roles.length > 0) {
-                   await this.updateUserRolesInEntitiesElasticSearch(userId, requestedData.roles);
-                }   
+                // if (requestedData.roles.length > 0) {
+                //    await this.updateUserRolesInEntitiesElasticSearch(userId, requestedData.roles);
+                // }   
 
-                await this.pushUserToElasticSearch(userId);
+                // await this.pushUserToElasticSearch(userId);
 
                 resolve({
                     message: constants.apiResponses.USER_EXTENSION_UPDATED,
@@ -916,66 +916,66 @@ module.exports = class UserExtensionHelper {
  * @name userId - user id
  * @name userRoles - array of userRoles.
  */
-static updateUserRolesInEntitiesElasticSearch(userId = "", userRoles = []) {
-    return new Promise(async (resolve, reject) => {
-        try {
+// static updateUserRolesInEntitiesElasticSearch(userId = "", userRoles = []) {
+//     return new Promise(async (resolve, reject) => {
+//         try {
         
-        await Promise.all(userRoles.map( async role => {
-            await Promise.all(role.entities.map(async entity => {
+//         await Promise.all(userRoles.map( async role => {
+//             await Promise.all(role.entities.map(async entity => {
 
-                let entityDocument = await elasticSearch.getData
-                ({
-                    id : entity,
-                    index : process.env.ELASTICSEARCH_ENTITIES_INDEX,
-                    type : "_doc"
-                })
+//                 let entityDocument = await elasticSearch.getData
+//                 ({
+//                     id : entity,
+//                     index : process.env.ELASTICSEARCH_ENTITIES_INDEX,
+//                     type : "_doc"
+//                 })
                
-                if (entityDocument.statusCode == httpStatusCode.ok.status) {
+//                 if (entityDocument.statusCode == httpStatusCode.ok.status) {
 
-                    entityDocument = entityDocument.body["_source"].data;
+//                     entityDocument = entityDocument.body["_source"].data;
                     
-                    if (!entityDocument.roles) {
-                        entityDocument.roles = {};
-                    }
+//                     if (!entityDocument.roles) {
+//                         entityDocument.roles = {};
+//                     }
                     
-                    if (entityDocument.roles[role.code]) {
-                        if (!entityDocument.roles[role.code].includes(userId)) {
-                            entityDocument.roles[role.code].push(userId);
+//                     if (entityDocument.roles[role.code]) {
+//                         if (!entityDocument.roles[role.code].includes(userId)) {
+//                             entityDocument.roles[role.code].push(userId);
 
-                            await elasticSearch.createOrUpdateDocumentInIndex
-                            (
-                                process.env.ELASTICSEARCH_ENTITIES_INDEX,
-                                "_doc",
-                                entity,
-                                {data: entityDocument }
-                            )
-                        }
-                    }
-                    else {
-                        entityDocument.roles[role.code] = [userId];
+//                             await elasticSearch.createOrUpdateDocumentInIndex
+//                             (
+//                                 process.env.ELASTICSEARCH_ENTITIES_INDEX,
+//                                 "_doc",
+//                                 entity,
+//                                 {data: entityDocument }
+//                             )
+//                         }
+//                     }
+//                     else {
+//                         entityDocument.roles[role.code] = [userId];
 
-                        await elasticSearch.createOrUpdateDocumentInIndex
-                        (
-                            process.env.ELASTICSEARCH_ENTITIES_INDEX,
-                            "_doc",
-                            entity,
-                            {data: entityDocument }
-                        )
-                    }
-                }
-            }))
-        }))
+//                         await elasticSearch.createOrUpdateDocumentInIndex
+//                         (
+//                             process.env.ELASTICSEARCH_ENTITIES_INDEX,
+//                             "_doc",
+//                             entity,
+//                             {data: entityDocument }
+//                         )
+//                     }
+//                 }
+//             }))
+//         }))
 
-        return resolve({
-            success: true
-        });
+//         return resolve({
+//             success: true
+//         });
 
-    }
-    catch (error) {
-        return reject(error);
-    }
-})
-}
+//     }
+//     catch (error) {
+//         return reject(error);
+//     }
+// })
+// }
 
 
 /**
@@ -986,46 +986,46 @@ static updateUserRolesInEntitiesElasticSearch(userId = "", userRoles = []) {
    * @returns {Object} 
    */
 
-  static pushUserToElasticSearch(userId) {
-    return new Promise(async (resolve, reject) => {
-        try {
+//   static pushUserToElasticSearch(userId) {
+//     return new Promise(async (resolve, reject) => {
+//         try {
 
-         let userInformation = await this.userExtensionDocument
-         (
-             { userId: userId },
-             [ "_id",
-             "status", 
-             "isDeleted",
-             "deleted",
-             "roles",
-             "userId",
-             "externalId",
-             "updatedBy",
-             "createdBy",
-             "updatedAt",
-             "createdAt"]
-         )
+//          let userInformation = await this.userExtensionDocument
+//          (
+//              { userId: userId },
+//              [ "_id",
+//              "status", 
+//              "isDeleted",
+//              "deleted",
+//              "roles",
+//              "userId",
+//              "externalId",
+//              "updatedBy",
+//              "createdBy",
+//              "updatedAt",
+//              "createdAt"]
+//          )
               
-         await elasticSearch.createOrUpdateDocumentInIndex(
-            process.env.ELASTICSEARCH_USER_EXTENSION_INDEX,
-            "_doc",
-            userId,
-            {
-                data : userInformation
-            }
-        );
+//          await elasticSearch.createOrUpdateDocumentInIndex(
+//             process.env.ELASTICSEARCH_USER_EXTENSION_INDEX,
+//             "_doc",
+//             userId,
+//             {
+//                 data : userInformation
+//             }
+//         );
 
-        return resolve({
-            success : true
-        });
+//         return resolve({
+//             success : true
+//         });
             
-    }
-        catch(error) {
-            return reject(error);
-        }
-    })
+//     }
+//         catch(error) {
+//             return reject(error);
+//         }
+//     })
 
-   }
+//    }
 
     /**
    * List of programs for platform user

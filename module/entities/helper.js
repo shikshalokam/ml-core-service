@@ -1,6 +1,6 @@
 const entityTypesHelper = require(MODULES_BASE_PATH + "/entityTypes/helper");
 const userRolesHelper = require(MODULES_BASE_PATH + "/user-roles/helper");
-const elasticSearch = require(GENERIC_HELPERS_PATH + "/elastic-search");
+// const elasticSearch = require(GENERIC_HELPERS_PATH + "/elastic-search");
 
 module.exports = class EntitiesHelper {
 
@@ -695,128 +695,128 @@ module.exports = class EntitiesHelper {
    * @returns {Array}  - List of userIds and entityIds
    */
 
-  static getUsersByEntityAndRole( entityId= "", role= "" ) {
-    return new Promise(async (resolve, reject) => {
-        try {
+//   static getUsersByEntityAndRole( entityId= "", role= "" ) {
+//     return new Promise(async (resolve, reject) => {
+//         try {
 
-            if (entityId == "") {
-                throw new Error(constants.apiResponses.ENTITY_ID_REQUIRED);
-            }
+//             if (entityId == "") {
+//                 throw new Error(constants.apiResponses.ENTITY_ID_REQUIRED);
+//             }
 
-            if (role == "") {
-                throw new Error(constants.apiResponses.ROLE_REQUIRED)
-            }
+//             if (role == "") {
+//                 throw new Error(constants.apiResponses.ROLE_REQUIRED)
+//             }
 
-            let userRole = await userRolesHelper.roleDocuments({
-                code : role
-            },[
-                "entityTypes"
-            ]);
+//             let userRole = await userRolesHelper.roleDocuments({
+//                 code : role
+//             },[
+//                 "entityTypes"
+//             ]);
             
-            if(!userRole.length) {
-                throw new Error(constants.apiResponses.INVALID_ROLE)
-            }
+//             if(!userRole.length) {
+//                 throw new Error(constants.apiResponses.INVALID_ROLE)
+//             }
 
-            let entityType = userRole[0].entityTypes[0].entityType;
+//             let entityType = userRole[0].entityTypes[0].entityType;
 
-            let entityTypeOfInputEntityId = await this.entityDocuments
-            (
-                { _id: entityId },
-                ["entityType"]
-            )
+//             let entityTypeOfInputEntityId = await this.entityDocuments
+//             (
+//                 { _id: entityId },
+//                 ["entityType"]
+//             )
 
-            if (entityTypeOfInputEntityId.length == 0) {
-                throw new Error(constants.apiResponses.ENTITY_NOT_FOUND);
-            }
+//             if (entityTypeOfInputEntityId.length == 0) {
+//                 throw new Error(constants.apiResponses.ENTITY_NOT_FOUND);
+//             }
             
-            let entityDocument = [];
-            let entityIds = [];
+//             let entityDocument = [];
+//             let entityIds = [];
 
-            if (entityType == entityTypeOfInputEntityId[0].entityType) {
-                entityIds.push(entityId)
-            }
-            else {
-                entityDocument = await this.entityDocuments
-                    (
-                        {
-                            _id: entityId
-                        },
-                        [
-                            `groups.${entityType}`
-                        ]
-                )
+//             if (entityType == entityTypeOfInputEntityId[0].entityType) {
+//                 entityIds.push(entityId)
+//             }
+//             else {
+//                 entityDocument = await this.entityDocuments
+//                     (
+//                         {
+//                             _id: entityId
+//                         },
+//                         [
+//                             `groups.${entityType}`
+//                         ]
+//                 )
                 
-                if (entityDocument.length > 0) {
-                    entityIds = entityDocument[0].groups[entityType]
-                }
-            }
+//                 if (entityDocument.length > 0) {
+//                     entityIds = entityDocument[0].groups[entityType]
+//                 }
+//             }
 
-            if (!entityIds.length) {
-                throw new Error(constants.apiResponses.USERS_NOT_FOUND);
-            }
+//             if (!entityIds.length) {
+//                 throw new Error(constants.apiResponses.USERS_NOT_FOUND);
+//             }
 
-            let chunkOfEntities = _.chunk(entityIds, 1000);
+//             let chunkOfEntities = _.chunk(entityIds, 1000);
 
-            let entitiesFromEs = [];
+//             let entitiesFromEs = [];
 
-            for(let entities = 0; entities < chunkOfEntities.length; entities++) {
+//             for(let entities = 0; entities < chunkOfEntities.length; entities++) {
                 
-                let queryObject = {
-                    "query": {
-                      "ids" : {
-                        "values" : chunkOfEntities[entities]
-                      }
-                    },
-                    "_source":  [`data.roles.${role}`,"data.externalId"]
-                }
+//                 let queryObject = {
+//                     "query": {
+//                       "ids" : {
+//                         "values" : chunkOfEntities[entities]
+//                       }
+//                     },
+//                     "_source":  [`data.roles.${role}`,"data.externalId"]
+//                 }
 
-                let entityDocuments = await elasticSearch.searchDocumentFromIndex
-                (
-                    process.env.ELASTICSEARCH_ENTITIES_INDEX,
-                    "_doc",
-                    queryObject,
-                    "all",
-                    1000
-                )
+//                 let entityDocuments = await elasticSearch.searchDocumentFromIndex
+//                 (
+//                     process.env.ELASTICSEARCH_ENTITIES_INDEX,
+//                     "_doc",
+//                     queryObject,
+//                     "all",
+//                     1000
+//                 )
                 
-                if (entityDocuments && entityDocuments.length > 0) {
-                  entitiesFromEs = [...entitiesFromEs, ...entityDocuments]
-                }
-            } 
+//                 if (entityDocuments && entityDocuments.length > 0) {
+//                   entitiesFromEs = [...entitiesFromEs, ...entityDocuments]
+//                 }
+//             } 
 
-            if (!entitiesFromEs.length) {
-                throw new Error(constants.apiResponses.USERS_NOT_FOUND)
-            }
+//             if (!entitiesFromEs.length) {
+//                 throw new Error(constants.apiResponses.USERS_NOT_FOUND)
+//             }
             
-            let result = [];
+//             let result = [];
         
-            for (let entity = 0; entity < entitiesFromEs.length; entity++) {
-                if (entitiesFromEs[entity].data.roles && Object.keys(entitiesFromEs[entity].data.roles).length > 0) {
-                    for (let user = 0; user < entitiesFromEs[entity].data.roles[role].length; user++) {
-                        result.push({
-                            entityId: entitiesFromEs[entity].id,
-                            entityExternalId: entitiesFromEs[entity].data.externalId ? entitiesFromEs[entity].data.externalId : "",
-                            userId: entitiesFromEs[entity].data.roles[role][user]
-                        })
-                    }
-                }
-            }
+//             for (let entity = 0; entity < entitiesFromEs.length; entity++) {
+//                 if (entitiesFromEs[entity].data.roles && Object.keys(entitiesFromEs[entity].data.roles).length > 0) {
+//                     for (let user = 0; user < entitiesFromEs[entity].data.roles[role].length; user++) {
+//                         result.push({
+//                             entityId: entitiesFromEs[entity].id,
+//                             entityExternalId: entitiesFromEs[entity].data.externalId ? entitiesFromEs[entity].data.externalId : "",
+//                             userId: entitiesFromEs[entity].data.roles[role][user]
+//                         })
+//                     }
+//                 }
+//             }
            
-            resolve({
-                success: true,
-                message : constants.apiResponses.USERS_AND_ENTITIES_FETCHED,
-                data : result
-            });
+//             resolve({
+//                 success: true,
+//                 message : constants.apiResponses.USERS_AND_ENTITIES_FETCHED,
+//                 data : result
+//             });
 
-        } catch (error) {
-            return resolve({
-                success: false,
-                message: error.message,
-                data: false
-            });
-        }
-    })
-  }
+//         } catch (error) {
+//             return resolve({
+//                 success: false,
+//                 message: error.message,
+//                 data: false
+//             });
+//         }
+//     })
+//   }
 
     /** 
     * Sub entity type list.
