@@ -93,8 +93,6 @@ var assignedSurveys = function ( token,search = "",filter = "", surveyReportPage
     if( surveyReportPage !== "" ) {
         userAssignedUrl = userAssignedUrl + "&surveyReportPage=" + surveyReportPage;
     } 
-
-    console.log(userAssignedUrl, "userAssignedUrl")
     
     return new Promise(async (resolve, reject) => {
         try {
@@ -110,7 +108,6 @@ var assignedSurveys = function ( token,search = "",filter = "", surveyReportPage
                 } else {
                     
                     let response = JSON.parse(data.body);
-                    console.log(response,"assignedSurveys response")
                     if( response.status === httpStatusCode['ok'].status ) {
                         result["data"] = response.result;
                     } else {
