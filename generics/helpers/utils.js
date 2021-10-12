@@ -7,6 +7,7 @@
 
 // Dependencies
 const {validate : uuidValidate,v4 : uuidV4} = require('uuid');
+const md5 = require("md5");
 
  /**
   * convert string to camelCaseToTitleCase.
@@ -213,6 +214,17 @@ function convertStringToBoolean(stringData) {
   return stringToBoolean;
 }
 
+/**
+  * md5 hash
+  * @function
+  * @name md5Hash
+  * @returns {String} returns hashed value.  
+*/
+
+function md5Hash(value) {
+  return md5(value);
+}
+
 module.exports = {
   camelCaseToTitleCase : camelCaseToTitleCase,
   lowerCase : lowerCase,
@@ -226,5 +238,6 @@ module.exports = {
   epochTime : epochTime,
   valueParser : valueParser,
   checkValidUUID : checkValidUUID,
-  convertStringToBoolean : convertStringToBoolean
+  convertStringToBoolean : convertStringToBoolean,
+  md5Hash : md5Hash
 };

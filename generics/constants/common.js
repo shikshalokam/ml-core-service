@@ -58,5 +58,11 @@ module.exports = {
   "DEFAULT_PAGE_NO" : 1,
   "DHITI" : "dhiti",
   "DEFAULT_SURVEY_REMOVED_DAY" : 15,
-  "COURSE" : "course"
+  "COURSE" : "course",
+  "PREFIX_FOR_PROJECT_LINK" : "manage-learn",
+  "CREATE_OBSERVATION": "/create-observation/",
+  "CREATE_SURVEY" : "/create-survey/",
+  "CREATE_PROJECT" : "/create-project/",
+  "LINK" : "link",
+  "DISCOVERED_BY_ME" : "discoveredByMe"
 };

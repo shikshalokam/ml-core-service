@@ -59,23 +59,24 @@ module.exports = class UsersHelper {
     * @returns {Array} - Created user program and solution.
     */
 
-    static createProgramAndSolution(userId, data) {
+    static createProgramAndSolution(userId, data, isATargetedSolution = "") {
         return new Promise(async (resolve, reject) => {
             try {
 
                 let userPrivateProgram = {};
                 let dateFormat = gen.utils.epochTime();
+                let parentSolutionInformation = {};
 
-                if (data.programId && data.programId !== "") {
+                isATargetedSolution =  gen.utils.convertStringToBoolean(isATargetedSolution);
+                //program part
+                if( data.programId && data.programId !== ""){
 
-                    userPrivateProgram = await programsHelper.programDocuments(
+                    let checkforProgramExist = await programsHelper.programDocuments(
                         {
-                            _id: data.programId,
-                            createdBy: userId
-                        }
-                    );
+                            _id: data.programId
+                        },"all",["__v"]);
 
-                    if (!userPrivateProgram.length > 0) {
+                    if (!checkforProgramExist.length > 0) {
                         return resolve({
                             status: httpStatusCode['bad_request'].status,
                             message: constants.apiResponses.PROGRAM_NOT_FOUND,
@@ -83,10 +84,28 @@ module.exports = class UsersHelper {
                         })
                     }
 
-                    userPrivateProgram = userPrivateProgram[0];
+                    if(isATargetedSolution === false){
 
-                } else {
+                        let duplicateProgram = checkforProgramExist[0];
+                        duplicateProgram.externalId = duplicateProgram.name + "-" + dateFormat,
+                        duplicateProgram.isAPrivateProgram = true;
+                        duplicateProgram.status =  constants.common.ACTIVE_STATUS;
+                        duplicateProgram.userId = userId;
+                        duplicateProgram.createdBy = userId;
 
+                        userPrivateProgram = await programsHelper.create(
+                            _.omit(
+                                duplicateProgram, 
+                                ["_id", "components","scope"]
+                            ) 
+                        );
+
+                    }else{
+                        userPrivateProgram = checkforProgramExist[0];
+                    }   
+
+                }else{
+  
                     let programData = {
                         name: data.programName,
                         isAPrivateProgram: true,
@@ -116,6 +135,7 @@ module.exports = class UsersHelper {
                     isAPrivateProgram: userPrivateProgram.isAPrivateProgram
                 };
 
+                //entities
                 if ( Array.isArray(data.entities) && data.entities && data.entities.length > 0) {
 
                     let entityData = await entitiesHelper.entityDocuments(
@@ -140,15 +160,14 @@ module.exports = class UsersHelper {
                     solutionDataToBeUpdated["entityTypeId"] = entityData[0].entityTypeId;
                 }
 
+                //solution part
                 let solution = ""
-
-                if (data.solutionId && data.solutionId !== "") {
+                if(data.solutionId && data.solutionId !== ""){
 
                     let solutionData =
                         await solutionsHelper.solutionDocuments({
-                            _id: data.solutionId,
-                            isReusable: false
-                        }, ["_id"]);
+                            _id: data.solutionId
+                        },["name","link","type","subType"]);
 
                     if (!solutionData.length > 0) {
 
@@ -159,20 +178,54 @@ module.exports = class UsersHelper {
                         })
                     }
 
-                    solution =
-                        await database.models.solutions.findOneAndUpdate({
-                            _id: solutionData[0]._id
-                        }, {
-                            $set: solutionDataToBeUpdated
-                        }, {
-                            new: true
-                        });
+                    if(isATargetedSolution === false){
 
+                        let duplicateSolution = solutionData[0];
+                        duplicateSolution.externalId = duplicateSolution.name + "-" + dateFormat;
+                        duplicateSolution.isAPrivateProgram =  true;
+                        duplicateSolution.isReusable =  false;
+                        duplicateSolution.name =  duplicateSolution.name;
+                        duplicateSolution.description =  duplicateSolution.description;
+                        duplicateSolution.status =  constants.common.ACTIVE_STATUS;
+                        duplicateSolution.userId = userId;
+                        duplicateSolution.parentSolutionId = duplicateSolution._id;
 
-                } else {
+                        _.merge(duplicateSolution, solutionDataToBeUpdated);
+
+                        solution = await solutionsHelper.create(
+                            _.omit(
+                                duplicateSolution, 
+                                ["_id","link"]
+                            ) 
+                        );
+
+                        parentSolutionInformation.solutionId = duplicateSolution._id;
+                        parentSolutionInformation.link = duplicateSolution.link;
+
+                    }else{
+
+                        if(solutionData[0].isReusable === false){
+                            return resolve({
+                                status: httpStatusCode['bad_request'].status,
+                                message: constants.apiResponses.SOLUTION_NOT_FOUND,
+                                result: {}
+                            })
+                        }
+
+                        solution =
+                            await database.models.solutions.findOneAndUpdate({
+                                _id: solutionData[0]._id
+                            }, {
+                                $set: solutionDataToBeUpdated
+                            }, {
+                                new: true
+                            });
+                    }
+
+                }else{
 
                     solutionDataToBeUpdated["type"] =
-                        data.type ? data.type : constants.common.ASSESSMENT;
+                    data.type ? data.type : constants.common.ASSESSMENT;
                     solutionDataToBeUpdated["subType"] =
                         data.subType ? data.subType : constants.common.INSTITUTIONAL;
 
@@ -192,11 +245,10 @@ module.exports = class UsersHelper {
                     }
 
                     solutionDataToBeUpdated.updatedBy = userId;
-
                     solution = await solutionsHelper.create(solutionDataToBeUpdated);
                 }
 
-                if (solution._id) {
+                if (solution && solution._id) {
 
                     await database.models.programs.findOneAndUpdate(
                         {
@@ -204,13 +256,15 @@ module.exports = class UsersHelper {
                         }, {
                         $addToSet: { components: ObjectId(solution._id) }
                     });
+
                 }
 
                 return resolve({
                     message: constants.apiResponses.USER_PROGRAM_AND_SOLUTION_CREATED,
                     result: {
                         program: userPrivateProgram,
-                        solution: solution
+                        solution: solution,
+                        parentSolutionInformation : parentSolutionInformation
                     }
                 });
 

@@ -8,11 +8,12 @@
 // Dependencies
 
 const programsHelper = require(MODULES_BASE_PATH + "/programs/helper");
-const entityTypesHelper = require(MODULES_BASE_PATH + "/entityTypes/helper");
+const entitysolutionTypesHelper = require(MODULES_BASE_PATH + "/entityTypes/helper");
 const entitiesHelper = require(MODULES_BASE_PATH + "/entities/helper");
 const userRolesHelper = require(MODULES_BASE_PATH + "/user-roles/helper");
 const assessmentService = require(ROOT_PATH + '/generics/services/samiksha');
 const improvementProjectService = require(ROOT_PATH + '/generics/services/improvement-project');
+const appsPortalBaseUrl = (process.env.APP_PORTAL_BASE_URL && process.env.APP_PORTAL_BASE_URL !== "") ? process.env.APP_PORTAL_BASE_URL + "/" : "https://apps.shikshalokam.org/";
 
 /**
     * SolutionsHelper
@@ -1331,19 +1332,27 @@ module.exports = class SolutionsHelper {
             success : false
           };
 
-          surveyReportPage = gen.utils.convertStringToBoolean(surveyReportPage);
-          if ( !surveyReportPage || solutionType == constants.common.COURSE ) {
+          let getTargetedSolution = true;
 
-            targetedSolutions = 
-            await this.forUserRoleAndLocation(
-              requestedData,
-              solutionType,
-              "",
-              "",
-              constants.common.DEFAULT_PAGE_SIZE,
-              constants.common.DEFAULT_PAGE_NO,
-              search
-            ); 
+          if(filter === constants.common.DISCOVERED_BY_ME){
+            getTargetedSolution = false;
+          }else if (solutionType === constants.common.COURSE){
+            getTargetedSolution = true;
+          }else if (gen.utils.convertStringToBoolean(surveyReportPage) === true ){
+              getTargetedSolution = false;
+          }
+
+          if( getTargetedSolution ) {
+              targetedSolutions = 
+                await this.forUserRoleAndLocation(
+                  requestedData,
+                  solutionType,
+                  "",
+                  "",
+                  constants.common.DEFAULT_PAGE_SIZE,
+                  constants.common.DEFAULT_PAGE_NO,
+                  search
+                ); 
           }
 
         if( targetedSolutions.success ) {
@@ -1445,6 +1454,330 @@ module.exports = class SolutionsHelper {
         }
       })
     }
+
+  /**
+   * Get link by solution id
+   * @method
+   * @name getLink
+   * @param {String} solutionId - solution Id.
+   * @param {String} appName - app Name.
+   * @param {String} userId - user Id.
+   * @returns {Object} - Details of the solution.
+   */
+
+  static getLink( solutionId, userId ) {
+    return new Promise(async (resolve, reject) => {
+      try {
+
+        let solutionData = await this.solutionDocuments({
+                                _id : solutionId,
+                                isReusable : false,
+                                isAPrivateProgram: false
+                                },[
+                                    "link","type","author"
+                              ]);
+
+        if ( !Array.isArray(solutionData) || solutionData.length < 1 ) {
+            return resolve({
+                message: constants.apiResponses.SOLUTION_NOT_FOUND,
+                result: {}
+            });
+        }
+
+       
+        let prefix = constants.common.PREFIX_FOR_PROJECT_LINK;
+        
+        let solutionLink, link;
+
+        if ( !solutionData[0].link ) {
+
+          let updateLink = await gen.utils.md5Hash(solutionData[0]._id + "###" + solutionData[0].author);
+          let updateSolution = await this.update(solutionId, { link : updateLink } , userId );
+
+          solutionLink = updateLink;
+
+        } else {
+          solutionLink = solutionData[0].link;
+        }
+
+        link = _generateLink(appsPortalBaseUrl, prefix, solutionLink, solutionData[0].type);
+
+        return resolve({
+            success : true,
+            message: constants.apiResponses.LINK_GENERATED,
+            result: link
+        });
+
+      } catch(error) {
+        return resolve({
+          success : false,
+          status : error.status ? 
+          error.status : httpStatusCode['internal_server_error'].status,
+          message : error.message
+        })
+      }
+    })
+  }
+
+  /**
+   * Verify solution link
+   * @method
+   * @name verifyLink
+   * @param {String} solutionId - solution Id.
+   * @param {String} userId - user Id.
+   * @param {Object} bodyData - Req Body.
+   * @returns {Object} - Details of the solution.
+   */
+
+  static verifyLink( link = "", bodyData = {}, userId = "", userToken = "" ) {
+    return new Promise(async (resolve, reject) => {
+      try {
+
+        let verifySolution = await this.verifySolutionDetails( link, userId, userToken );
+        let checkForTargetedSolution = await this.checkForTargetedSolution( link, bodyData, userId, userToken );
+
+        if ( checkForTargetedSolution && Object.keys( checkForTargetedSolution.result ).length > 0 ) {
+
+          let solutionData = checkForTargetedSolution.result;
+          if ( !checkForTargetedSolution.result.isATargetedSolution ) {
+
+            if ( solutionData.type == constants.common.IMPROVEMENT_PROJECT ) {
+
+              let filterQuery = {
+                createdBy: userId,
+                referenceFrom: constants.common.LINK,
+                link: link
+              }
+
+              let checkForProjectExist = await improvementProjectService.projectDocuments( userToken, filterQuery, [ "_id" ] );
+              if ( checkForProjectExist.success && checkForProjectExist.data && checkForProjectExist.data.length > 0 && checkForProjectExist.data[ 0 ]._id != "" ) {
+                checkForTargetedSolution.result[ "projectId" ] = checkForProjectExist.data[ 0 ]._id;
+              }
+            }
+
+          }
+          else {
+
+            let detailFromLink;
+            if ( solutionData.type == constants.common.IMPROVEMENT_PROJECT ) {
+
+              detailFromLink = await improvementProjectService.getDetail( solutionData.solutionId, userToken, bodyData );
+
+              if ( !detailFromLink || !detailFromLink.data ) {
+                return resolve( detailFromLink )
+              }
+
+              if ( solutionData.type == constants.common.IMPROVEMENT_PROJECT && detailFromLink.data._id != "" ) {
+                checkForTargetedSolution.result[ "projectId" ] = detailFromLink.data._id ? detailFromLink.data._id : "";
+              }
+            }
+          }
+
+        }
+
+        return resolve( checkForTargetedSolution );
+
+      } catch ( error ) {
+        return resolve({
+          success: false,
+          status: error.status ?
+            error.status : httpStatusCode[ 'internal_server_error' ].status,
+          message: error.message
+        })
+      }
+    })
+  }
+
+  /**
+   * Verify Solution details.
+   * @method
+   * @name verifySolutionDetails
+   * @param {String} solutionId - Program Id.
+   * @returns {Object} - Details of the solution.
+   */
+
+    static verifySolutionDetails(link = "", userId = "", userToken = "") {
+      return new Promise(async (resolve, reject) => {
+        try {
+
+          let response = {
+              verified: false
+          };
+
+          if (link == "") {
+              throw new Error(constants.apiResponses.LINK_REQUIRED_CHECK)
+          }
+
+          if (userToken == "") {
+              throw new Error(constants.apiResponses.REQUIRED_USER_AUTH_TOKEN)
+          }
+
+          if (userId == "") {
+              throw new Error(constants.apiResponses.USER_ID_REQUIRED_CHECK)
+          }
+
+          let solutionData = await this.solutionDocuments({
+              link: link,
+              isReusable: false,
+              status: {
+                  $ne: constants.common.IN_ACTIVE
+              }
+          }, [
+              "type", "status", "endDate"
+          ]);
+
+          if (!Array.isArray(solutionData) || solutionData.length < 1) {
+              return resolve({
+                  message: constants.apiResponses.INVALID_LINK,
+                  result: []
+              });
+          }
+
+          if (solutionData[0].status !== constants.common.ACTIVE) {
+              return resolve({
+                  message: constants.apiResponses.LINK_IS_EXPIRED,
+                  result: []
+              });
+          }
+
+          if (solutionData[0].endDate && new Date() > new Date(solutionData[0].endDate)) {
+              if (solutionData[0].status === constants.common.ACTIVE) {
+                  let updateSolution = await this.update(solutionData[0]._id, {
+                      status: constants.common.IN_ACTIVE
+                  }, userId);
+              }
+
+              return resolve({
+                  message: constants.apiResponses.LINK_IS_EXPIRED,
+                  result: []
+              });
+          }
+
+          response.verified = true;
+          return resolve({
+              message: constants.apiResponses.LINK_VERIFIED,
+              result: response
+          });
+
+        } catch (error) {
+              return resolve({
+                  success: false,
+                  status: error.status ?
+                      error.status : httpStatusCode['internal_server_error'].status,
+                  message: error.message
+              })
+          }
+      })
+    }
+
+  /**
+   * Check the user is targeted.
+   * @method
+   * @name checkForTargetedSolution
+   * @param {String} link - Solution link.
+   * @returns {Object} - Details of the solution.
+   */
+
+  static checkForTargetedSolution( link = "", bodyData = {}, userId = "", userToken = "" ) {
+    return new Promise(async (resolve, reject) => {
+      try {
+
+        let response = {
+          isATargetedSolution : false,
+          link : link
+        };
+
+        let solutionDetails = await this.solutionDocuments({link:link},["type","_id"]);
+        
+        let queryData = await this.queryBasedOnRoleAndLocation(bodyData);
+        if( !queryData.success ) {
+          return resolve(queryData);
+        }
+
+        queryData.data["link"] = link;
+        let matchQuery = queryData.data;
+
+        let solutionData = await this.solutionDocuments(matchQuery, ["_id","link","type"]);
+        
+        if( !Array.isArray(solutionData) || solutionData.length < 1 ) {
+          response.solutionId = solutionDetails[0]._id;
+          response.type = solutionDetails[0].type;
+          return resolve({
+              success : true,
+              message: constants.apiResponses.SOLUTION_NOT_FOUND_OR_NOT_A_TARGETED,
+              result: response
+          }); 
+        }
+        
+        response.isATargetedSolution = true;
+        Object.assign(response, solutionData[0]);
+        response.solutionId = solutionData[0]._id;
+        delete response._id;
+
+        return resolve({
+            success : true,
+            message: constants.apiResponses.SOLUTION_DETAILS_VERIFIED,
+            result: response
+        }); 
+
+      } catch(error) {
+        return resolve({
+          success : false,
+          status : error.status ? 
+          error.status : httpStatusCode['internal_server_error'].status,
+          message : error.message
+        })
+      }
+    })
+  }
+
+  /**
+   * Fetch template observation based on solution Id.
+   * @method
+   * @name getDetails
+   * @param {String} solutionId - Solution Id.
+   * @returns {Object} - Details of the solution.
+   */
+
+  static getDetails( solutionId, bodyData = {}, userId = "", userToken = "" ) {
+    return new Promise(async (resolve, reject) => {
+      try {
+
+        let solutionData = await this.solutionDocuments({_id:solutionId},["type", "projectTemplateId"]);
+        if (!Array.isArray(solutionData) || solutionData.length < 1) {
+            return resolve({
+                message: constants.apiResponses.SOLUTION_NOT_FOUND,
+                result: []
+            });
+        }
+
+        solutionData = solutionData[0];
+        let templateOrQuestionDetails;
+
+        if( solutionData.type === constants.common.IMPROVEMENT_PROJECT ) {
+
+            if( !solutionData.projectTemplateId ) {
+              throw {
+                message : constants.apiResponses.PROJECT_TEMPLATE_ID_NOT_FOUND
+              }
+            }
+
+            templateOrQuestionDetails = await improvementProjectService.getTemplateDetail( solutionData.projectTemplateId, userToken );
+        }
+
+        return resolve(templateOrQuestionDetails); 
+
+      } catch(error) {
+        return resolve({
+          success : false,
+          status : error.status ? 
+          error.status : httpStatusCode['internal_server_error'].status,
+          message : error.message
+        })
+      }
+    })
+  }
+
 };
 
  /**
@@ -1461,4 +1794,30 @@ function _targetedSolutionTypes() {
     constants.common.IMPROVEMENT_PROJECT,
     constants.common.COURSE
   ]
+}
+
+/**
+   * Generate sharing Link.
+   * @method
+   * @name _targetedSolutionTypes
+   * @returns {Array} - Targeted solution types
+   */
+
+function _generateLink(appsPortalBaseUrl, prefix, solutionLink, solutionType) {
+
+  let link;
+
+  switch( solutionType ) {
+    case constants.common.OBSERVATION:
+      link = appsPortalBaseUrl + prefix + constants.common.CREATE_OBSERVATION + solutionLink;
+      break;
+    case constants.common.IMPROVEMENT_PROJECT:
+      link = appsPortalBaseUrl + prefix + constants.common.CREATE_PROJECT + solutionLink;
+      break;
+    default:
+      link = appsPortalBaseUrl + prefix + constants.common.CREATE_SURVEY + solutionLink;
+  }
+
+  return link;
+  
 }

@@ -746,4 +746,241 @@ module.exports = class Solutions extends Abstract {
       })
   }
 
+   /**
+  * @api {get} /kendra/api/v1/solutions/getLink/:solutionId
+  * @apiVersion 1.0.0
+  * @apiName Get link by solution id
+  * @apiGroup Solutions
+  * @apiSampleRequest /kendra/api/v1/solutions/getLink/5fa28620b6bd9b757dc4e932
+  * @apiHeader {String} X-authenticated-user-token Authenticity token  
+  * @apiUse successBody
+  * @apiUse errorBody
+  * @apiParamExample {json} Response:
+  * {
+    "message": "Solution Link generated successfully",
+    "status": 200,
+    "result": "https://preprod.ntp.net.in/manage-learn/create-observation/38cd93bdb87489c3890fe0ab00e7d406"
+    }
+  */
+
+   /**
+   * Get link by solution id.
+   * @method
+   * @name getLink
+   * @param {Object} req - requested data.
+   * @param {String} req.params._id - solution Id
+   * @returns {Array}
+   */
+
+  async getLink(req) {
+    return new Promise(async (resolve, reject) => {
+      try {
+
+        let solutionData = await solutionsHelper.getLink(
+          req.params._id,
+          req.userDetails.userId
+        );
+
+        return resolve(solutionData);
+
+      }
+      catch (error) {
+        reject({
+          status: error.status || httpStatusCode.internal_server_error.status,
+          message: error.message || httpStatusCode.internal_server_error.message,
+          errorObject: error
+        })
+      }
+    })
+  }
+
+   /**
+  * @api {post} /kendra/api/v1/solutions/verifyLink/:link
+  * @apiVersion 1.0.0
+  * @apiName verify Link
+  * @apiGroup Solutions
+  * @apiSampleRequest /kendra/api/v1/solutions/verifyLink/6f8d395f674dcb3146ade10f972da9d0
+  * @apiHeader {String} X-authenticated-user-token Authenticity token  
+  * @apiUse successBody
+  * @apiUse errorBody
+  * @apiParamExample {json} Request:
+  * {
+  *   "role" : "HM",
+      "state" : "236f5cff-c9af-4366-b0b6-253a1789766a",
+      "district" : "1dcbc362-ec4c-4559-9081-e0c2864c2931",
+      "school" : "c5726207-4f9f-4f45-91f1-3e9e8e84d824"
+    }
+  * @apiParamExample {json} Response:
+  * {
+      "message": "Solution Link verified successfully",
+      "status": 200,
+      "result": {
+          isATargetedSolution : true/false,
+          type: improvementProject,
+          solutionId : “5f6853f293734140ccce90cf”,
+          projectId : “”,
+          obervationId: “”,
+          surveyId: “”
+      }
+    }
+  */
+
+   /**
+   * verify Link
+   * @method
+   * @name verifyLink
+   * @param {Object} req - requested data.
+   * @param {String} req.params._id - solution Id
+   * @returns {Array}
+   */
+
+  async verifyLink(req) {
+    return new Promise(async (resolve, reject) => {
+      try {
+
+        let solutionData = await solutionsHelper.verifyLink(
+          req.params._id,
+          req.body,
+          req.userDetails.userId,
+          req.userDetails.userToken
+        );
+
+        return resolve(solutionData);
+
+      }
+      catch (error) {
+        reject({
+          status: error.status || httpStatusCode.internal_server_error.status,
+          message: error.message || httpStatusCode.internal_server_error.message,
+          errorObject: error
+        })
+      }
+    })
+  }
+
+  /**
+  * @api {post} /kendra/api/v1/solutions/getDetails/:solutionId
+  * @apiVersion 1.0.0
+  * @apiName verify Link
+  * @apiGroup Solutions
+  * @apiSampleRequest /kendra/api/v1/solutions/getDetails/5ff9d50f9259097d48017bbb
+  * @apiHeader {String} X-authenticated-user-token Authenticity token  
+  * @apiUse successBody
+  * @apiUse errorBody
+  * @apiParamExample {json} Request:
+  * {
+  *   "role" : "HM",
+      "state" : "236f5cff-c9af-4366-b0b6-253a1789766a",
+      "district" : "1dcbc362-ec4c-4559-9081-e0c2864c2931",
+      "school" : "c5726207-4f9f-4f45-91f1-3e9e8e84d824"
+    }
+  * @apiParamExample {json} Response:
+  * {
+    "message": "Successfully fetched details",
+    "status": 200,
+    "result": {
+        "_id": "5f97d2f6bf3a3b1c0116c80a",
+        "status": "published",
+        "isDeleted": false,
+        "categories": [
+            {
+                "_id": "5f102331665bee6a740714e8",
+                "name": "Teachers",
+                "externalId": "teachers"
+            },
+            {
+                "name": "newCategory",
+                "externalId": "",
+                "_id": ""
+            }
+        ],
+        "tasks": [
+            {
+                "_id": "289d9558-b98f-41cf-81d3-92486f114a49",
+                "name": "Task 1",
+                "description": "Task 1 description",
+                "status": "notStarted",
+                "isACustomTask": false,
+                "startDate": "2020-09-29T09:08:41.667Z",
+                "endDate": "2020-09-29T09:08:41.667Z",
+                "lastModifiedAt": "2020-09-29T09:08:41.667Z",
+                "type": "single",
+                "isDeleted": false,
+                "attachments": [
+                    {
+                        "name": "download(2).jpeg",
+                        "type": "image/jpeg",
+                        "sourcePath": "projectId/userId/imageName"
+                    }
+                ],
+                "remarks": "Tasks completed",
+                "assignee": "Aman",
+                "children": [
+                    {
+                        "_id": "289d9558-b98f-41cf-81d3-92486f114a50",
+                        "name": "Task 2",
+                        "description": "Task 2 description",
+                        "status": "notStarted",
+                        "children": [],
+                        "isACustomTask": false,
+                        "startDate": "2020-09-29T09:08:41.667Z",
+                        "endDate": "2020-09-29T09:08:41.667Z",
+                        "lastModifiedAt": "2020-09-29T09:08:41.667Z",
+                        "type": "single",
+                        "isDeleted": false,
+                        "externalId": "task 2",
+                        "isDeleteable": false,
+                        "createdAt": "2020-10-28T05:58:24.907Z",
+                        "updatedAt": "2020-10-28T05:58:24.907Z",
+                        "isImportedFromLibrary": false
+                    }
+                ],
+                "externalId": "task 1",
+                "isDeleteable": false,
+                "createdAt": "2020-10-28T05:58:24.907Z",
+                "updatedAt": "2020-10-28T05:58:24.907Z",
+                "isImportedFromLibrary": false
+            }
+        ],
+        "resources": [],
+        "deleted": false,
+        "__v": 0,
+        "description": "Project 1 description"
+    }
+}
+  */
+
+   /**
+   * get solution details
+   * @method
+   * @name getDetails
+   * @param {Object} req - requested data.
+   * @param {String} req.params._id - solution Id
+   * @returns {Array}
+   */
+
+  async getDetails(req) {
+    return new Promise(async (resolve, reject) => {
+      try {
+
+        let solutionData = await solutionsHelper.getDetails(
+          req.params._id,
+          req.body,
+          req.userDetails.userId,
+          req.userDetails.userToken
+        );
+
+        return resolve(solutionData);
+
+      }
+      catch (error) {
+        reject({
+          status: error.status || httpStatusCode.internal_server_error.status,
+          message: error.message || httpStatusCode.internal_server_error.message,
+          errorObject: error
+        })
+      }
+    })
+  }
+
 }
