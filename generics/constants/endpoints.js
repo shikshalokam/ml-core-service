@@ -26,7 +26,7 @@ module.exports = {
     GET_USER_ASSIGNED_SURVEY : "/v1/surveys/userAssigned",
     GET_USER_ASSIGNED_PROJECT : "/v1/userProjects/userAssigned",
     IMPORTED_PROJECT : "/v1/userProjects/importedProjects",
-    GET_PROJECT_DETAILS_BY_LINK : "/v1/userProjects/details",
+    GET_PROJECT_DETAILS : "/v1/userProjects/details",
     GET_TEMPLATE_DETAILS : "/v1/project/templates/details",
     LIST_PROJECT : "/v1/userProjects/list"
 }

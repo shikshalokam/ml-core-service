@@ -7,7 +7,6 @@
 
 //dependencies
 const request = require('request');
-// process.env.ML_PROJECT_SERVICE_URL = "http://ml-projects-service:3000"
 
 /**
   * List of user assigned projects.
@@ -133,18 +132,18 @@ var importedProjects = function ( token,programId = "" ) {
 /**
   * Get project detail by solutionId.
   * @function
-  * @name getDetail
+  * @name getProjectDetail
   * @param {String} token - logged in user token.
   * @param {String} link - link
   * @param {Object} bodyData - bodyData
   * @returns {Promise} returns a promise.
 */
 
-var getDetail = function ( solutionId, token, bodyData = {} ) {
+var getProjectDetail = function ( solutionId, token, bodyData = {} ) {
 
-    let getProjectDetailByLinkUrl = 
+    let getProjectDetailUrl = 
     process.env.ML_PROJECT_SERVICE_URL + 
-    constants.endpoints.GET_PROJECT_DETAILS_BY_LINK + "?solutionId=" + solutionId;
+    constants.endpoints.GET_PROJECT_DETAILS + "?solutionId=" + solutionId;
     
     return new Promise(async (resolve, reject) => {
         try {
@@ -186,7 +185,7 @@ var getDetail = function ( solutionId, token, bodyData = {} ) {
                 options.json = bodyData
             } 
 
-            request.get(getProjectDetailByLinkUrl,options,improvementProjectCallback)
+            request.get(getProjectDetailUrl,options,improvementProjectCallback)
 
         } catch (error) {
             return reject(error);
@@ -321,7 +320,7 @@ const projectDocuments = function (
 module.exports = {
     assignedProjects : assignedProjects,
     importedProjects : importedProjects,
-    getDetail : getDetail,
+    getProjectDetail : getProjectDetail,
     getTemplateDetail : getTemplateDetail,
     projectDocuments : projectDocuments
 }

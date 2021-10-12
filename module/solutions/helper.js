@@ -8,29 +8,28 @@
 // Dependencies
 
 const programsHelper = require(MODULES_BASE_PATH + "/programs/helper");
-const entitysolutionTypesHelper = require(MODULES_BASE_PATH + "/entityTypes/helper");
+const entityTypesHelper = require(MODULES_BASE_PATH + "/entityTypes/helper");
 const entitiesHelper = require(MODULES_BASE_PATH + "/entities/helper");
 const userRolesHelper = require(MODULES_BASE_PATH + "/user-roles/helper");
 const assessmentService = require(ROOT_PATH + '/generics/services/samiksha');
 const improvementProjectService = require(ROOT_PATH + '/generics/services/improvement-project');
-const appsPortalBaseUrl = (process.env.APP_PORTAL_BASE_URL && process.env.APP_PORTAL_BASE_URL !== "") ? process.env.APP_PORTAL_BASE_URL + "/" : "https://apps.shikshalokam.org/";
+const appsPortalBaseUrl = (process.env.APP_PORTAL_BASE_URL && process.env.APP_PORTAL_BASE_URL !== "") ? process.env.APP_PORTAL_BASE_URL + "/" : "https://dev.sunbirded.org/";
 
 /**
     * SolutionsHelper
     * @class
 */
 module.exports = class SolutionsHelper {
-
-    /**
+  /**
    * Solution Data
    * @method
    * @name solutionDocuments
    * @param {Array} [filterQuery = "all"] - solution ids.
    * @param {Array} [fieldsArray = "all"] - projected fields.
    * @param {Array} [skipFields = "none"] - field not to include
-   * @returns {Array} List of solutions. 
+   * @returns {Array} List of solutions.
    */
-  
+
   static solutionDocuments(
     filterQuery = "all", 
     fieldsArray = "all",
@@ -94,7 +93,7 @@ module.exports = class SolutionsHelper {
     });
   }
 
-     /**
+  /**
    * Create solution.
    * @method 
    * @name createSolution
@@ -102,7 +101,7 @@ module.exports = class SolutionsHelper {
    * @returns {JSON} solution creation data. 
    */
   
-  static createSolution(solutionData) {
+   static createSolution(solutionData) {
     return new Promise(async (resolve, reject) => {
         try {
 
@@ -217,7 +216,7 @@ module.exports = class SolutionsHelper {
     });
   }
 
-    /**
+  /**
    * Set scope in solution
    * @method
    * @name setScope
@@ -230,7 +229,7 @@ module.exports = class SolutionsHelper {
    * @returns {JSON} - scope in solution.
    */
 
-  static setScope( programId,solutionId,scopeData ) {
+   static setScope( programId,solutionId,scopeData ) {
 
     return new Promise(async (resolve, reject) => {
 
@@ -397,7 +396,7 @@ module.exports = class SolutionsHelper {
       }
 
     })
-  } 
+  }
 
   /**
    * Update solution.
@@ -408,7 +407,7 @@ module.exports = class SolutionsHelper {
    * @returns {JSON} solution creation data. 
    */
   
-  static update(solutionId, solutionData, userId) {
+   static update(solutionId, solutionData, userId) {
     return new Promise(async (resolve, reject) => {
         try {
 
@@ -493,7 +492,7 @@ module.exports = class SolutionsHelper {
    * @returns {JSON} List of solutions.
    */
   
-  static list(type,subType,filter = {},pageNo,pageSize,searchText,projection) {
+   static list(type,subType,filter = {},pageNo,pageSize,searchText,projection) {
     return new Promise(async (resolve, reject) => {
         try {
 
@@ -502,7 +501,7 @@ module.exports = class SolutionsHelper {
           };
 
           if( type == constants.common.SURVEY ) {
-            matchQuery["status"] = { $in: [ constants.common.ACTIVE, constants.common.IN_ACTIVE ] }
+            matchQuery["status"] = { $in: [ constants.common.ACTIVE, constants.common.INACTIVE ] }
           } else {
             matchQuery.status = constants.common.ACTIVE ;
           }
@@ -617,106 +616,106 @@ module.exports = class SolutionsHelper {
    * @returns {JSON} - List of solutions based on role and location.
    */
 
-  static forUserRoleAndLocation( 
-    bodyData,
-    type,
-    subType = "",
-    programId, 
-    pageSize, 
-    pageNo,
-    searchText = "" 
-  ) {
-    return new Promise(async (resolve, reject) => {
-      try {
-
-        let queryData = await this.queryBasedOnRoleAndLocation(
-          bodyData,
-          type,
-          subType,
-          programId
-        );
-
-        if( !queryData.success ) {
-          return resolve(queryData);
-        }
-
-        let matchQuery = queryData.data;
-
-        if( type === "" && subType === "" ) {
-          
-          let targetedTypes = _targetedSolutionTypes();
-
-          matchQuery["$or"] = [];
-
-          targetedTypes.forEach( type => {
+    static forUserRoleAndLocation( 
+      bodyData,
+      type,
+      subType = "",
+      programId, 
+      pageSize, 
+      pageNo,
+      searchText = "" 
+    ) {
+      return new Promise(async (resolve, reject) => {
+        try {
+  
+          let queryData = await this.queryBasedOnRoleAndLocation(
+            bodyData,
+            type,
+            subType,
+            programId
+          );
+  
+          if( !queryData.success ) {
+            return resolve(queryData);
+          }
+  
+          let matchQuery = queryData.data;
+  
+          if( type === "" && subType === "" ) {
             
-            let singleType = {
-              type : type
-            };
-
-            if( type === constants.common.IMPROVEMENT_PROJECT ) {
-              singleType["projectTemplateId"] = { $exists : true };
+            let targetedTypes = _targetedSolutionTypes();
+  
+            matchQuery["$or"] = [];
+  
+            targetedTypes.forEach( type => {
+              
+              let singleType = {
+                type : type
+              };
+  
+              if( type === constants.common.IMPROVEMENT_PROJECT ) {
+                singleType["projectTemplateId"] = { $exists : true };
+              }
+  
+              matchQuery["$or"].push(singleType);
+            })
+          } else {
+            
+            if( type !== "" ) {
+              matchQuery["type"] = type;
             }
-
-            matchQuery["$or"].push(singleType);
-          })
-        } else {
-          
-          if( type !== "" ) {
-            matchQuery["type"] = type;
+        
+            if( subType !== "" ) {
+              matchQuery["subType"] = subType;
+            }
           }
-      
-          if( subType !== "" ) {
-            matchQuery["subType"] = subType;
+  
+          if ( programId !== "" ) {
+            matchQuery["programId"] = ObjectId(programId);
           }
+  
+          let targetedSolutions = await this.list(
+            type,
+            subType,
+            matchQuery,
+            pageNo,
+            pageSize,
+            searchText,
+            [
+              "name", 
+              "description", 
+              "programName",
+              "programId",
+              "externalId",
+              "projectTemplateId",
+              "type",
+              "language",
+              "creator",
+              "endDate",
+              "link"
+            ]  
+          );
+        
+          return resolve({
+            success: true,
+            message: constants.apiResponses.TARGETED_SOLUTIONS_FETCHED,
+            data: targetedSolutions.data
+          });
+  
+        } catch (error) {
+  
+          return resolve({
+            success : false,
+            message : error.message,
+            data : {}
+          });
+  
         }
+  
+      })
+    }
 
-        if ( programId !== "" ) {
-          matchQuery["programId"] = ObjectId(programId);
-        }
-
-        let targetedSolutions = await this.list(
-          type,
-          subType,
-          matchQuery,
-          pageNo,
-          pageSize,
-          searchText,
-          [
-            "name", 
-            "description", 
-            "programName",
-            "programId",
-            "externalId",
-            "projectTemplateId",
-            "type",
-            "language",
-            "creator",
-            "endDate",
-            "link"
-          ]  
-        );
-      
-        return resolve({
-          success: true,
-          message: constants.apiResponses.TARGETED_SOLUTIONS_FETCHED,
-          data: targetedSolutions.data
-        });
-
-      } catch (error) {
-
-        return resolve({
-          success : false,
-          message : error.message,
-          data : {}
-        });
-
-      }
-
-    })
-  }
-
-   /**
+  /**
    * Auto targeted query field.
    * @method
    * @name queryBasedOnRoleAndLocation
@@ -724,7 +723,7 @@ module.exports = class SolutionsHelper {
    * @returns {JSON} - Auto targeted solutions query.
    */
   
-  static queryBasedOnRoleAndLocation( data, type = "" ) {
+   static queryBasedOnRoleAndLocation( data, type = "" ) {
     return new Promise(async (resolve, reject) => {
       try {
 
@@ -766,7 +765,7 @@ module.exports = class SolutionsHelper {
 
         if( type === constants.common.SURVEY ) {
 
-          filterQuery["status"] = { $in: [ constants.common.ACTIVE, constants.common.IN_ACTIVE ] }
+          filterQuery["status"] = { $in: [ constants.common.ACTIVE, constants.common.INACTIVE ] }
           let validDate = new Date();
           validDate.setDate(validDate.getDate() - constants.common.DEFAULT_SURVEY_REMOVED_DAY );
           filterQuery["endDate"] = { $gte : validDate } 
@@ -812,7 +811,7 @@ module.exports = class SolutionsHelper {
     })   
   } 
 
-   /**
+  /**
    * Details of solution based on role and location.
    * @method
    * @name detailsBasedOnRoleAndLocation
@@ -821,7 +820,7 @@ module.exports = class SolutionsHelper {
    * @returns {JSON} - Details of solution based on role and location.
    */
 
-  static detailsBasedOnRoleAndLocation( solutionId,bodyData ) {
+   static detailsBasedOnRoleAndLocation( solutionId,bodyData ) {
 
     return new Promise(async (resolve, reject) => {
 
@@ -881,7 +880,7 @@ module.exports = class SolutionsHelper {
     })
   }
 
-   /**
+  /**
    * Add roles in solution scope.
    * @method
    * @name addRolesInScope
@@ -890,7 +889,7 @@ module.exports = class SolutionsHelper {
    * @returns {JSON} - Added roles data.
    */
 
-  static addRolesInScope( solutionId,roles ) {
+   static addRolesInScope( solutionId,roles ) {
     return new Promise(async (resolve, reject) => {
       try {
 
@@ -967,7 +966,7 @@ module.exports = class SolutionsHelper {
     })
   } 
 
-   /**
+ /**
    * Add entities in solution.
    * @method
    * @name addEntitiesInScope
@@ -1067,7 +1066,7 @@ module.exports = class SolutionsHelper {
     })
   } 
 
-   /**
+  /**
    * remove roles from solution scope.
    * @method
    * @name removeRolesInScope
@@ -1076,66 +1075,75 @@ module.exports = class SolutionsHelper {
    * @returns {JSON} - Removed solution roles.
    */
 
-  static removeRolesInScope( solutionId,roles ) {
+  static removeRolesInScope(solutionId, roles) {
     return new Promise(async (resolve, reject) => {
       try {
-
-        let solutionData = 
-        await this.solutionDocuments({ 
-          _id : solutionId,
-          scope : { $exists : true },
-          isReusable : false,
-          isDeleted : false
-        },["_id"]);
-
-        if( !solutionData.length > 0 ) {
-          return resolve({
-            status : httpStatusCode.bad_request.status,
-            message : constants.apiResponses.SOLUTION_NOT_FOUND
-          });
-        }
-
-        let userRoles = await userRolesHelper.roleDocuments({
-          code : { $in : roles }
-        },["_id","code"]
+        let solutionData = await this.solutionDocuments(
+          {
+            _id: solutionId,
+            scope: { $exists: true },
+            isReusable: false,
+            isDeleted: false,
+          },
+          ["_id"]
         );
-        
-        if( !userRoles.length > 0 ) {
+
+        if (!solutionData.length > 0) {
           return resolve({
-            status : httpStatusCode.bad_request.status,
-            message : constants.apiResponses.INVALID_ROLE_CODE
+            status: httpStatusCode.bad_request.status,
+            message: constants.apiResponses.SOLUTION_NOT_FOUND,
           });
         }
 
-        let updateSolution = await database.models.solutions.findOneAndUpdate({
-          _id : solutionId
-        },{
-          $pull : { "scope.roles" : { $in : userRoles } }
-        },{ new : true }).lean();
+        let userRoles = await userRolesHelper.roleDocuments(
+          {
+            code: { $in: roles },
+          },
+          ["_id", "code"]
+        );
 
-        if( !updateSolution || !updateSolution._id ) {
+        if (!userRoles.length > 0) {
+          return resolve({
+            status: httpStatusCode.bad_request.status,
+            message: constants.apiResponses.INVALID_ROLE_CODE,
+          });
+        }
+
+        let updateSolution = await database.models.solutions
+          .findOneAndUpdate(
+            {
+              _id: solutionId,
+            },
+            {
+              $pull: { "scope.roles": { $in: userRoles } },
+            },
+            { new: true }
+          )
+          .lean();
+
+        if (!updateSolution || !updateSolution._id) {
           throw {
-            message : constants.apiResponses.SOLUTION_NOT_UPDATED
-          }
+            message: constants.apiResponses.SOLUTION_NOT_UPDATED,
+          };
         }
 
         return resolve({
-          message : constants.apiResponses.ROLES_REMOVED_IN_SOLUTION,
-          success : true
+          message: constants.apiResponses.ROLES_REMOVED_IN_SOLUTION,
+          success: true,
         });
-
-      } catch(error) {
+      } catch (error) {
         return resolve({
-          success : false,
-          status : error.status ? 
-          error.status : httpStatusCode['internal_server_error'].status,
-          message : error.message
-        })
+          success: false,
+          status: error.status
+            ? error.status
+            : httpStatusCode['internal_server_error'].status,
+          message: error.message,
+        });
       }
-    })
-  } 
+    });
+  }
 
-   /**
+  /**
    * remove entities in solution scope.
    * @method
    * @name removeEntitiesInScope
@@ -1144,72 +1152,81 @@ module.exports = class SolutionsHelper {
    * @returns {JSON} - Removed entities from solution scope.
    */
 
-  static removeEntitiesInScope( solutionId,entities ) {
+  static removeEntitiesInScope(solutionId, entities) {
     return new Promise(async (resolve, reject) => {
       try {
+        let solutionData = await this.solutionDocuments(
+          {
+            _id: solutionId,
+            scope: { $exists: true },
+            isReusable: false,
+            isDeleted: false,
+          },
+          ["_id", "scope.entityTypeId"]
+        );
 
-        let solutionData = 
-        await this.solutionDocuments({ 
-          _id : solutionId,
-          scope : { $exists : true },
-          isReusable : false,
-          isDeleted : false
-        },["_id","scope.entityTypeId"]);
-
-        if( !solutionData.length > 0 ) {
+        if (!solutionData.length > 0) {
           return resolve({
-            status : httpStatusCode.bad_request.status,
-            message : constants.apiResponses.SOLUTION_NOT_FOUND
+            status: httpStatusCode.bad_request.status,
+            message: constants.apiResponses.SOLUTION_NOT_FOUND,
           });
         }
 
-        let entitiesData = 
-        await entitiesHelper.entityDocuments({
-          _id : { $in : entities },
-          entityTypeId : solutionData[0].scope.entityTypeId
-        },["_id"]);
-          
-        if( !entitiesData.length > 0 ) {
-            throw {
-              message : constants.apiResponses.ENTITIES_NOT_FOUND
-            };
+        let entitiesData = await entitiesHelper.entityDocuments(
+          {
+            _id: { $in: entities },
+            entityTypeId: solutionData[0].scope.entityTypeId,
+          },
+          ["_id"]
+        );
+
+        if (!entitiesData.length > 0) {
+          throw {
+            message: constants.apiResponses.ENTITIES_NOT_FOUND,
+          };
         }
 
         let entityIds = [];
-        
-        entitiesData.forEach(entity => {
+
+        entitiesData.forEach((entity) => {
           entityIds.push(entity._id);
         });
 
-        let updateSolution = await database.models.solutions.findOneAndUpdate({
-          _id : solutionId
-        },{
-          $pull : { "scope.entities" : { $in : entityIds } }
-        },{ new : true }).lean();
+        let updateSolution = await database.models.solutions
+          .findOneAndUpdate(
+            {
+              _id: solutionId,
+            },
+            {
+              $pull: { "scope.entities": { $in: entityIds } },
+            },
+            { new: true }
+          )
+          .lean();
 
-        if( !updateSolution || !updateSolution._id ) {
+        if (!updateSolution || !updateSolution._id) {
           throw {
-            message : constants.apiResponses.SOLUTION_NOT_UPDATED
-          }
+            message: constants.apiResponses.SOLUTION_NOT_UPDATED,
+          };
         }
 
         return resolve({
-          message : constants.apiResponses.ENTITIES_REMOVED_IN_SOLUTION,
-          success : true
+          message: constants.apiResponses.ENTITIES_REMOVED_IN_SOLUTION,
+          success: true,
         });
-
-      } catch(error) {
+      } catch (error) {
         return resolve({
-          success : false,
-          status : error.status ? 
-          error.status : httpStatusCode['internal_server_error'].status,
-          message : error.message
-        })
+          success: false,
+          status: error.status
+            ? error.status
+            : httpStatusCode['internal_server_error'].status,
+          message: error.message,
+        });
       }
-    })
-  } 
+    });
+  }
 
-   /**
+  /**
    * Solution details.
    * @method
    * @name details
@@ -1217,38 +1234,39 @@ module.exports = class SolutionsHelper {
    * @returns {Object} - Details of the solution.
    */
 
-  static details( solutionId ) {
+  static getDetails(solutionId) {
     return new Promise(async (resolve, reject) => {
       try {
+        let solutionData = await this.solutionDocuments({
+          _id: solutionId,
+          isDeleted: false,
+        });
 
-        let solutionData = 
-        await this.solutionDocuments({ _id : solutionId,isDeleted : false });
-
-        if( !solutionData.length > 0 ) {
+        if ( !solutionData.length > 0 ) {
           return resolve({
-            status : httpStatusCode.bad_request.status,
-            message : constants.apiResponses.SOLUTION_NOT_FOUND
+            status: httpStatusCode.bad_request.status,
+            message: constants.apiResponses.SOLUTION_NOT_FOUND,
           });
         }
 
         return resolve({
-          message : constants.apiResponses.SOLUTION_DETAILS_FETCHED,
-          success : true,
-          data : solutionData[0]
+          message: constants.apiResponses.SOLUTION_DETAILS_FETCHED,
+          success: true,
+          data: solutionData[0],
         });
-
-      } catch(error) {
+      } catch (error) {
         return resolve({
-          success : false,
-          status : error.status ? 
-          error.status : httpStatusCode['internal_server_error'].status,
-          message : error.message
-        })
+          success: false,
+          status: error.status
+            ? error.status
+            : httpStatusCode['internal_server_error'].status,
+          message: error.message,
+        });
       }
-    })
+    });
   }
-  
-   /**
+
+  /**
    * List of solutions and targeted ones.
    * @method
    * @name targetedSolutions
@@ -1256,11 +1274,20 @@ module.exports = class SolutionsHelper {
    * @returns {Object} - Details of the solution.
    */
 
-  static targetedSolutions(requestedData,solutionType,userToken,pageSize,pageNo,search,filter, surveyReportPage = "") {
+  static targetedSolutions(
+    requestedData,
+    solutionType,
+    userToken,
+    pageSize,
+    pageNo,
+    search,
+    filter,
+    surveyReportPage = ""
+  ) {
     return new Promise(async (resolve, reject) => {
-        try {
+      try {
 
-          let assignedSolutions = await this.assignedUserSolutions(
+        let assignedSolutions = await this.assignedUserSolutions(
             solutionType,
             userToken,
             search,
@@ -1268,142 +1295,141 @@ module.exports = class SolutionsHelper {
             surveyReportPage
           );
 
-          let totalCount = 0;
-          let mergedData = [];
-          let solutionIds = [];
+        let totalCount = 0;
+        let mergedData = [];
+        let solutionIds = [];
 
-          if( assignedSolutions.success && assignedSolutions.data ) {
+        if( assignedSolutions.success && assignedSolutions.data ) {
 
-            totalCount = assignedSolutions.data.count;
-            mergedData = assignedSolutions.data.data;
+          totalCount = assignedSolutions.data.count;
+          mergedData = assignedSolutions.data.data;
 
-            if( mergedData.length > 0 ) {
+          if ( mergedData.length > 0 ) {
+            let programIds = [];
 
-                let programIds = [];
+            mergedData.forEach( mergeSolutionData => {
+              if( mergeSolutionData.solutionId ) {
+                  solutionIds.push(mergeSolutionData.solutionId);
+              }
 
-                mergedData.forEach( mergeSolutionData => {
-                    if( mergeSolutionData.solutionId ) {
-                        solutionIds.push(mergeSolutionData.solutionId);
-                    }
+              if( mergeSolutionData.programId ) {
+                  programIds.push(mergeSolutionData.programId);
+              }
+          });
 
-                    if( mergeSolutionData.programId ) {
-                        programIds.push(mergeSolutionData.programId);
-                    }
-                });
+          let programsData = await programsHelper.programDocuments({
+              _id : { $in : programIds }
+          },["name"]);
 
-                let programsData = await programsHelper.programDocuments({
-                    _id : { $in : programIds }
-                },["name"]);
+          if( programsData.length > 0 ) {
 
-                if( programsData.length > 0 ) {
-                    
-                    let programs = 
-                    programsData.reduce(
-                        (ac, program) => 
-                        ({ ...ac, [program._id.toString()]: program }), {}
-                    );
+              let programs = 
+              programsData.reduce(
+                  (ac, program) => 
+                  ({ ...ac, [program._id.toString()]: program }), {}
+              );
 
-                    mergedData = mergedData.map( data => {
-                        if( data.programId && programs[data.programId.toString()]) {
-                            data.programName = programs[data.programId.toString()].name;
-                        }
-                        return data;
-                    })
-                }
+              mergedData = mergedData.map((data) => {
+                  if( data.programId && programs[data.programId.toString()]) {
+                    data.programName = programs[data.programId.toString()].name;
+                  }
+                return data;
+              });
             }
           }
+        }
 
-          requestedData["filter"] = {};
-          if( solutionIds.length > 0 ) {
-            requestedData["filter"]["skipSolutions"] = solutionIds; 
+        requestedData['filter'] = {};
+        if( solutionIds.length > 0 ) {
+          requestedData["filter"]["skipSolutions"] = solutionIds; 
+        }
+
+        if( filter && filter !== "" ) {
+          if( filter === constants.common.CREATED_BY_ME ) {
+            requestedData["filter"]["isAPrivateProgram"] = {
+              $ne : false
+            };
+          } else if( filter === constants.common.ASSIGN_TO_ME ) {
+            requestedData["filter"]["isAPrivateProgram"] = false;
           }
+        }
 
-          if( filter && filter !== "" ) {
-            if( filter === constants.common.CREATED_BY_ME ) {
-              requestedData["filter"]["isAPrivateProgram"] = {
-                $ne : false
-              };
-            } else if( filter === constants.common.ASSIGN_TO_ME ) {
-              requestedData["filter"]["isAPrivateProgram"] = false;
-            }
-          }
+        let targetedSolutions = {
+          success: false,
+        };
 
-          let targetedSolutions = {
-            success : false
-          };
+        let getTargetedSolution = true;
 
-          let getTargetedSolution = true;
-
-          if(filter === constants.common.DISCOVERED_BY_ME){
+        if ( filter === constants.common.DISCOVERED_BY_ME ) {
             getTargetedSolution = false;
-          }else if (solutionType === constants.common.COURSE){
+        } else if ( solutionType === constants.common.COURSE ) {
             getTargetedSolution = true;
-          }else if (gen.utils.convertStringToBoolean(surveyReportPage) === true ){
-              getTargetedSolution = false;
-          }
+        } else if ( gen.utils.convertStringToBoolean(surveyReportPage) === true ) {
+            getTargetedSolution = false;
+        }
 
-          if( getTargetedSolution ) {
-              targetedSolutions = 
-                await this.forUserRoleAndLocation(
-                  requestedData,
-                  solutionType,
-                  "",
-                  "",
-                  constants.common.DEFAULT_PAGE_SIZE,
-                  constants.common.DEFAULT_PAGE_NO,
-                  search
-                ); 
-          }
+        if( getTargetedSolution ) {
+          targetedSolutions = 
+            await this.forUserRoleAndLocation(
+              requestedData,
+              solutionType,
+              "",
+              "",
+              constants.common.DEFAULT_PAGE_SIZE,
+              constants.common.DEFAULT_PAGE_NO,
+              search
+            ); 
+      }
 
-        if( targetedSolutions.success ) {
+      if( targetedSolutions.success ) {
 
-            if( targetedSolutions.data.data && targetedSolutions.data.data.length > 0 ) {
-                totalCount += targetedSolutions.data.count;
-                targetedSolutions.data.data.forEach(targetedSolution => {
-                    targetedSolution.solutionId = targetedSolution._id;
-                    targetedSolution._id = "";
+          if( targetedSolutions.data.data && targetedSolutions.data.data.length > 0 ) {
+              totalCount += targetedSolutions.data.count;
+              targetedSolutions.data.data.forEach(targetedSolution => {
+                  targetedSolution.solutionId = targetedSolution._id;
+                  targetedSolution._id = "";
 
-                    if( solutionType !== constants.common.COURSE ) {
-                      targetedSolution["creator"] = targetedSolution.creator ? targetedSolution.creator : "";
-                    }
-                    
-                    if ( solutionType === constants.common.SURVEY ) {
-                      targetedSolution.isCreator = false;
-                    }
+                  if( solutionType !== constants.common.COURSE ) {
+                    targetedSolution["creator"] = targetedSolution.creator ? targetedSolution.creator : "";
+                  }
                   
-                    mergedData.push(targetedSolution);
-                    delete targetedSolution.type; 
-                    delete targetedSolution.externalId;
+                  if ( solutionType === constants.common.SURVEY ) {
+                    targetedSolution.isCreator = false;
+                  }
                 
-                });
-            }
-        }
+                  mergedData.push(targetedSolution);
+                  delete targetedSolution.type; 
+                  delete targetedSolution.externalId;
+              
+              });
+          }
+      }
 
-        if( mergedData.length > 0 ) {
-            let startIndex = pageSize * (pageNo - 1);
-            let endIndex = startIndex + pageSize;
-            mergedData = mergedData.slice(startIndex,endIndex) 
-        }
+      if( mergedData.length > 0 ) {
+          let startIndex = pageSize * (pageNo - 1);
+          let endIndex = startIndex + pageSize;
+          mergedData = mergedData.slice(startIndex,endIndex) 
+      }
 
         return resolve({
-            success : true,
-            message : constants.apiResponses.TARGETED_OBSERVATION_FETCHED,
-            data : {
-                data : mergedData,
-                count : totalCount
-            }
+          success: true,
+          message: constants.apiResponses.TARGETED_OBSERVATION_FETCHED,
+          data: {
+            data: mergedData,
+            count: totalCount,
+          },
         });
-
       } catch (error) {
         return reject({
           status: error.status || httpStatusCode.internal_server_error.status,
-          message: error.message || httpStatusCode.internal_server_error.message,
-          errorObject: error
+          message:
+            error.message || httpStatusCode.internal_server_error.message,
+          errorObject: error,
         });
       }
-    })
+    });
   }
-     /**
+   /**
    * Solution details.
    * @method
    * @name assignedUserSolutions
@@ -1444,7 +1470,7 @@ module.exports = class SolutionsHelper {
         }
 
           return resolve(userAssignedSolutions);
-        } catch(error) {
+      } catch(error) {
           return resolve({
             success : false,
             status : error.status ? 
@@ -1458,65 +1484,77 @@ module.exports = class SolutionsHelper {
   /**
    * Get link by solution id
    * @method
-   * @name getLink
+   * @name fetchLink
    * @param {String} solutionId - solution Id.
    * @param {String} appName - app Name.
    * @param {String} userId - user Id.
    * @returns {Object} - Details of the solution.
    */
 
-  static getLink( solutionId, userId ) {
+  static fetchLink(solutionId, userId) {
     return new Promise(async (resolve, reject) => {
       try {
 
-        let solutionData = await this.solutionDocuments({
-                                _id : solutionId,
-                                isReusable : false,
-                                isAPrivateProgram: false
-                                },[
-                                    "link","type","author"
-                              ]);
+        let solutionData = await this.solutionDocuments(
+          {
+            _id: solutionId,
+            isReusable: false,
+            isAPrivateProgram: false,
+          },
+          ["link", "type", 'author']
+        );
 
         if ( !Array.isArray(solutionData) || solutionData.length < 1 ) {
-            return resolve({
-                message: constants.apiResponses.SOLUTION_NOT_FOUND,
-                result: {}
-            });
+          return resolve({
+            message: constants.apiResponses.SOLUTION_NOT_FOUND,
+            result: {},
+          });
         }
 
-       
         let prefix = constants.common.PREFIX_FOR_PROJECT_LINK;
-        
+
         let solutionLink, link;
 
         if ( !solutionData[0].link ) {
 
-          let updateLink = await gen.utils.md5Hash(solutionData[0]._id + "###" + solutionData[0].author);
-          let updateSolution = await this.update(solutionId, { link : updateLink } , userId );
+          let updateLink = await gen.utils.md5Hash(
+            solutionData[0]._id + "###" + solutionData[0].author
+          );
+
+          let updateSolution = await this.update(
+            solutionId,
+            { link: updateLink },
+            userId
+          );
 
           solutionLink = updateLink;
-
         } else {
           solutionLink = solutionData[0].link;
         }
 
-        link = _generateLink(appsPortalBaseUrl, prefix, solutionLink, solutionData[0].type);
+        link = _generateLink(
+          appsPortalBaseUrl,
+          prefix,
+          solutionLink,
+          solutionData[0].type
+        );
 
         return resolve({
-            success : true,
-            message: constants.apiResponses.LINK_GENERATED,
-            result: link
+          success: true,
+          message: constants.apiResponses.LINK_GENERATED,
+          result: link,
         });
 
-      } catch(error) {
+      } catch (error) {
         return resolve({
-          success : false,
-          status : error.status ? 
-          error.status : httpStatusCode['internal_server_error'].status,
-          message : error.message
-        })
+          success: false,
+          status: error.status
+            ? error.status
+            : httpStatusCode['internal_server_error'].status,
+          message: error.message,
+        });
       }
-    })
+    });
   }
 
   /**
@@ -1529,63 +1567,89 @@ module.exports = class SolutionsHelper {
    * @returns {Object} - Details of the solution.
    */
 
-  static verifyLink( link = "", bodyData = {}, userId = "", userToken = "" ) {
+  static verifyLink(link = "", bodyData = {}, userId = "", userToken = "") {
     return new Promise(async (resolve, reject) => {
       try {
+        let verifySolution = await this.verifySolutionDetails(
+          link,
+          userId,
+          userToken
+        );
+        let checkForTargetedSolution = await this.checkForTargetedSolution(
+          link,
+          bodyData,
+          userId,
+          userToken
+        );
 
-        let verifySolution = await this.verifySolutionDetails( link, userId, userToken );
-        let checkForTargetedSolution = await this.checkForTargetedSolution( link, bodyData, userId, userToken );
-
-        if ( checkForTargetedSolution && Object.keys( checkForTargetedSolution.result ).length > 0 ) {
+        if (
+          checkForTargetedSolution &&
+          Object.keys(checkForTargetedSolution.result).length > 0
+        ) {
 
           let solutionData = checkForTargetedSolution.result;
           if ( !checkForTargetedSolution.result.isATargetedSolution ) {
-
             if ( solutionData.type == constants.common.IMPROVEMENT_PROJECT ) {
 
               let filterQuery = {
                 createdBy: userId,
                 referenceFrom: constants.common.LINK,
-                link: link
-              }
+                link: link,
+              };
 
-              let checkForProjectExist = await improvementProjectService.projectDocuments( userToken, filterQuery, [ "_id" ] );
-              if ( checkForProjectExist.success && checkForProjectExist.data && checkForProjectExist.data.length > 0 && checkForProjectExist.data[ 0 ]._id != "" ) {
-                checkForTargetedSolution.result[ "projectId" ] = checkForProjectExist.data[ 0 ]._id;
+              let checkForProjectExist =
+                await improvementProjectService.projectDocuments(
+                  userToken,
+                  filterQuery,
+                  ["_id"]
+                );
+              if (
+                checkForProjectExist.success &&
+                checkForProjectExist.data &&
+                checkForProjectExist.data.length > 0 &&
+                checkForProjectExist.data[0]._id != ""
+              ) {
+                checkForTargetedSolution.result['projectId'] =
+                  checkForProjectExist.data[0]._id;
               }
             }
-
-          }
-          else {
-
+          } else {
             let detailFromLink;
             if ( solutionData.type == constants.common.IMPROVEMENT_PROJECT ) {
-
-              detailFromLink = await improvementProjectService.getDetail( solutionData.solutionId, userToken, bodyData );
+              detailFromLink = await improvementProjectService.getProjectDetail(
+                solutionData.solutionId,
+                userToken,
+                bodyData
+              );
 
               if ( !detailFromLink || !detailFromLink.data ) {
-                return resolve( detailFromLink )
+                return resolve(detailFromLink);
               }
 
-              if ( solutionData.type == constants.common.IMPROVEMENT_PROJECT && detailFromLink.data._id != "" ) {
-                checkForTargetedSolution.result[ "projectId" ] = detailFromLink.data._id ? detailFromLink.data._id : "";
+              if (
+                solutionData.type == constants.common.IMPROVEMENT_PROJECT &&
+                detailFromLink.data._id != ""
+              ) {
+                checkForTargetedSolution.result['projectId'] = detailFromLink
+                  .data._id
+                  ? detailFromLink.data._id
+                  : "";
               }
             }
           }
-
         }
 
-        return resolve( checkForTargetedSolution );
-
-      } catch ( error ) {
+        return resolve(checkForTargetedSolution);
+      } catch (error) {
         return resolve({
           success: false,
-          status: error.status ?
-            error.status : httpStatusCode[ 'internal_server_error' ].status,
-          message: error.message
-        })
+          status: error.status
+            ? error.status
+            : httpStatusCode['internal_server_error'].status,
+          message: error.message,
+        });
       }
-    })
+    });
   }
 
   /**
@@ -1596,79 +1660,87 @@ module.exports = class SolutionsHelper {
    * @returns {Object} - Details of the solution.
    */
 
-    static verifySolutionDetails(link = "", userId = "", userToken = "") {
-      return new Promise(async (resolve, reject) => {
-        try {
+  static verifySolutionDetails(link = "", userId = "", userToken = "") {
+    return new Promise(async (resolve, reject) => {
+      try {
+        let response = {
+          verified: false,
+        };
 
-          let response = {
-              verified: false
-          };
+        if ( link == "" ) {
+          throw new Error(constants.apiResponses.LINK_REQUIRED_CHECK);
+        }
 
-          if (link == "") {
-              throw new Error(constants.apiResponses.LINK_REQUIRED_CHECK)
-          }
+        if ( userToken == "" ) {
+          throw new Error(constants.apiResponses.REQUIRED_USER_AUTH_TOKEN);
+        }
 
-          if (userToken == "") {
-              throw new Error(constants.apiResponses.REQUIRED_USER_AUTH_TOKEN)
-          }
+        if ( userId == "" ) {
+          throw new Error(constants.apiResponses.USER_ID_REQUIRED_CHECK);
+        }
 
-          if (userId == "") {
-              throw new Error(constants.apiResponses.USER_ID_REQUIRED_CHECK)
-          }
+        let solutionData = await this.solutionDocuments(
+          {
+            link: link,
+            isReusable: false,
+            status: {
+              $ne: constants.common.INACTIVE,
+            },
+          },
+          ["type", "status", "endDate"]
+        );
 
-          let solutionData = await this.solutionDocuments({
-              link: link,
-              isReusable: false,
-              status: {
-                  $ne: constants.common.IN_ACTIVE
-              }
-          }, [
-              "type", "status", "endDate"
-          ]);
-
-          if (!Array.isArray(solutionData) || solutionData.length < 1) {
-              return resolve({
-                  message: constants.apiResponses.INVALID_LINK,
-                  result: []
-              });
-          }
-
-          if (solutionData[0].status !== constants.common.ACTIVE) {
-              return resolve({
-                  message: constants.apiResponses.LINK_IS_EXPIRED,
-                  result: []
-              });
-          }
-
-          if (solutionData[0].endDate && new Date() > new Date(solutionData[0].endDate)) {
-              if (solutionData[0].status === constants.common.ACTIVE) {
-                  let updateSolution = await this.update(solutionData[0]._id, {
-                      status: constants.common.IN_ACTIVE
-                  }, userId);
-              }
-
-              return resolve({
-                  message: constants.apiResponses.LINK_IS_EXPIRED,
-                  result: []
-              });
-          }
-
-          response.verified = true;
+        if ( !Array.isArray(solutionData) || solutionData.length < 1 ) {
           return resolve({
-              message: constants.apiResponses.LINK_VERIFIED,
-              result: response
+            message: constants.apiResponses.INVALID_LINK,
+            result: [],
           });
+        }
 
-        } catch (error) {
-              return resolve({
-                  success: false,
-                  status: error.status ?
-                      error.status : httpStatusCode['internal_server_error'].status,
-                  message: error.message
-              })
-          }
-      })
-    }
+        if ( solutionData[0].status !== constants.common.ACTIVE ) {
+          return resolve({
+            message: constants.apiResponses.LINK_IS_EXPIRED,
+            result: [],
+          });
+        }
+
+        if (
+          solutionData[0].endDate &&
+          new Date() > new Date(solutionData[0].endDate)
+        ) {
+          
+            if ( solutionData[0].status === constants.common.ACTIVE ) {
+                let updateSolution = await this.update(
+                  solutionData[0]._id,
+                  {
+                    status: constants.common.INACTIVE,
+                  },
+                  userId
+                );
+            }
+
+            return resolve({
+              message: constants.apiResponses.LINK_IS_EXPIRED,
+              result: [],
+            });
+        }
+
+        response.verified = true;
+        return resolve({
+          message: constants.apiResponses.LINK_VERIFIED,
+          result: response,
+        });
+      } catch (error) {
+        return resolve({
+          success: false,
+          status: error.status
+            ? error.status
+            : httpStatusCode['internal_server_error'].status,
+          message: error.message,
+        });
+      }
+    });
+  }
 
   /**
    * Check the user is targeted.
@@ -1678,106 +1750,131 @@ module.exports = class SolutionsHelper {
    * @returns {Object} - Details of the solution.
    */
 
-  static checkForTargetedSolution( link = "", bodyData = {}, userId = "", userToken = "" ) {
+  static checkForTargetedSolution(
+    link = "",
+    bodyData = {},
+    userId = "",
+    userToken = ""
+  ) {
     return new Promise(async (resolve, reject) => {
       try {
 
         let response = {
-          isATargetedSolution : false,
-          link : link
+          isATargetedSolution: false,
+          link: link,
         };
 
-        let solutionDetails = await this.solutionDocuments({link:link},["type","_id"]);
-        
+        let solutionDetails = await this.solutionDocuments({ link: link }, [
+          "type",
+          "_id",
+          "programId",
+        ]);
+
         let queryData = await this.queryBasedOnRoleAndLocation(bodyData);
-        if( !queryData.success ) {
+        if ( !queryData.success ) {
           return resolve(queryData);
         }
 
         queryData.data["link"] = link;
         let matchQuery = queryData.data;
 
-        let solutionData = await this.solutionDocuments(matchQuery, ["_id","link","type"]);
-        
-        if( !Array.isArray(solutionData) || solutionData.length < 1 ) {
+        let solutionData = await this.solutionDocuments(matchQuery, [
+          "_id",
+          "link",
+          "type",
+          "programId",
+        ]);
+
+        if ( !Array.isArray(solutionData) || solutionData.length < 1 ) {
+
           response.solutionId = solutionDetails[0]._id;
           response.type = solutionDetails[0].type;
+          response.programId = solutionDetails[0].programId;
           return resolve({
-              success : true,
-              message: constants.apiResponses.SOLUTION_NOT_FOUND_OR_NOT_A_TARGETED,
-              result: response
-          }); 
+            success: true,
+            message:
+              constants.apiResponses.SOLUTION_NOT_FOUND_OR_NOT_A_TARGETED,
+            result: response,
+          });
         }
-        
+
         response.isATargetedSolution = true;
         Object.assign(response, solutionData[0]);
         response.solutionId = solutionData[0]._id;
         delete response._id;
 
         return resolve({
-            success : true,
-            message: constants.apiResponses.SOLUTION_DETAILS_VERIFIED,
-            result: response
-        }); 
+          success: true,
+          message: constants.apiResponses.SOLUTION_DETAILS_VERIFIED,
+          result: response,
+        });
 
-      } catch(error) {
+      } catch (error) {
         return resolve({
-          success : false,
-          status : error.status ? 
-          error.status : httpStatusCode['internal_server_error'].status,
-          message : error.message
-        })
+          success: false,
+          status: error.status
+            ? error.status
+            : httpStatusCode['internal_server_error'].status,
+          message: error.message,
+        });
       }
-    })
+    });
   }
 
   /**
    * Fetch template observation based on solution Id.
    * @method
-   * @name getDetails
+   * @name details
    * @param {String} solutionId - Solution Id.
    * @returns {Object} - Details of the solution.
    */
 
-  static getDetails( solutionId, bodyData = {}, userId = "", userToken = "" ) {
+  static details(solutionId, bodyData = {}, userId = "", userToken = "") {
     return new Promise(async (resolve, reject) => {
       try {
 
-        let solutionData = await this.solutionDocuments({_id:solutionId},["type", "projectTemplateId"]);
-        if (!Array.isArray(solutionData) || solutionData.length < 1) {
-            return resolve({
-                message: constants.apiResponses.SOLUTION_NOT_FOUND,
-                result: []
-            });
-        }
+        let solutionData = await this.solutionDocuments({ _id: solutionId }, [
+          "type",
+          "projectTemplateId",
+        ]);
 
+        if ( !Array.isArray(solutionData) || solutionData.length < 1 ) {
+          return resolve({
+            message: constants.apiResponses.SOLUTION_NOT_FOUND,
+            result: [],
+          });
+        }
+        
         solutionData = solutionData[0];
         let templateOrQuestionDetails;
 
-        if( solutionData.type === constants.common.IMPROVEMENT_PROJECT ) {
+        if ( solutionData.type === constants.common.IMPROVEMENT_PROJECT ) {
+          if ( !solutionData.projectTemplateId ) {
+            throw {
+              message: constants.apiResponses.PROJECT_TEMPLATE_ID_NOT_FOUND,
+            };
+          }
 
-            if( !solutionData.projectTemplateId ) {
-              throw {
-                message : constants.apiResponses.PROJECT_TEMPLATE_ID_NOT_FOUND
-              }
-            }
-
-            templateOrQuestionDetails = await improvementProjectService.getTemplateDetail( solutionData.projectTemplateId, userToken );
+          templateOrQuestionDetails =
+            await improvementProjectService.getTemplateDetail(
+              solutionData.projectTemplateId,
+              userToken
+            );
         }
 
-        return resolve(templateOrQuestionDetails); 
-
-      } catch(error) {
+        return resolve(templateOrQuestionDetails);
+        
+      } catch (error) {
         return resolve({
-          success : false,
-          status : error.status ? 
-          error.status : httpStatusCode['internal_server_error'].status,
-          message : error.message
-        })
+          success: false,
+          status: error.status
+            ? error.status
+            : httpStatusCode['internal_server_error'].status,
+          message: error.message,
+        });
       }
-    })
+    });
   }
-
 };
 
  /**
@@ -1807,7 +1904,7 @@ function _generateLink(appsPortalBaseUrl, prefix, solutionLink, solutionType) {
 
   let link;
 
-  switch( solutionType ) {
+  switch (solutionType) {
     case constants.common.OBSERVATION:
       link = appsPortalBaseUrl + prefix + constants.common.CREATE_OBSERVATION + solutionLink;
       break;
@@ -1819,5 +1916,5 @@ function _generateLink(appsPortalBaseUrl, prefix, solutionLink, solutionType) {
   }
 
   return link;
-  
+
 }

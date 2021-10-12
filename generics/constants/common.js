@@ -19,7 +19,7 @@ module.exports = {
   "STATE_ENTITY_TYPE":"state",
   "ALL_APP_VERSION" : "allAppVersion",
   "ACTIVE" : "active",
-  "IN_ACTIVE" : "inactive",
+  "INACTIVE" : "inactive",
   "BODH_DIAL_CODE_LIVE_STATUS" : "Live",
   "GOA_STATE" : "Goa",
   "UNNATI_APP_NAME" : "unnati",

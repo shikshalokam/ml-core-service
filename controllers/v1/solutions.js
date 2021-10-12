@@ -538,12 +538,12 @@ module.exports = class Solutions extends Abstract {
   }
 
       /**
-    * @api {get} /kendra/api/v1/solutions/details/:solutionId Solution details
+    * @api {get} /kendra/api/v1/solutions/getDetails/:solutionId Solution details
     * @apiVersion 1.0.0
     * @apiName Details of the solution.
     * @apiGroup Solutions
     * @apiHeader {String} X-authenticated-user-token Authenticity token
-    * @apiSampleRequest /kendra/api/v1/solutions/details/5ffbf8909259097d48017bbf
+    * @apiSampleRequest /kendra/api/v1/solutions/getDetails/5ffbf8909259097d48017bbf
     * @apiUse successBody
     * @apiUse errorBody
     * @apiParamExample {json} Response:
@@ -641,17 +641,17 @@ module.exports = class Solutions extends Abstract {
      /**
    * Details of the solution.
    * @method
-   * @name details
+   * @name getDetails
    * @param {Object} req - requested data.
    * @param {String} req.params._id - solution id.
    * @returns {Object} Solution details 
    */
 
-  async details(req) {
+  async getDetails(req) {
     return new Promise(async (resolve, reject) => {
       try {
 
-        let solutionData = await solutionsHelper.details(
+        let solutionData = await solutionsHelper.getDetails(
           req.params._id
         );
 
@@ -747,11 +747,11 @@ module.exports = class Solutions extends Abstract {
   }
 
    /**
-  * @api {get} /kendra/api/v1/solutions/getLink/:solutionId
+  * @api {get} /kendra/api/v1/solutions/fetchLink/:solutionId
   * @apiVersion 1.0.0
   * @apiName Get link by solution id
   * @apiGroup Solutions
-  * @apiSampleRequest /kendra/api/v1/solutions/getLink/5fa28620b6bd9b757dc4e932
+  * @apiSampleRequest /kendra/api/v1/solutions/fetchLink/5fa28620b6bd9b757dc4e932
   * @apiHeader {String} X-authenticated-user-token Authenticity token  
   * @apiUse successBody
   * @apiUse errorBody
@@ -766,17 +766,17 @@ module.exports = class Solutions extends Abstract {
    /**
    * Get link by solution id.
    * @method
-   * @name getLink
+   * @name fetchLink
    * @param {Object} req - requested data.
    * @param {String} req.params._id - solution Id
    * @returns {Array}
    */
 
-  async getLink(req) {
+  async fetchLink(req) {
     return new Promise(async (resolve, reject) => {
       try {
 
-        let solutionData = await solutionsHelper.getLink(
+        let solutionData = await solutionsHelper.fetchLink(
           req.params._id,
           req.userDetails.userId
         );
@@ -953,17 +953,17 @@ module.exports = class Solutions extends Abstract {
    /**
    * get solution details
    * @method
-   * @name getDetails
+   * @name details
    * @param {Object} req - requested data.
    * @param {String} req.params._id - solution Id
    * @returns {Array}
    */
 
-  async getDetails(req) {
+  async details(req) {
     return new Promise(async (resolve, reject) => {
       try {
 
-        let solutionData = await solutionsHelper.getDetails(
+        let solutionData = await solutionsHelper.details(
           req.params._id,
           req.body,
           req.userDetails.userId,

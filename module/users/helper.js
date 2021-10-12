@@ -20,592 +20,608 @@ const userService = require(ROOT_PATH + "/generics/services/users");
 */
 
 module.exports = class UsersHelper {
+  /**
+   * List of all private programs created by user
+   * @method
+   * @name privatePrograms
+   * @param {string} userId - logged in user Id.
+   * @returns {Array} - List of all private programs created by user.
+   */
 
-    /**
-  * List of all private programs created by user
-  * @method
-  * @name privatePrograms
-  * @param {string} userId - logged in user Id.
-  * @returns {Array} - List of all private programs created by user.
-  */
+  static privatePrograms(userId) {
+    return new Promise(async (resolve, reject) => {
+      try {
+        let userPrivatePrograms = await programsHelper.userPrivatePrograms(
+          userId
+        );
 
-    static privatePrograms(userId) {
-        return new Promise(async (resolve, reject) => {
-            try {
+        return resolve({
+          message: constants.apiResponses.PRIVATE_PROGRAMS_LIST,
+          result: userPrivatePrograms,
+        });
+      } catch (error) {
+        return reject(error);
+      }
+    });
+  }
 
-                let userPrivatePrograms =
-                    await programsHelper.userPrivatePrograms(
-                        userId
-                    );
+  /**
+   * Create user program and solution
+   * @method
+   * @name createProgramAndSolution
+   * @param {string} userId - logged in user Id.
+   * @param {object} programData - data needed for creation of program.
+   * @param {object} solutionData - data needed for creation of solution.
+   * @returns {Array} - Created user program and solution.
+   */
 
-                return resolve({
-                    message: constants.apiResponses.PRIVATE_PROGRAMS_LIST,
-                    result: userPrivatePrograms
-                })
+  static createProgramAndSolution(
+    userId,
+    data,
+    userToken,
+    createADuplicateSolution = ''
+  ) {
+    return new Promise(async (resolve, reject) => {
+      try {
+        let userPrivateProgram = {};
+        let dateFormat = gen.utils.epochTime();
+        let parentSolutionInformation = {};
 
-            } catch (error) {
-                return reject(error);
+        createADuplicateSolution = gen.utils.convertStringToBoolean(
+          createADuplicateSolution
+        );
+        //program part
+        if (data.programId && data.programId !== "") {
+          let checkforProgramExist = await programsHelper.programDocuments(
+            {
+              _id: data.programId,
+              createdBy: userId,
+            },
+            "all",
+            ["__v"]
+          );
+
+          if (!checkforProgramExist.length > 0) {
+            return resolve({
+              status: httpStatusCode['bad_request'].status,
+              message: constants.apiResponses.PROGRAM_NOT_FOUND,
+              result: {},
+            });
+          }
+
+          if (createADuplicateSolution === true) {
+            let duplicateProgram = checkforProgramExist[0];
+            duplicateProgram = await _createProgramData(
+              duplicateProgram.name,
+              duplicateProgram.name + '-' + dateFormat,
+              true,
+              constants.common.ACTIVE,
+              duplicateProgram.description,
+              userId,
+              userId
+            );
+
+            userPrivateProgram = await programsHelper.create(
+              _.omit(duplicateProgram, ['_id', 'components', 'scope'])
+            );
+          } else {
+            userPrivateProgram = checkforProgramExist[0];
+          }
+        } else {
+          let programData = await _createProgramData(
+            data.programName,
+            data.programExternalId
+              ? data.programExternalId
+              : data.programName + '-' + dateFormat,
+            true,
+            constants.common.ACTIVE,
+            data.programDescription
+              ? data.programDescription
+              : data.programName,
+            userId
+          );
+
+          userPrivateProgram = await programsHelper.create(programData);
+        }
+
+        let solutionDataToBeUpdated = {
+          programId: userPrivateProgram._id,
+          programExternalId: userPrivateProgram.externalId,
+          programName: userPrivateProgram.name,
+          programDescription: userPrivateProgram.description,
+          isAPrivateProgram: userPrivateProgram.isAPrivateProgram,
+        };
+
+        //entities
+        if (
+          Array.isArray(data.entities) &&
+          data.entities &&
+          data.entities.length > 0
+        ) {
+          let entityData = await entitiesHelper.entityDocuments(
+            {
+              _id: { $in: data.entities },
+            },
+            ['entityType', 'entityTypeId']
+          );
+
+          if (!entityData.length > 0) {
+            return resolve({
+              status: httpStatusCode['bad_request'].status,
+              message: constants.apiResponses.ENTITY_NOT_FOUND,
+              result: {},
+            });
+          }
+
+          if (data.type && data.type !== constants.common.IMPROVEMENT_PROJECT) {
+            solutionDataToBeUpdated['entities'] = entityData.map(
+              (entity) => entity._id
+            );
+          }
+
+          solutionDataToBeUpdated['entityType'] = entityData[0].entityType;
+          solutionDataToBeUpdated['entityTypeId'] = entityData[0].entityTypeId;
+        }
+
+        //solution part
+        let solution = "";
+        if (data.solutionId && data.solutionId !== "") {
+          let solutionData = await solutionsHelper.solutionDocuments(
+            {
+              _id: data.solutionId,
+            },
+            ['name', 'link', 'type', 'subType']
+          );
+
+          if (!solutionData.length > 0) {
+            return resolve({
+              status: httpStatusCode['bad_request'].status,
+              message: constants.apiResponses.SOLUTION_NOT_FOUND,
+              result: {},
+            });
+          }
+
+          if (createADuplicateSolution === true) {
+            let duplicateSolution = solutionData[0];
+            let solutionCreationData = await _createSolutionData(
+              duplicateSolution.name,
+              duplicateSolution.name + "-" + dateFormat,
+              true,
+              constants.common.ACTIVE,
+              duplicateSolution.description,
+              userId,
+              false,
+              duplicateSolution._id
+            );
+
+            _.merge(duplicateSolution, solutionCreationData);
+            _.merge(duplicateSolution, solutionDataToBeUpdated);
+
+            solution = await solutionsHelper.create(
+              _.omit(duplicateSolution, ['_id', 'link'])
+            );
+
+            parentSolutionInformation.solutionId = duplicateSolution._id;
+            parentSolutionInformation.link = duplicateSolution.link;
+          } else {
+            if (solutionData[0].isReusable === false) {
+              return resolve({
+                status: httpStatusCode['bad_request'].status,
+                message: constants.apiResponses.SOLUTION_NOT_FOUND,
+                result: {},
+              });
             }
-        })
-    }
 
-    /**
-    * Create user program and solution
-    * @method
-    * @name createProgramAndSolution
-    * @param {string} userId - logged in user Id.
-    * @param {object} programData - data needed for creation of program.
-    * @param {object} solutionData - data needed for creation of solution.
-    * @returns {Array} - Created user program and solution.
-    */
+            solution = await database.models.solutions.findOneAndUpdate(
+              {
+                _id: solutionData[0]._id,
+              },
+              {
+                $set: solutionDataToBeUpdated,
+              },
+              {
+                new: true,
+              }
+            );
+          }
+        } else {
 
-    static createProgramAndSolution(userId, data, isATargetedSolution = "") {
-        return new Promise(async (resolve, reject) => {
-            try {
+          let externalId, description;
+          if (data.solutionName) {
+            externalId = data.solutionExternalId
+              ? data.solutionExternalId
+              : data.solutionName + "-" + dateFormat;
+            description = data.solutionDescription
+              ? data.solutionDescription
+              : data.solutionName;
+          } else {
+            externalId = userId + "-" + dateFormat;
+            description = userPrivateProgram.programDescription;
+          }
 
-                let userPrivateProgram = {};
-                let dateFormat = gen.utils.epochTime();
-                let parentSolutionInformation = {};
+          let createSolutionData = await _createSolutionData(
+            data.solutionName
+              ? data.solutionName
+              : userPrivateProgram.programName,
+            externalId,
+            userPrivateProgram.isAPrivateProgram,
+            constants.common.ACTIVE,
+            description,
+            "",
+            false,
+            "",
+            data.type ? data.type : constants.common.ASSESSMENT,
+            data.subType ? data.subType : constants.common.INSTITUTIONAL,
+            userId
+          );
 
-                isATargetedSolution =  gen.utils.convertStringToBoolean(isATargetedSolution);
-                //program part
-                if( data.programId && data.programId !== ""){
+          _.merge(solutionDataToBeUpdated, createSolutionData);
 
-                    let checkforProgramExist = await programsHelper.programDocuments(
-                        {
-                            _id: data.programId
-                        },"all",["__v"]);
+          solution = await solutionsHelper.create(solutionDataToBeUpdated);
+        }
 
-                    if (!checkforProgramExist.length > 0) {
-                        return resolve({
-                            status: httpStatusCode['bad_request'].status,
-                            message: constants.apiResponses.PROGRAM_NOT_FOUND,
-                            result: {}
-                        })
-                    }
-
-                    if(isATargetedSolution === false){
-
-                        let duplicateProgram = checkforProgramExist[0];
-                        duplicateProgram.externalId = duplicateProgram.name + "-" + dateFormat,
-                        duplicateProgram.isAPrivateProgram = true;
-                        duplicateProgram.status =  constants.common.ACTIVE_STATUS;
-                        duplicateProgram.userId = userId;
-                        duplicateProgram.createdBy = userId;
-
-                        userPrivateProgram = await programsHelper.create(
-                            _.omit(
-                                duplicateProgram, 
-                                ["_id", "components","scope"]
-                            ) 
-                        );
-
-                    }else{
-                        userPrivateProgram = checkforProgramExist[0];
-                    }   
-
-                }else{
-  
-                    let programData = {
-                        name: data.programName,
-                        isAPrivateProgram: true,
-                        status: constants.common.ACTIVE_STATUS,
-                        externalId:
-                            data.programExternalId ?
-                                data.programExternalId :
-                                data.programName + "-" + dateFormat,
-                        description:
-                            data.programDescription ?
-                                data.programDescription :
-                                data.programName,
-                        userId: userId
-                    }
-
-                    userPrivateProgram =
-                        await programsHelper.create(
-                            programData
-                        );
-                }
-
-                let solutionDataToBeUpdated = {
-                    programId: userPrivateProgram._id,
-                    programExternalId: userPrivateProgram.externalId,
-                    programName: userPrivateProgram.name,
-                    programDescription: userPrivateProgram.description,
-                    isAPrivateProgram: userPrivateProgram.isAPrivateProgram
-                };
-
-                //entities
-                if ( Array.isArray(data.entities) && data.entities && data.entities.length > 0) {
-
-                    let entityData = await entitiesHelper.entityDocuments(
-                        {
-                            _id: { $in: data.entities }
-                        }, ["entityType", "entityTypeId"]
-                    );
-
-                    if (!entityData.length > 0) {
-                        return resolve({
-                            status: httpStatusCode['bad_request'].status,
-                            message: constants.apiResponses.ENTITY_NOT_FOUND,
-                            result: {}
-                        })
-                    }
-
-                    if( data.type && data.type !== constants.common.IMPROVEMENT_PROJECT ) {
-                        solutionDataToBeUpdated["entities"] = entityData.map(entity => entity._id);
-                    }
-
-                    solutionDataToBeUpdated["entityType"] = entityData[0].entityType;
-                    solutionDataToBeUpdated["entityTypeId"] = entityData[0].entityTypeId;
-                }
-
-                //solution part
-                let solution = ""
-                if(data.solutionId && data.solutionId !== ""){
-
-                    let solutionData =
-                        await solutionsHelper.solutionDocuments({
-                            _id: data.solutionId
-                        },["name","link","type","subType"]);
-
-                    if (!solutionData.length > 0) {
-
-                        return resolve({
-                            status: httpStatusCode['bad_request'].status,
-                            message: constants.apiResponses.SOLUTION_NOT_FOUND,
-                            result: {}
-                        })
-                    }
-
-                    if(isATargetedSolution === false){
-
-                        let duplicateSolution = solutionData[0];
-                        duplicateSolution.externalId = duplicateSolution.name + "-" + dateFormat;
-                        duplicateSolution.isAPrivateProgram =  true;
-                        duplicateSolution.isReusable =  false;
-                        duplicateSolution.name =  duplicateSolution.name;
-                        duplicateSolution.description =  duplicateSolution.description;
-                        duplicateSolution.status =  constants.common.ACTIVE_STATUS;
-                        duplicateSolution.userId = userId;
-                        duplicateSolution.parentSolutionId = duplicateSolution._id;
-
-                        _.merge(duplicateSolution, solutionDataToBeUpdated);
-
-                        solution = await solutionsHelper.create(
-                            _.omit(
-                                duplicateSolution, 
-                                ["_id","link"]
-                            ) 
-                        );
-
-                        parentSolutionInformation.solutionId = duplicateSolution._id;
-                        parentSolutionInformation.link = duplicateSolution.link;
-
-                    }else{
-
-                        if(solutionData[0].isReusable === false){
-                            return resolve({
-                                status: httpStatusCode['bad_request'].status,
-                                message: constants.apiResponses.SOLUTION_NOT_FOUND,
-                                result: {}
-                            })
-                        }
-
-                        solution =
-                            await database.models.solutions.findOneAndUpdate({
-                                _id: solutionData[0]._id
-                            }, {
-                                $set: solutionDataToBeUpdated
-                            }, {
-                                new: true
-                            });
-                    }
-
-                }else{
-
-                    solutionDataToBeUpdated["type"] =
-                    data.type ? data.type : constants.common.ASSESSMENT;
-                    solutionDataToBeUpdated["subType"] =
-                        data.subType ? data.subType : constants.common.INSTITUTIONAL;
-
-                    solutionDataToBeUpdated["isReusable"] = false;
-
-                    if (data.solutionName) {
-                        solutionDataToBeUpdated["name"] = data.solutionName;
-                        solutionDataToBeUpdated["externalId"] =
-                            data.solutionExternalId ?
-                                data.solutionExternalId : data.solutionName + "-" + dateFormat;
-                        solutionDataToBeUpdated["description"] =
-                            data.solutionDescription ? data.solutionDescription : data.solutionName;
-                    } else {
-                        solutionDataToBeUpdated["name"] = userPrivateProgram.programName,
-                            solutionDataToBeUpdated["externalId"] = userId + "-" + dateFormat;
-                        solutionDataToBeUpdated["description"] = userPrivateProgram.programDescription;
-                    }
-
-                    solutionDataToBeUpdated.updatedBy = userId;
-                    solution = await solutionsHelper.create(solutionDataToBeUpdated);
-                }
-
-                if (solution && solution._id) {
-
-                    await database.models.programs.findOneAndUpdate(
-                        {
-                            _id: userPrivateProgram._id
-                        }, {
-                        $addToSet: { components: ObjectId(solution._id) }
-                    });
-
-                }
-
-                return resolve({
-                    message: constants.apiResponses.USER_PROGRAM_AND_SOLUTION_CREATED,
-                    result: {
-                        program: userPrivateProgram,
-                        solution: solution,
-                        parentSolutionInformation : parentSolutionInformation
-                    }
-                });
-
-            } catch (error) {
-                console.log(error);
-                return reject(error);
+        if (solution && solution._id) {
+          await database.models.programs.findOneAndUpdate(
+            {
+              _id: userPrivateProgram._id,
+            },
+            {
+              $addToSet: { components: ObjectId(solution._id) },
             }
-        })
-    }
+          );
+        }
 
-    /**
-      * Entities mapping form data.
-      * @method
-      * @name entitiesMappingForm
-      * @param {String} stateId - state id.
-      * @param {String} roleId - role id.
-      * @returns {Object} returns a list of entitiesMappingForm.
-     */
+        return resolve({
+          message: constants.apiResponses.USER_PROGRAM_AND_SOLUTION_CREATED,
+          result: {
+            program: userPrivateProgram,
+            solution: solution,
+            parentSolutionInformation: parentSolutionInformation,
+          },
+        });
+      } catch (error) {
+        return reject(error);
+      }
+    });
+  }
 
-    static entitiesMappingForm(stateId, roleId) {
-        return new Promise(async (resolve, reject) => {
-            try {
+  /**
+   * Entities mapping form data.
+   * @method
+   * @name entitiesMappingForm
+   * @param {String} stateId - state id.
+   * @param {String} roleId - role id.
+   * @returns {Object} returns a list of entitiesMappingForm.
+   */
 
-                const rolesData = await userRolesHelper.roleDocuments({
-                    _id: roleId
-                }, ["entityTypes.entityType"]);
+  static entitiesMappingForm(stateId, roleId) {
+    return new Promise(async (resolve, reject) => {
+      try {
+        const rolesData = await userRolesHelper.roleDocuments(
+          {
+            _id: roleId,
+          },
+          ['entityTypes.entityType']
+        );
 
-                if (!rolesData.length > 0) {
-                    return resolve({
-                        message: constants.apiResponses.USER_ROLES_NOT_FOUND,
-                        result: []
-                    })
-                }
+        if (!rolesData.length > 0) {
+          return resolve({
+            message: constants.apiResponses.USER_ROLES_NOT_FOUND,
+            result: [],
+          });
+        }
 
-                const entitiesData = await entitiesHelper.entityDocuments(
-                    {
-                        _id: stateId,
-                    }, ["childHierarchyPath"]
-                );
+        const entitiesData = await entitiesHelper.entityDocuments(
+          {
+            _id: stateId,
+          },
+          ['childHierarchyPath']
+        );
 
-                if (!entitiesData.length > 0) {
-                    return resolve({
-                        message: constants.apiResponses.ENTITY_NOT_FOUND,
-                        result: []
-                    })
-                }
+        if (!entitiesData.length > 0) {
+          return resolve({
+            message: constants.apiResponses.ENTITY_NOT_FOUND,
+            result: [],
+          });
+        }
 
-                let roleEntityType = "";
+        let roleEntityType = '';
 
-                rolesData[0].entityTypes.forEach(roleData => {
-                    if (entitiesData[0].childHierarchyPath.includes(roleData.entityType)) {
-                        roleEntityType = roleData.entityType;
-                    }
-                })
+        rolesData[0].entityTypes.forEach((roleData) => {
+          if (
+            entitiesData[0].childHierarchyPath.includes(roleData.entityType)
+          ) {
+            roleEntityType = roleData.entityType;
+          }
+        });
 
-                let entityTypeIndex =
-                entitiesData[0].childHierarchyPath.findIndex(path => path === roleEntityType);
+        let entityTypeIndex = entitiesData[0].childHierarchyPath.findIndex(
+          (path) => path === roleEntityType
+        );
 
-                let form = {
-                    "field": "",
-                    "label": "",
-                    "value": "",
-                    "visible": true,
-                    "editable": true,
-                    "input": "text",
-                    "validation": {
-                        "required": false
-                    }
-                };
+        let form = {
+          field: '',
+          label: '',
+          value: '',
+          visible: true,
+          editable: true,
+          input: 'text',
+          validation: {
+            required: false,
+          },
+        };
 
-                let forms = [];
+        let forms = [];
 
-                for (
-                    let pointerToChildHierarchy = 0;
-                    pointerToChildHierarchy < entityTypeIndex + 1;
-                    pointerToChildHierarchy++
-                ) {
-                    let cloneForm = JSON.parse(JSON.stringify(form));
-                    let entityType = entitiesData[0].childHierarchyPath[pointerToChildHierarchy];
-                    cloneForm["field"] = entityType;
-                    cloneForm["label"] = `Select ${gen.utils.camelCaseToTitleCase(entityType)}`;
+        for (
+          let pointerToChildHierarchy = 0;
+          pointerToChildHierarchy < entityTypeIndex + 1;
+          pointerToChildHierarchy++
+        ) {
+          let cloneForm = JSON.parse(JSON.stringify(form));
+          let entityType =
+            entitiesData[0].childHierarchyPath[pointerToChildHierarchy];
+          cloneForm['field'] = entityType;
+          cloneForm['label'] = `Select ${gen.utils.camelCaseToTitleCase(
+            entityType
+          )}`;
 
-                    if (roleEntityType === entityType) {
-                        cloneForm.validation.required = true;
-                    }
+          if (roleEntityType === entityType) {
+            cloneForm.validation.required = true;
+          }
 
-                    forms.push(cloneForm);
-                }
+          forms.push(cloneForm);
+        }
 
-                return resolve({
-                    message: constants.apiResponses.ENTITIES_MAPPING_FORM_FETCHED,
-                    result: forms
-                });
+        return resolve({
+          message: constants.apiResponses.ENTITIES_MAPPING_FORM_FETCHED,
+          result: forms,
+        });
+      } catch (error) {
+        return reject(error);
+      }
+    });
+  }
 
-            } catch (error) {
-                return reject(error);
-            }
-        })
-    }
+  /**
+   * User targeted solutions.
+   * @method
+   * @name solutions
+   * @param {String} programId - program id.
+   * @param {Object} requestedData requested data.
+   * @param {String} pageSize page size.
+   * @param {String} pageNo page no.
+   * @param {String} search search text.
+   * @returns {Object} targeted user solutions.
+   */
 
-      /**
-      * User targeted solutions.
-      * @method
-      * @name solutions
-      * @param {String} programId - program id.
-      * @param {Object} requestedData requested data.
-      * @param {String} pageSize page size.
-      * @param {String} pageNo page no.
-      * @param {String} search search text.
-      * @returns {Object} targeted user solutions.
-     */
+  static solutions(programId, requestedData, pageSize, pageNo, search, token) {
+    return new Promise(async (resolve, reject) => {
+      try {
+        let programData = await programsHelper.programDocuments(
+          {
+            _id: programId,
+          },
+          ['name']
+        );
 
-    static solutions( programId,requestedData,pageSize,pageNo,search,token ) {
-        return new Promise(async (resolve, reject) => {
-            try {
+        if (!programData.length > 0) {
+          return resolve({
+            status: httpStatusCode['bad_request'].status,
+            message: constants.apiResponses.PROGRAM_NOT_FOUND,
+          });
+        }
 
-                let programData = await programsHelper.programDocuments({
-                    _id : programId
-                },["name"]);
+        let autoTargetedSolutions =
+          await solutionsHelper.forUserRoleAndLocation(
+            requestedData,
+            '',
+            '',
+            programId,
+            constants.common.DEFAULT_PAGE_SIZE,
+            constants.common.DEFAULT_PAGE_NO,
+            search
+          );
 
-                if( !programData.length > 0 ) {
-                    return resolve({
-                        status : httpStatusCode["bad_request"].status,
-                        message : constants.apiResponses.PROGRAM_NOT_FOUND
-                    })
-                }
+        let totalCount = 0;
+        let mergedData = [];
 
-                let autoTargetedSolutions = 
-                await solutionsHelper.forUserRoleAndLocation(
-                    requestedData,
-                    "",
-                    "",
-                    programId,
-                    constants.common.DEFAULT_PAGE_SIZE,
-                    constants.common.DEFAULT_PAGE_NO,
-                    search
-                );
+        if (
+          autoTargetedSolutions.data.data &&
+          autoTargetedSolutions.data.data.length > 0
+        ) {
+          totalCount = autoTargetedSolutions.data.count;
 
-                let totalCount = 0;
-                let mergedData = [];
+          mergedData = autoTargetedSolutions.data.data;
 
-                if( autoTargetedSolutions.data.data && autoTargetedSolutions.data.data.length > 0 ) {
-                    
-                    totalCount = autoTargetedSolutions.data.count;
+          mergedData = mergedData.map((targetedData) => {
+            delete targetedData.programId;
+            delete targetedData.programName;
+            return targetedData;
+          });
+        }
 
-                    mergedData = autoTargetedSolutions.data.data;
+        let importedProjects = await improvementProjectService.importedProjects(
+          token,
+          programId
+        );
 
-                    mergedData = 
-                    mergedData.map( targetedData => {
-                        delete targetedData.programId;
-                        delete targetedData.programName;
-                        return targetedData;
-                    });
-                }
-                    
-                let importedProjects = 
-                await improvementProjectService.importedProjects(
-                    token,
-                    programId
-                );
+        if (importedProjects.success) {
+          if (importedProjects.data && importedProjects.data.length > 0) {
+            totalCount += importedProjects.data.length;
 
-                if( importedProjects.success ) {
-                    
-                    if( importedProjects.data && importedProjects.data.length > 0 ) {
-                        
-                        totalCount += importedProjects.data.length;
+            importedProjects.data.forEach((importedProject) => {
+              let data = importedProject.solutionInformation;
+              data['projectTemplateId'] = importedProject.projectTemplateId;
+              data['type'] = constants.common.IMPROVEMENT_PROJECT;
+              mergedData.push(data);
+            });
+          }
+        }
 
+        if (mergedData.length > 0) {
+          let startIndex = pageSize * (pageNo - 1);
+          let endIndex = startIndex + pageSize;
+          mergedData = mergedData.slice(startIndex, endIndex);
+        }
 
-                        importedProjects.data.forEach(importedProject => {
-                            let data = importedProject.solutionInformation;
-                            data["projectTemplateId"] = importedProject.projectTemplateId;
-                            data["type"] = constants.common.IMPROVEMENT_PROJECT;
-                            mergedData.push(data);
-                        });
+        let result = {
+          programName: programData[0].name,
+          programId: programId,
+          description: constants.common.TARGETED_SOLUTION_TEXT,
+          data: mergedData,
+          count: totalCount,
+        };
 
-                    }
-                }
+        return resolve({
+          message: constants.apiResponses.PROGRAM_SOLUTIONS_FETCHED,
+          success: true,
+          data: result,
+        });
+      } catch (error) {
+        return resolve({
+          success: false,
+          data: {
+            description: constants.common.TARGETED_SOLUTION_TEXT,
+            data: [],
+            count: 0,
+          },
+        });
+      }
+    });
+  }
 
-                if( mergedData.length > 0 ) {
-                    let startIndex = pageSize * (pageNo - 1);
-                    let endIndex = startIndex + pageSize;
-                    mergedData = mergedData.slice(startIndex,endIndex) 
-                }
+  /**
+   * User targeted programs.
+   * @method
+   * @name programs
+   * @param {Object} bodyData - request body data.
+   * @param {String} pageNo - Page number.
+   * @param {String} pageSize - Page size.
+   * @param {String} searchText - Search text.
+   * @returns {Array} - Get user targeted programs.
+   */
 
-                let result = {
-                    programName : programData[0].name,
-                    programId : programId,
-                    description : constants.common.TARGETED_SOLUTION_TEXT,
-                    data : mergedData,
-                    count : totalCount
-                }
+  static programs(bodyData, pageNo, pageSize, searchText) {
+    return new Promise(async (resolve, reject) => {
+      try {
+        let targetedProgrms = await programsHelper.forUserRoleAndLocation(
+          bodyData,
+          pageSize,
+          pageNo,
+          searchText
+        );
 
-                return resolve({
-                    message : constants.apiResponses.PROGRAM_SOLUTIONS_FETCHED,
-                    success : true,
-                    data : result
-                })
-            } catch (error) {
-                return resolve({
-                    success : false,
-                    data : {
-                        description : constants.common.TARGETED_SOLUTION_TEXT,
-                        data : [],
-                        count : 0
-                    }
-                })
-            }
-        })
-    }
+        if (!targetedProgrms.success) {
+          throw {
+            message: constants.apiResponses.PROGRAM_NOT_FOUND,
+          };
+        }
 
-    /**
-    * User targeted programs.
-    * @method
-    * @name programs
-    * @param {Object} bodyData - request body data.
-    * @param {String} pageNo - Page number.
-    * @param {String} pageSize - Page size.
-    * @param {String} searchText - Search text.
-    * @returns {Array} - Get user targeted programs.
-    */
+        targetedProgrms.data['description'] =
+          constants.apiResponses.PROGRAM_DESCRIPTION;
 
-   static programs(bodyData, pageNo, pageSize,searchText) {
-       return new Promise(async (resolve, reject) => {
-            try {
+        return resolve({
+          success: true,
+          message: constants.apiResponses.USER_TARGETED_PROGRAMS_FETCHED,
+          data: targetedProgrms.data,
+        });
+      } catch (error) {
+        return resolve({
+          success: false,
+          message: error.message,
+          data: {
+            description: constants.common.TARGETED_SOLUTION_TEXT,
+            data: [],
+            count: 0,
+          },
+        });
+      }
+    });
+  }
 
-                let targetedProgrms = await programsHelper.forUserRoleAndLocation(
-                    bodyData,
-                    pageSize,
-                    pageNo,
-                    searchText
-                );
+  /**
+   * List of entity types by location and role.
+   * @method
+   * @name entityTypesByLocationAndRole
+   * @param {String} stateLocationId - state location id.
+   * @param {String} role - role.
+   * @returns {Object} returns a list of entity type by location and role.
+   */
 
-                if (!targetedProgrms.success) {
-                    throw {
-                        message : constants.apiResponses.PROGRAM_NOT_FOUND
-                    }
-                }
-                    
-                targetedProgrms.data["description"] = constants.apiResponses.PROGRAM_DESCRIPTION;
+  static entityTypesByLocationAndRole(stateLocationId, role) {
+    return new Promise(async (resolve, reject) => {
+      try {
+        let filterQuery = {
+          'registryDetails.code': stateLocationId,
+        };
 
-                return resolve({
-                    success: true,
-                    message: constants.apiResponses.USER_TARGETED_PROGRAMS_FETCHED,
-                    data : targetedProgrms.data
-                });
+        if (gen.utils.checkValidUUID(stateLocationId)) {
+          filterQuery = {
+            'registryDetails.locationId': stateLocationId,
+          };
+        }
 
-            } catch (error) {
-                return resolve({
-                    success: false,
-                    message: error.message,
-                    data : {
-                        description : constants.common.TARGETED_SOLUTION_TEXT,
-                        data : [],
-                        count : 0
-                    }
-                });
-            }
-        })
-    }
+        const entitiesData = await entitiesHelper.entityDocuments(filterQuery, [
+          '_id',
+        ]);
 
-      /**
-      * List of entity types by location and role.
-      * @method
-      * @name entityTypesByLocationAndRole
-      * @param {String} stateLocationId - state location id.
-      * @param {String} role - role.
-      * @returns {Object} returns a list of entity type by location and role.
-     */
+        if (!entitiesData.length > 0) {
+          throw {
+            message: constants.apiResponses.ENTITIES_NOT_EXIST_IN_LOCATION,
+          };
+        }
 
-    static entityTypesByLocationAndRole(stateLocationId, role) {
-        return new Promise(async (resolve, reject) => {
-            try {
+        const rolesDocument = await userRolesHelper.roleDocuments(
+          {
+            code: role.toUpperCase(),
+          },
+          ['_id', 'entityTypes.entityType']
+        );
 
-                let filterQuery = {
-                    "registryDetails.code" : stateLocationId
-                  };
-          
-                if( gen.utils.checkValidUUID( stateLocationId ) ) {
-                    filterQuery = {
-                      "registryDetails.locationId" : stateLocationId
-                    };
-                } 
+        if (!rolesDocument.length > 0) {
+          throw {
+            message: constants.apiResponses.USER_ROLES_NOT_FOUND,
+          };
+        }
 
-                const entitiesData = await entitiesHelper.entityDocuments(filterQuery, ["_id"]);
+        let entityTypes = [];
+        let stateEntityExists = false;
 
-                if (!entitiesData.length > 0) {
-                    throw {
-                        message: constants.apiResponses.ENTITIES_NOT_EXIST_IN_LOCATION
-                    }
-                }
+        rolesDocument[0].entityTypes.forEach((roleDocument) => {
+          if (roleDocument.entityType === constants.common.STATE_ENTITY_TYPE) {
+            stateEntityExists = true;
+          }
+        });
 
-                const rolesDocument = await userRolesHelper.roleDocuments({
-                    code : role.toUpperCase()
-                },["_id","entityTypes.entityType"]);
+        if (stateEntityExists) {
+          entityTypes = [constants.common.STATE_ENTITY_TYPE];
+        } else {
+          let entitiesMappingForm = await this.entitiesMappingForm(
+            entitiesData[0]._id,
+            rolesDocument[0]._id
+          );
 
-                if (!rolesDocument.length > 0) {
-                    throw {
-                        message: constants.apiResponses.USER_ROLES_NOT_FOUND
-                    }
-                }
+          entitiesMappingForm.result.forEach((entitiesMappingData) => {
+            entityTypes.push(entitiesMappingData.field);
+          });
+        }
 
-                let entityTypes = [];
-                let stateEntityExists = false;
+        return resolve({
+          success: true,
+          message: constants.apiResponses.ENTITY_TYPES_FETCHED,
+          data: entityTypes,
+        });
+      } catch (error) {
+        return resolve({
+          success: false,
+          message: error.message,
+        });
+      }
+    });
+  }
 
-                rolesDocument[0].entityTypes.forEach( roleDocument => {
-                    if( roleDocument.entityType === constants.common.STATE_ENTITY_TYPE ) {
-                        stateEntityExists = true;
-                    }
-                });
-
-                if( stateEntityExists ) {
-                    entityTypes = [constants.common.STATE_ENTITY_TYPE]
-                } else {
-                    
-                    let entitiesMappingForm = 
-                    await this.entitiesMappingForm(
-                        entitiesData[0]._id,
-                        rolesDocument[0]._id
-                    );
-
-                    entitiesMappingForm.result.forEach( entitiesMappingData => {
-                        entityTypes.push(entitiesMappingData.field)
-                    });
-                }
-
-                return resolve({
-                    success : true,
-                    message : constants.apiResponses.ENTITY_TYPES_FETCHED,
-                    data : entityTypes
-                });
-
-            } catch (error) {
-                return resolve({
-                    success : false,
-                    message : error.message
-                });
-            }
-        })
-    }
-
-      /**
+  /**
    * User Targeted entity.
    * @method
    * @name targetedEntity
@@ -614,114 +630,182 @@ module.exports = class UsersHelper {
    * @returns {Object} - Details of the solution.
    */
 
-   static targetedEntity( solutionId,requestedData ) {
+  static targetedEntity(solutionId, requestedData) {
     return new Promise(async (resolve, reject) => {
       try {
+        let solutionData = await solutionsHelper.solutionDocuments(
+          {
+            _id: solutionId,
+            isDeleted: false,
+          },
+          ['entityType', 'type']
+        );
 
-        let solutionData = 
-        await solutionsHelper.solutionDocuments({ 
-          _id : solutionId,
-          isDeleted : false 
-        },["entityType","type"]);
-
-        if( !solutionData.length > 0 ) {
+        if (!solutionData.length > 0) {
           return resolve({
-            status : httpStatusCode.bad_request.status,
-            message : constants.apiResponses.SOLUTION_NOT_FOUND
+            status: httpStatusCode.bad_request.status,
+            message: constants.apiResponses.SOLUTION_NOT_FOUND,
           });
         }
-          
-        let rolesDocument = await userRolesHelper.roleDocuments({
-            code : requestedData.role
-        },["entityTypes.entityType"]);
-        
-        if( !rolesDocument.length > 0 ) {
-            throw {
-                status : httpStatusCode["bad_request"].status,
-                message: constants.apiResponses.USER_ROLES_NOT_FOUND
-            }
+
+        let rolesDocument = await userRolesHelper.roleDocuments(
+          {
+            code: requestedData.role,
+          },
+          ['entityTypes.entityType']
+        );
+
+        if (!rolesDocument.length > 0) {
+          throw {
+            status: httpStatusCode['bad_request'].status,
+            message: constants.apiResponses.USER_ROLES_NOT_FOUND,
+          };
         }
 
-        let requestedEntityTypes = Object.keys(_.omit(requestedData,["role"]));
-        let targetedEntityType = "";
+        let requestedEntityTypes = Object.keys(_.omit(requestedData, ['role']));
+        let targetedEntityType = '';
 
-        rolesDocument[0].entityTypes.forEach(singleEntityType => {
-            if( requestedEntityTypes.includes(singleEntityType.entityType) ) {
-                targetedEntityType = singleEntityType.entityType;
-            }
+        rolesDocument[0].entityTypes.forEach((singleEntityType) => {
+          if (requestedEntityTypes.includes(singleEntityType.entityType)) {
+            targetedEntityType = singleEntityType.entityType;
+          }
         });
 
-        if( !requestedData[targetedEntityType] ) {
-            throw {
-                status : httpStatusCode["bad_request"].status,
-                message: constants.apiResponses.ENTITIES_NOT_ALLOWED_IN_ROLE
-            }
-        }
-
-
-        if( solutionData[0].entityType === targetedEntityType ) {
-
-            let filterQuery = {
-                "registryDetails.code" : requestedData[targetedEntityType]
-              };
-      
-            if( gen.utils.checkValidUUID( requestedData[targetedEntityType] ) ) {
-                filterQuery = {
-                  "registryDetails.locationId" : requestedData[targetedEntityType]
-                };
-            } 
-            
-            let entities = await entitiesHelper.entityDocuments(filterQuery,["groups"]);
-
-            if( !entities.length > 0 ) {
-                throw {
-                    message : constants.apiResponses.ENTITY_NOT_FOUND
-                }
-            }
-
-            if( entities[0] && entities[0].groups && Object.keys(entities[0].groups).length > 0 ) {
-                targetedEntityType = constants.common.STATE_ENTITY_TYPE;
-            }
-        }
-
-        let filterData = {
-            "registryDetails.code" : requestedData[targetedEntityType]
-          };
-  
-        if( gen.utils.checkValidUUID( requestedData[targetedEntityType] ) ) {
-            filterData = {
-              "registryDetails.locationId" : requestedData[targetedEntityType]
-            };
-        } 
-
-        let entities = await entitiesHelper.entityDocuments(filterData,["metaInformation.name","entityType"])
-
-        if( !entities.length > 0 ) {
+        if (!requestedData[targetedEntityType]) {
           throw {
-            message : constants.apiResponses.ENTITY_NOT_FOUND
+            status: httpStatusCode['bad_request'].status,
+            message: constants.apiResponses.ENTITIES_NOT_ALLOWED_IN_ROLE,
+          };
+        }
+
+        if (solutionData[0].entityType === targetedEntityType) {
+          let filterQuery = {
+            'registryDetails.code': requestedData[targetedEntityType],
+          };
+
+          if (gen.utils.checkValidUUID(requestedData[targetedEntityType])) {
+            filterQuery = {
+              'registryDetails.locationId': requestedData[targetedEntityType],
+            };
+          }
+
+          let entities = await entitiesHelper.entityDocuments(filterQuery, [
+            'groups',
+          ]);
+
+          if (!entities.length > 0) {
+            throw {
+              message: constants.apiResponses.ENTITY_NOT_FOUND,
+            };
+          }
+
+          if (
+            entities[0] &&
+            entities[0].groups &&
+            Object.keys(entities[0].groups).length > 0
+          ) {
+            targetedEntityType = constants.common.STATE_ENTITY_TYPE;
           }
         }
 
-        if( entities[0].metaInformation && entities[0].metaInformation.name ) {
-          entities[0]["entityName"] = entities[0].metaInformation.name;
+        let filterData = {
+          'registryDetails.code': requestedData[targetedEntityType],
+        };
+
+        if (gen.utils.checkValidUUID(requestedData[targetedEntityType])) {
+          filterData = {
+            'registryDetails.locationId': requestedData[targetedEntityType],
+          };
+        }
+
+        let entities = await entitiesHelper.entityDocuments(filterData, [
+          'metaInformation.name',
+          'entityType',
+        ]);
+
+        if (!entities.length > 0) {
+          throw {
+            message: constants.apiResponses.ENTITY_NOT_FOUND,
+          };
+        }
+
+        if (entities[0].metaInformation && entities[0].metaInformation.name) {
+          entities[0]['entityName'] = entities[0].metaInformation.name;
           delete entities[0].metaInformation;
         }
 
         return resolve({
-          message : constants.apiResponses.SOLUTION_TARGETED_ENTITY,
-          success : true,
-          data : entities[0]
+          message: constants.apiResponses.SOLUTION_TARGETED_ENTITY,
+          success: true,
+          data: entities[0],
         });
-
-      } catch(error) {
+      } catch (error) {
         return resolve({
-          success : false,
-          status : error.status ? 
-          error.status : httpStatusCode['internal_server_error'].status,
-          message : error.message
-        })
+          success: false,
+          status: error.status
+            ? error.status
+            : httpStatusCode['internal_server_error'].status,
+          message: error.message,
+        });
       }
-    })
-   } 
-
+    });
+  }
 };
+
+/**
+   * Generate program creation data.
+   * @method
+   * @name _createProgramData
+   * @returns {Object} - program creation data
+   */
+
+function _createProgramData(name, externalId, isAPrivateProgram, status, description, userId, createdBy = "") {
+
+    let programData = {};
+    programData.name = name;
+    programData.externalId = externalId;
+    programData.isAPrivateProgram = isAPrivateProgram;
+    programData.status = status;
+    programData.description = description;
+    programData.userId = userId;
+    programData.createdBy = createdBy;
+    return programData;
+
+}
+
+/**
+   * Generate solution creation data.
+   * @method
+   * @name _createSolutionData
+   * @returns {Object} - solution creation data
+   */
+
+function _createSolutionData(name = "", externalId = "", isAPrivateProgram = "", status, description = "", userId, isReusable = "", parentSolutionId = "", type = "", subType = "", updatedBy="") {
+
+    let solutionData = {};
+    solutionData.name = name;
+    solutionData.externalId = externalId;
+    solutionData.isAPrivateProgram = isAPrivateProgram;
+    solutionData.status = status;
+    solutionData.description = description;
+    solutionData.userId = userId;
+    if( parentSolutionId ) {
+        solutionData.parentSolutionId = parentSolutionId;
+    }
+    if( type){
+        solutionData.type = type;
+    }
+    if( subType){
+        solutionData.subType = subType;
+    }
+    if( updatedBy){
+        solutionData.updatedBy = updatedBy;
+    }
+    if( isReusable){
+        solutionData.isReusable = isReusable;
+    }
+
+    return solutionData;
+
+}
+

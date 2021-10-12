@@ -192,7 +192,7 @@ module.exports = class Users extends Abstract {
                 req.userDetails.id,
                 req.body,
                 req.userDetails.userToken,
-                req.query.isATargetedSolution ? req.query.isATargetedSolution : ""
+                req.query.createADuplicateSolution ? req.query.createADuplicateSolution : ""
             );
 
             return resolve(createdProgramAndSolution);

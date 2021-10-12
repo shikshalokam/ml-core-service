@@ -44,7 +44,7 @@ module.exports = (req) => {
         getSolutions : function () {
             req.checkQuery("type").exists().withMessage("required solution type")
         },
-        getLink : function () {
+        fetchLink : function () {
             req.checkParams("_id").exists().withMessage("required solution id");
         },
         verifyLink : function () {
