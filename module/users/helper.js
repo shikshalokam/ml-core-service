@@ -20,29 +20,33 @@ const userService = require(ROOT_PATH + "/generics/services/users");
 */
 
 module.exports = class UsersHelper {
-  /**
-   * List of all private programs created by user
-   * @method
-   * @name privatePrograms
-   * @param {string} userId - logged in user Id.
-   * @returns {Array} - List of all private programs created by user.
-   */
 
-  static privatePrograms(userId) {
-    return new Promise(async (resolve, reject) => {
-      try {
-        let userPrivatePrograms = await programsHelper.userPrivatePrograms(
-          userId
-        );
+    /**
+  * List of all private programs created by user
+  * @method
+  * @name privatePrograms
+  * @param {string} userId - logged in user Id.
+  * @returns {Array} - List of all private programs created by user.
+  */
 
-        return resolve({
-          message: constants.apiResponses.PRIVATE_PROGRAMS_LIST,
-          result: userPrivatePrograms,
-        });
-      } catch (error) {
-        return reject(error);
-      }
-    });
+     static privatePrograms(userId) {
+      return new Promise(async (resolve, reject) => {
+          try {
+
+              let userPrivatePrograms =
+                  await programsHelper.userPrivatePrograms(
+                      userId
+                  );
+
+              return resolve({
+                  message: constants.apiResponses.PRIVATE_PROGRAMS_LIST,
+                  result: userPrivatePrograms
+              })
+
+          } catch (error) {
+              return reject(error);
+          }
+      })
   }
 
   /**
@@ -59,10 +63,11 @@ module.exports = class UsersHelper {
     userId,
     data,
     userToken,
-    createADuplicateSolution = ''
+    createADuplicateSolution = ""
   ) {
     return new Promise(async (resolve, reject) => {
       try {
+
         let userPrivateProgram = {};
         let dateFormat = gen.utils.epochTime();
         let parentSolutionInformation = {};
@@ -71,7 +76,7 @@ module.exports = class UsersHelper {
           createADuplicateSolution
         );
         //program part
-        if (data.programId && data.programId !== "") {
+        if ( data.programId && data.programId !== "" ) {
           let checkforProgramExist = await programsHelper.programDocuments(
             {
               _id: data.programId,
@@ -81,7 +86,7 @@ module.exports = class UsersHelper {
             ["__v"]
           );
 
-          if (!checkforProgramExist.length > 0) {
+          if ( !checkforProgramExist.length > 0 ) {
             return resolve({
               status: httpStatusCode['bad_request'].status,
               message: constants.apiResponses.PROGRAM_NOT_FOUND,
@@ -89,7 +94,8 @@ module.exports = class UsersHelper {
             });
           }
 
-          if (createADuplicateSolution === true) {
+          if ( createADuplicateSolution === true ) {
+
             let duplicateProgram = checkforProgramExist[0];
             duplicateProgram = await _createProgramData(
               duplicateProgram.name,
@@ -104,10 +110,12 @@ module.exports = class UsersHelper {
             userPrivateProgram = await programsHelper.create(
               _.omit(duplicateProgram, ['_id', 'components', 'scope'])
             );
+
           } else {
             userPrivateProgram = checkforProgramExist[0];
           }
         } else {
+
           let programData = await _createProgramData(
             data.programName,
             data.programExternalId
@@ -138,6 +146,7 @@ module.exports = class UsersHelper {
           data.entities &&
           data.entities.length > 0
         ) {
+
           let entityData = await entitiesHelper.entityDocuments(
             {
               _id: { $in: data.entities },
@@ -145,7 +154,7 @@ module.exports = class UsersHelper {
             ['entityType', 'entityTypeId']
           );
 
-          if (!entityData.length > 0) {
+          if ( !entityData.length > 0 ) {
             return resolve({
               status: httpStatusCode['bad_request'].status,
               message: constants.apiResponses.ENTITY_NOT_FOUND,
@@ -153,7 +162,7 @@ module.exports = class UsersHelper {
             });
           }
 
-          if (data.type && data.type !== constants.common.IMPROVEMENT_PROJECT) {
+          if ( data.type && data.type !== constants.common.IMPROVEMENT_PROJECT ) {
             solutionDataToBeUpdated['entities'] = entityData.map(
               (entity) => entity._id
             );
@@ -165,7 +174,7 @@ module.exports = class UsersHelper {
 
         //solution part
         let solution = "";
-        if (data.solutionId && data.solutionId !== "") {
+        if ( data.solutionId && data.solutionId !== "" ) {
           let solutionData = await solutionsHelper.solutionDocuments(
             {
               _id: data.solutionId,
@@ -173,7 +182,7 @@ module.exports = class UsersHelper {
             ['name', 'link', 'type', 'subType']
           );
 
-          if (!solutionData.length > 0) {
+          if ( !solutionData.length > 0 ) {
             return resolve({
               status: httpStatusCode['bad_request'].status,
               message: constants.apiResponses.SOLUTION_NOT_FOUND,
@@ -181,7 +190,8 @@ module.exports = class UsersHelper {
             });
           }
 
-          if (createADuplicateSolution === true) {
+          if ( createADuplicateSolution === true ) {
+
             let duplicateSolution = solutionData[0];
             let solutionCreationData = await _createSolutionData(
               duplicateSolution.name,
@@ -203,64 +213,68 @@ module.exports = class UsersHelper {
 
             parentSolutionInformation.solutionId = duplicateSolution._id;
             parentSolutionInformation.link = duplicateSolution.link;
-          } else {
-            if (solutionData[0].isReusable === false) {
-              return resolve({
-                status: httpStatusCode['bad_request'].status,
-                message: constants.apiResponses.SOLUTION_NOT_FOUND,
-                result: {},
-              });
-            }
 
-            solution = await database.models.solutions.findOneAndUpdate(
-              {
-                _id: solutionData[0]._id,
-              },
-              {
-                $set: solutionDataToBeUpdated,
-              },
-              {
-                new: true,
+          } else {
+
+              if ( solutionData[0].isReusable === false ) {
+                return resolve({
+                  status: httpStatusCode['bad_request'].status,
+                  message: constants.apiResponses.SOLUTION_NOT_FOUND,
+                  result: {},
+                });
               }
+
+            solution = await database.models.solutions.findOneAndUpdate({
+                  _id: solutionData[0]._id,
+                },
+                {
+                  $set: solutionDataToBeUpdated,
+                },
+                {
+                  new: true,
+                }
             );
-          }
+            }
         } else {
 
-          let externalId, description;
-          if (data.solutionName) {
-            externalId = data.solutionExternalId
-              ? data.solutionExternalId
-              : data.solutionName + "-" + dateFormat;
-            description = data.solutionDescription
-              ? data.solutionDescription
-              : data.solutionName;
-          } else {
-            externalId = userId + "-" + dateFormat;
-            description = userPrivateProgram.programDescription;
-          }
+            let externalId, description;
+            if ( data.solutionName ) {
+              
+              externalId = data.solutionExternalId
+                ? data.solutionExternalId
+                : data.solutionName + "-" + dateFormat;
+              description = data.solutionDescription
+                ? data.solutionDescription
+                : data.solutionName;
 
-          let createSolutionData = await _createSolutionData(
-            data.solutionName
-              ? data.solutionName
-              : userPrivateProgram.programName,
-            externalId,
-            userPrivateProgram.isAPrivateProgram,
-            constants.common.ACTIVE,
-            description,
-            "",
-            false,
-            "",
-            data.type ? data.type : constants.common.ASSESSMENT,
-            data.subType ? data.subType : constants.common.INSTITUTIONAL,
-            userId
-          );
+            } else {
+              
+              externalId = userId + "-" + dateFormat;
+              description = userPrivateProgram.programDescription;
+            }
 
-          _.merge(solutionDataToBeUpdated, createSolutionData);
+            let createSolutionData = await _createSolutionData(
+              data.solutionName
+                ? data.solutionName
+                : userPrivateProgram.programName,
+              externalId,
+              userPrivateProgram.isAPrivateProgram,
+              constants.common.ACTIVE,
+              description,
+              "",
+              false,
+              "",
+              data.type ? data.type : constants.common.ASSESSMENT,
+              data.subType ? data.subType : constants.common.INSTITUTIONAL,
+              userId
+            );
 
-          solution = await solutionsHelper.create(solutionDataToBeUpdated);
+            _.merge(solutionDataToBeUpdated, createSolutionData);
+
+            solution = await solutionsHelper.create(solutionDataToBeUpdated);
         }
 
-        if (solution && solution._id) {
+        if ( solution && solution._id ) {
           await database.models.programs.findOneAndUpdate(
             {
               _id: userPrivateProgram._id,
@@ -279,6 +293,7 @@ module.exports = class UsersHelper {
             parentSolutionInformation: parentSolutionInformation,
           },
         });
+
       } catch (error) {
         return reject(error);
       }
@@ -286,102 +301,94 @@ module.exports = class UsersHelper {
   }
 
   /**
-   * Entities mapping form data.
-   * @method
-   * @name entitiesMappingForm
-   * @param {String} stateId - state id.
-   * @param {String} roleId - role id.
-   * @returns {Object} returns a list of entitiesMappingForm.
-   */
+      * Entities mapping form data.
+      * @method
+      * @name entitiesMappingForm
+      * @param {String} stateId - state id.
+      * @param {String} roleId - role id.
+      * @returns {Object} returns a list of entitiesMappingForm.
+     */
 
-  static entitiesMappingForm(stateId, roleId) {
-    return new Promise(async (resolve, reject) => {
-      try {
-        const rolesData = await userRolesHelper.roleDocuments(
-          {
-            _id: roleId,
-          },
-          ['entityTypes.entityType']
-        );
+    static entitiesMappingForm(stateId, roleId) {
+        return new Promise(async (resolve, reject) => {
+            try {
 
-        if (!rolesData.length > 0) {
-          return resolve({
-            message: constants.apiResponses.USER_ROLES_NOT_FOUND,
-            result: [],
-          });
-        }
+                const rolesData = await userRolesHelper.roleDocuments({
+                    _id: roleId
+                }, ["entityTypes.entityType"]);
 
-        const entitiesData = await entitiesHelper.entityDocuments(
-          {
-            _id: stateId,
-          },
-          ['childHierarchyPath']
-        );
+                if (!rolesData.length > 0) {
+                    return resolve({
+                        message: constants.apiResponses.USER_ROLES_NOT_FOUND,
+                        result: []
+                    })
+                }
 
-        if (!entitiesData.length > 0) {
-          return resolve({
-            message: constants.apiResponses.ENTITY_NOT_FOUND,
-            result: [],
-          });
-        }
+                const entitiesData = await entitiesHelper.entityDocuments(
+                    {
+                        _id: stateId,
+                    }, ["childHierarchyPath"]
+                );
 
-        let roleEntityType = '';
+                if (!entitiesData.length > 0) {
+                    return resolve({
+                        message: constants.apiResponses.ENTITY_NOT_FOUND,
+                        result: []
+                    })
+                }
 
-        rolesData[0].entityTypes.forEach((roleData) => {
-          if (
-            entitiesData[0].childHierarchyPath.includes(roleData.entityType)
-          ) {
-            roleEntityType = roleData.entityType;
-          }
-        });
+                let roleEntityType = "";
 
-        let entityTypeIndex = entitiesData[0].childHierarchyPath.findIndex(
-          (path) => path === roleEntityType
-        );
+                rolesData[0].entityTypes.forEach(roleData => {
+                    if (entitiesData[0].childHierarchyPath.includes(roleData.entityType)) {
+                        roleEntityType = roleData.entityType;
+                    }
+                })
 
-        let form = {
-          field: '',
-          label: '',
-          value: '',
-          visible: true,
-          editable: true,
-          input: 'text',
-          validation: {
-            required: false,
-          },
-        };
+                let entityTypeIndex =
+                entitiesData[0].childHierarchyPath.findIndex(path => path === roleEntityType);
 
-        let forms = [];
+                let form = {
+                    "field": "",
+                    "label": "",
+                    "value": "",
+                    "visible": true,
+                    "editable": true,
+                    "input": "text",
+                    "validation": {
+                        "required": false
+                    }
+                };
 
-        for (
-          let pointerToChildHierarchy = 0;
-          pointerToChildHierarchy < entityTypeIndex + 1;
-          pointerToChildHierarchy++
-        ) {
-          let cloneForm = JSON.parse(JSON.stringify(form));
-          let entityType =
-            entitiesData[0].childHierarchyPath[pointerToChildHierarchy];
-          cloneForm['field'] = entityType;
-          cloneForm['label'] = `Select ${gen.utils.camelCaseToTitleCase(
-            entityType
-          )}`;
+                let forms = [];
 
-          if (roleEntityType === entityType) {
-            cloneForm.validation.required = true;
-          }
+                for (
+                    let pointerToChildHierarchy = 0;
+                    pointerToChildHierarchy < entityTypeIndex + 1;
+                    pointerToChildHierarchy++
+                ) {
+                    let cloneForm = JSON.parse(JSON.stringify(form));
+                    let entityType = entitiesData[0].childHierarchyPath[pointerToChildHierarchy];
+                    cloneForm["field"] = entityType;
+                    cloneForm["label"] = `Select ${gen.utils.camelCaseToTitleCase(entityType)}`;
 
-          forms.push(cloneForm);
-        }
+                    if (roleEntityType === entityType) {
+                        cloneForm.validation.required = true;
+                    }
 
-        return resolve({
-          message: constants.apiResponses.ENTITIES_MAPPING_FORM_FETCHED,
-          result: forms,
-        });
-      } catch (error) {
-        return reject(error);
-      }
-    });
-  }
+                    forms.push(cloneForm);
+                }
+
+                return resolve({
+                    message: constants.apiResponses.ENTITIES_MAPPING_FORM_FETCHED,
+                    result: forms
+                });
+
+            } catch (error) {
+                return reject(error);
+            }
+        })
+    }
 
   /**
    * User targeted solutions.
@@ -415,8 +422,8 @@ module.exports = class UsersHelper {
         let autoTargetedSolutions =
           await solutionsHelper.forUserRoleAndLocation(
             requestedData,
-            '',
-            '',
+            "",
+            "",
             programId,
             constants.common.DEFAULT_PAGE_SIZE,
             constants.common.DEFAULT_PAGE_NO,
@@ -663,7 +670,7 @@ module.exports = class UsersHelper {
         }
 
         let requestedEntityTypes = Object.keys(_.omit(requestedData, ['role']));
-        let targetedEntityType = '';
+        let targetedEntityType = "";
 
         rolesDocument[0].entityTypes.forEach((singleEntityType) => {
           if (requestedEntityTypes.includes(singleEntityType.entityType)) {
