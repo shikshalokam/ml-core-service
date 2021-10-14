@@ -80,7 +80,7 @@ module.exports = class UsersHelper {
           let checkforProgramExist = await programsHelper.programDocuments(
             {
               _id: data.programId,
-              createdBy: userId,
+              createdBy: userId
             },
             "all",
             ["__v"]
@@ -88,9 +88,9 @@ module.exports = class UsersHelper {
 
           if ( !checkforProgramExist.length > 0 ) {
             return resolve({
-              status: httpStatusCode['bad_request'].status,
+              status: httpStatusCode["bad_request"].status,
               message: constants.apiResponses.PROGRAM_NOT_FOUND,
-              result: {},
+              result: {}
             });
           }
 
@@ -99,7 +99,7 @@ module.exports = class UsersHelper {
             let duplicateProgram = checkforProgramExist[0];
             duplicateProgram = await _createProgramData(
               duplicateProgram.name,
-              duplicateProgram.name + '-' + dateFormat,
+              duplicateProgram.name + "-" + dateFormat,
               true,
               constants.common.ACTIVE,
               duplicateProgram.description,
@@ -108,7 +108,7 @@ module.exports = class UsersHelper {
             );
 
             userPrivateProgram = await programsHelper.create(
-              _.omit(duplicateProgram, ['_id', 'components', 'scope'])
+              _.omit(duplicateProgram, ["_id", "components", "scope"])
             );
 
           } else {
@@ -120,7 +120,7 @@ module.exports = class UsersHelper {
             data.programName,
             data.programExternalId
               ? data.programExternalId
-              : data.programName + '-' + dateFormat,
+              : data.programName + "-" + dateFormat,
             true,
             constants.common.ACTIVE,
             data.programDescription
@@ -137,7 +137,7 @@ module.exports = class UsersHelper {
           programExternalId: userPrivateProgram.externalId,
           programName: userPrivateProgram.name,
           programDescription: userPrivateProgram.description,
-          isAPrivateProgram: userPrivateProgram.isAPrivateProgram,
+          isAPrivateProgram: userPrivateProgram.isAPrivateProgram
         };
 
         //entities
@@ -149,27 +149,27 @@ module.exports = class UsersHelper {
 
           let entityData = await entitiesHelper.entityDocuments(
             {
-              _id: { $in: data.entities },
+              _id: { $in: data.entities }
             },
-            ['entityType', 'entityTypeId']
+            ["entityType", "entityTypeId"]
           );
 
           if ( !entityData.length > 0 ) {
             return resolve({
-              status: httpStatusCode['bad_request'].status,
+              status: httpStatusCode["bad_request"].status,
               message: constants.apiResponses.ENTITY_NOT_FOUND,
-              result: {},
+              result: {}
             });
           }
 
           if ( data.type && data.type !== constants.common.IMPROVEMENT_PROJECT ) {
-            solutionDataToBeUpdated['entities'] = entityData.map(
+            solutionDataToBeUpdated["entities"] = entityData.map(
               (entity) => entity._id
             );
           }
 
-          solutionDataToBeUpdated['entityType'] = entityData[0].entityType;
-          solutionDataToBeUpdated['entityTypeId'] = entityData[0].entityTypeId;
+          solutionDataToBeUpdated["entityType"] = entityData[0].entityType;
+          solutionDataToBeUpdated["entityTypeId"] = entityData[0].entityTypeId;
         }
 
         //solution part
@@ -179,14 +179,14 @@ module.exports = class UsersHelper {
             {
               _id: data.solutionId,
             },
-            ['name', 'link', 'type', 'subType']
+            ["name", "link", "type", "subType"]
           );
 
           if ( !solutionData.length > 0 ) {
             return resolve({
-              status: httpStatusCode['bad_request'].status,
+              status: httpStatusCode["bad_request"].status,
               message: constants.apiResponses.SOLUTION_NOT_FOUND,
-              result: {},
+              result: {}
             });
           }
 
@@ -208,7 +208,7 @@ module.exports = class UsersHelper {
             _.merge(duplicateSolution, solutionDataToBeUpdated);
 
             solution = await solutionsHelper.create(
-              _.omit(duplicateSolution, ['_id', 'link'])
+              _.omit(duplicateSolution, ["_id", "link"])
             );
 
             parentSolutionInformation.solutionId = duplicateSolution._id;
@@ -218,20 +218,20 @@ module.exports = class UsersHelper {
 
               if ( solutionData[0].isReusable === false ) {
                 return resolve({
-                  status: httpStatusCode['bad_request'].status,
+                  status: httpStatusCode["bad_request"].status,
                   message: constants.apiResponses.SOLUTION_NOT_FOUND,
-                  result: {},
+                  result: {}
                 });
               }
 
             solution = await database.models.solutions.findOneAndUpdate({
-                  _id: solutionData[0]._id,
+                  _id: solutionData[0]._id
                 },
                 {
-                  $set: solutionDataToBeUpdated,
+                  $set: solutionDataToBeUpdated
                 },
                 {
-                  new: true,
+                  new: true
                 }
             );
             }
@@ -277,10 +277,10 @@ module.exports = class UsersHelper {
         if ( solution && solution._id ) {
           await database.models.programs.findOneAndUpdate(
             {
-              _id: userPrivateProgram._id,
+              _id: userPrivateProgram._id
             },
             {
-              $addToSet: { components: ObjectId(solution._id) },
+              $addToSet: { components: ObjectId(solution._id) }
             }
           );
         }
@@ -290,8 +290,8 @@ module.exports = class UsersHelper {
           result: {
             program: userPrivateProgram,
             solution: solution,
-            parentSolutionInformation: parentSolutionInformation,
-          },
+            parentSolutionInformation: parentSolutionInformation
+          }
         });
 
       } catch (error) {
@@ -326,7 +326,7 @@ module.exports = class UsersHelper {
 
                 const entitiesData = await entitiesHelper.entityDocuments(
                     {
-                        _id: stateId,
+                        _id: stateId
                     }, ["childHierarchyPath"]
                 );
 
@@ -407,15 +407,15 @@ module.exports = class UsersHelper {
       try {
         let programData = await programsHelper.programDocuments(
           {
-            _id: programId,
+            _id: programId
           },
-          ['name']
+          ["name"]
         );
 
         if (!programData.length > 0) {
           return resolve({
-            status: httpStatusCode['bad_request'].status,
-            message: constants.apiResponses.PROGRAM_NOT_FOUND,
+            status: httpStatusCode["bad_request"].status,
+            message: constants.apiResponses.PROGRAM_NOT_FOUND
           });
         }
 
@@ -460,7 +460,7 @@ module.exports = class UsersHelper {
             importedProjects.data.forEach((importedProject) => {
               let data = importedProject.solutionInformation;
               data['projectTemplateId'] = importedProject.projectTemplateId;
-              data['type'] = constants.common.IMPROVEMENT_PROJECT;
+              data["type"] = constants.common.IMPROVEMENT_PROJECT;
               mergedData.push(data);
             });
           }
@@ -477,13 +477,13 @@ module.exports = class UsersHelper {
           programId: programId,
           description: constants.common.TARGETED_SOLUTION_TEXT,
           data: mergedData,
-          count: totalCount,
+          count: totalCount
         };
 
         return resolve({
           message: constants.apiResponses.PROGRAM_SOLUTIONS_FETCHED,
           success: true,
-          data: result,
+          data: result
         });
       } catch (error) {
         return resolve({
@@ -491,7 +491,7 @@ module.exports = class UsersHelper {
           data: {
             description: constants.common.TARGETED_SOLUTION_TEXT,
             data: [],
-            count: 0,
+            count: 0
           },
         });
       }
@@ -525,13 +525,13 @@ module.exports = class UsersHelper {
           };
         }
 
-        targetedProgrms.data['description'] =
+        targetedProgrms.data["description"] =
           constants.apiResponses.PROGRAM_DESCRIPTION;
 
         return resolve({
           success: true,
           message: constants.apiResponses.USER_TARGETED_PROGRAMS_FETCHED,
-          data: targetedProgrms.data,
+          data: targetedProgrms.data
         });
       } catch (error) {
         return resolve({
@@ -560,17 +560,17 @@ module.exports = class UsersHelper {
     return new Promise(async (resolve, reject) => {
       try {
         let filterQuery = {
-          'registryDetails.code': stateLocationId,
+          "registryDetails.code": stateLocationId,
         };
 
         if (gen.utils.checkValidUUID(stateLocationId)) {
           filterQuery = {
-            'registryDetails.locationId': stateLocationId,
+            "registryDetails.locationId": stateLocationId,
           };
         }
 
         const entitiesData = await entitiesHelper.entityDocuments(filterQuery, [
-          '_id',
+          "_id",
         ]);
 
         if (!entitiesData.length > 0) {
@@ -583,12 +583,12 @@ module.exports = class UsersHelper {
           {
             code: role.toUpperCase(),
           },
-          ['_id', 'entityTypes.entityType']
+          ["_id", "entityTypes.entityType"]
         );
 
         if (!rolesDocument.length > 0) {
           throw {
-            message: constants.apiResponses.USER_ROLES_NOT_FOUND,
+            message: constants.apiResponses.USER_ROLES_NOT_FOUND
           };
         }
 
@@ -617,12 +617,12 @@ module.exports = class UsersHelper {
         return resolve({
           success: true,
           message: constants.apiResponses.ENTITY_TYPES_FETCHED,
-          data: entityTypes,
+          data: entityTypes
         });
       } catch (error) {
         return resolve({
           success: false,
-          message: error.message,
+          message: error.message
         });
       }
     });
@@ -643,29 +643,29 @@ module.exports = class UsersHelper {
         let solutionData = await solutionsHelper.solutionDocuments(
           {
             _id: solutionId,
-            isDeleted: false,
+            isDeleted: false
           },
-          ['entityType', 'type']
+          ["entityType", "type"]
         );
 
         if (!solutionData.length > 0) {
           return resolve({
             status: httpStatusCode.bad_request.status,
-            message: constants.apiResponses.SOLUTION_NOT_FOUND,
+            message: constants.apiResponses.SOLUTION_NOT_FOUND
           });
         }
 
         let rolesDocument = await userRolesHelper.roleDocuments(
           {
-            code: requestedData.role,
+            code: requestedData.role
           },
-          ['entityTypes.entityType']
+          ["entityTypes.entityType"]
         );
 
         if (!rolesDocument.length > 0) {
           throw {
-            status: httpStatusCode['bad_request'].status,
-            message: constants.apiResponses.USER_ROLES_NOT_FOUND,
+            status: httpStatusCode["bad_request"].status,
+            message: constants.apiResponses.USER_ROLES_NOT_FOUND
           };
         }
 
@@ -680,29 +680,29 @@ module.exports = class UsersHelper {
 
         if (!requestedData[targetedEntityType]) {
           throw {
-            status: httpStatusCode['bad_request'].status,
-            message: constants.apiResponses.ENTITIES_NOT_ALLOWED_IN_ROLE,
+            status: httpStatusCode["bad_request"].status,
+            message: constants.apiResponses.ENTITIES_NOT_ALLOWED_IN_ROLE
           };
         }
 
         if (solutionData[0].entityType === targetedEntityType) {
           let filterQuery = {
-            'registryDetails.code': requestedData[targetedEntityType],
+            "registryDetails.code": requestedData[targetedEntityType]
           };
 
           if (gen.utils.checkValidUUID(requestedData[targetedEntityType])) {
             filterQuery = {
-              'registryDetails.locationId': requestedData[targetedEntityType],
+              "registryDetails.locationId": requestedData[targetedEntityType]
             };
           }
 
           let entities = await entitiesHelper.entityDocuments(filterQuery, [
-            'groups',
+            "groups",
           ]);
 
           if (!entities.length > 0) {
             throw {
-              message: constants.apiResponses.ENTITY_NOT_FOUND,
+              message: constants.apiResponses.ENTITY_NOT_FOUND
             };
           }
 
@@ -716,23 +716,23 @@ module.exports = class UsersHelper {
         }
 
         let filterData = {
-          'registryDetails.code': requestedData[targetedEntityType],
+          "registryDetails.code": requestedData[targetedEntityType]
         };
 
         if (gen.utils.checkValidUUID(requestedData[targetedEntityType])) {
           filterData = {
-            'registryDetails.locationId': requestedData[targetedEntityType],
+            "registryDetails.locationId": requestedData[targetedEntityType]
           };
         }
 
         let entities = await entitiesHelper.entityDocuments(filterData, [
-          'metaInformation.name',
-          'entityType',
+          "metaInformation.name",
+          "entityType"
         ]);
 
         if (!entities.length > 0) {
           throw {
-            message: constants.apiResponses.ENTITY_NOT_FOUND,
+            message: constants.apiResponses.ENTITY_NOT_FOUND
           };
         }
 
@@ -744,7 +744,7 @@ module.exports = class UsersHelper {
         return resolve({
           message: constants.apiResponses.SOLUTION_TARGETED_ENTITY,
           success: true,
-          data: entities[0],
+          data: entities[0]
         });
       } catch (error) {
         return resolve({
@@ -752,7 +752,7 @@ module.exports = class UsersHelper {
           status: error.status
             ? error.status
             : httpStatusCode['internal_server_error'].status,
-          message: error.message,
+          message: error.message
         });
       }
     });

@@ -759,7 +759,7 @@ module.exports = class Solutions extends Abstract {
   * {
     "message": "Solution Link generated successfully",
     "status": 200,
-    "result": "https://preprod.ntp.net.in/manage-learn/create-observation/38cd93bdb87489c3890fe0ab00e7d406"
+    "result": "https://dev.sunbirded.org/manage-learn/create-observation/38cd93bdb87489c3890fe0ab00e7d406"
     }
   */
 
