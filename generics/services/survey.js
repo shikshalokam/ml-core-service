@@ -1,8 +1,8 @@
 /**
- * name : samiksha.js
+ * name : survey.js
  * author : Aman Jung Karki
  * Date : 11-Nov-2019
- * Description : All samiksha related api call.
+ * Description : All survey related api call.
  */
 
 //dependencies
@@ -134,7 +134,68 @@ var assignedSurveys = function ( token,search = "",filter = "", surveyReportPage
 
 }
 
+/**
+  * Get questions from solution.
+  * @function
+  * @name getQuestions
+  * @param {String} token - logged in user token.
+  * @param {String} solutionId - solution Id
+  * @returns {Promise} returns a promise.
+*/
+
+var getQuestions = function ( solutionId, token ) {
+
+    let getQuestionsUrl = 
+    process.env.ML_SURVEY_SERVICE_URL + 
+    constants.endpoints.GET_QUESTIONS + "/" + solutionId;
+    
+    return new Promise(async (resolve, reject) => {
+        try {
+
+            function assessmentCallback(err, data) {
+
+                let result = {
+                    success : true,
+                    message: "",
+                    status:""
+                };
+
+                if (err) {
+                    result.success = false;
+                } else {
+                    
+                    let response = JSON.parse(data.body);
+                    if( response.status === httpStatusCode['ok'].status ) {
+                        result["result"] = response.result;
+                    } else {
+                        result.success = false;
+                    }
+
+                    result.message = response.message;
+                    result.status = response.status;
+                }
+
+                return resolve(result);
+            }
+
+            const options = {
+                headers : {
+                    "content-type": "application/json",
+                    "x-authenticated-user-token" : token
+                }
+            };
+
+            request.get(getQuestionsUrl,options,assessmentCallback)
+
+        } catch (error) {
+            return reject(error);
+        }
+    })
+
+}
+
 module.exports = {
     assignedObservations : assignedObservations,
-    assignedSurveys : assignedSurveys
+    assignedSurveys : assignedSurveys,
+    getQuestions : getQuestions
 };

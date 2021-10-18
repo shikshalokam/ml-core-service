@@ -859,11 +859,11 @@ module.exports = class Solutions extends Abstract {
   }
 
   /**
-  * @api {post} /kendra/api/v1/solutions/getDetails/:solutionId
+  * @api {post} /kendra/api/v1/solutions/details/:solutionId
   * @apiVersion 1.0.0
-  * @apiName verify Link
+  * @apiName Get Project Template or Solution Questions
   * @apiGroup Solutions
-  * @apiSampleRequest /kendra/api/v1/solutions/getDetails/5ff9d50f9259097d48017bbb
+  * @apiSampleRequest /kendra/api/v1/solutions/details/5ff9d50f9259097d48017bbb
   * @apiHeader {String} X-authenticated-user-token Authenticity token  
   * @apiUse successBody
   * @apiUse errorBody

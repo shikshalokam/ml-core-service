@@ -28,5 +28,6 @@ module.exports = {
     IMPORTED_PROJECT : "/v1/userProjects/importedProjects",
     GET_PROJECT_DETAILS : "/v1/userProjects/details",
     GET_TEMPLATE_DETAILS : "/v1/project/templates/details",
-    LIST_PROJECT : "/v1/userProjects/list"
+    LIST_PROJECT : "/v1/userProjects/list",
+    GET_QUESTIONS : "/v1/solutions/questions"
 }
