@@ -168,5 +168,15 @@ module.exports = {
   "USER_PLATFORM_ROLE_NOT_FOUND": "Not found user platform role",
   "PLATFORM_USER_PROGRAMS": "List of programs for platform user",
   "ENTITY_TYPE_REQUIRED": "required entity type",
-  "COURSE_LINK_REQUIRED" : "Course link is required"
+  "COURSE_LINK_REQUIRED" : "Course link is required",
+  "LINK_GENERATED": "Link generated successfully",
+  "LINK_REQUIRED_CHECK": "Link is required",
+  "REQUIRED_USER_AUTH_TOKEN": "User auth token is required",
+  "INVALID_LINK": "The Link is not valid",
+  "LINK_IS_EXPIRED": "Link is expired",
+  "LINK_VERIFIED": "Link is verified successfully",
+  "SOLUTION_DETAILS_VERIFIED": "Solution verified successfully",
+  "SOLUTION_NOT_FOUND_OR_NOT_A_TARGETED": "Solution is not targeted to the role",
+  "PROJECT_TEMPLATE_ID_NOT_FOUND": "Project templates not exists in solution",
+
 };
