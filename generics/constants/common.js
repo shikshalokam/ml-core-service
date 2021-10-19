@@ -19,7 +19,7 @@ module.exports = {
   "STATE_ENTITY_TYPE":"state",
   "ALL_APP_VERSION" : "allAppVersion",
   "ACTIVE" : "active",
-  "IN_ACTIVE" : "inactive",
+  "INACTIVE" : "inactive",
   "BODH_DIAL_CODE_LIVE_STATUS" : "Live",
   "GOA_STATE" : "Goa",
   "UNNATI_APP_NAME" : "unnati",
@@ -58,5 +58,11 @@ module.exports = {
   "DEFAULT_PAGE_NO" : 1,
   "DHITI" : "dhiti",
   "DEFAULT_SURVEY_REMOVED_DAY" : 15,
-  "COURSE" : "course"
+  "COURSE" : "course",
+  "PREFIX_FOR_SOLUTION_LINK" : "manage-learn",
+  "CREATE_OBSERVATION": "/create-observation/",
+  "CREATE_SURVEY" : "/create-survey/",
+  "CREATE_PROJECT" : "/create-project/",
+  "LINK" : "link",
+  "DISCOVERED_BY_ME" : "discoveredByMe"
 };

@@ -8,11 +8,6 @@ module.exports = (req) => {
 
     let staticLinksValidator = {
 
-        list: function () {
-            req.checkHeaders('apptype').exists().withMessage("required app type")
-        }
-
-
     }
 
     if (staticLinksValidator[req.params.method]) {

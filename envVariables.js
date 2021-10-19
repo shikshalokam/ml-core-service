@@ -124,6 +124,11 @@ let enviromentVariables = {
     "message" : "CSV Report Path",
     "optional" : true,
     "default": "public/reports"
+  },
+  "APP_PORTAL_BASE_URL" : {
+    "message" : "App Portal base url",
+    "optional" : true,
+    "default": "https://dev.sunbirded.org"
   }
 }
 
