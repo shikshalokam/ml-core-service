@@ -13,7 +13,7 @@ const entitiesHelper = require(MODULES_BASE_PATH + "/entities/helper");
 const userRolesHelper = require(MODULES_BASE_PATH + "/user-roles/helper");
 const assessmentService = require(ROOT_PATH + '/generics/services/samiksha');
 const improvementProjectService = require(ROOT_PATH + '/generics/services/improvement-project');
-const appsPortalBaseUrl = (process.env.APP_PORTAL_BASE_URL && process.env.APP_PORTAL_BASE_URL !== "") ? process.env.APP_PORTAL_BASE_URL + "/" : "https://dev.sunbirded.org/";
+const appsPortalBaseUrl = process.env.APP_PORTAL_BASE_URL + "/" ;
 
 /**
     * SolutionsHelper
@@ -1511,7 +1511,7 @@ module.exports = class SolutionsHelper {
           });
         }
 
-        let prefix = constants.common.PREFIX_FOR_PROJECT_LINK;
+        let prefix = constants.common.PREFIX_FOR_SOLUTION_LINK;
 
         let solutionLink, link;
 

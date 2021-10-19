@@ -99,7 +99,7 @@ module.exports = class UsersHelper {
             let duplicateProgram = checkforProgramExist[0];
             duplicateProgram = await _createProgramData(
               duplicateProgram.name,
-              duplicateProgram.name + "-" + dateFormat,
+              duplicateProgram.externalId ? duplicateProgram.externalId + "-" + dateFormat : duplicateProgram.name + "-" + dateFormat,
               true,
               constants.common.ACTIVE,
               duplicateProgram.description,
@@ -179,7 +179,7 @@ module.exports = class UsersHelper {
             {
               _id: data.solutionId,
             },
-            ["name", "link", "type", "subType"]
+            ["name", "link", "type", "subType", "externalId", "description"]
           );
 
           if ( !solutionData.length > 0 ) {
@@ -195,7 +195,7 @@ module.exports = class UsersHelper {
             let duplicateSolution = solutionData[0];
             let solutionCreationData = await _createSolutionData(
               duplicateSolution.name,
-              duplicateSolution.name + "-" + dateFormat,
+              duplicateSolution.externalId ? duplicateSolution.externalId + "-" + dateFormat : duplicateSolution.name + "-" + dateFormat,
               true,
               constants.common.ACTIVE,
               duplicateSolution.description,
