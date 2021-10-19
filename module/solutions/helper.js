@@ -1332,7 +1332,6 @@ module.exports = class SolutionsHelper {
           };
 
           surveyReportPage = gen.utils.convertStringToBoolean(surveyReportPage);
-          console.log(surveyReportPage,"surveyReportPage targetedSolution")
           if ( !surveyReportPage || solutionType == constants.common.COURSE ) {
 
             targetedSolutions = 
@@ -1351,7 +1350,6 @@ module.exports = class SolutionsHelper {
 
             if( targetedSolutions.data.data && targetedSolutions.data.data.length > 0 ) {
                 totalCount += targetedSolutions.data.count;
-                console.log(targetedSolutions.data.data,"targetedSolutions data")
                 targetedSolutions.data.data.forEach(targetedSolution => {
                     targetedSolution.solutionId = targetedSolution._id;
                     targetedSolution._id = "";
