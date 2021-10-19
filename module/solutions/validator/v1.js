@@ -50,7 +50,7 @@ module.exports = (req) => {
         verifyLink : function () {
             req.checkParams("_id").exists().withMessage("required solution link");
         },
-        getDetails : function () {
+        details : function () {
             req.checkParams("_id").exists().withMessage("required solution Id");
         }
     }
