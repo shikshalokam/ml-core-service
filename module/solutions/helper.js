@@ -11,7 +11,7 @@ const programsHelper = require(MODULES_BASE_PATH + "/programs/helper");
 const entityTypesHelper = require(MODULES_BASE_PATH + "/entityTypes/helper");
 const entitiesHelper = require(MODULES_BASE_PATH + "/entities/helper");
 const userRolesHelper = require(MODULES_BASE_PATH + "/user-roles/helper");
-const assessmentService = require(ROOT_PATH + '/generics/services/samiksha');
+const surveyService = require(ROOT_PATH + '/generics/services/survey');
 const improvementProjectService = require(ROOT_PATH + '/generics/services/improvement-project');
 const appsPortalBaseUrl = process.env.APP_PORTAL_BASE_URL + "/" ;
 
@@ -850,7 +850,8 @@ module.exports = class SolutionsHelper {
             "entityType",
             "entityTypeId",
             "language",
-            "creator"
+            "creator",
+            "link"
           ]
         );
 
@@ -1445,7 +1446,7 @@ module.exports = class SolutionsHelper {
         if ( solutionType ===  constants.common.OBSERVATION ) {
             
           userAssignedSolutions = 
-          await assessmentService.assignedObservations(
+            await surveyService.assignedObservations(
             userToken,
             search,
             filter
@@ -1454,7 +1455,7 @@ module.exports = class SolutionsHelper {
         } else if ( solutionType === constants.common.SURVEY) {
             
           userAssignedSolutions = 
-          await assessmentService.assignedSurveys(
+            await surveyService.assignedSurveys(
             userToken,
             search,
             filter,
@@ -1499,7 +1500,7 @@ module.exports = class SolutionsHelper {
           {
             _id: solutionId,
             isReusable: false,
-            isAPrivateProgram: false,
+            isAPrivateProgram: false
           },
           ["link", "type", 'author']
         );
@@ -1507,7 +1508,7 @@ module.exports = class SolutionsHelper {
         if ( !Array.isArray(solutionData) || solutionData.length < 1 ) {
           return resolve({
             message: constants.apiResponses.SOLUTION_NOT_FOUND,
-            result: {},
+            result: {}
           });
         }
 
@@ -1542,7 +1543,7 @@ module.exports = class SolutionsHelper {
         return resolve({
           success: true,
           message: constants.apiResponses.LINK_GENERATED,
-          result: link,
+          result: link
         });
 
       } catch (error) {
@@ -1551,7 +1552,7 @@ module.exports = class SolutionsHelper {
           status: error.status
             ? error.status
             : httpStatusCode['internal_server_error'].status,
-          message: error.message,
+          message: error.message
         });
       }
     });
@@ -1588,8 +1589,9 @@ module.exports = class SolutionsHelper {
         ) {
 
           let solutionData = checkForTargetedSolution.result;
+          //non targeted solution
           if ( !checkForTargetedSolution.result.isATargetedSolution ) {
-            if ( solutionData.type == constants.common.IMPROVEMENT_PROJECT ) {
+            if ( solutionData.type === constants.common.IMPROVEMENT_PROJECT ) {
 
               let filterQuery = {
                 createdBy: userId,
@@ -1613,9 +1615,12 @@ module.exports = class SolutionsHelper {
                   checkForProjectExist.data[0]._id;
               }
             }
+
           } else {
+            // targeted solution
             let detailFromLink;
             if ( solutionData.type == constants.common.IMPROVEMENT_PROJECT ) {
+
               detailFromLink = await improvementProjectService.getProjectDetail(
                 solutionData.solutionId,
                 userToken,
@@ -1635,7 +1640,7 @@ module.exports = class SolutionsHelper {
                   ? detailFromLink.data._id
                   : "";
               }
-            }
+            } 
           }
         }
 
@@ -1646,7 +1651,7 @@ module.exports = class SolutionsHelper {
           status: error.status
             ? error.status
             : httpStatusCode['internal_server_error'].status,
-          message: error.message,
+          message: error.message
         });
       }
     });
@@ -1860,6 +1865,22 @@ module.exports = class SolutionsHelper {
               solutionData.projectTemplateId,
               userToken
             );
+            
+        } else if ( solutionData.type === constants.common.OBSERVATION ) {
+
+            templateOrQuestionDetails =
+              await surveyService.getQuestions(
+              solutionData._id,
+              userToken
+            );
+        } else {
+
+          templateOrQuestionDetails = {
+            status : httpStatusCode.ok.status,
+            message : constants.apiResponses.SOLUTION_TYPE_INVALID,
+            result : {}
+          }
+
         }
 
         return resolve(templateOrQuestionDetails);
