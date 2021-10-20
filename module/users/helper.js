@@ -563,15 +563,22 @@ module.exports = class UsersHelper {
           "registryDetails.code": stateLocationId,
         };
 
+        console.log(stateLocationId,"stateLocationId input")
+        console.log(gen.utils.checkValidUUID(stateLocationId), "output of checkValidUUID")
+
         if (gen.utils.checkValidUUID(stateLocationId)) {
           filterQuery = {
             "registryDetails.locationId": stateLocationId,
           };
         }
 
+        console.log(filterQuery, "filterQuery for check entity")
+
         const entitiesData = await entitiesHelper.entityDocuments(filterQuery, [
           "_id",
         ]);
+
+        console.log(entitiesData,"entitiesData")
 
         if (!entitiesData.length > 0) {
           throw {
@@ -585,6 +592,8 @@ module.exports = class UsersHelper {
           },
           ["_id", "entityTypes.entityType"]
         );
+
+        console.log(rolesDocument,"rolesDocument")
 
         if (!rolesDocument.length > 0) {
           throw {
