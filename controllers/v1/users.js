@@ -189,7 +189,7 @@ module.exports = class Users extends Abstract {
             await usersHelper.createProgramAndSolution(
                 (req.params._id && req.params._id != "") ? 
                 req.params._id : 
-                req.userDetails.id,
+                req.userDetails.userId,
                 req.body,
                 req.userDetails.userToken,
                 req.query.createADuplicateSolution ? req.query.createADuplicateSolution : ""
