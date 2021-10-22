@@ -206,7 +206,6 @@ function valueParser(dataToBeParsed) {
 
 function checkValidUUID(str) {
   var validateUUID = uuidValidate(str);
-  console.log(validateUUID,"validateUUID")
   return validateUUID;
 }
 
