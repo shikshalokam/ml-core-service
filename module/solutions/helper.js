@@ -1640,7 +1640,23 @@ module.exports = class SolutionsHelper {
                   ? detailFromLink.data._id
                   : "";
               }
-            } 
+            } else if ( solutionData.type == constants.common.OBSERVATION ) {
+
+                detailFromLink = await surveyService.getObservationDetail(
+                  solutionData.solutionId,
+                  userToken
+                );
+
+                if (
+                  solutionData.type == constants.common.OBSERVATION && detailFromLink.result &&
+                  detailFromLink.result._id != ""
+                ) {
+                  checkForTargetedSolution.result["observationId"] = detailFromLink
+                    .result._id
+                    ? detailFromLink.result._id
+                    : "";
+                }
+            }
           }
         }
 
@@ -1773,6 +1789,7 @@ module.exports = class SolutionsHelper {
           "type",
           "_id",
           "programId",
+          "name"
         ]);
 
         let queryData = await this.queryBasedOnRoleAndLocation(bodyData);
@@ -1788,12 +1805,14 @@ module.exports = class SolutionsHelper {
           "link",
           "type",
           "programId",
+          "name"
         ]);
 
         if ( !Array.isArray(solutionData) || solutionData.length < 1 ) {
 
           response.solutionId = solutionDetails[0]._id;
           response.type = solutionDetails[0].type;
+          response.name = solutionDetails[0].name;
           response.programId = solutionDetails[0].programId;
           return resolve({
             success: true,

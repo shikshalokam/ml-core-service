@@ -194,8 +194,69 @@ var getQuestions = function ( solutionId, token ) {
 
 }
 
+/**
+  * Get observation.
+  * @function
+  * @name getObservationDetail
+  * @param {String} token - logged in user token.
+  * @param {String} solutionId - solution Id
+  * @returns {Promise} returns a promise.
+*/
+
+var getObservationDetail = function ( solutionId, token ) {
+
+    let url = 
+    process.env.ML_SURVEY_SERVICE_URL + 
+    constants.endpoints.GET_OBSERVATION + "?solutionId=" + solutionId;
+    
+    return new Promise(async (resolve, reject) => {
+        try {
+
+            function assessmentCallback(err, data) {
+
+                let result = {
+                    success : true,
+                    message: "",
+                    status:""
+                };
+
+                if (err) {
+                    result.success = false;
+                } else {
+                    
+                    let response = JSON.parse(data.body);
+                    if( response.status === httpStatusCode['ok'].status ) {
+                        result["result"] = response.result;
+                    } else {
+                        result.success = false;
+                    }
+
+                    result.message = response.message;
+                    result.status = response.status;
+                }
+
+                return resolve(result);
+            }
+
+            const options = {
+                headers : {
+                    "content-type": "application/json",
+                    "x-authenticated-user-token" : token
+                }
+            };
+
+            request.get(url,options,assessmentCallback)
+
+        } catch (error) {
+            return reject(error);
+        }
+    })
+
+}
+
 module.exports = {
     assignedObservations : assignedObservations,
     assignedSurveys : assignedSurveys,
-    getQuestions : getQuestions
+    getQuestions : getQuestions,
+    getObservationDetail : getObservationDetail
 };
