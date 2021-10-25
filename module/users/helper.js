@@ -77,11 +77,17 @@ module.exports = class UsersHelper {
         );
         //program part
         if ( data.programId && data.programId !== "" ) {
+
+          let filterQuery = {
+            _id: data.programId
+          }
+
+          if ( createADuplicateSolution === false ) {
+            filterQuery.createdBy = userId;
+          }
+
           let checkforProgramExist = await programsHelper.programDocuments(
-            {
-              _id: data.programId,
-              createdBy: userId
-            },
+            filterQuery,
             "all",
             ["__v"]
           );
