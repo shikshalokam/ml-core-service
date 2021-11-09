@@ -7,7 +7,10 @@ module.exports = {
       owner: String,
       createdBy: String,
       updatedBy: String,
-      status: String,
+      status: {
+        type : String,
+        index : true
+      },
       resourceType: [String],
       language: [String],
       keywords: [String],
@@ -36,7 +39,8 @@ module.exports = {
       },
       isDeleted: {
         default : false,
-        type : Boolean
+        type : Boolean,
+        index : true
       }
     }
   };

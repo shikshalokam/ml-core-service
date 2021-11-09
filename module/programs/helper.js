@@ -10,6 +10,7 @@
 const entityTypesHelper = require(MODULES_BASE_PATH + "/entityTypes/helper");
 const entitiesHelper = require(MODULES_BASE_PATH + "/entities/helper");
 const userRolesHelper = require(MODULES_BASE_PATH + "/user-roles/helper");
+const solutionsHelper = require(MODULES_BASE_PATH + "/solutions/helper");
 
 /**
     * ProgramsHelper
@@ -506,16 +507,14 @@ module.exports = class ProgramsHelper {
               let currentTargetedProgram = targetedPrograms.data.data[targetedProgram];
 
               if( currentTargetedProgram.components.length > 0 ) {
-                
-                let solutions = await database.models.solutions.find({
+
+                let solutions = await solutionsHelper.solutionDocuments({
                   _id : { $in : currentTargetedProgram.components },
                   isDeleted : false,
                   status : constants.common.ACTIVE
-                },{
-                  _id : 1
-                });
+                },["_id"]); 
 
-                if( solutions.length > 0 ) {
+                if( solutions && solutions.length > 0 ) {
                   currentTargetedProgram["solutions"] = solutions.length;
                   delete currentTargetedProgram.components;
                 }
