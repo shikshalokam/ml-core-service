@@ -10,7 +10,6 @@
 const entityTypesHelper = require(MODULES_BASE_PATH + "/entityTypes/helper");
 const entitiesHelper = require(MODULES_BASE_PATH + "/entities/helper");
 const userRolesHelper = require(MODULES_BASE_PATH + "/user-roles/helper");
-const solutionsHelper = require(MODULES_BASE_PATH + "/solutions/helper");
 
 /**
     * ProgramsHelper
@@ -389,6 +388,7 @@ module.exports = class ProgramsHelper {
         }
 
         if ( searchText !== "" ) {
+
           matchQuery["$or"] = [];
           matchQuery["$or"].push(
             { 
@@ -522,7 +522,7 @@ module.exports = class ProgramsHelper {
               }
             }
         }
-      
+
         return resolve({
           success: true,
           message: constants.apiResponses.TARGETED_PROGRAMS_FETCHED,
@@ -915,3 +915,5 @@ module.exports = class ProgramsHelper {
   } 
 
 };
+
+const solutionsHelper = require(MODULES_BASE_PATH + "/solutions/helper");
