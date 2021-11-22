@@ -424,14 +424,26 @@ module.exports = class Users extends Abstract {
 
             try {
 
-                const entitiesMappingData = 
-                await usersHelper.entityTypesByLocationAndRole(
-                    req.params._id,
-                    req.query.role
-                );
+                let currentMaximumCountOfRequiredEntities = 0;
+                let requiredEntities = new Array;
 
-                entitiesMappingData["result"] = entitiesMappingData.data;
-                resolve(entitiesMappingData);
+                // Calculate required entities for each of the role and send the output of the role which has maximum length.
+                for (let roleCount = 0; roleCount < req.query.role.split(",").length; roleCount++) {
+                    const eachRole = req.query.role.split(",")[roleCount];
+                    const entitiesMappingData = 
+                    await usersHelper.entityTypesByLocationAndRole(
+                        req.params._id,
+                        eachRole
+                    );
+                    if(entitiesMappingData.data.length > currentMaximumCountOfRequiredEntities) {
+                        currentMaximumCountOfRequiredEntities = entitiesMappingData.data.length;
+                        requiredEntities = entitiesMappingData;
+                        requiredEntities.result = entitiesMappingData.data;
+                    }
+                }
+
+                // entitiesMappingData["result"] = requiredEntities;
+                resolve(requiredEntities);
 
             } catch (error) {
 

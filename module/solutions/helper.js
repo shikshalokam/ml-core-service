@@ -756,7 +756,7 @@ module.exports = class SolutionsHelper {
         });
 
         let filterQuery = {
-          "scope.roles.code" : { $in : [constants.common.ALL_ROLES,data.role] },
+          "scope.roles.code" : { $in : [constants.common.ALL_ROLES,...data.role.split(",")] },
           "scope.entities" : { $in : entityIds },
           "scope.entityType" : { $in : entityTypes },
           "isReusable" : false,
