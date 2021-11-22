@@ -172,6 +172,10 @@ module.exports = class SolutionsHelper {
             solutionData.entities = entitiesData;
           }
 
+          if( !solutionData.noOfSubmissionsRequired || !solutionData.allowMultipleAssessemts ) {
+            solutionData.noOfSubmissionsRequired = constants.common.DEFAULT_SUBMISSION_REQUIRED;
+          }
+
           solutionData.status = constants.common.ACTIVE;
     
           let solutionCreation = 
@@ -428,6 +432,10 @@ module.exports = class SolutionsHelper {
           let updateObject = {
             "$set" : {}
           };
+
+          if( !solutionData.noOfSubmissionsRequired || !solutionData.allowMultipleAssessemts ) {
+            solutionData.noOfSubmissionsRequired = constants.common.DEFAULT_SUBMISSION_REQUIRED;
+          }
 
           let solutionUpdateData = solutionData;
 

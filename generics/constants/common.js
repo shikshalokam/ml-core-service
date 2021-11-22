@@ -64,5 +64,6 @@ module.exports = {
   "CREATE_SURVEY" : "/create-survey/",
   "CREATE_PROJECT" : "/create-project/",
   "LINK" : "link",
-  "DISCOVERED_BY_ME" : "discoveredByMe"
+  "DISCOVERED_BY_ME" : "discoveredByMe",
+  "DEFAULT_SUBMISSION_REQUIRED" : 1
 };

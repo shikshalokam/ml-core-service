@@ -38,7 +38,9 @@ module.exports = class Solutions extends Abstract {
     "type" : "improvementProject",
     "subType" : "improvementProject",
     "isReusable" : false,
-    "externalId" : "01c04166-a65e-4e92-a87b-a9e4194e771d-1607936956167"
+    "externalId" : "01c04166-a65e-4e92-a87b-a9e4194e771d-1607936956167",
+    "noOfSubmissionsRequired" : 2,
+    "allowMultipleAssessemts" : true
     }
     * @apiHeader {String} internal-access-token internal access token  
     * @apiHeader {String} X-authenticated-user-token Authenticity token
