@@ -172,8 +172,12 @@ module.exports = class SolutionsHelper {
             solutionData.entities = entitiesData;
           }
 
-          if( !solutionData.minNoOfSubmissionsRequired || !solutionData.allowMultipleAssessemts ) {
-            solutionData.minNoOfSubmissionsRequired = constants.common.DEFAULT_SUBMISSION_REQUIRED;
+          if( solutionData.minNoOfSubmissionsRequired && 
+            solutionData.minNoOfSubmissionsRequired > constants.common.DEFAULT_SUBMISSION_REQUIRED 
+          ) {
+            if (!solutionData.allowMultipleAssessemts){
+              solutionData.minNoOfSubmissionsRequired = constants.common.DEFAULT_SUBMISSION_REQUIRED;
+            }
           }
 
           solutionData.status = constants.common.ACTIVE;
@@ -433,8 +437,12 @@ module.exports = class SolutionsHelper {
             "$set" : {}
           };
 
-          if( !solutionData.minNoOfSubmissionsRequired || !solutionData.allowMultipleAssessemts ) {
-            solutionData.minNoOfSubmissionsRequired = constants.common.DEFAULT_SUBMISSION_REQUIRED;
+          if( solutionData.minNoOfSubmissionsRequired && 
+            solutionData.minNoOfSubmissionsRequired > constants.common.DEFAULT_SUBMISSION_REQUIRED 
+          ) {
+            if (!solutionData.allowMultipleAssessemts){
+              solutionData.minNoOfSubmissionsRequired = constants.common.DEFAULT_SUBMISSION_REQUIRED;
+            }
           }
 
           let solutionUpdateData = solutionData;
