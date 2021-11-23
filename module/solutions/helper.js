@@ -172,6 +172,14 @@ module.exports = class SolutionsHelper {
             solutionData.entities = entitiesData;
           }
 
+          if( solutionData.minNoOfSubmissionsRequired && 
+            solutionData.minNoOfSubmissionsRequired > constants.common.DEFAULT_SUBMISSION_REQUIRED 
+          ) {
+            if (!solutionData.allowMultipleAssessemts){
+              solutionData.minNoOfSubmissionsRequired = constants.common.DEFAULT_SUBMISSION_REQUIRED;
+            }
+          }
+
           solutionData.status = constants.common.ACTIVE;
     
           let solutionCreation = 
@@ -428,6 +436,14 @@ module.exports = class SolutionsHelper {
           let updateObject = {
             "$set" : {}
           };
+
+          if( solutionData.minNoOfSubmissionsRequired && 
+            solutionData.minNoOfSubmissionsRequired > constants.common.DEFAULT_SUBMISSION_REQUIRED 
+          ) {
+            if (!solutionData.allowMultipleAssessemts){
+              solutionData.minNoOfSubmissionsRequired = constants.common.DEFAULT_SUBMISSION_REQUIRED;
+            }
+          }
 
           let solutionUpdateData = solutionData;
 
