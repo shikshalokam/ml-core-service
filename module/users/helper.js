@@ -444,7 +444,7 @@ module.exports = class UsersHelper {
           autoTargetedSolutions.data.data.length > 0
         ) {
 
-          autoTargetedSolutions.data = _.remove(autoTargetedSolutions.data, { 'referenceFrom': constants.common.PROJECT, 'type': constants.common.OBSERVATION });
+          autoTargetedSolutions.data.data = _.remove(autoTargetedSolutions.data.data, { 'referenceFrom': constants.common.PROJECT, 'type': constants.common.OBSERVATION });
 
           totalCount = autoTargetedSolutions.data.count;
 
