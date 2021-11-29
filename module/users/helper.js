@@ -444,6 +444,8 @@ module.exports = class UsersHelper {
           autoTargetedSolutions.data.data.length > 0
         ) {
 
+          // Remove observation solutions which for project tasks.
+          
           autoTargetedSolutions.data.data = _.remove(autoTargetedSolutions.data.data, function(solution) {
               return solution.referenceFrom == constants.common.PROJECT && solution.type == constants.common.OBSERVATION;
             });
