@@ -708,7 +708,8 @@ module.exports = class SolutionsHelper {
               "language",
               "creator",
               "endDate",
-              "link"
+              "link",
+              "referenceFrom"
             ]  
           );
         
