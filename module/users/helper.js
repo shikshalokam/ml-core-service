@@ -443,6 +443,9 @@ module.exports = class UsersHelper {
           autoTargetedSolutions.data.data &&
           autoTargetedSolutions.data.data.length > 0
         ) {
+
+          autoTargetedSolutions.data = _.remove(autoTargetedSolutions.data, { 'referenceFrom': constants.common.PROJECT, 'type': constants.common.OBSERVATION });
+
           totalCount = autoTargetedSolutions.data.count;
 
           mergedData = autoTargetedSolutions.data.data;
@@ -453,7 +456,7 @@ module.exports = class UsersHelper {
             return targetedData;
           });
 
-          mergedData = _.filter(mergedData, { 'referenceFrom': constants.common.PROJECT, 'type': constants.common.OBSERVATION });
+          
         }
 
         let importedProjects = await improvementProjectService.importedProjects(
