@@ -452,6 +452,8 @@ module.exports = class UsersHelper {
             delete targetedData.programName;
             return targetedData;
           });
+
+          mergedData = _.filter(mergedData, { 'referenceFrom': constants.common.PROJECT, 'type': constants.common.OBSERVATION });
         }
 
         let importedProjects = await improvementProjectService.importedProjects(
