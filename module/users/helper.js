@@ -450,7 +450,7 @@ module.exports = class UsersHelper {
               return solution.referenceFrom == constants.common.PROJECT && solution.type == constants.common.OBSERVATION;
             });
 
-          totalCount = autoTargetedSolutions.data.count;
+          totalCount = autoTargetedSolutions.data.data.count;
 
           mergedData = autoTargetedSolutions.data.data;
 

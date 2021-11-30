@@ -1319,7 +1319,13 @@ module.exports = class SolutionsHelper {
 
         if( assignedSolutions.success && assignedSolutions.data ) {
 
-          totalCount = assignedSolutions.data.count;
+          // Remove observation solutions which for project tasks.
+          
+          _.remove(assignedSolutions.data.data, function(solution) {
+              return solution.referenceFrom == constants.common.PROJECT && solution.type == constants.common.OBSERVATION;
+            });
+
+          totalCount = assignedSolutions.data.data.count;
           mergedData = assignedSolutions.data.data;
 
           if ( mergedData.length > 0 ) {
