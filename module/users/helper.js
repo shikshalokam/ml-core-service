@@ -761,6 +761,7 @@ module.exports = class UsersHelper {
           success: true,
           data: entities[0]
         });
+        
       } catch (error) {
         return resolve({
           success: false,
