@@ -65,5 +65,6 @@ module.exports = {
   "CREATE_PROJECT" : "/create-project/",
   "LINK" : "link",
   "DISCOVERED_BY_ME" : "discoveredByMe",
-  "DEFAULT_SUBMISSION_REQUIRED" : 1
+  "DEFAULT_SUBMISSION_REQUIRED" : 1,
+  "SCHOOL" : "school"
 };

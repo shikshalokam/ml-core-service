@@ -503,9 +503,7 @@ module.exports = class Users extends Abstract {
         return new Promise(async (resolve, reject) => {
           try {
 
-            let targetedEntities = new Array;
-            targetedEntities["result"] = new Array;
-            targetedEntities["data"] = new Array;
+            let targetedEntities = {};
 
             for ( let roleCount = 0; roleCount < req.body.role.split(",").length; roleCount++ ) {
 
@@ -519,21 +517,20 @@ module.exports = class Users extends Abstract {
                     bodyData
                 );
 
+                targetedEntities.message = detailEntity.message;
+                targetedEntities.success = detailEntity.success; 
+                targetedEntities.status = detailEntity.status;
+
                 if ( detailEntity.data && Object.keys(detailEntity.data).length > 0 ) {
-                    targetedEntities.message = detailEntity.message;
-                    targetedEntities.success = detailEntity.success;  
-                    targetedEntities["data"].push(detailEntity.data);
-                }
 
-                if ( !targetedEntities["data"].length > 0 ) {
-                    targetedEntities.message = detailEntity.message;
-                    targetedEntities.status = detailEntity.status
-                }
-            }
+                    if ( roleCount  == 0 ) {
+                        targetedEntities.result = detailEntity.data;
+                    }
 
-            if ( targetedEntities["data"].length > 0 ){
-                targetedEntities["result"] = _.uniqBy(targetedEntities["data"], "entityName");
-                delete targetedEntities["data"];
+                    if ( detailEntity.data.entityType !== constants.common.SCHOOL ) {
+                        targetedEntities.result = detailEntity.data;
+                    }
+                }
             }
 
             return resolve(targetedEntities);
