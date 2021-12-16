@@ -655,7 +655,7 @@ module.exports = class UserExtensionHelper {
                     _id: {$in: programDocuments[0].components},
                     programId: programId,
                     isReusable: false,
-                    status: constants.common.ACTIVE
+                    isDeleted: false
                 },[
                     "externalId",
                     "description",
