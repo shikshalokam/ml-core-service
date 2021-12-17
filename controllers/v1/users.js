@@ -517,9 +517,6 @@ module.exports = class Users extends Abstract {
                     bodyData
                 );
 
-                targetedEntities.message = detailEntity.message;
-                targetedEntities.success = detailEntity.success; 
-                targetedEntities.status = detailEntity.status;
 
                 if ( detailEntity.data && Object.keys(detailEntity.data).length > 0 ) {
 
@@ -530,6 +527,12 @@ module.exports = class Users extends Abstract {
                     if ( detailEntity.data.entityType !== constants.common.SCHOOL ) {
                         targetedEntities.result = detailEntity.data;
                     }
+                }
+
+                if ( !targetedEntities.result ) {
+                    targetedEntities.message = detailEntity.message;
+                    targetedEntities.success = detailEntity.success; 
+                    targetedEntities.status = detailEntity.status;
                 }
             }
 
