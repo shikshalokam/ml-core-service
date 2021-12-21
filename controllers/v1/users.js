@@ -11,6 +11,7 @@
  */
 
 const usersHelper = require(MODULES_BASE_PATH + "/users/helper.js");
+const entitiesHelper = require(MODULES_BASE_PATH + "/entities/helper.js");
 
 /**
     * User
@@ -504,6 +505,7 @@ module.exports = class Users extends Abstract {
           try {
 
             let targetedEntities = {};
+            let matchingEntities = new Array();
 
             for ( let roleCount = 0; roleCount < req.body.role.split(",").length; roleCount++ ) {
 
@@ -517,23 +519,73 @@ module.exports = class Users extends Abstract {
                     bodyData
                 );
 
-
                 if ( detailEntity.data && Object.keys(detailEntity.data).length > 0 ) {
 
-                    if ( roleCount  == 0 ) {
-                        targetedEntities.result = detailEntity.data;
-                    }
+                    matchingEntities.push(detailEntity.data);
 
-                    if ( detailEntity.data.entityType !== constants.common.SCHOOL ) {
-                        targetedEntities.result = detailEntity.data;
+                }else{
+
+                    if ( req.body.role.split(",").length - 1 === roleCount) {
+                        targetedEntities.message = detailEntity.message;
                     }
                 }
+            }
 
-                if ( !targetedEntities.result ) {
-                    targetedEntities.message = detailEntity.message;
-                    targetedEntities.success = detailEntity.success; 
-                    targetedEntities.status = detailEntity.status;
-                }
+            if ( matchingEntities && matchingEntities.length == 1 ) {
+                targetedEntities.result = matchingEntities[0];
+                return resolve(targetedEntities);
+            }
+
+            let allTargetedEntities = {};
+            if ( matchingEntities && matchingEntities.length > 1 ) {
+                
+                for( let pointerToEntities = 0 ; pointerToEntities < matchingEntities.length ; pointerToEntities++ ) {
+
+                    let currentEntity = matchingEntities[pointerToEntities];
+
+                    if ( !allTargetedEntities.hasOwnProperty(currentEntity._id) ){
+                        allTargetedEntities[currentEntity._id] = new Array();
+                    }
+                    let otherEntities = matchingEntities.filter((entity) => entity.entityType !== currentEntity.entityType);
+
+                    if ( !otherEntities || !otherEntities.length > 0 ) {
+                        continue; 
+                    }
+
+                    let entitiesDocument = await entitiesHelper.entityDocuments({
+                        _id: ObjectId(currentEntity._id)
+                    }, ["groups"]);
+
+                    if ( !entitiesDocument ) {
+                        continue;
+                    }
+
+                    entitiesDocument = entitiesDocument[0];
+
+                    for( let entityCounter = 0 ; entityCounter < otherEntities.length ; entityCounter++ ) {
+
+                        let entityDoc = otherEntities[entityCounter];
+                        if ( !entitiesDocument.groups || !entitiesDocument.groups.hasOwnProperty(entityDoc.entityType)){
+                            continue;
+                        }
+
+                        allTargetedEntities[currentEntity._id].push(true);
+                    } 
+                }  
+            }else{
+                
+                targetedEntities.status = httpStatusCode.bad_request.status;
+            }
+
+            if ( Object.keys(allTargetedEntities).length > 0 ){
+                
+                let entitiesCount = req.body.role.split(",").length - 1;
+                Object.keys(allTargetedEntities).forEach( entityMap => {
+                    if ( allTargetedEntities[entityMap] && allTargetedEntities[entityMap].length  === entitiesCount ) {
+                        targetedEntities["result"] = matchingEntities.filter((entity) => entity._id == entityMap);
+                    }
+                    
+                })
             }
 
             return resolve(targetedEntities);
