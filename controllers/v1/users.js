@@ -11,7 +11,6 @@
  */
 
 const usersHelper = require(MODULES_BASE_PATH + "/users/helper.js");
-const entitiesHelper = require(MODULES_BASE_PATH + "/entities/helper.js");
 
 /**
     * User
