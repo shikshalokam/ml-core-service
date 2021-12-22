@@ -504,91 +504,71 @@ module.exports = class Users extends Abstract {
         return new Promise(async (resolve, reject) => {
           try {
 
+            let roleArray = req.body.role.split(",");
             let targetedEntities = {};
-            let matchingEntities = new Array();
 
-            for ( let roleCount = 0; roleCount < req.body.role.split(",").length; roleCount++ ) {
+            if ( roleArray.length === 1 ) {
 
-                const eachRole = req.body.role.split(",")[roleCount];
-                let bodyData = _.omit(req.body, ['role']);
-                bodyData.role = eachRole;
-                
                 const detailEntity = 
                 await usersHelper.targetedEntity(
                     req.params._id,
-                    bodyData
+                    req.body
                 );
 
-                if ( detailEntity.data && Object.keys(detailEntity.data).length > 0 ) {
+                detailEntity["result"] = detailEntity.data;
+    
+                return resolve(detailEntity);
 
-                    matchingEntities.push(detailEntity.data);
+            } else {
 
-                }else{
-                    //setting error message 
-                    if ( req.body.role.split(",").length - 1 === roleCount) {
-                        targetedEntities.message = detailEntity.message;
+                let roleWiseTargetedEntities = new Array();
+
+                for ( let roleCount = 0; roleCount < roleArray.length; roleCount++ ) {
+
+                    const eachRole = roleArray[roleCount];
+                    let bodyData = _.omit(req.body, ['role']);
+                    bodyData.role = eachRole;
+                    
+                    const detailEntity = 
+                    await usersHelper.targetedEntity(
+                        req.params._id,
+                        bodyData
+                    );
+
+                    if ( detailEntity.data && Object.keys(detailEntity.data).length > 0 ) {
+                        roleWiseTargetedEntities.push(detailEntity.data);
                     }
                 }
-            }
 
-            //return when only one entity found 
-            if ( matchingEntities && matchingEntities.length == 1 ) {
-                targetedEntities.result = matchingEntities[0];
-                return resolve(targetedEntities);
-            }
-
-            let allTargetedEntities = {};
-            //finding the highest entity
-            if ( matchingEntities && matchingEntities.length > 1 ) {
-                
-                for( let pointerToEntities = 0 ; pointerToEntities < matchingEntities.length ; pointerToEntities++ ) {
-
-                    let currentEntity = matchingEntities[pointerToEntities];
-
-                    if ( !allTargetedEntities.hasOwnProperty(currentEntity._id) ){
-                        allTargetedEntities[currentEntity._id] = new Array();
-                    }
-                    let otherEntities = matchingEntities.filter((entity) => entity.entityType !== currentEntity.entityType);
-
-                    if ( !otherEntities || !otherEntities.length > 0 ) {
-                        continue; 
-                    }
-
-                    let entitiesDocument = await entitiesHelper.entityDocuments({
-                        _id: ObjectId(currentEntity._id)
-                    }, ["groups"]);
-
-                    if ( !entitiesDocument ) {
-                        continue;
-                    }
-
-                    entitiesDocument = entitiesDocument[0];
-
-                    for( let entityCounter = 0 ; entityCounter < otherEntities.length ; entityCounter++ ) {
-
-                        let entityDoc = otherEntities[entityCounter];
-                        if ( !entitiesDocument.groups || !entitiesDocument.groups.hasOwnProperty(entityDoc.entityType)){
-                            continue;
-                        }
-
-                        allTargetedEntities[currentEntity._id].push(true);
-                    } 
-                }  
-            }else{
-                
-                targetedEntities.status = httpStatusCode.bad_request.status;
-            }
-
-            //check the count of allTargetedEntities with role count to get the targeted entity
-            if ( Object.keys(allTargetedEntities).length > 0 ){
-                
-                let entitiesCount = req.body.role.split(",").length - 1;
-                Object.keys(allTargetedEntities).forEach( entityMap => {
-                    if ( allTargetedEntities[entityMap] && allTargetedEntities[entityMap].length  === entitiesCount ) {
-                        targetedEntities["result"] = matchingEntities.filter((entity) => entity._id == entityMap);
-                    }
+                //no targeted entity
+                if ( roleWiseTargetedEntities.length  == 0 ) {
+                    throw {
+                        status: httpStatusCode["bad_request"].status,
+                        message: constants.apiResponses.ENTITIES_NOT_ALLOWED_IN_ROLE
+                    };
+                } 
+                //one targeted entity 
+                else if ( roleWiseTargetedEntities && roleWiseTargetedEntities.length == 1 ) {
                     
-                })
+                    targetedEntities.result = roleWiseTargetedEntities[0];
+
+                } 
+                // multiple targeted entity
+                else if ( roleWiseTargetedEntities && roleWiseTargetedEntities.length > 1 ) {
+                    
+                    let targetedEntity = await usersHelper.getHighestTargetedEntity(
+                        roleWiseTargetedEntities
+                    );
+           
+                    if ( !targetedEntity.data ) {
+                        throw {
+                            status: httpStatusCode["bad_request"].status,
+                            message: constants.apiResponses.ENTITIES_NOT_ALLOWED_IN_ROLE
+                        };
+                    }
+
+                    targetedEntities.result = targetedEntity.data;
+                }
             }
 
             return resolve(targetedEntities);
