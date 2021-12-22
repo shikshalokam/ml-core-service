@@ -745,8 +745,9 @@ module.exports = class EntitiesHelper {
                  }
                  
                  return resolve({
-                     message : constants.apiResponses.ENTITIES_CHILD_HIERACHY_PATH,
-                     result : result
+                    success: true,
+                    message : constants.apiResponses.ENTITIES_CHILD_HIERACHY_PATH,
+                    result : result
                  });
     
             } catch (error) {

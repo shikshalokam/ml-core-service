@@ -322,7 +322,7 @@ module.exports = class Entities extends Abstract {
     * @apiVersion 1.0.0
     * @apiGroup Entities
     * @apiHeader {String} X-authenticated-user-token Authenticity token
-    * @apiSampleRequest /kendra/api/v1/entities/subEntityListBasedOnRoleAndLocation/236f5cff-c9af-4366-b0b6-253a1789766a?role=DEO
+    * @apiSampleRequest /kendra/api/v1/entities/subEntityListBasedOnRoleAndLocation/236f5cff-c9af-4366-b0b6-253a1789766a?role=DEO,HM
     * @apiUse successBody
     * @apiUse errorBody
     * @apiParamExample {json} Response:
@@ -351,11 +351,24 @@ module.exports = class Entities extends Abstract {
 
       try {
 
-        const subEntityTypeListData = 
-        await entitiesHelper.subEntityListBasedOnRoleAndLocation(
-          req.params._id,
-          req.query.role
-        );
+
+        let currentMaximumCountOfRequiredEntities = 0;
+        let subEntityTypeListData = new Array;
+        // Calculate required entity type for each of the role and send the output of the role which has maximum length.
+        for (let roleCount = 0; roleCount < req.query.role.split(",").length; roleCount++) {
+            const eachRole = req.query.role.split(",")[roleCount];
+            const entityTypeMappingData = 
+            await entitiesHelper.subEntityListBasedOnRoleAndLocation(
+              req.params._id,
+              eachRole
+            );
+ 
+            if(entityTypeMappingData.result && entityTypeMappingData.result.length > currentMaximumCountOfRequiredEntities) {
+                currentMaximumCountOfRequiredEntities = entityTypeMappingData.result.length;
+                subEntityTypeListData = entityTypeMappingData;
+                subEntityTypeListData.result = entityTypeMappingData.result;
+            }
+        }
        
         resolve(subEntityTypeListData);
 
