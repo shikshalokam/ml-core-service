@@ -524,19 +524,21 @@ module.exports = class Users extends Abstract {
                     matchingEntities.push(detailEntity.data);
 
                 }else{
-
+                    //setting error message 
                     if ( req.body.role.split(",").length - 1 === roleCount) {
                         targetedEntities.message = detailEntity.message;
                     }
                 }
             }
 
+            //return when only one entity found 
             if ( matchingEntities && matchingEntities.length == 1 ) {
                 targetedEntities.result = matchingEntities[0];
                 return resolve(targetedEntities);
             }
 
             let allTargetedEntities = {};
+            //finding the highest entity
             if ( matchingEntities && matchingEntities.length > 1 ) {
                 
                 for( let pointerToEntities = 0 ; pointerToEntities < matchingEntities.length ; pointerToEntities++ ) {
@@ -577,6 +579,7 @@ module.exports = class Users extends Abstract {
                 targetedEntities.status = httpStatusCode.bad_request.status;
             }
 
+            //check the count of allTargetedEntities with role count to get the targeted entity
             if ( Object.keys(allTargetedEntities).length > 0 ){
                 
                 let entitiesCount = req.body.role.split(",").length - 1;
