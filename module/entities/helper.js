@@ -514,23 +514,50 @@ module.exports = class EntitiesHelper {
    * Entity details information.
    * @method 
    * @name details
-   * @param {String} entityId - _id of entity.
-   * @return {Object} - consists of entity details information. 
-   */
+     * @param {String} entityId - _id of entity.
+     * @param {Object} requestData -  query details.
+     * @param {String} requestData.locationIds -  array of location Ids
+     * @param {String} requestData.entityIds -  array of entity Ids
+     * @return {Array} - consists of entity details information. 
+     */
 
-  static details( entityId ) {
-    return new Promise(async (resolve, reject) => {
-        try {
+    static details(entityId, requestData = {}) {
+        return new Promise(async (resolve, reject) => {
+            try {
+
+                let entityIds = [];
+                let query = {};
+                query["$or"] = [];
+
+                if (entityId) {
+                    entityIds.push(entityId)
+                }
+                if (requestData && requestData.entityIds) {
+                    entityIds.push(...requestData.entityIds);
+                }
+                if (entityIds.length > 0) {
+                    query["$or"].push({
+                        _id: {
+                            $in: entityIds
+                        }
+                    })
+                }
+
+                if (requestData && requestData.locationIds) {
+                    query["$or"].push({
+                        "registryDetails.locationId": {
+                            $in: requestData.locationIds
+                        }
+                    })
+                }
 
             let entityDocument = await this.entityDocuments(
-                {
-                    _id : entityId
-                },
+                query,
                 "all",
                 ["groups"]
             );
 
-            if ( !entityDocument[0] ) {
+            if (entityDocument && entityDocument.length ==0 ) {
                 return resolve({
                     status : httpStatusCode.bad_request.status,
                     message : constants.apiResponses.ENTITY_NOT_FOUND
@@ -539,7 +566,7 @@ module.exports = class EntitiesHelper {
 
             resolve({
                 message : constants.apiResponses.ENTITY_INFORMATION_FETCHED,
-                result : entityDocument[0]
+                result : entityDocument
             });
 
         } catch (error) {

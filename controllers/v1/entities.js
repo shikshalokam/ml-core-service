@@ -243,7 +243,7 @@ module.exports = class Entities extends Abstract {
         try {
           
           let result = await entitiesHelper.details(
-            req.params._id
+            req.params._id ? req.params._id :"",req.body ? req.body : {}
           );
           
           return resolve(result);
