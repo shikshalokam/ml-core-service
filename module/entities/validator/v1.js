@@ -36,7 +36,7 @@ module.exports = (req) => {
             req.checkBody('locationIds').optional()
             .isArray().withMessage("locationIds should be array")
             .custom(location => 
-                uuidValidation(location)
+                gen.utils.checkValidUUID(location)
             ).withMessage("invalid location ids");
         },
     }
@@ -58,16 +58,4 @@ module.exports = (req) => {
         return isObjectIds;
         
     }
-    function uuidValidation(locationIds) {
-
-        let validateUUIDs = true;
-        if(Array.isArray(locationIds)){
-            for (var i = 0; locationIds.length > i; i++) {
-                if(!gen.utils.checkValidUUID(locationIds[i])){
-                    validateUUIDs =false
-                }
-            }
-        }
-        return validateUUIDs;
-      }
 }
