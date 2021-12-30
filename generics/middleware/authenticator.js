@@ -69,7 +69,8 @@ module.exports = async function (req, res, next) {
     "/user-roles/list",
     "/forms/details",
     "/programs/list",
-    "/entities/getUsersByEntityAndRole/"
+    "/entities/getUsersByEntityAndRole/",
+    "/entities/details"
   ];
   
   let performInternalAccessTokenCheck = false;
