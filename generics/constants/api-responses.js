@@ -178,6 +178,7 @@ module.exports = {
   "SOLUTION_DETAILS_VERIFIED": "Solution verified successfully",
   "SOLUTION_NOT_FOUND_OR_NOT_A_TARGETED": "Solution is not targeted to the role",
   "PROJECT_TEMPLATE_ID_NOT_FOUND": "Project templates not exists in solution",
-  "SOLUTION_TARGETED_ENTITY" : "Targeted Entity Types Fetched"
+  "SOLUTION_TARGETED_ENTITY" : "Targeted Entity Types Fetched",
+  "ENTITY_ID_OR_LOCATION_ID_NOT_FOUND" : "Entity id or location id not found" 
 
 };

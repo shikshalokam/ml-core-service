@@ -22,7 +22,23 @@ module.exports = (req) => {
         subEntityListBasedOnRoleAndLocation : function () {
             req.checkParams('_id').exists().withMessage("required state location id");
             req.checkQuery('role').exists().withMessage("required role code");
-        }
+        },
+        details : function () {
+            req.checkParams('_id').optional()
+            .isMongoId().withMessage("Invalid entity id");
+
+            req.checkBody('entityIds').optional()
+            .isArray().withMessage("entityIds should be array")
+            .custom(entities => 
+                entitiesValidation(entities)
+            ).withMessage("invalid entity ids");
+
+            req.checkBody('locationIds').optional()
+            .isArray().withMessage("locationIds should be array")
+            .custom(location => 
+                uuidValidation(location)
+            ).withMessage("invalid location ids");
+        },
     }
 
     if (entityValidator[req.params.method]) {
@@ -42,4 +58,16 @@ module.exports = (req) => {
         return isObjectIds;
         
     }
+    function uuidValidation(locationIds) {
+
+        let validateUUIDs = true;
+        if(Array.isArray(locationIds)){
+            for (var i = 0; locationIds.length > i; i++) {
+                if(!gen.utils.checkValidUUID(locationIds[i])){
+                    validateUUIDs =false
+                }
+            }
+        }
+        return validateUUIDs;
+      }
 }

@@ -782,6 +782,12 @@ module.exports = class EntitiesHelper {
                 if (requestData && requestData.entityIds) {
                     entityIds.push(...requestData.entityIds);
                 }
+                if(entityIds.length == 0 && !requestData.locationIds){
+                    throw {
+                        message : constants.apiResponses.ENTITY_ID_OR_LOCATION_ID_NOT_FOUND,
+                    }
+                }
+
                 if (entityIds.length > 0) {
                     query["$or"].push({
                         _id: {
