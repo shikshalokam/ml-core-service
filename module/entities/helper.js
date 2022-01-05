@@ -782,7 +782,7 @@ module.exports = class EntitiesHelper {
                 if (requestData && requestData.entityIds) {
                     entityIds.push(...requestData.entityIds);
                 }
-                if(entityIds.length == 0 && !requestData.locationIds){
+                if(entityIds.length == 0 && !requestData.locationIds && !requestData.codes){
                     throw {
                         message : constants.apiResponses.ENTITY_ID_OR_LOCATION_ID_NOT_FOUND,
                     }
