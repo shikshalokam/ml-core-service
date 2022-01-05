@@ -200,12 +200,22 @@ function valueParser(dataToBeParsed) {
   * check whether string is valid uuid.
   * @function
   * @name checkValidUUID
-  * @param {String} str 
+  * @param {String} uuids 
   * @returns {Boolean} returns a Boolean value true/false
 */
 
-function checkValidUUID(str) {
-  var validateUUID = uuidValidate(str);
+function checkValidUUID(uuids) {
+
+  var validateUUID = true;
+  if(Array.isArray(uuids)){
+      for (var i = 0; uuids.length > i; i++) {
+          if(!uuidValidate(uuids[i])){
+            validateUUID = false
+          }
+      }
+  }else {
+     validateUUID = uuidValidate(uuids);
+  }
   return validateUUID;
 }
 
