@@ -38,6 +38,10 @@ module.exports = (req) => {
             .custom(location => 
                 gen.utils.checkValidUUID(location)
             ).withMessage("invalid location ids");
+
+            req.checkBody('codes').optional()
+            .isArray().withMessage("codes should be array")
+            
         },
     }
 

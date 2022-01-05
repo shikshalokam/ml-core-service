@@ -803,6 +803,13 @@ module.exports = class EntitiesHelper {
                         }
                     })
                 }
+                if (requestData && requestData.codes) {
+                    query["$or"].push({
+                        "registryDetails.code": {
+                            $in: requestData.codes
+                        }
+                    })
+                }
 
             let entityDocument = await this.entityDocuments(
                 query,
