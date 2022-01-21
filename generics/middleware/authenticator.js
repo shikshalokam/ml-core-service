@@ -70,7 +70,8 @@ module.exports = async function (req, res, next) {
     "/forms/details",
     "/programs/list",
     "/entities/getUsersByEntityAndRole/",
-    "/entities/details"
+    "/entities/details",
+    "/solutions/getList"
   ];
   
   let performInternalAccessTokenCheck = false;
@@ -79,6 +80,7 @@ module.exports = async function (req, res, next) {
       performInternalAccessTokenCheck = true;
     }
   }));
+  console.log(token,performInternalAccessTokenCheck,process.env.INTERNAL_ACCESS_TOKEN)
 
   if ( !token && performInternalAccessTokenCheck) {
     if (req.headers["internal-access-token"] !== process.env.INTERNAL_ACCESS_TOKEN) {

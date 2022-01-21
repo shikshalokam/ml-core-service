@@ -1938,6 +1938,35 @@ module.exports = class SolutionsHelper {
       }
     });
   }
+
+
+  /**
+   * List of solution.
+   * @method
+   * @name getList
+   * @returns {Array} List of solution.
+   */
+  
+   static getList( query, projection, skipField) {
+    return new Promise(async (resolve, reject) => {
+        try {
+            
+            const solutions = await this.solutionDocuments(
+              query, 
+              projection, 
+              skipField
+            );
+
+            return resolve({
+                message : constants.apiResponses.SOLUTIONS_LIST,
+                result : solutions
+            });
+            
+        } catch (error) {
+            return reject(error);
+        }
+    });
+  }
 };
 
  /**

@@ -985,4 +985,54 @@ module.exports = class Solutions extends Abstract {
     })
   }
 
+  /**
+   * @api {get} /kendra/api/v1/solutions/getList
+   * Lists of solution types.
+   * @apiVersion 0.0.1
+   * @apiName Lists of solution.
+   * @apiGroup Solutions
+   * @apiHeader {String} X-authenticated-user-token Authenticity token
+   * @apiSampleRequest /kendra/api/v1/solutions/getList
+   * @apiUse successBody
+   * @apiUse errorBody
+   * @apiParamExample {json} Response: 
+   * {
+   * "message": "Entity types fetched successfully",
+   * "status": 200,
+   * "result" : [
+   *  {
+   * "_id": "5d15a959e9185967a6d5e8a6",
+   *  "name": "school"
+   }]
+  }
+   */
+
+  /**
+   * Lists of solutions.
+   * @method
+   * @name list
+   * @returns {JSON} List solutions.
+  */
+
+ async getList(req) {
+  return new Promise(async (resolve, reject) => {
+    try {
+
+      const solutions = await solutionsHelper.getList(
+              req.body.query,  
+              req.body.projection,
+              req.body.skipFields 
+      );
+      return resolve(solutions);
+
+    } catch (error) {
+      return reject({
+        status: error.status || httpStatusCode.internal_server_error.status,
+        message: error.message || httpStatusCode.internal_server_error.message,
+        errorObject: error
+      });
+    }
+  });
+}
+
 }

@@ -7,6 +7,7 @@
 
 
 //dependencies
+//require('dotenv').config();
 const mongoose = require("mongoose");
 const mongooseDelete = require("mongoose-delete");
 const mongooseAutoPopulate = require("mongoose-autopopulate");
@@ -26,14 +27,12 @@ var databaseConfiguration = function () {
   mongoose.set('useCreateIndex', true);
   mongoose.set('useFindAndModify', false);
   mongoose.set('useUnifiedTopology', true);
-  
   var db = mongoose.createConnection(
     process.env.MONGODB_URL,
     {
       useNewUrlParser: true
     }
   );
-
   db.on("error", console.error.bind(console, "connection error:"));
   db.once("open", function () {
     console.log("Connected to database!");
