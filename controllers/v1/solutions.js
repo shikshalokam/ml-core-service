@@ -997,14 +997,19 @@ module.exports = class Solutions extends Abstract {
    * @apiUse errorBody
    * @apiParamExample {json} Response: 
    * {
-   * "message": "Entity types fetched successfully",
+   * "message": "solution Fetched successfully, Missing project template id",
    * "status": 200,
-   * "result" : [
-   *  {
-   * "_id": "5d15a959e9185967a6d5e8a6",
-   *  "name": "school"
-   }]
-  }
+   * "result": [
+   *     {
+   *         "_id": "5f34e44681871d939950bca7",
+   *        "externalId": "dea0b95a-dd11-11ea-a3bf-000d3af02677-OBSERVATION-TEMPLATE-1597301830736",
+   *         "name": "TN01-Mantra4Change-APSWREIS School Leader Feedback",
+   *         "programId": "5f34e44681871d939950bca6",
+   *         "programName": "TN-Program",
+   *         "link": "4feefb622c5b5ea5d3f8f0d9db2a86af"
+   *   }
+   * ]
+   *}
    */
 
   /**
