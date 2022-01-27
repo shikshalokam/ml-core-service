@@ -1599,6 +1599,7 @@ module.exports = class SolutionsHelper {
           userId,
           userToken
         );
+
         let checkForTargetedSolution = await this.checkForTargetedSolution(
           link,
           bodyData,
@@ -1812,7 +1813,8 @@ module.exports = class SolutionsHelper {
           "type",
           "_id",
           "programId",
-          "name"
+          "name",
+          "projectTemplateId"
         ]);
 
         let queryData = await this.queryBasedOnRoleAndLocation(bodyData);
@@ -1828,26 +1830,29 @@ module.exports = class SolutionsHelper {
           "link",
           "type",
           "programId",
-          "name"
+          "name",
+          "projectTemplateId"
         ]);
 
         if ( !Array.isArray(solutionData) || solutionData.length < 1 ) {
-
+          
           response.solutionId = solutionDetails[0]._id;
           response.type = solutionDetails[0].type;
           response.name = solutionDetails[0].name;
           response.programId = solutionDetails[0].programId;
+
           return resolve({
             success: true,
             message:
               constants.apiResponses.SOLUTION_NOT_FOUND_OR_NOT_A_TARGETED,
-            result: response,
+            result: response
           });
         }
 
         response.isATargetedSolution = true;
         Object.assign(response, solutionData[0]);
         response.solutionId = solutionData[0]._id;
+        response.projectTemplateId = solutionDetails[0].projectTemplateId ? solutionDetails[0].projectTemplateId : "";
         delete response._id;
 
         return resolve({
@@ -1938,6 +1943,132 @@ module.exports = class SolutionsHelper {
       }
     });
   }
+
+  /**
+   * Verify solution link V2
+   * @method
+   * @name verifyLinkV2
+   * @param {String} solutionId - solution Id.
+   * @param {String} userId - user Id.
+   * @param {Object} bodyData - Req Body.
+   * @returns {Object} - Details of the solution.
+   */
+
+  static verifyLinkV2(link = "", bodyData = {}, userId = "", userToken = "") {
+    return new Promise(async (resolve, reject) => {
+      try {
+
+        let verifySolution = await this.verifySolutionDetails(
+          link,
+          userId,
+          userToken
+        );
+
+        let checkForTargetedSolution = await this.checkForTargetedSolution(
+          link,
+          bodyData,
+          userId,
+          userToken
+        );
+
+        if (
+          checkForTargetedSolution &&
+          Object.keys(checkForTargetedSolution.result).length > 0
+        ) {
+
+          let solutionData = checkForTargetedSolution.result;
+          //non targeted solution
+          if ( !checkForTargetedSolution.result.isATargetedSolution ) {
+            if ( solutionData.type === constants.common.IMPROVEMENT_PROJECT ) {
+
+              let filterQuery = {
+                createdBy: userId,
+                referenceFrom: constants.common.LINK,
+                link: link,
+              };
+
+              let checkForProjectExist =
+                await improvementProjectService.projectDocuments(
+                  userToken,
+                  filterQuery,
+                  ["_id"]
+                );
+              if (
+                checkForProjectExist.success &&
+                checkForProjectExist.data &&
+                checkForProjectExist.data.length > 0 &&
+                checkForProjectExist.data[0]._id != ""
+              ) {
+                checkForTargetedSolution.result['projectId'] =
+                  checkForProjectExist.data[0]._id;
+              }
+            }
+
+          } else {
+            // targeted solution
+            let detailFromLink;
+            if ( solutionData.type == constants.common.IMPROVEMENT_PROJECT ) {
+              //return the project id if project is already exist for that user
+              let findQuery = {
+                userId: "de79e613-0d2f-4923-8431-db3534e69d3c",
+                projectTemplateId : solutionData.projectTemplateId,
+                referenceFrom: {
+                  $ne : constants.common.LINK
+                },
+                isDeleted : false
+              };
+
+              let checkTargetedProjectExist =
+                await improvementProjectService.projectDocuments(
+                  userToken,
+                  findQuery,
+                  ["_id"]
+                );
+
+              if (
+                checkTargetedProjectExist.success &&
+                checkTargetedProjectExist.data &&
+                checkTargetedProjectExist.data.length > 0 &&
+                checkTargetedProjectExist.data[0]._id != ""
+              ) {
+                checkForTargetedSolution.result['projectId'] =
+                  checkTargetedProjectExist.data[0]._id;
+              }
+
+            } else if ( solutionData.type == constants.common.OBSERVATION ) {
+
+                detailFromLink = await surveyService.getObservationDetail(
+                  solutionData.solutionId,
+                  userToken
+                );
+
+                if (
+                  solutionData.type == constants.common.OBSERVATION && detailFromLink.result &&
+                  detailFromLink.result._id != ""
+                ) {
+                  checkForTargetedSolution.result["observationId"] = detailFromLink
+                    .result._id
+                    ? detailFromLink.result._id
+                    : "";
+                }
+            }
+          }
+        }
+
+        return resolve(checkForTargetedSolution);
+      } catch (error) {
+
+        return resolve({
+          success: false,
+          status: error.status
+            ? error.status
+            : httpStatusCode['internal_server_error'].status,
+          message: error.message
+        });
+      }
+    });
+  }
+
 };
 
  /**
