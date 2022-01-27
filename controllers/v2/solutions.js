@@ -14,17 +14,17 @@ const solutionV1 = require(ROOT_PATH + "/controllers/v1/solutions");
 const solutionHelper = require(MODULES_BASE_PATH + "/solutions/helper");
 
 /**
-    * SolutrioV2
+    * SolutionV2
     * @class
 */
 
 module.exports = class SolutionsV2 extends solutionV1 {
     /**
-  * @api {post} /kendra/api/v1/solutions/verifyLink/:link
+  * @api {post} /kendra/api/v2/solutions/verifyLink/:link
   * @apiVersion 1.0.0
   * @apiName verify Link
   * @apiGroup Solutions
-  * @apiSampleRequest /kendra/api/v1/solutions/verifyLink/6f8d395f674dcb3146ade10f972da9d0
+  * @apiSampleRequest /kendra/api/v2/solutions/verifyLink/6f8d395f674dcb3146ade10f972da9d0
   * @apiHeader {String} X-authenticated-user-token Authenticity token  
   * @apiUse successBody
   * @apiUse errorBody
