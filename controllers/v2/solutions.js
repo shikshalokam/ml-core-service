@@ -66,7 +66,7 @@ module.exports = class SolutionsV2 extends solutionV1 {
           req.body,
           req.userDetails.userId,
           req.userDetails.userToken,
-          true
+          false
         );
 
         return resolve(solutionData);
