@@ -61,11 +61,12 @@ module.exports = class SolutionsV2 extends solutionV1 {
     return new Promise(async (resolve, reject) => {
       try {
 
-        let solutionData = await solutionHelper.verifyLinkV2(
+        let solutionData = await solutionHelper.verifyLink(
           req.params._id,
           req.body,
           req.userDetails.userId,
-          req.userDetails.userToken
+          req.userDetails.userToken,
+          true
         );
 
         return resolve(solutionData);
