@@ -1610,13 +1610,13 @@ module.exports = class SolutionsHelper {
           userToken
         );
 
-        if(!checkForTargetedSolution || Object.keys(checkForTargetedSolution.result).length <= 0) {
+        if( !checkForTargetedSolution || Object.keys(checkForTargetedSolution.result).length <= 0 ) {
           return resolve(checkForTargetedSolution);
         }
 
         let solutionData = checkForTargetedSolution.result;
 
-        if(solutionData.type == constants.common.OBSERVATION) {
+        if( solutionData.type == constants.common.OBSERVATION ) {
           // Targeted solution
           if(checkForTargetedSolution.result.isATargetedSolution) {
 
@@ -1631,10 +1631,10 @@ module.exports = class SolutionsHelper {
 
           }
 
-        } else if (solutionData.type === constants.common.IMPROVEMENT_PROJECT) {
+        } else if ( solutionData.type === constants.common.IMPROVEMENT_PROJECT ) {
           // Targeted solution
-          if(checkForTargetedSolution.result.isATargetedSolution && createProject) {
-
+          if( checkForTargetedSolution.result.isATargetedSolution && createProject ) {
+            //targeted user with project creation
             let projectDetailFromLink = await improvementProjectService.getProjectDetail(
               solutionData.solutionId,
               userToken,
@@ -1642,15 +1642,43 @@ module.exports = class SolutionsHelper {
             );
 
             if ( !projectDetailFromLink || !projectDetailFromLink.data ) {
-              return resolve(detailFromLink);
+              return resolve(projectDetailFromLink);
             }
 
               checkForTargetedSolution.result['projectId'] = projectDetailFromLink.data._id
                 ? projectDetailFromLink.data._id
                 : "";
 
-          } else {
+          } if( checkForTargetedSolution.result.isATargetedSolution && !createProject ) {
+              //targeted user with no project creation 
+              let findQuery = {
+                userId: "de79e613-0d2f-4923-8431-db3534e69d3c",
+                projectTemplateId : solutionData.projectTemplateId,
+                referenceFrom: {
+                  $ne : constants.common.LINK
+                },
+                isDeleted : false
+              };
 
+              let checkTargetedProjectExist =
+                await improvementProjectService.projectDocuments(
+                  userToken,
+                  findQuery,
+                  ["_id"]
+                );
+
+              if (
+                checkTargetedProjectExist.success &&
+                checkTargetedProjectExist.data &&
+                checkTargetedProjectExist.data.length > 0 &&
+                checkTargetedProjectExist.data[0]._id != ""
+              ) {
+                checkForTargetedSolution.result['projectId'] =
+                  checkTargetedProjectExist.data[0]._id;
+              }
+
+          } else {
+            //non targeted project exist
             let checkIfUserProjectExistsQuery = {
               createdBy: userId,
               referenceFrom: constants.common.LINK,
@@ -1677,7 +1705,6 @@ module.exports = class SolutionsHelper {
           }
 
         }
-
 
         return resolve(checkForTargetedSolution);
 
