@@ -1652,7 +1652,7 @@ module.exports = class SolutionsHelper {
           } if( checkForTargetedSolution.result.isATargetedSolution && !createProject ) {
               //targeted user with no project creation 
               let findQuery = {
-                userId: "de79e613-0d2f-4923-8431-db3534e69d3c",
+                userId: userId,
                 projectTemplateId : solutionData.projectTemplateId,
                 referenceFrom: {
                   $ne : constants.common.LINK
