@@ -1649,7 +1649,7 @@ module.exports = class SolutionsHelper {
                 ? projectDetailFromLink.data._id
                 : "";
 
-          } if( checkForTargetedSolution.result.isATargetedSolution && !createProject ) {
+          } else if( checkForTargetedSolution.result.isATargetedSolution && !createProject ) {
               //targeted user with no project creation 
               let findQuery = {
                 userId: userId,
