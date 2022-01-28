@@ -787,7 +787,7 @@ module.exports = class Solutions extends Abstract {
 
       }
       catch (error) {
-        reject({
+        return reject({
           status: error.status || httpStatusCode.internal_server_error.status,
           message: error.message || httpStatusCode.internal_server_error.message,
           errorObject: error
@@ -851,7 +851,7 @@ module.exports = class Solutions extends Abstract {
 
       }
       catch (error) {
-        reject({
+        return reject({
           status: error.status || httpStatusCode.internal_server_error.status,
           message: error.message || httpStatusCode.internal_server_error.message,
           errorObject: error
@@ -976,7 +976,7 @@ module.exports = class Solutions extends Abstract {
 
       }
       catch (error) {
-        reject({
+        return reject({
           status: error.status || httpStatusCode.internal_server_error.status,
           message: error.message || httpStatusCode.internal_server_error.message,
           errorObject: error
