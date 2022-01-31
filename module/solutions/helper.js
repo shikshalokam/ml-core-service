@@ -1587,18 +1587,22 @@ module.exports = class SolutionsHelper {
    * @name verifyLink
    * @param {String} solutionId - solution Id.
    * @param {String} userId - user Id.
+   * @param {String} userToken - user token.
+   * @param {Boolean} createProject - create project.
    * @param {Object} bodyData - Req Body.
    * @returns {Object} - Details of the solution.
    */
 
-  static verifyLink(link = "", bodyData = {}, userId = "", userToken = "") {
+  static verifyLink(link = "", bodyData = {}, userId = "", userToken = "", createProject = true ) {
     return new Promise(async (resolve, reject) => {
       try {
+        
         let verifySolution = await this.verifySolutionDetails(
           link,
           userId,
           userToken
         );
+
         let checkForTargetedSolution = await this.checkForTargetedSolution(
           link,
           bodyData,
@@ -1606,84 +1610,104 @@ module.exports = class SolutionsHelper {
           userToken
         );
 
-        if (
-          checkForTargetedSolution &&
-          Object.keys(checkForTargetedSolution.result).length > 0
-        ) {
+        if( !checkForTargetedSolution || Object.keys(checkForTargetedSolution.result).length <= 0 ) {
+          return resolve(checkForTargetedSolution);
+        }
 
-          let solutionData = checkForTargetedSolution.result;
-          //non targeted solution
-          if ( !checkForTargetedSolution.result.isATargetedSolution ) {
-            if ( solutionData.type === constants.common.IMPROVEMENT_PROJECT ) {
+        let solutionData = checkForTargetedSolution.result;
 
-              let filterQuery = {
-                createdBy: userId,
-                referenceFrom: constants.common.LINK,
-                link: link,
+        if( solutionData.type == constants.common.OBSERVATION ) {
+          // Targeted solution
+          if(checkForTargetedSolution.result.isATargetedSolution) {
+
+            let observationDetailFromLink = await surveyService.getObservationDetail(
+              solutionData.solutionId,
+              userToken
+            );
+
+            checkForTargetedSolution.result["observationId"] = (observationDetailFromLink.result && observationDetailFromLink.result._id != "")
+                ? observationDetailFromLink.result._id
+                : "";
+
+          }
+
+        } else if ( solutionData.type === constants.common.IMPROVEMENT_PROJECT ) {
+          // Targeted solution
+          if( checkForTargetedSolution.result.isATargetedSolution && createProject ) {
+            //targeted user with project creation
+            let projectDetailFromLink = await improvementProjectService.getProjectDetail(
+              solutionData.solutionId,
+              userToken,
+              bodyData
+            );
+
+            if ( !projectDetailFromLink || !projectDetailFromLink.data ) {
+              return resolve(projectDetailFromLink);
+            }
+
+              checkForTargetedSolution.result['projectId'] = projectDetailFromLink.data._id
+                ? projectDetailFromLink.data._id
+                : "";
+
+          } else if( checkForTargetedSolution.result.isATargetedSolution && !createProject ) {
+              //targeted user with no project creation 
+              let findQuery = {
+                userId: userId,
+                projectTemplateId : solutionData.projectTemplateId,
+                referenceFrom: {
+                  $ne : constants.common.LINK
+                },
+                isDeleted : false
               };
 
-              let checkForProjectExist =
+              let checkTargetedProjectExist =
                 await improvementProjectService.projectDocuments(
                   userToken,
-                  filterQuery,
+                  findQuery,
                   ["_id"]
                 );
+
               if (
-                checkForProjectExist.success &&
-                checkForProjectExist.data &&
-                checkForProjectExist.data.length > 0 &&
-                checkForProjectExist.data[0]._id != ""
+                checkTargetedProjectExist.success &&
+                checkTargetedProjectExist.data &&
+                checkTargetedProjectExist.data.length > 0 &&
+                checkTargetedProjectExist.data[0]._id != ""
               ) {
                 checkForTargetedSolution.result['projectId'] =
-                  checkForProjectExist.data[0]._id;
+                  checkTargetedProjectExist.data[0]._id;
               }
-            }
 
           } else {
-            // targeted solution
-            let detailFromLink;
-            if ( solutionData.type == constants.common.IMPROVEMENT_PROJECT ) {
+            //non targeted project exist
+            let checkIfUserProjectExistsQuery = {
+              createdBy: userId,
+              referenceFrom: constants.common.LINK,
+              link: link,
+            };
 
-              detailFromLink = await improvementProjectService.getProjectDetail(
-                solutionData.solutionId,
+            let checkForProjectExist =
+              await improvementProjectService.projectDocuments(
                 userToken,
-                bodyData
+                checkIfUserProjectExistsQuery,
+                ["_id"]
               );
 
-              if ( !detailFromLink || !detailFromLink.data ) {
-                return resolve(detailFromLink);
-              }
-
-              if (
-                solutionData.type == constants.common.IMPROVEMENT_PROJECT &&
-                detailFromLink.data._id != ""
-              ) {
-                checkForTargetedSolution.result['projectId'] = detailFromLink
-                  .data._id
-                  ? detailFromLink.data._id
-                  : "";
-              }
-            } else if ( solutionData.type == constants.common.OBSERVATION ) {
-
-                detailFromLink = await surveyService.getObservationDetail(
-                  solutionData.solutionId,
-                  userToken
-                );
-
-                if (
-                  solutionData.type == constants.common.OBSERVATION && detailFromLink.result &&
-                  detailFromLink.result._id != ""
-                ) {
-                  checkForTargetedSolution.result["observationId"] = detailFromLink
-                    .result._id
-                    ? detailFromLink.result._id
-                    : "";
-                }
+            if (
+              checkForProjectExist.success &&
+              checkForProjectExist.data &&
+              checkForProjectExist.data.length > 0 &&
+              checkForProjectExist.data[0]._id != ""
+            ) {
+              checkForTargetedSolution.result['projectId'] =
+                checkForProjectExist.data[0]._id;
             }
+
           }
+
         }
 
         return resolve(checkForTargetedSolution);
+
       } catch (error) {
         return resolve({
           success: false,
@@ -1812,7 +1836,8 @@ module.exports = class SolutionsHelper {
           "type",
           "_id",
           "programId",
-          "name"
+          "name",
+          "projectTemplateId"
         ]);
 
         let queryData = await this.queryBasedOnRoleAndLocation(bodyData);
@@ -1828,26 +1853,29 @@ module.exports = class SolutionsHelper {
           "link",
           "type",
           "programId",
-          "name"
+          "name",
+          "projectTemplateId"
         ]);
 
         if ( !Array.isArray(solutionData) || solutionData.length < 1 ) {
-
+          
           response.solutionId = solutionDetails[0]._id;
           response.type = solutionDetails[0].type;
           response.name = solutionDetails[0].name;
           response.programId = solutionDetails[0].programId;
+
           return resolve({
             success: true,
             message:
               constants.apiResponses.SOLUTION_NOT_FOUND_OR_NOT_A_TARGETED,
-            result: response,
+            result: response
           });
         }
 
         response.isATargetedSolution = true;
         Object.assign(response, solutionData[0]);
         response.solutionId = solutionData[0]._id;
+        response.projectTemplateId = solutionDetails[0].projectTemplateId ? solutionDetails[0].projectTemplateId : "";
         delete response._id;
 
         return resolve({
@@ -1938,6 +1966,7 @@ module.exports = class SolutionsHelper {
       }
     });
   }
+
 };
 
  /**

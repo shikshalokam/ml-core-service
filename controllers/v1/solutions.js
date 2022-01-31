@@ -787,7 +787,7 @@ module.exports = class Solutions extends Abstract {
 
       }
       catch (error) {
-        reject({
+        return reject({
           status: error.status || httpStatusCode.internal_server_error.status,
           message: error.message || httpStatusCode.internal_server_error.message,
           errorObject: error
@@ -844,14 +844,15 @@ module.exports = class Solutions extends Abstract {
           req.params._id,
           req.body,
           req.userDetails.userId,
-          req.userDetails.userToken
+          req.userDetails.userToken,
+          req.query.createProject ? req.query.createProject : true
         );
 
         return resolve(solutionData);
 
       }
       catch (error) {
-        reject({
+        return reject({
           status: error.status || httpStatusCode.internal_server_error.status,
           message: error.message || httpStatusCode.internal_server_error.message,
           errorObject: error
@@ -976,7 +977,7 @@ module.exports = class Solutions extends Abstract {
 
       }
       catch (error) {
-        reject({
+        return reject({
           status: error.status || httpStatusCode.internal_server_error.status,
           message: error.message || httpStatusCode.internal_server_error.message,
           errorObject: error
