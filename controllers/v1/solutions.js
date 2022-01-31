@@ -844,7 +844,8 @@ module.exports = class Solutions extends Abstract {
           req.params._id,
           req.body,
           req.userDetails.userId,
-          req.userDetails.userToken
+          req.userDetails.userToken,
+          req.query.createProject ? req.query.createProject : true
         );
 
         return resolve(solutionData);
