@@ -4,6 +4,9 @@
  * created-date : 03-Sep-2020
  * Description : Solution related information.
  */
+
+
+
 // Dependencies
 const solutionsHelper = require(MODULES_BASE_PATH + "/solutions/helper");
 module.exports = class Solutions extends Abstract {
@@ -839,13 +842,13 @@ module.exports = class Solutions extends Abstract {
   async verifyLink(req) {
     return new Promise(async (resolve, reject) => {
       try {
-
+        
         let solutionData = await solutionsHelper.verifyLink(
           req.params._id,
           req.body,
           req.userDetails.userId,
           req.userDetails.userToken,
-          req.query.createProject ? req.query.createProject : true
+          req.query.hasOwnProperty("createProject") ? gen.utils.convertStringToBoolean(req.query.createProject) : true
         );
 
         return resolve(solutionData);
