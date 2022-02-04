@@ -5,8 +5,7 @@
  * Description : Solution related information.
  */
 
-const { query } = require("express");
-const { utils } = require("mocha");
+
 
 // Dependencies
 const solutionsHelper = require(MODULES_BASE_PATH + "/solutions/helper");
