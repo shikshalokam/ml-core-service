@@ -590,7 +590,7 @@ module.exports = class SolutionsHelper {
               $arrayElemAt: ["$totalCount.count", 0]
             }
           };
-
+          
           let solutionDocuments = 
           await database.models.solutions.aggregate([
             { $match : matchQuery },
@@ -650,7 +650,7 @@ module.exports = class SolutionsHelper {
             subType,
             programId
           );
-  
+          
           if( !queryData.success ) {
             return resolve(queryData);
           }
@@ -751,30 +751,15 @@ module.exports = class SolutionsHelper {
           registryIds.push(data[requestedDataKey]);
           entityTypes.push(requestedDataKey);
         })
-
-        let filterData = {
-          $or : [{
-            "registryDetails.code" : { $in : registryIds }
-          },{
-            "registryDetails.locationId" : { $in : registryIds }
-          }]
-        };
-    
-        let entities = await entitiesHelper.entityDocuments(filterData,["_id"]); 
-
-        if( !entities.length > 0 ) {
+        if( !registryIds.length > 0 ) {
           throw {
-            message : constants.apiResponses.NO_ENTITY_FOUND_IN_LOCATION
+            message : constants.apiResponses.NO_LOCATION_ID_FOUND_IN_DATA
           }
         }
-
-        let entityIds = entities.map(entity => {
-          return entity._id;
-        });
-
+        
         let filterQuery = {
           "scope.roles.code" : { $in : [constants.common.ALL_ROLES,...data.role.split(",")] },
-          "scope.entities" : { $in : entityIds },
+          "scope.entities" : { $in : registryIds },
           "scope.entityType" : { $in : entityTypes },
           "isReusable" : false,
           "isDeleted" : false
@@ -1180,7 +1165,7 @@ module.exports = class SolutionsHelper {
             isReusable: false,
             isDeleted: false,
           },
-          ["_id", "scope.entityTypeId"]
+          ["_id", "scope.entities"]
         );
 
         if (!solutionData.length > 0) {
@@ -1189,26 +1174,22 @@ module.exports = class SolutionsHelper {
             message: constants.apiResponses.SOLUTION_NOT_FOUND,
           });
         }
-
-        let entitiesData = await entitiesHelper.entityDocuments(
-          {
-            _id: { $in: entities },
-            entityTypeId: solutionData[0].scope.entityTypeId,
-          },
-          ["_id"]
-        );
-
-        if (!entitiesData.length > 0) {
+        let entitiesData = [];
+        entitiesData = solutionData[0].scope.entities;
+        if( !entitiesData.length > 0 ) {
           throw {
-            message: constants.apiResponses.ENTITIES_NOT_FOUND,
+            message : constants.apiResponses.ENTITIES_NOT_FOUND
           };
         }
 
         let entityIds = [];
-
-        entitiesData.forEach((entity) => {
-          entityIds.push(entity._id);
+        entities.forEach(entity => {
+          if (gen.utils.checkValidUUID(entity)) {
+            entityIds.push(entity);
+          }
+          
         });
+
 
         let updateSolution = await database.models.solutions
           .findOneAndUpdate(
@@ -1596,30 +1577,29 @@ module.exports = class SolutionsHelper {
   static verifyLink(link = "", bodyData = {}, userId = "", userToken = "", createProject = true ) {
     return new Promise(async (resolve, reject) => {
       try {
-        
+       
         let verifySolution = await this.verifySolutionDetails(
           link,
           userId,
           userToken
         );
-
+        
         let checkForTargetedSolution = await this.checkForTargetedSolution(
           link,
           bodyData,
           userId,
           userToken
         );
-
         if( !checkForTargetedSolution || Object.keys(checkForTargetedSolution.result).length <= 0 ) {
           return resolve(checkForTargetedSolution);
         }
-
+        
         let solutionData = checkForTargetedSolution.result;
 
         if( solutionData.type == constants.common.OBSERVATION ) {
           // Targeted solution
           if(checkForTargetedSolution.result.isATargetedSolution) {
-
+            
             let observationDetailFromLink = await surveyService.getObservationDetail(
               solutionData.solutionId,
               userToken
@@ -1635,6 +1615,7 @@ module.exports = class SolutionsHelper {
           // Targeted solution
           if( checkForTargetedSolution.result.isATargetedSolution && createProject ) {
             //targeted user with project creation
+
             let projectDetailFromLink = await improvementProjectService.getProjectDetail(
               solutionData.solutionId,
               userToken,
@@ -1912,7 +1893,7 @@ module.exports = class SolutionsHelper {
           "type",
           "projectTemplateId",
         ]);
-
+        
         if ( !Array.isArray(solutionData) || solutionData.length < 1 ) {
           return resolve({
             message: constants.apiResponses.SOLUTION_NOT_FOUND,

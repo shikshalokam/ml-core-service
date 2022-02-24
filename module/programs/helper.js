@@ -10,6 +10,7 @@
 const entityTypesHelper = require(MODULES_BASE_PATH + "/entityTypes/helper");
 const entitiesHelper = require(MODULES_BASE_PATH + "/entities/helper");
 const userRolesHelper = require(MODULES_BASE_PATH + "/user-roles/helper");
+const sunbirdService = require(ROOT_PATH + '/generics/services/sunbird');
 
 /**
     * ProgramsHelper
@@ -50,7 +51,7 @@ module.exports = class ProgramsHelper {
                 projection[field] = 0;
               })
             }
-    
+            
             let programData = await database.models.programs.find(
               queryObject, 
               projection
@@ -483,7 +484,7 @@ module.exports = class ProgramsHelper {
         let queryData = await this.queryBasedOnRoleAndLocation(
           bodyData
         );
-
+        
         if( !queryData.success ) {
           return resolve(queryData);
         }
@@ -553,35 +554,21 @@ module.exports = class ProgramsHelper {
   static queryBasedOnRoleAndLocation( data ) {
     return new Promise(async (resolve, reject) => {
       try {
-
+        
         let locationIds = 
         Object.values(_.omit(data,["role","filter"])).map(locationId => {
           return locationId;
         });
-
-        let filterData = {
-          $or : [{
-            "registryDetails.code" : { $in : locationIds }
-          },{
-            "registryDetails.locationId" : { $in : locationIds }
-          }]
-        };
-
-        let entities = await entitiesHelper.entityDocuments(filterData,["_id"]); 
-
-        if( !entities.length > 0 ) {
+        if( !locationIds.length > 0 ) {
           throw {
-            message : constants.apiResponses.NO_ENTITY_FOUND_IN_LOCATION
+            message : constants.apiResponses.NO_LOCATION_ID_FOUND_IN_DATA
           }
         }
 
-        let entityIds = entities.map(entity => {
-          return entity._id;
-        });
-
+       
         let filterQuery = {
           "scope.roles.code" : { $in : [constants.common.ALL_ROLES,...data.role.split(",")] },
-          "scope.entities" : { $in : entityIds },
+          "scope.entities" : { $in : locationIds },
           "isDeleted" : false,
           status : constants.common.ACTIVE
         }
@@ -721,37 +708,50 @@ module.exports = class ProgramsHelper {
           _id : programId,
           scope : { $exists : true },
           isAPrivateProgram : false 
-        },["_id","scope.entityTypeId"]);
-
+        },["_id"]);
+       
         if( !programData.length > 0 ) {
           throw {
             message : constants.apiResponses.PROGRAM_NOT_FOUND
           };
         }
+        
 
-        let entitiesData = 
-        await entitiesHelper.entityDocuments({
-          _id : { $in : entities },
-          entityTypeId : programData[0].scope.entityTypeId
-        },["_id"]);
-          
-        if( !entitiesData.length > 0 ) {
+        let locationIds = [];
+        let bodyData={};
+        bodyData["request"] = {};
+        bodyData["request"]["filters"] = {};
+        bodyData["request"]["filters"]["id"] = "";
+
+        entities.forEach(entity=>{
+          if (gen.utils.checkValidUUID(entity)) {
+            locationIds.push(entity);
+          }
+        });
+        
+        bodyData["request"]["filters"]["id"] = locationIds;
+        let entitiesData = await sunbirdService.learnerLocationSearch( bodyData );
+        
+
+        if( !entitiesData.data.count > 0 ) {
             throw {
               message : constants.apiResponses.ENTITIES_NOT_FOUND
             };
         }
 
-        let entityIds = [];
         
-        entitiesData.forEach(entity => {
-          entityIds.push(entity._id);
+        let entityIds = [];
+        entitiesData.data.response.forEach(entityResult => {
+          entityIds.push(entityResult.id);
         });
+        
 
         let updateProgram = await database.models.programs.findOneAndUpdate({
           _id : programId
         },{
           $addToSet : { "scope.entities" : { $each : entityIds } }
         },{ new : true }).lean();
+        
 
         if( !updateProgram || !updateProgram._id ) {
           throw {
@@ -854,50 +854,47 @@ module.exports = class ProgramsHelper {
   static removeEntitiesInScope( programId,entities ) {
     return new Promise(async (resolve, reject) => {
       try {
-
         let programData = 
         await this.programDocuments({ 
           _id : programId,
           scope : { $exists : true },
           isAPrivateProgram : false 
-        },["_id","scope.entityTypeId"]);
-
+        },["_id","scope.entities"]);
+        
         if( !programData.length > 0 ) {
           throw {
             message : constants.apiResponses.PROGRAM_NOT_FOUND
           };
         }
-
-        let entitiesData = 
-        await entitiesHelper.entityDocuments({
-          _id : { $in : entities },
-          entityTypeId : programData[0].scope.entityTypeId
-        },["_id"]);
-          
+        let entitiesData = [];
+        entitiesData = programData[0].scope.entities;
+       
         if( !entitiesData.length > 0 ) {
             throw {
               message : constants.apiResponses.ENTITIES_NOT_FOUND
             };
         }
-
+ 
         let entityIds = [];
-        
-        entitiesData.forEach(entity => {
-          entityIds.push(entity._id);
+        entities.forEach(entity => {
+          if (gen.utils.checkValidUUID(entity)) {
+            entityIds.push(entity);
+          }
+          
         });
-
+        
         let updateProgram = await database.models.programs.findOneAndUpdate({
           _id : programId
         },{
-          $pull : { "scope.entities" : { $in : entityIds } }
+          $pull : { "scope.entities" : { $in : entityIds} }
         },{ new : true }).lean();
-
+        
         if( !updateProgram || !updateProgram._id ) {
           throw {
             message : constants.apiResponses.PROGRAM_NOT_UPDATED
           }
         }
-
+       
         return resolve({
           message : constants.apiResponses.ENTITIES_REMOVED_IN_PROGRAM,
           success : true

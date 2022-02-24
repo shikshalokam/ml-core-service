@@ -50,7 +50,7 @@ module.exports = class UserRolesHelper {
               queryObject, 
               projection
             ).lean();
-            
+          
             return resolve(userRolesData);
             
         } catch (error) {
