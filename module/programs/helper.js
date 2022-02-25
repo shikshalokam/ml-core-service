@@ -105,17 +105,17 @@ module.exports = class ProgramsHelper {
           "components" : [],
           "isAPrivateProgram" : data.isAPrivateProgram ? data.isAPrivateProgram : false  
         }
-
+        
         let program = await database.models.programs.create(
           programData
         );
-
+        
         if( !program._id ) {
           throw {
             message : constants.apiResponses.PROGRAM_NOT_CREATED
           };
         }
-
+        
         if( data.scope ) {
           
           let programScopeUpdated = await this.setScope(
@@ -212,7 +212,7 @@ module.exports = class ProgramsHelper {
             {
               name : scopeData.entityType
             },
-            ["name","_id"]
+            ["name"]
           );
           
           if( !entityTypeData.length > 0 ) {
@@ -223,19 +223,31 @@ module.exports = class ProgramsHelper {
           }
 
           scope["entityType"] = entityTypeData[0].name;
-          scope["entityTypeId"] = entityTypeData[0]._id;
         }
 
         if( scopeData.entities && scopeData.entities.length > 0 ) {
-
-          let entities = 
-          await entitiesHelper.entityDocuments(
-            {
-              _id : { $in : scopeData.entities },
-              entityTypeId : scope.entityTypeId
-            },["_id"]
-          );
           
+          //call learners api for search
+
+          let locationIds = [];
+          let bodyData={};
+          bodyData["request"] = {};
+          bodyData["request"]["filters"] = {};
+          bodyData["request"]["filters"]["id"] = "";
+
+          scopeData.entities.forEach(entity=>{
+            if (gen.utils.checkValidUUID(entity)) {
+              locationIds.push(entity);
+            }
+          });
+        
+          bodyData["request"]["filters"]["id"] = locationIds;
+
+          
+          let entityData = await sunbirdService.learnerLocationSearch( bodyData );
+
+          
+          let entities = entityData.data.response;
           if( !entities.length > 0 ) {
             return resolve({
               status : httpStatusCode.bad_request.status,
@@ -244,7 +256,7 @@ module.exports = class ProgramsHelper {
           }
   
           scope["entities"] = entities.map(entity => {
-            return entity._id;
+            return entity.id;
           });
 
         }

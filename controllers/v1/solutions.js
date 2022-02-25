@@ -28,9 +28,7 @@ module.exports = class Solutions extends Abstract {
     * "concepts" : [],
     "themes" : [],
     "flattenedThemes" : [],
-    "entities" : [ 
-        "5beaa888af0065f0e0a10515"
-    ],
+    "entities" : ["bc75cc99-9205-463e-a722-5326857838f8","8ac1efe9-0415-4313-89ef-884e1c8eee34"]
     "registry" : [],
     "isRubricDriven" : false,
     "enableQuestionReadOut" : false,

@@ -72,6 +72,7 @@ module.exports = class EntitiesHelper {
                     .skip(skippingValue)
                     .lean();
                 }
+                
                 return resolve(entitiesDocuments);
             } catch (error) {
                 return reject(error);

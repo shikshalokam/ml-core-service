@@ -538,7 +538,7 @@ module.exports = class Users extends Abstract {
                         roleWiseTargetedEntities.push(detailEntity.data);
                     }
                 }
-
+                
                 //no targeted entity
                 if ( roleWiseTargetedEntities.length  == 0 ) {
                     throw {
