@@ -410,6 +410,7 @@ module.exports = class UsersHelper {
 
   static solutions(programId, requestedData, pageSize, pageNo, search, token) {
     return new Promise(async (resolve, reject) => {
+      token="b110b42b-d016-48b5-b10a-6529ac903c44"
       try {
         let programData = await programsHelper.programDocuments(
           {
@@ -462,12 +463,12 @@ module.exports = class UsersHelper {
 
           
         }
-
+        console.log("controll here yeah#############",token);
         let importedProjects = await improvementProjectService.importedProjects(
           token,
           programId
         );
-
+        console.log("importedProjects:",mergedData);
         if (importedProjects.success) {
           if (importedProjects.data && importedProjects.data.length > 0) {
             totalCount += importedProjects.data.length;

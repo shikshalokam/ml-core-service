@@ -270,7 +270,7 @@ module.exports = class Users extends Abstract {
  solutions(req) {
     return new Promise(async (resolve, reject) => {
       try {
-
+        
         let targetedSolutions = await usersHelper.solutions(
             req.params._id,
             req.body,

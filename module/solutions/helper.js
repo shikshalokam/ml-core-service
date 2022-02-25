@@ -650,7 +650,7 @@ module.exports = class SolutionsHelper {
             subType,
             programId
           );
-          
+            console.log("queryData:",queryData)
           if( !queryData.success ) {
             return resolve(queryData);
           }
@@ -689,7 +689,7 @@ module.exports = class SolutionsHelper {
           if ( programId !== "" ) {
             matchQuery["programId"] = ObjectId(programId);
           }
-  
+          console.log("matchQuery:",matchQuery)
           let targetedSolutions = await this.list(
             type,
             subType,
@@ -712,7 +712,7 @@ module.exports = class SolutionsHelper {
               "referenceFrom"
             ]  
           );
-        
+          console.log("targetedSolutions: ######",targetedSolutions.data)
           return resolve({
             success: true,
             message: constants.apiResponses.TARGETED_SOLUTIONS_FETCHED,
