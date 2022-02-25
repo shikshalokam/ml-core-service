@@ -476,6 +476,7 @@ module.exports = class UsersHelper {
               let data = importedProject.solutionInformation;
               data['projectTemplateId'] = importedProject.projectTemplateId;
               data["type"] = constants.common.IMPROVEMENT_PROJECT;
+              data["projectId"] = importedProject._id;
               mergedData.push(data);
             });
           }
