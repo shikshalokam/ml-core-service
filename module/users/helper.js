@@ -439,6 +439,8 @@ module.exports = class UsersHelper {
         let totalCount = 0;
         let mergedData = [];
 
+        let projectSolutionIdIndexMap = {}
+
         if (
           autoTargetedSolutions.data.data &&
           autoTargetedSolutions.data.data.length > 0
@@ -454,30 +456,30 @@ module.exports = class UsersHelper {
 
           mergedData = autoTargetedSolutions.data.data;
 
-          mergedData = mergedData.map((targetedData) => {
+          mergedData = mergedData.map((targetedData, index) => {
+            if(targetedData.type == constants.common.IMPROVEMENT_PROJECT) {
+              projectSolutionIdIndexMap[targetedData._id.toString()] = index;
+            }
             delete targetedData.programId;
             delete targetedData.programName;
             return targetedData;
           });
 
-          
         }
 
+        // Get projects already started by a user in a given program
         let importedProjects = await improvementProjectService.importedProjects(
           token,
           programId
         );
 
+        // Add projectId to the solution object if the user has already started a project for the improvement project solution.
         if (importedProjects.success) {
           if (importedProjects.data && importedProjects.data.length > 0) {
-            totalCount += importedProjects.data.length;
-
             importedProjects.data.forEach((importedProject) => {
-              let data = importedProject.solutionInformation;
-              data['projectTemplateId'] = importedProject.projectTemplateId;
-              data["type"] = constants.common.IMPROVEMENT_PROJECT;
-              data["projectId"] = importedProject._id;
-              mergedData.push(data);
+              if(projectSolutionIdIndexMap[importedProject.solutionInformation._id]) {
+                mergedData[projectSolutionIdIndexMap[importedProject.solutionInformation._id]].projectId = importedProject._id;
+              }
             });
           }
         }
