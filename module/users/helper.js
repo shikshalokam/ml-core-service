@@ -475,7 +475,7 @@ module.exports = class UsersHelper {
 
           
         }
-        console.log("controll here yeah#############",token);
+        
         let importedProjects = await improvementProjectService.importedProjects(
           token,
           programId
