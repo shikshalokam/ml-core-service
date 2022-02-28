@@ -259,7 +259,7 @@ module.exports = class ProgramsHelper {
             return entity.id;
           });
 
-        }
+        } 
 
         if( scopeData.roles ) {
           
