@@ -1,7 +1,9 @@
 const entityTypesHelper = require(MODULES_BASE_PATH + "/entityTypes/helper");
 const userRolesHelper = require(MODULES_BASE_PATH + "/user-roles/helper");
 // const elasticSearch = require(GENERIC_HELPERS_PATH + "/elastic-search");
-
+const sunbirdService = require(ROOT_PATH + '/generics/services/sunbird');
+let cache = require(ROOT_PATH+"/generics/helpers/cache");
+const formService = require(ROOT_PATH + '/generics/services/form');
 module.exports = class EntitiesHelper {
 
 
@@ -319,7 +321,7 @@ module.exports = class EntitiesHelper {
         return new Promise(async (resolve, reject) => {
 
             try {
-
+                console.log("req in helper : ",entities,entityId,type,search,limit,pageNo)
                 let result = [];
                 let obj = {
                     entityId : entityId,
@@ -379,9 +381,9 @@ module.exports = class EntitiesHelper {
 
     static subEntities( entitiesData ) {
         return new Promise(async (resolve, reject) => {
-
+            
             try {
-                
+                console.log("#entitiesData : ",entitiesData)
                 let entitiesDocument;
                 
                 if( entitiesData.type !== "" ) {
@@ -686,7 +688,8 @@ module.exports = class EntitiesHelper {
     static subEntityListBasedOnRoleAndLocation( stateLocationId,role ) {   
         return new Promise(async (resolve, reject) => {
             try {
-
+                let entityKey = constants.common.SUBENTITY + stateLocationId;
+                
                 let rolesDocument = await userRolesHelper.roleDocuments({
                     code : role
                 },["entityTypes.entityType"]);
@@ -697,44 +700,52 @@ module.exports = class EntitiesHelper {
                         message: constants.apiResponses.USER_ROLES_NOT_FOUND
                     }
                 }
+                
+                let subEntities = await cache.getValue(entityKey);
+                console.log("subEntitiesDetails from cache:",subEntities)
+                if( !subEntities.length > 0 ) {
+                    let bodyData={};
+                    bodyData["request"] = {};
+                    bodyData["request"]["filters"] = {};
+                    bodyData["request"]["filters"]["id"] = stateLocationId;
 
-                let filterQuery = {
-                    "registryDetails.code" : stateLocationId
-                };
+                    let entitiesData = await sunbirdService.learnerLocationSearch( bodyData );
 
-                if( gen.utils.checkValidUUID(stateLocationId) ) {
-                    filterQuery = {
-                        "registryDetails.locationId" : stateLocationId
-                    };
-                } 
+                    if( !entitiesData.data.response.length > 0 ) {
+                        return resolve({
+                            message : constants.apiResponses.ENTITY_NOT_FOUND,
+                            result : []
+                        })
+                    }
+                    
+                    let stateLocationCode = entitiesData.data.response[0].code;
+                    subEntities = await formService.formData( stateLocationCode,entityKey );
+                    if( !subEntities.length > 0 ) {
+                        return resolve({
+                            message : constants.apiResponses.ENTITY_NOT_FOUND,
+                            result : []
+                        })
+                    }
+                }
+                
+               
+                let result = [];
 
-                const entityDocuments = await this.entityDocuments(filterQuery,["childHierarchyPath"]);
-    
-                 if( !entityDocuments.length > 0 ) {
-                     return resolve({
-                         message : constants.apiResponses.ENTITY_NOT_FOUND,
-                         result : []
-                     })
-                 }
-
-                 let result = [];
-
-                 if( rolesDocument[0].entityTypes[0].entityType === constants.common.STATE_ENTITY_TYPE ) {
-                    result = entityDocuments[0].childHierarchyPath;
+                if( rolesDocument[0].entityTypes[0].entityType === constants.common.STATE_ENTITY_TYPE ) {
+                    result = subEntities;
                     result.unshift(constants.common.STATE_ENTITY_TYPE);
-                 } else {
+                } else {
 
                     let targetedEntityType = "";
 
                     rolesDocument[0].entityTypes.forEach(singleEntityType => {
-                       if( entityDocuments[0].childHierarchyPath.includes(singleEntityType.entityType) ) {
+                       if( subEntities.includes(singleEntityType.entityType) ) {
                            targetedEntityType = singleEntityType.entityType;
                        }
                     });
    
                     let findTargetedEntityIndex = 
-                    entityDocuments[0].childHierarchyPath.findIndex(element => element === targetedEntityType);
-   
+                    subEntities.findIndex(element => element === targetedEntityType);
                     if( findTargetedEntityIndex < 0 ) {
                        throw {
                            message : constants.apiResponses.SUB_ENTITY_NOT_FOUND,
@@ -742,14 +753,14 @@ module.exports = class EntitiesHelper {
                        }
                     }
    
-                    result = entityDocuments[0].childHierarchyPath.slice(findTargetedEntityIndex);
-                 }
+                    result = subEntities.slice(findTargetedEntityIndex);
+                }
                  
-                 return resolve({
+                return resolve({
                     success: true,
                     message : constants.apiResponses.ENTITIES_CHILD_HIERACHY_PATH,
                     result : result
-                 });
+                });
     
             } catch (error) {
                 return reject(error);

@@ -63,6 +63,67 @@ const learnerLocationSearch = function ( bodyData ) {
   })
 }
 
+/**
+  * 
+  * @function
+  * @name formRead
+  * @param {String} bearerToken - autherization token.
+  * @param {object} bodyData -  subType data.
+  * @returns {Promise} returns a promise.
+*/
+const formRead = function ( subTypeData ) {
+    return new Promise(async (resolve, reject) => {
+        try {
+            console.log("subTypeData:",subTypeData)
+            let bodyData = {
+                request : {
+                    type: "profileConfig",
+                    subType: subTypeData,
+                    action: "get"
+                }
+            }
+            console.log("bodyData:",bodyData.request)
+            const url = 
+            sunbirdBaseUrl + constants.endpoints.GET_FORM_DATA;
+            const options = {
+                headers : {
+                    "Authorization" : process.env.SUNBIRD_SERVICE_AUTHERIZATION,
+                    "content-type": "application/json"
+                },
+                json : bodyData
+            };
+  
+            request.post(url,options,kendraCallback);
+  
+            function kendraCallback(err, data) {
+  
+                let result = {
+                    success : true
+                };
+  
+                if (err) {
+                    result.success = false;
+                } else {
+                    
+                    let response = data.body;
+                    
+                    if( response.responseCode === constants.common.OK) {
+                        result["data"] = response.result;
+                    } else {
+                        result.success = false;
+                    }
+                }
+                return resolve(result);
+            }
+
+        } catch (error) {
+            return reject(error);
+        }
+    })
+}
+
+
 module.exports = {
-  learnerLocationSearch : learnerLocationSearch
+  learnerLocationSearch : learnerLocationSearch,
+  formRead : formRead
 };

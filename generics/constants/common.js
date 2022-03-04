@@ -66,5 +66,6 @@ module.exports = {
   "LINK" : "link",
   "DISCOVERED_BY_ME" : "discoveredByMe",
   "DEFAULT_SUBMISSION_REQUIRED" : 1,
-  "SCHOOL" : "school"
+  "SCHOOL" : "school",
+  "SUBENTITY" :"subEntity_"
 };

@@ -31,5 +31,6 @@ module.exports = {
     LIST_PROJECT : "/v1/userProjects/list",
     GET_QUESTIONS : "/v1/solutions/questions",
     GET_OBSERVATION : "/v1/observations/details",
-    GET_LOCATION_DATA : "/api/data/v1/location/search"
+    GET_LOCATION_DATA : "/api/data/v1/location/search",
+    GET_FORM_DATA : "/api/data/v1/form/read"
 }
