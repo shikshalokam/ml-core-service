@@ -452,8 +452,7 @@ module.exports = class UsersHelper {
               return solution.referenceFrom == constants.common.PROJECT && solution.type == constants.common.OBSERVATION;
             });
 
-          totalCount = autoTargetedSolutions.data.data.count;
-
+          totalCount = autoTargetedSolutions.data.data.length;
           mergedData = autoTargetedSolutions.data.data;
 
           mergedData = mergedData.map((targetedData, index) => {
@@ -476,10 +475,22 @@ module.exports = class UsersHelper {
         // Add projectId to the solution object if the user has already started a project for the improvement project solution.
         if (importedProjects.success) {
           if (importedProjects.data && importedProjects.data.length > 0) {
+
             importedProjects.data.forEach((importedProject) => {
-              if(projectSolutionIdIndexMap[importedProject.solutionInformation._id]) {
+
+              if( projectSolutionIdIndexMap[importedProject.solutionInformation._id] ) {
                 mergedData[projectSolutionIdIndexMap[importedProject.solutionInformation._id]].projectId = importedProject._id;
+              } else {
+
+                let data = importedProject.solutionInformation;
+                data['projectTemplateId'] = importedProject.projectTemplateId;
+                data['projectId'] = importedProject._id;
+                data["type"] = constants.common.IMPROVEMENT_PROJECT;
+                mergedData.push(data);
+                totalCount = totalCount + 1;
+
               }
+
             });
           }
         }
