@@ -571,13 +571,7 @@ module.exports = class UserExtensionHelper {
                             }
 
                             for( let program = 0; program < currentRole.programs.length;program++) {
-                              
-                                if(programMapToRole[currentRole.programs[program].toString()] && programMapToRole[currentRole.programs[program].toString()].length > 0){
-                                    programMapToRole[currentRole.programs[program].toString()].push(currentRole.code);
-                                }else {
-                                    programMapToRole[currentRole.programs[program].toString()] = [currentRole.code];
-                                }
-                              
+                                programMapToRole[currentRole.programs[program].toString()] = currentRole.code;
                                 programIds.push(currentRole.programs[program]);
                             }
 
