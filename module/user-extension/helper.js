@@ -582,9 +582,7 @@ module.exports = class UserExtensionHelper {
 
                         }
                     }
-
-                    console.log("programMapToRole",programMapToRole);
-
+                   
                     const programData = await programsHelper.programDocuments({
                         _id: {$in: programIds},
                         status: constants.common.ACTIVE 
