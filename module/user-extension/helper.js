@@ -571,7 +571,6 @@ module.exports = class UserExtensionHelper {
                             }
 
                             for( let program = 0; program < currentRole.programs.length;program++) {
-                              
                                 if(programMapToRole[currentRole.programs[program].toString()] && programMapToRole[currentRole.programs[program].toString()].length > 0){
                                     programMapToRole[currentRole.programs[program].toString()].push(currentRole.code);
                                 }else {
@@ -583,6 +582,8 @@ module.exports = class UserExtensionHelper {
 
                         }
                     }
+
+                    console.log("programMapToRole",programMapToRole);
 
                     const programData = await programsHelper.programDocuments({
                         _id: {$in: programIds},
