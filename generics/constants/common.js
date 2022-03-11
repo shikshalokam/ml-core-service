@@ -67,5 +67,7 @@ module.exports = {
   "DISCOVERED_BY_ME" : "discoveredByMe",
   "DEFAULT_SUBMISSION_REQUIRED" : 1,
   "SCHOOL" : "school",
-  "SUBENTITY" :"subEntity_"
+  "SUBENTITY" :"subEntity_",
+  "SUNBIRD_SERVER_TIMEOUT" : 5000,
+  "TIMEOUT_ERROR" : "Server timeout error"
 };

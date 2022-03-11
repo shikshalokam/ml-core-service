@@ -24,38 +24,43 @@ const learnerLocationSearch = function ( bodyData ) {
   return new Promise(async (resolve, reject) => {
       try {
           
-          const url = 
-          sunbirdBaseUrl + constants.endpoints.GET_LOCATION_DATA;
-          const options = {
-              headers : {
-                  "Authorization" : process.env.SUNBIRD_SERVICE_AUTHERIZATION,
-                  "content-type": "application/json"
-              },
-              json : bodyData
-          };
+        const url = 
+        sunbirdBaseUrl + constants.endpoints.GET_LOCATION_DATA;
+        const options = {
+            headers : {
+                "Authorization" : process.env.SUNBIRD_SERVICE_AUTHERIZATION,
+                "content-type": "application/json"
+            },
+            json : bodyData
+        };
 
-          request.post(url,options,kendraCallback);
+        request.post(url,options,kendraCallback);
 
-          function kendraCallback(err, data) {
+        function kendraCallback(err, data) {
 
-              let result = {
-                  success : true
-              };
+            let result = {
+                success : true
+            };
 
-              if (err) {
-                  result.success = false;
-              } else {
+            if (err) {
+                result.success = false;
+            } else {
                   
-                  let response = data.body;
+                let response = data.body;
                   
-                  if( response.responseCode === constants.common.OK) {
-                      result["data"] = response.result;
-                  } else {
+                if( response.responseCode === constants.common.OK) {
+                    result["data"] = response.result;
+                } else {
                       result.success = false;
-                  }
-              }
-              return resolve(result);
-          }
+                }
+            }
+            return resolve(result);
+        }
+
+        setTimeout(function () {
+           return reject (constants.common.TIMEOUT_ERROR)
+        }, constants.common.SUNBIRD_SERVER_TIMEOUT);
+
 
       } catch (error) {
           return reject(error);
@@ -115,6 +120,9 @@ const formRead = function ( subTypeData ) {
                 }
                 return resolve(result);
             }
+            setTimeout(function () {
+                return reject (constants.common.TIMEOUT_ERROR)
+             }, constants.common.SUNBIRD_SERVER_TIMEOUT);
 
         } catch (error) {
             return reject(error);

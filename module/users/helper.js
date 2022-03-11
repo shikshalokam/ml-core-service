@@ -808,101 +808,6 @@ module.exports = class UsersHelper {
   static targetedEntity(solutionId, requestedData) {
     return new Promise(async (resolve, reject) => {
       try {
-        // let solutionData = await solutionsHelper.solutionDocuments(
-        //   {
-        //     _id: solutionId,
-        //     isDeleted: false
-        //   },
-        //   ["entityType", "type"]
-        // );
-
-        // if (!solutionData.length > 0) {
-        //   return resolve({
-        //     status: httpStatusCode.bad_request.status,
-        //     message: constants.apiResponses.SOLUTION_NOT_FOUND
-        //   });
-        // }
-        // console.log("solutionData:",solutionData)
-        // let rolesDocument = await userRolesHelper.roleDocuments(
-        //   {
-        //     code: requestedData.role
-        //   },
-        //   ["entityTypes.entityType"]
-        // );
-
-        // if (!rolesDocument.length > 0) {
-        //   throw {
-        //     status: httpStatusCode["bad_request"].status,
-        //     message: constants.apiResponses.USER_ROLES_NOT_FOUND
-        //   };
-        // }
-
-        // let requestedEntityTypes = Object.keys(_.omit(requestedData, ['role']));
-        // let targetedEntityType = "";
-        
-        // rolesDocument[0].entityTypes.forEach((singleEntityType) => {
-        //   if (requestedEntityTypes.includes(singleEntityType.entityType)) {
-        //     targetedEntityType = singleEntityType.entityType;
-        //   }
-        // });
-        // console.log("targetedEntityType:",targetedEntityType)
-        // console.log("requestedData[targetedEntityType]:",requestedData[targetedEntityType])
-        // if (!requestedData[targetedEntityType]) {
-        //   throw {
-        //     status: httpStatusCode["bad_request"].status,
-        //     message: constants.apiResponses.ENTITIES_NOT_ALLOWED_IN_ROLE
-        //   };
-        // }
-        // console.log("##############")
-        // if (solutionData[0].entityType === targetedEntityType) {
-        //   let bodyData={};
-        //   bodyData["request"] = {};
-        //   bodyData["request"]["filters"] = {};
-        //   bodyData["request"]["filters"]["parentId"] = "";
-           
-        //   if (gen.utils.checkValidUUID(requestedData[targetedEntityType])) {
-        //     bodyData["request"]["filters"]["parentId"] = requestedData[targetedEntityType];
-        //   }
-  
-        //   let entitiesData = await sunbirdService.learnerLocationSearch( bodyData );
-        //   if( entitiesData.count > 0 ){
-        //     targetedEntityType = constants.common.STATE_ENTITY_TYPE;
-        //   }          
-        // }
-        // console.log("targetedEntityTypeUpdated:",targetedEntityType)
-        // let filterData={};
-        // filterData["request"] = {};
-        // filterData["request"]["filters"] = {};
-       
-        // if (gen.utils.checkValidUUID(requestedData[targetedEntityType])) {
-        //   filterData["request"]["filters"] = {
-        //     "id" : requestedData[targetedEntityType]
-        //   };
-        // } else {
-        //   filterData["request"]["filters"] = {
-        //     "code" : requestedData[targetedEntityType]
-        //   };
-        // }
-        
-        // let entitiesDocument = await sunbirdService.learnerLocationSearch( filterData );
-        // if (!entitiesDocument.data.count > 0) {
-        //   throw {
-        //     message: constants.apiResponses.ENTITY_NOT_FOUND
-        //   };
-        // }
-
-        // let entityData = entitiesDocument.data.response;
-        // let entityDataFormated = {
-        //   "_id" : entityData[0].id,
-        //   "entityType" : entityData[0].type,
-        //   "entityName" : entityData[0].name
-        // }
-        // console.log("entityDataFormated:",entityDataFormated)
-        // return resolve({
-        //   message: constants.apiResponses.SOLUTION_TARGETED_ENTITY,
-        //   success: true,
-        //   data: entityDataFormated
-        // });
         let solutionData = await solutionsHelper.solutionDocuments(
           {
             _id: solutionId,
@@ -917,7 +822,6 @@ module.exports = class UsersHelper {
             message: constants.apiResponses.SOLUTION_NOT_FOUND
           });
         }
-
         let rolesDocument = await userRolesHelper.roleDocuments(
           {
             code: requestedData.role
@@ -934,81 +838,170 @@ module.exports = class UsersHelper {
 
         let requestedEntityTypes = Object.keys(_.omit(requestedData, ['role']));
         let targetedEntityType = "";
-
+        
         rolesDocument[0].entityTypes.forEach((singleEntityType) => {
           if (requestedEntityTypes.includes(singleEntityType.entityType)) {
             targetedEntityType = singleEntityType.entityType;
           }
         });
-        console.log("targetedEntityType :",targetedEntityType)
         if (!requestedData[targetedEntityType]) {
           throw {
             status: httpStatusCode["bad_request"].status,
             message: constants.apiResponses.ENTITIES_NOT_ALLOWED_IN_ROLE
           };
         }
-
         if (solutionData[0].entityType === targetedEntityType) {
-          let filterQuery = {
-            "registryDetails.code": requestedData[targetedEntityType]
-          };
-
+          let bodyData={};
+          bodyData["request"] = {};
+          bodyData["request"]["filters"] = {};
+          bodyData["request"]["filters"]["parentId"] = "";
+           
           if (gen.utils.checkValidUUID(requestedData[targetedEntityType])) {
-            filterQuery = {
-              "registryDetails.locationId": requestedData[targetedEntityType]
-            };
+            bodyData["request"]["filters"]["parentId"] = requestedData[targetedEntityType];
           }
-
-          let entities = await entitiesHelper.entityDocuments(filterQuery, [
-            "groups",
-          ]);
-
-          if (!entities.length > 0) {
-            throw {
-              message: constants.apiResponses.ENTITY_NOT_FOUND
-            };
-          }
-
-          if (
-            entities[0] &&
-            entities[0].groups &&
-            Object.keys(entities[0].groups).length > 0
-          ) {
+  
+          let entitiesData = await sunbirdService.learnerLocationSearch( bodyData );
+          if( entitiesData.count > 0 ){
             targetedEntityType = constants.common.STATE_ENTITY_TYPE;
-          }
+          }          
         }
-
-        let filterData = {
-          "registryDetails.code": requestedData[targetedEntityType]
-        };
-
+        let filterData={};
+        filterData["request"] = {};
+        filterData["request"]["filters"] = {};
+       
         if (gen.utils.checkValidUUID(requestedData[targetedEntityType])) {
-          filterData = {
-            "registryDetails.locationId": requestedData[targetedEntityType]
+          filterData["request"]["filters"] = {
+            "id" : requestedData[targetedEntityType]
+          };
+        } else {
+          filterData["request"]["filters"] = {
+            "code" : requestedData[targetedEntityType]
           };
         }
-
-        let entities = await entitiesHelper.entityDocuments(filterData, [
-          "metaInformation.name",
-          "entityType"
-        ]);
-
-        if (!entities.length > 0) {
+        let entitiesDocument = await sunbirdService.learnerLocationSearch( filterData );
+        if (!entitiesDocument.data.count > 0) {
           throw {
             message: constants.apiResponses.ENTITY_NOT_FOUND
           };
         }
 
-        if (entities[0].metaInformation && entities[0].metaInformation.name) {
-          entities[0]['entityName'] = entities[0].metaInformation.name;
-          delete entities[0].metaInformation;
+        let entityData = entitiesDocument.data.response;
+        let entityDataFormated = {
+          "_id" : entityData[0].id,
+          "entityType" : entityData[0].type,
+          "entityName" : entityData[0].name
         }
-
         return resolve({
           message: constants.apiResponses.SOLUTION_TARGETED_ENTITY,
           success: true,
-          data: entities[0]
+          data: entityDataFormated
         });
+        // let solutionData = await solutionsHelper.solutionDocuments(
+        //   {
+        //     _id: solutionId,
+        //     isDeleted: false
+        //   },
+        //   ["entityType", "type"]
+        // );
+
+        // if (!solutionData.length > 0) {
+        //   return resolve({
+        //     status: httpStatusCode.bad_request.status,
+        //     message: constants.apiResponses.SOLUTION_NOT_FOUND
+        //   });
+        // }
+
+        // let rolesDocument = await userRolesHelper.roleDocuments(
+        //   {
+        //     code: requestedData.role
+        //   },
+        //   ["entityTypes.entityType"]
+        // );
+
+        // if (!rolesDocument.length > 0) {
+        //   throw {
+        //     status: httpStatusCode["bad_request"].status,
+        //     message: constants.apiResponses.USER_ROLES_NOT_FOUND
+        //   };
+        // }
+
+        // let requestedEntityTypes = Object.keys(_.omit(requestedData, ['role']));
+        // let targetedEntityType = "";
+
+        // rolesDocument[0].entityTypes.forEach((singleEntityType) => {
+        //   if (requestedEntityTypes.includes(singleEntityType.entityType)) {
+        //     targetedEntityType = singleEntityType.entityType;
+        //   }
+        // });
+        // console.log("targetedEntityType :",targetedEntityType)
+        // if (!requestedData[targetedEntityType]) {
+        //   throw {
+        //     status: httpStatusCode["bad_request"].status,
+        //     message: constants.apiResponses.ENTITIES_NOT_ALLOWED_IN_ROLE
+        //   };
+        // }
+
+        // if (solutionData[0].entityType === targetedEntityType) {
+        //   let filterQuery = {
+        //     "registryDetails.code": requestedData[targetedEntityType]
+        //   };
+
+        //   if (gen.utils.checkValidUUID(requestedData[targetedEntityType])) {
+        //     filterQuery = {
+        //       "registryDetails.locationId": requestedData[targetedEntityType]
+        //     };
+        //   }
+
+        //   let entities = await entitiesHelper.entityDocuments(filterQuery, [
+        //     "groups",
+        //   ]);
+
+        //   if (!entities.length > 0) {
+        //     throw {
+        //       message: constants.apiResponses.ENTITY_NOT_FOUND
+        //     };
+        //   }
+
+        //   if (
+        //     entities[0] &&
+        //     entities[0].groups &&
+        //     Object.keys(entities[0].groups).length > 0
+        //   ) {
+        //     targetedEntityType = constants.common.STATE_ENTITY_TYPE;
+        //   }
+        // }
+
+        // let filterData = {
+        //   "registryDetails.code": requestedData[targetedEntityType]
+        // };
+
+        // if (gen.utils.checkValidUUID(requestedData[targetedEntityType])) {
+        //   filterData = {
+        //     "registryDetails.locationId": requestedData[targetedEntityType]
+        //   };
+        // }
+
+        // let entities = await entitiesHelper.entityDocuments(filterData, [
+        //   "metaInformation.name",
+        //   "entityType"
+        // ]);
+
+        // if (!entities.length > 0) {
+        //   throw {
+        //     message: constants.apiResponses.ENTITY_NOT_FOUND
+        //   };
+        // }
+
+        // if (entities[0].metaInformation && entities[0].metaInformation.name) {
+        //   entities[0]['entityName'] = entities[0].metaInformation.name;
+        //   delete entities[0].metaInformation;
+        // }
+
+        // return resolve({
+        //   message: constants.apiResponses.SOLUTION_TARGETED_ENTITY,
+        //   success: true,
+        //   data: entities[0]
+        // });
         
       } catch (error) {
         return resolve({
@@ -1030,62 +1023,108 @@ module.exports = class UsersHelper {
    * @returns {Object} - Entity.
    */
 
-  static getHighestTargetedEntity( roleWiseTargetedEntities ) {
+  static getHighestTargetedEntity( roleWiseTargetedEntities,requestedData ) {
     return new Promise(async (resolve, reject) => {
       try {
-        console.log("roleWiseTargetedEntities:",roleWiseTargetedEntities)
-        let allTargetedEntities = {};
-        let targetedEntity = {};
+        let entityKey = constants.common.SUBENTITY + requestedData.state;
+        let subEntities = await cache.getValue(entityKey);
+        if( !subEntities.length > 0 ) {
+            let bodyData={};
+            bodyData["request"] = {};
+            bodyData["request"]["filters"] = {};
+            bodyData["request"]["filters"]["id"] = requestedData.state;
 
-        for( let pointerToEntities = 0 ; pointerToEntities < roleWiseTargetedEntities.length ; pointerToEntities++ ) {
-          
-          let currentEntity = roleWiseTargetedEntities[pointerToEntities];
-          console.log("currentEntity:",currentEntity)
-          if ( !allTargetedEntities.hasOwnProperty(currentEntity._id) ) {
-            allTargetedEntities[currentEntity._id] = new Array();
-          }
-          console.log("allTargetedEntities:",allTargetedEntities)
-          //add entity _id if already not there to allTargetedEntities
-          let otherEntities = roleWiseTargetedEntities.filter((entity) => entity.entityType !== currentEntity.entityType);
-          console.log("otherEntities:",otherEntities)
-          if ( !otherEntities || !otherEntities.length > 0 ) {
-            continue; 
-          }
-          
-          let entitiesDocument = await entitiesHelper.entityDocuments({
-              _id: ObjectId(currentEntity._id)
-          }, ["groups"]);
+            let entitiesData = await sunbirdService.learnerLocationSearch( bodyData );
 
-          if ( !entitiesDocument || !entitiesDocument.length > 0 ) {
-            continue;
-          }
-          
-          entitiesDocument = entitiesDocument[0];
-          for( let entityCounter = 0 ; entityCounter < otherEntities.length ; entityCounter++ ) {
-
-            let entityDoc = otherEntities[entityCounter];
-            console.log("entityDoc:",entityDoc)
-            if ( !entitiesDocument.groups || !entitiesDocument.groups.hasOwnProperty(entityDoc.entityType) ) {
-              console.log(entityDoc.entityType,"entity type not exists")
-              break;
+            if( !entitiesData.data.response.length > 0 ) {
+                return resolve({
+                    message : constants.apiResponses.ENTITY_NOT_FOUND,
+                    result : []
+                })
             }
-
-            allTargetedEntities[currentEntity._id].push(true);
-            console.log("allTargetedEntities in entity counter:",allTargetedEntities)
-            if ( allTargetedEntities[currentEntity._id].length == otherEntities.length ) {
-              targetedEntity = roleWiseTargetedEntities.filter((entity) => entity._id == currentEntity._id);
-              break;
+            let stateLocationCode = entitiesData.data.response[0].code;
+            subEntities = await formService.formData( stateLocationCode,entityKey );
+            if( !subEntities.length > 0 ) {
+                return resolve({
+                    message : constants.apiResponses.ENTITY_NOT_FOUND,
+                    result : []
+                })
             }
-            console.log("targetedEntity in entity counter:",targetedEntity)
+        }        
+        let targetedIndex = subEntities.length;
+        let roleWiseTarget;
+        for( let roleWiseEntityIndex = 0; roleWiseEntityIndex < roleWiseTargetedEntities.length; roleWiseEntityIndex++ ) {
+          for( let subEntitiesIndex = 0; subEntitiesIndex < subEntities.length; subEntitiesIndex++ ) {
+            if( roleWiseTargetedEntities[roleWiseEntityIndex].entityType == subEntities[subEntitiesIndex] ) {
+                if( subEntitiesIndex < targetedIndex) {
+                  targetedIndex = subEntitiesIndex;
+                  roleWiseTarget = roleWiseEntityIndex;
+                }
+            }
           }
-          
         }
-        console.log("targetedEntity in entity counter:",targetedEntity)
+        
+        let targetedEntity = roleWiseTargetedEntities[roleWiseTarget];
         return resolve({
           message: constants.apiResponses.SOLUTION_TARGETED_ENTITY,
           success: true,
           data: targetedEntity
         });
+
+
+        // console.log("roleWiseTargetedEntities:",roleWiseTargetedEntities)
+        // let allTargetedEntities = {};
+        // let targetedEntity = {};
+
+        // for( let pointerToEntities = 0 ; pointerToEntities < roleWiseTargetedEntities.length ; pointerToEntities++ ) {
+          
+        //   let currentEntity = roleWiseTargetedEntities[pointerToEntities];
+        //   console.log("currentEntity:",currentEntity)
+        //   if ( !allTargetedEntities.hasOwnProperty(currentEntity._id) ) {
+        //     allTargetedEntities[currentEntity._id] = new Array();
+        //   }
+        //   console.log("allTargetedEntities:",allTargetedEntities)
+        //   //add entity _id if already not there to allTargetedEntities
+        //   let otherEntities = roleWiseTargetedEntities.filter((entity) => entity.entityType !== currentEntity.entityType);
+        //   console.log("otherEntities:",otherEntities)
+        //   if ( !otherEntities || !otherEntities.length > 0 ) {
+        //     continue; 
+        //   }
+          
+        //   let entitiesDocument = await entitiesHelper.entityDocuments({
+        //       _id: ObjectId(currentEntity._id)
+        //   }, ["groups"]);
+
+        //   if ( !entitiesDocument || !entitiesDocument.length > 0 ) {
+        //     continue;
+        //   }
+          
+        //   entitiesDocument = entitiesDocument[0];
+        //   for( let entityCounter = 0 ; entityCounter < otherEntities.length ; entityCounter++ ) {
+
+        //     let entityDoc = otherEntities[entityCounter];
+        //     console.log("entityDoc:",entityDoc)
+        //     if ( !entitiesDocument.groups || !entitiesDocument.groups.hasOwnProperty(entityDoc.entityType) ) {
+        //       console.log(entityDoc.entityType,"entity type not exists")
+        //       break;
+        //     }
+
+        //     allTargetedEntities[currentEntity._id].push(true);
+        //     console.log("allTargetedEntities in entity counter:",allTargetedEntities)
+        //     if ( allTargetedEntities[currentEntity._id].length == otherEntities.length ) {
+        //       targetedEntity = roleWiseTargetedEntities.filter((entity) => entity._id == currentEntity._id);
+        //       break;
+        //     }
+        //     console.log("targetedEntity in entity counter:",targetedEntity)
+        //   }
+          
+        // }
+        // console.log("targetedEntity in entity counter:",targetedEntity)
+        // return resolve({
+        //   message: constants.apiResponses.SOLUTION_TARGETED_ENTITY,
+        //   success: true,
+        //   data: targetedEntity
+        // });
         
       } catch (error) {
         return resolve({

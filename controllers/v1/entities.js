@@ -156,7 +156,7 @@ module.exports = class Entities extends Abstract {
       return new Promise(async (resolve, reject) => {
         console.log("request : ",req.params._id, req.body.entities)
 
-        //if condition is not working
+       
         if( !(req.params._id || req.body.entities) ) {
           return resolve({
             status :  httpStatusCode.bad_request.status,

@@ -144,7 +144,7 @@ module.exports = class EntitiesHelper {
                     }
                 }
             ]);
-
+            console.log("entityDocuments : ",entityDocuments)
             return resolve(entityDocuments);
 
         } catch (error) {
@@ -295,7 +295,7 @@ module.exports = class EntitiesHelper {
                         immediateEntities = searchImmediateData[0];
                     }
                 }
-    
+                console.log("immediateEntities : ",immediateEntities)
                 return resolve(immediateEntities);
 
             } catch(error) {
@@ -322,6 +322,7 @@ module.exports = class EntitiesHelper {
 
             try {
                 console.log("req in helper : ",entities,entityId,type,search,limit,pageNo)
+                
                 let result = [];
                 let obj = {
                     entityId : entityId,
@@ -330,7 +331,7 @@ module.exports = class EntitiesHelper {
                     limit : limit,
                     pageNo : pageNo
                 }
-    
+                
                 if ( entityId !== "" ) {
                     result = await this.subEntities(
                         obj
@@ -396,7 +397,7 @@ module.exports = class EntitiesHelper {
                         entitiesData.pageNo
                         );
                 } else {
-                    
+                    //type is empty call learner search with parentId
                     entitiesDocument = await this.immediateEntities(
                         entitiesData.entityId, 
                         entitiesData.search,
