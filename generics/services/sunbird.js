@@ -130,7 +130,6 @@ const formRead = function ( subTypeData ) {
     })
 }
 
-
 module.exports = {
   learnerLocationSearch : learnerLocationSearch,
   formRead : formRead

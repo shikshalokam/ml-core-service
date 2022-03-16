@@ -152,11 +152,9 @@ module.exports = class Entities extends Abstract {
      */
 
     subEntityList(req) {
-        
+      
       return new Promise(async (resolve, reject) => {
-        console.log("request : ",req.params._id, req.body.entities)
-
-       
+      
         if( !(req.params._id || req.body.entities) ) {
           return resolve({
             status :  httpStatusCode.bad_request.status,
