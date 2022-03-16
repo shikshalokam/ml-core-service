@@ -417,7 +417,7 @@ module.exports = class UsersHelper {
           },
           ["name"]
         );
-
+        
         if (!programData.length > 0) {
           return resolve({
             status: httpStatusCode["bad_request"].status,
@@ -435,7 +435,7 @@ module.exports = class UsersHelper {
             constants.common.DEFAULT_PAGE_NO,
             search
           );
-
+            
         let totalCount = 0;
         let mergedData = [];
 
@@ -471,24 +471,26 @@ module.exports = class UsersHelper {
           token,
           programId
         );
-
+          
         // Add projectId to the solution object if the user has already started a project for the improvement project solution.
         if (importedProjects.success) {
+
           if (importedProjects.data && importedProjects.data.length > 0) {
 
             importedProjects.data.forEach((importedProject) => {
+              
+              
+              if( projectSolutionIdIndexMap[importedProject.solutionInformation._id] !== undefined  ) {
 
-              if( projectSolutionIdIndexMap[importedProject.solutionInformation._id] ) {
+                
                 mergedData[projectSolutionIdIndexMap[importedProject.solutionInformation._id]].projectId = importedProject._id;
               } else {
-
                 let data = importedProject.solutionInformation;
                 data['projectTemplateId'] = importedProject.projectTemplateId;
                 data['projectId'] = importedProject._id;
                 data["type"] = constants.common.IMPROVEMENT_PROJECT;
                 mergedData.push(data);
                 totalCount = totalCount + 1;
-
               }
 
             });
