@@ -1,3 +1,5 @@
+
+
 const entityTypesHelper = require(MODULES_BASE_PATH + "/entityTypes/helper");
 const userRolesHelper = require(MODULES_BASE_PATH + "/user-roles/helper");
 // const elasticSearch = require(GENERIC_HELPERS_PATH + "/elastic-search");
@@ -268,21 +270,21 @@ module.exports = class EntitiesHelper {
                     immediateLocation = matchEntities;
                 }
 
-                let formatedEntities = [];
+                // let formatedEntities = [];
 
-                immediateLocation.map( entityData => {
-                    let data = {};
-                    data._id = entityData.id;
-                    data.entityType = entityData.type;
-                    data.name = entityData.name;
-                    data.externalId = entityData.code;
-                    data.label = entityData.name;
-                    data.value = entityData.id
-                    formatedEntities.push(data)
-                } );
+                // immediateLocation.map( entityData => {
+                //     let data = {};
+                //     data._id = entityData.id;
+                //     data.entityType = entityData.type;
+                //     data.name = entityData.name;
+                //     data.externalId = entityData.code;
+                //     data.label = entityData.name;
+                //     data.value = entityData.id
+                //     formatedEntities.push(data)
+                // } );
 
-                immediateLocation = [];
-                immediateLocation = formatedEntities;
+                // immediateLocation = [];
+                // immediateLocation = formatedEntities;
 
                 return resolve(immediateLocation);
                 
@@ -397,6 +399,22 @@ module.exports = class EntitiesHelper {
                         if (uniqueEntities.includes(data) === false) uniqueEntities.push(data);
                     });
                 }
+                let formatedEntities = [];
+
+                uniqueEntities.map( entityData => {
+                    let data = {};
+                    data._id = entityData.id;
+                    data.entityType = entityData.type;
+                    data.name = entityData.name;
+                    data.externalId = entityData.code;
+                    data.label = entityData.name;
+                    data.value = entityData.id
+                    formatedEntities.push(data)
+                } );
+
+                uniqueEntities = [];
+                uniqueEntities = formatedEntities;
+
                 
                 let totalcount = uniqueEntities.length;
                 if (uniqueEntities.length > 0) {
@@ -499,43 +517,114 @@ module.exports = class EntitiesHelper {
     ) {
         return new Promise(async (resolve, reject) => {
             try {
-                let subEntitiesMatchingType = [];
-                let parentId = [];
-                parentId.push(entityId);
-                let subEntities = await subEntitiesWithMatchingType( parentId,entityTraversalType,subEntitiesMatchingType )
-               
-                if( !subEntities.length > 0 ) {
-                    return resolve(subEntities) 
-                }
+                let subentitiesData = [];
+                if( entityTraversalType == constants.common.SCHOOL) {
+                    let subentitiesCode = await sunbirdService.schoolData( entityId );
+                    let schoolDetails = subentitiesCode.data.response.content;
+                    if( !schoolDetails.length > 0 ) {
+                        return resolve(schoolDetails) 
+                    }
+                    //console.log("subentitiesData : ",subentitiesCode.data.response.content)
+                    //get code from all data
+                    let schoolCodes = [];
+                    schoolDetails.map(schoolData=> {
+                        schoolCodes.push(schoolData.externalId);
+                    });
+                    //console.log("schoolDetails : ",schoolCodes)
 
+                    let bodyData={};
+                    bodyData["request"] = {};
+                    bodyData["request"]["filters"] = {};
+                    bodyData["request"]["filters"]["code"] = schoolCodes;
+                
+                    let entitiesData = await sunbirdService.learnerLocationSearch( bodyData );
+                
+                    if( !entitiesData.data.response.length > 0 ) {
+                        return resolve(entitiesData.data.response) 
+                    }
+
+                    console.log("schoolData : ",entitiesData.data.response.length)
+                    subentitiesData = entitiesData.data.response;
+
+                } else {
+                    let subEntitiesMatchingType = [];
+                    let parentId = [];
+                    parentId.push(entityId);
+                    let subEntities = await subEntitiesWithMatchingType( parentId,entityTraversalType,subEntitiesMatchingType )
+               
+                    if( !subEntities.length > 0 ) {
+                        return resolve(subEntities) 
+                    }
+                    subentitiesData = subEntities
+                    
+                
+                }
+                console.log("schoolData : ",subentitiesData)
                 if( searchText !== "" ){
                     let matchEntities = [];
-                    subEntities.map( entityData => {
+                    subentitiesData.map( entityData => {
                         if( entityData.name.match(new RegExp(searchText, 'i')) || entityData.code.match(new RegExp("^" + searchText, 'm')) ) {
                             matchEntities.push(entityData)
                         }
                     });
-                    subEntities = [];
-                    subEntities = matchEntities;
-                }
+                    subentitiesData = [];
+                    subentitiesData = matchEntities;
+                }  
+                // let formatedEntities = [];
 
-                let formatedEntities = [];
+                // subentitiesData.map( entityData => {
+                //     let data = {};
+                //     data._id = entityData.id;
+                //     data.entityType = entityData.type;
+                //     data.name = entityData.name;
+                //     data.externalId = entityData.code;
+                //     data.label = entityData.name;
+                //     data.value = entityData.id
+                //     formatedEntities.push(data)
+                // } );
 
-                subEntities.map( entityData => {
-                    let data = {};
-                    data._id = entityData.id;
-                    data.entityType = entityData.type;
-                    data.name = entityData.name;
-                    data.externalId = entityData.code;
-                    data.label = entityData.name;
-                    data.value = entityData.id
-                    formatedEntities.push(data)
-                } );
+                // subentitiesData = [];
+                // subentitiesData = formatedEntities;
 
-                subEntities = [];
-                subEntities = formatedEntities;
+                return resolve(subentitiesData);
+                
+                // let subEntitiesMatchingType = [];
+                // let parentId = [];
+                // parentId.push(entityId);
+                // let subEntities = await subEntitiesWithMatchingType( parentId,entityTraversalType,subEntitiesMatchingType )
+               
+                // if( !subEntities.length > 0 ) {
+                //     return resolve(subEntities) 
+                // }
 
-                return resolve(subEntities);
+                // if( searchText !== "" ){
+                //     let matchEntities = [];
+                //     subEntities.map( entityData => {
+                //         if( entityData.name.match(new RegExp(searchText, 'i')) || entityData.code.match(new RegExp("^" + searchText, 'm')) ) {
+                //             matchEntities.push(entityData)
+                //         }
+                //     });
+                //     subEntities = [];
+                //     subEntities = matchEntities;
+                // }
+
+                // let formatedEntities = [];
+
+                // subEntities.map( entityData => {
+                //     let data = {};
+                //     data._id = entityData.id;
+                //     data.entityType = entityData.type;
+                //     data.name = entityData.name;
+                //     data.externalId = entityData.code;
+                //     data.label = entityData.name;
+                //     data.value = entityData.id
+                //     formatedEntities.push(data)
+                // } );
+
+                // subEntities = [];
+                // subEntities = formatedEntities;
+
+                // return resolve(subEntities);
 
                 
                 

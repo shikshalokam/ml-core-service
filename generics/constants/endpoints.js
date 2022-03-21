@@ -32,5 +32,6 @@ module.exports = {
     GET_QUESTIONS : "/v1/solutions/questions",
     GET_OBSERVATION : "/v1/observations/details",
     GET_LOCATION_DATA : "/api/data/v1/location/search",
-    GET_FORM_DATA : "/api/data/v1/form/read"
+    GET_FORM_DATA : "/api/data/v1/form/read",
+    GET_SCHOOL_DATA : "/api/org/v1/search"
 }
