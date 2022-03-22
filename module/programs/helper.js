@@ -231,17 +231,15 @@ module.exports = class ProgramsHelper {
 
           let locationIds = [];
           let bodyData={};
-          bodyData["request"] = {};
-          bodyData["request"]["filters"] = {};
-          bodyData["request"]["filters"]["id"] = "";
 
           scopeData.entities.forEach(entity=>{
             if (gen.utils.checkValidUUID(entity)) {
               locationIds.push(entity);
             }
           });
-        
-          bodyData["request"]["filters"]["id"] = locationIds;
+          bodyData = {
+            "id" : locationIds
+          }
 
           
           let entityData = await sunbirdService.learnerLocationSearch( bodyData );
@@ -731,17 +729,16 @@ module.exports = class ProgramsHelper {
 
         let locationIds = [];
         let bodyData={};
-        bodyData["request"] = {};
-        bodyData["request"]["filters"] = {};
-        bodyData["request"]["filters"]["id"] = "";
-
+        
         entities.forEach(entity=>{
           if (gen.utils.checkValidUUID(entity)) {
             locationIds.push(entity);
           }
         });
+        bodyData = {
+          "id" : locationIds
+        }
         
-        bodyData["request"]["filters"]["id"] = locationIds;
         let entitiesData = await sunbirdService.learnerLocationSearch( bodyData );
         
 

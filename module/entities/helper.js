@@ -106,7 +106,7 @@ module.exports = class EntitiesHelper {
                 queryObject["$match"]["_id"] = {};
                 queryObject["$match"]["_id"]["$in"] = entityIds;
             }
-            console.log("query inside search : ",queryObject)
+            
             if( searchText !== "") {
                 queryObject["$match"]["$or"] = [
                     { "metaInformation.name": new RegExp(searchText, 'i') },
@@ -146,7 +146,7 @@ module.exports = class EntitiesHelper {
                     }
                 }
             ]);
-            console.log("entityDocuments : ",entityDocuments.result)
+            
             return resolve(entityDocuments);
 
         } catch (error) {
@@ -246,10 +246,9 @@ module.exports = class EntitiesHelper {
         return new Promise(async (resolve, reject) => {
 
             try {
-                let bodyData={};
-                bodyData["request"] = {};
-                bodyData["request"]["filters"] = {};
-                bodyData["request"]["filters"]["parentId"] = entityId;
+                let bodyData={
+                    "parentId" : entityId
+                };
                 
                 let entitiesData = await sunbirdService.learnerLocationSearch( bodyData );
                 
@@ -524,18 +523,18 @@ module.exports = class EntitiesHelper {
                     if( !schoolDetails.length > 0 ) {
                         return resolve(schoolDetails) 
                     }
-                    //console.log("subentitiesData : ",subentitiesCode.data.response.content)
+                    
                     //get code from all data
                     let schoolCodes = [];
                     schoolDetails.map(schoolData=> {
                         schoolCodes.push(schoolData.externalId);
                     });
-                    //console.log("schoolDetails : ",schoolCodes)
+                    
 
-                    let bodyData={};
-                    bodyData["request"] = {};
-                    bodyData["request"]["filters"] = {};
-                    bodyData["request"]["filters"]["code"] = schoolCodes;
+                    let bodyData={
+                        "code" : schoolCodes
+                    };
+                    
                 
                     let entitiesData = await sunbirdService.learnerLocationSearch( bodyData );
                 
@@ -543,7 +542,7 @@ module.exports = class EntitiesHelper {
                         return resolve(entitiesData.data.response) 
                     }
 
-                    console.log("schoolData : ",entitiesData.data.response.length)
+                    
                     subentitiesData = entitiesData.data.response;
 
                 } else {
@@ -559,7 +558,7 @@ module.exports = class EntitiesHelper {
                     
                 
                 }
-                console.log("schoolData : ",subentitiesData)
+                
                 if( searchText !== "" ){
                     let matchEntities = [];
                     subentitiesData.map( entityData => {
@@ -900,13 +899,12 @@ module.exports = class EntitiesHelper {
                 }
                 
                 let subEntities = await cache.getValue(entityKey);
-                console.log("subEntitiesDetails from cache:",subEntities)
+               
                 if( !subEntities.length > 0 ) {
-                    let bodyData={};
-                    bodyData["request"] = {};
-                    bodyData["request"]["filters"] = {};
-                    bodyData["request"]["filters"]["id"] = stateLocationId;
-
+                    let bodyData={
+                        "id" : stateLocationId
+                    };
+                    
                     let entitiesData = await sunbirdService.learnerLocationSearch( bodyData );
 
                     if( !entitiesData.data.response.length > 0 ) {
@@ -1055,41 +1053,37 @@ module.exports = class EntitiesHelper {
 //   */
 
 async function subEntitiesWithMatchingType( parentIds,entityType,matchingData ){
-    //console.log("inside recursive function : ",matchingData)
-    //console.log("inside recursive function solutionEntities: ",parentIds,entityType,matchingData)
+    
     if( !parentIds.length > 0 ){
       return matchingData;
     }
 
-    let bodyData={};
-    bodyData["request"] = {};
-    bodyData["request"]["filters"] = {};
-    bodyData["request"]["filters"]["parentId"] = parentIds;
-    //console.log(" bodyData inside recursive fn : ", bodyData["request"]["filters"])
+    let bodyData={
+        "parentId" : parentIds
+    };
     
     let entityDetails = await sunbirdService.learnerLocationSearch(bodyData);
 
     if( !entityDetails.data.response.length > 0 && !matchingData.length > 0 ) {
       return matchingData;
     }
-    //console.log("Data from learner inside recursion:",entityDetails.data.response)
+    
     let entityData = entityDetails.data.response;
     
    
     let mismatchEntities = [];
     entityData.map(entity => {
-      //console.log("entity inside map:",entity.type);
+      
       if( entity.type == entityType ) {
         matchingData.push(entity)
-        //if (matchingData.includes(entity.type) === false) matchingData.push(entity.type);
+       
       } else {
         mismatchEntities.push(entity.id)
       }
     });
-    console.log("mismatchEntities:",mismatchEntities.length)
-    console.log("matching---------:",matchingData.length)
+
     if( mismatchEntities.length > 0 ){
-      console.log("++++recursive calling")
+      
       await subEntitiesWithMatchingType(mismatchEntities,entityType,matchingData)
     } 
     let uniqueEntities = [];

@@ -17,13 +17,24 @@ const sunbirdOrgBaseUrl = process.env.SUNBIRD_ORG_URL;
   * @function
   * @name learnerLocationSearch
   * @param {String} bearerToken - autherization token.
-  * @param {object} bodyData -  bodydata .
+  * @param {object} filterData -  bodydata .
   * @returns {Promise} returns a promise.
 */
 
-const learnerLocationSearch = function ( bodyData ) {
+const learnerLocationSearch = function ( filterData, limit = "", offset = ""  ) {
   return new Promise(async (resolve, reject) => {
       try {
+
+        let bodyData={};
+        bodyData["request"] = {};
+        bodyData["request"]["filters"] = filterData;
+        if( limit !== "" ) {
+            bodyData["request"]["limit"] = limit;
+        }
+        if( limit !== "" ) {
+            bodyData["request"]["offset"] = offset;
+        }
+        
           
         const url = 
         sunbirdBaseUrl + constants.endpoints.GET_LOCATION_DATA;
@@ -80,7 +91,7 @@ const learnerLocationSearch = function ( bodyData ) {
 const formRead = function ( subTypeData ) {
     return new Promise(async (resolve, reject) => {
         try {
-            console.log("subTypeData:",subTypeData)
+            
             let bodyData = {
                 request : {
                     type: "profileConfig",
@@ -88,7 +99,7 @@ const formRead = function ( subTypeData ) {
                     action: "get"
                 }
             }
-            console.log("bodyData:",bodyData.request)
+            
             const url = 
             sunbirdBaseUrl + constants.endpoints.GET_FORM_DATA;
             const options = {
@@ -142,7 +153,7 @@ const formRead = function ( subTypeData ) {
 const schoolData = function ( locationIds ) {
     return new Promise(async (resolve, reject) => {
         try {
-            console.log("locationIds:",locationIds)
+            
             let bodyData = {
                 request : {
                     filters :{
@@ -150,7 +161,7 @@ const schoolData = function ( locationIds ) {
                     }    
                 }
             }
-            console.log("bodyData:",bodyData.request)
+            
             const url = 
             sunbirdBaseUrl + constants.endpoints.GET_SCHOOL_DATA;
             const options = {

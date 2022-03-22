@@ -22,7 +22,7 @@ let cache = require(ROOT_PATH+"/generics/helpers/cache");
 const formData = function ( stateLocationCode, entityKey ) {
     return new Promise(async (resolve, reject) => {
         try {
-            console.log("requestData:",stateLocationCode,entityKey)
+            
             let subEntitiesDetails = await sunbirdService.formRead( stateLocationCode );
             let subEntityData = subEntitiesDetails.data.form.data.fields[1].children.teacher;
 
@@ -36,7 +36,6 @@ const formData = function ( stateLocationCode, entityKey ) {
                 })
             }
             let setCache = cache.setValue(entityKey, subEntities, 43200);
-            console.log("setCache",setCache)
             return resolve(subEntities);
 
         } catch (error) {
