@@ -31,7 +31,7 @@ const learnerLocationSearch = function ( filterData, limit = "", offset = ""  ) 
         if( limit !== "" ) {
             bodyData["request"]["limit"] = limit;
         }
-        if( limit !== "" ) {
+        if( offset !== "" ) {
             bodyData["request"]["offset"] = offset;
         }
         
@@ -48,18 +48,18 @@ const learnerLocationSearch = function ( filterData, limit = "", offset = ""  ) 
 
         request.post(url,options,kendraCallback);
 
+        let result = {
+            success : true
+        };
+
         function kendraCallback(err, data) {
 
-            let result = {
-                success : true
-            };
-
+            
             if (err) {
                 result.success = false;
             } else {
                   
                 let response = data.body;
-                  
                 if( response.responseCode === constants.common.OK) {
                     result["data"] = response.result;
                 } else {
@@ -70,7 +70,9 @@ const learnerLocationSearch = function ( filterData, limit = "", offset = ""  ) 
         }
 
         setTimeout(function () {
-           return reject (constants.common.TIMEOUT_ERROR)
+           return reject (result = {
+               success : false
+            });
         }, constants.common.SUNBIRD_SERVER_TIMEOUT);
 
 
@@ -94,9 +96,9 @@ const formRead = function ( subTypeData ) {
             
             let bodyData = {
                 request : {
-                    type: "profileConfig",
+                    type: constants.common.FORM_API_TYPE,
                     subType: subTypeData,
-                    action: "get"
+                    action: constants.common.GET_METHOD
                 }
             }
             
@@ -111,13 +113,12 @@ const formRead = function ( subTypeData ) {
             };
   
             request.post(url,options,kendraCallback);
-  
+            let result = {
+                success : true
+            };  
             function kendraCallback(err, data) {
   
-                let result = {
-                    success : true
-                };
-  
+               
                 if (err) {
                     result.success = false;
                 } else {
@@ -126,6 +127,7 @@ const formRead = function ( subTypeData ) {
                     
                     if( response.responseCode === constants.common.OK) {
                         result["data"] = response.result;
+                        result.success = true;
                     } else {
                         result.success = false;
                     }
@@ -133,7 +135,9 @@ const formRead = function ( subTypeData ) {
                 return resolve(result);
             }
             setTimeout(function () {
-                return reject (constants.common.TIMEOUT_ERROR)
+                return reject (result = {
+                    success : false
+                 });
              }, constants.common.SUNBIRD_SERVER_TIMEOUT);
 
         } catch (error) {
@@ -150,15 +154,13 @@ const formRead = function ( subTypeData ) {
   * @param {object} bodyData -  location id
   * @returns {Promise} returns a promise.
 */
-const schoolData = function ( locationIds ) {
+const schoolData = function ( filterData ) {
     return new Promise(async (resolve, reject) => {
         try {
             
             let bodyData = {
                 request : {
-                    filters :{
-                        "orgLocation.id" : locationIds
-                    }    
+                    filters : filterData
                 }
             }
             
@@ -173,12 +175,13 @@ const schoolData = function ( locationIds ) {
             };
   
             request.post(url,options,kendraCallback);
+            let result = {
+                success : true
+            };
   
             function kendraCallback(err, data) {
   
-                let result = {
-                    success : true
-                };
+                
   
                 if (err) {
                     result.success = false;
@@ -195,7 +198,9 @@ const schoolData = function ( locationIds ) {
                 return resolve(result);
             }
             setTimeout(function () {
-                return reject (constants.common.TIMEOUT_ERROR)
+                return reject (result = {
+                    success : false
+                 });
              }, constants.common.SUNBIRD_SERVER_TIMEOUT);
 
         } catch (error) {

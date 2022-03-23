@@ -69,5 +69,7 @@ module.exports = {
   "SCHOOL" : "school",
   "SUBENTITY" :"subEntity_",
   "SUNBIRD_SERVER_TIMEOUT" : 5000,
-  "TIMEOUT_ERROR" : "Server timeout error"
+  "CACHE_TIME_PERIOD" : 43200,
+  "FORM_API_TYPE" : "profileConfig"
+  
 };

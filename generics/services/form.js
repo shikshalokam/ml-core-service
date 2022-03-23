@@ -24,18 +24,20 @@ const formData = function ( stateLocationCode, entityKey ) {
         try {
             
             let subEntitiesDetails = await sunbirdService.formRead( stateLocationCode );
-            let subEntityData = subEntitiesDetails.data.form.data.fields[1].children.teacher;
-
-            let subEntities = subEntityData.map( subEntity => {
-                return subEntity.code;
-            })
-            if( !subEntitiesDetails.data || !subEntityData.length > 0 ) {
+            if( !subEntitiesDetails.success) {
                 return resolve({
                     message : constants.apiResponses.ENTITY_NOT_FOUND,
                     result : []
                 })
             }
-            let setCache = cache.setValue(entityKey, subEntities, 43200);
+            
+            let subEntityData = subEntitiesDetails.data.form.data.fields[1].children.teacher;
+
+            let subEntities = subEntityData.map( subEntity => {
+                return subEntity.code;
+            })
+            
+            let setCache = cache.setValue(entityKey, subEntities, constants.common.CACHE_TIME_PERIOD);
             return resolve(subEntities);
 
         } catch (error) {

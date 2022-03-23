@@ -139,13 +139,14 @@ module.exports = class SolutionsHelper {
             
 
             let entitiesDetails = await sunbirdService.learnerLocationSearch( bodyData );
-            let entitiesData = entitiesDetails.data.response;
-  
-            if( !entitiesData.length > 0 ) {
+            if( !entitiesDetails.success || !entitiesDetails.data.response.length > 0 ) {
               throw {
                 message : constants.apiResponses.ENTITIES_NOT_FOUND
               }
             }
+
+            let entitiesData = entitiesDetails.data.response;
+  
             entitiesData = entitiesData.map( entity => {
               return entity.id;
             })
@@ -263,7 +264,7 @@ module.exports = class SolutionsHelper {
               };
               
               let entityDetails = await sunbirdService.learnerLocationSearch(bodyData);
-              if( !entityDetails.data.response.length > 0 ) {
+              if( !entityDetails.success || !entityDetails.data.response.length > 0 ) {
                 return resolve({
                   status : httpStatusCode.bad_request.status,
                   message : constants.apiResponses.ENTITIES_NOT_FOUND
@@ -290,12 +291,12 @@ module.exports = class SolutionsHelper {
         
               if( currentSolutionScope.entityType !== programData[0].scope.entityType ) {
                 let matchData = [];
-                let childList = await entitiesInParent(currentSolutionScope.entities,currentSolutionScope.entityType,matchData);
+                let childEntities = await entitiesInParent(currentSolutionScope.entities,currentSolutionScope.entityType,matchData);
                 
-                if( childList.length > 0) {
+                if( childEntities.length > 0) {
                   for( let entitiesIndex = 0; entitiesIndex < entities.length; entitiesIndex++ ) {
-                    for( let childListIndex = 0; childListIndex < childList.length; childListIndex++) {
-                      if( childList[childListIndex] == entities[entitiesIndex]){
+                    for( let childListIndex = 0; childListIndex < childEntities.length; childListIndex++) {
+                      if( childEntities[childListIndex] == entities[entitiesIndex]){
                         entityIds.push(entities[entitiesIndex]);
                         entitiesIndex++;
                       }
@@ -981,17 +982,17 @@ module.exports = class SolutionsHelper {
 
           let matchData = [];
           let checkEntityInParent = [];
-          let childList = await entitiesInParent(programData[0].scope.entities,solutionData[0].scope.entityType,matchData);
+          let childEntities = await entitiesInParent(programData[0].scope.entities,solutionData[0].scope.entityType,matchData);
          
-          if( !childList.length > 0 ) {
+          if( !childEntities.length > 0 ) {
             throw {
               message : constants.apiResponses.ENTITY_NOT_EXISTS_IN_PARENT
             }
           }
           
           for( let entitiesIndex = 0; entitiesIndex < entities.length; entitiesIndex++ ) {
-            for( let childListIndex = 0; childListIndex < childList.length; childListIndex++) {
-              if( childList[childListIndex] == entities[entitiesIndex]){
+            for( let childListIndex = 0; childListIndex < childEntities.length; childListIndex++) {
+              if( childEntities[childListIndex] == entities[entitiesIndex]){
                 checkEntityInParent.push(entities[entitiesIndex]);
                 entitiesIndex++;
               }
@@ -1011,7 +1012,7 @@ module.exports = class SolutionsHelper {
 
         let entitiesDetails = await sunbirdService.learnerLocationSearch( bodyData );
 
-        if( !entitiesDetails.data.response.length > 0 ) {
+        if( !entitiesDetails.success || !entitiesDetails.data.response.length > 0 ) {
           return resolve({
             status : httpStatusCode.bad_request.status,
             message : constants.apiResponses.ENTITIES_NOT_FOUND
@@ -2002,7 +2003,7 @@ async function entitiesInParent( solutionEntities,currentEntityType,matchingData
   
   let entityDetails = await sunbirdService.learnerLocationSearch(bodyData);
 
-  if( !entityDetails.data.response.length > 0 && !matchingData.length > 0 ) {
+  if( ( !entityDetails.success || !entityDetails.data.response.length > 0) && !matchingData.length > 0 ) {
     return ({
       status : httpStatusCode.bad_request.status,
       message : constants.apiResponses.ENTITIES_NOT_FOUND

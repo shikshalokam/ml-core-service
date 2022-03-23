@@ -159,37 +159,65 @@ module.exports = class UsersHelper {
           
 
           let locationIds = [];
+          let orgExternalId = [];
+          let entitiesData = [];
           let bodyData={};
           
 
           data.entities.forEach(entity=>{
             if (gen.utils.checkValidUUID(entity)) {
               locationIds.push(entity);
+            } else {
+              orgExternalId.push(entity)
             }
           });
-        
-          bodyData = {
-            "id" : locationIds
-          } 
-          let entityData = await sunbirdService.learnerLocationSearch( bodyData );
-          
-          if ( !entityData.data.count > 0 ) {
-            return resolve({
-              status: httpStatusCode["bad_request"].status,
-              message: constants.apiResponses.ENTITY_NOT_FOUND,
-              result: {}
+
+          if( locationIds.length > 0 ){
+
+            bodyData = {
+              "id" : locationIds
+            } 
+            let entityData = await sunbirdService.learnerLocationSearch( bodyData );
+            
+            if ( !entityData.success || !entityData.data.count > 0 ) {
+              return resolve({
+                status: httpStatusCode["bad_request"].status,
+                message: constants.apiResponses.ENTITY_NOT_FOUND,
+                result: {}
+              });
+            }
+
+            entityData.data.response.forEach(entity =>{
+              entitiesData.push(entity.id)
             });
+
+            solutionDataToBeUpdated["entityType"] = entityData.data.response[0].type;
+            
+          }
+
+          if( orgExternalId.length > 0 ) {
+            let filterData = {
+              "externalId" : orgExternalId
+            }
+            let schoolDetails = await sunbirdService.schoolData( filterData );
+            if( !schoolDetails.success || !schoolDetails.data.response.content > 0 ) {
+              return resolve({
+                status: httpStatusCode["bad_request"].status,
+                message: constants.apiResponses.ENTITY_NOT_FOUND,
+                result: {}
+              });
+            }
+            let schoolData = schoolDetails.data.response.content;
+            schoolData.forEach(entity =>{
+              entitiesData.push(entity.identifier)
+            });
+
+            solutionDataToBeUpdated["entityType"] = constants.common.SCHOOL;
           }
 
           if ( data.type && data.type !== constants.common.IMPROVEMENT_PROJECT ) {
-            solutionDataToBeUpdated["entities"] = entityData.data.response.map(
-              
-              (entity) => entity.id
-            );
+            solutionDataToBeUpdated["entities"] = entitiesData;
           }
-
-          solutionDataToBeUpdated["entityType"] = entityData.data.response[0].type;
-          
         }
 
         //solution part
@@ -616,7 +644,7 @@ module.exports = class UsersHelper {
         
         let entityData = await sunbirdService.learnerLocationSearch( bodyData );
         
-        if ( !entityData.data.response.length > 0) {
+        if ( !entityData.success || !entityData.data.response.length > 0) {
           throw {
             message: constants.apiResponses.ENTITIES_NOT_EXIST_IN_LOCATION,
           };
@@ -726,7 +754,7 @@ module.exports = class UsersHelper {
             }
           }
           let entitiesData = await sunbirdService.learnerLocationSearch( filterData );
-          if( entitiesData.count > 0 ){
+          if( !entitiesData.success || entitiesData.count > 0 ){
             targetedEntityType = constants.common.STATE_ENTITY_TYPE;
           }          
         }
@@ -741,7 +769,7 @@ module.exports = class UsersHelper {
           };
         }
         let entitiesDocument = await sunbirdService.learnerLocationSearch( filterData );
-        if (!entitiesDocument.data.count > 0) {
+        if ( !entitiesDocument.success || !entitiesDocument.data.count > 0) {
           throw {
             message: constants.apiResponses.ENTITY_NOT_FOUND
           };
@@ -790,7 +818,7 @@ module.exports = class UsersHelper {
 
             let entitiesData = await sunbirdService.learnerLocationSearch( filterData );
 
-            if( !entitiesData.data.response.length > 0 ) {
+            if( !entitiesData.success || !entitiesData.data.response.length > 0 ) {
                 return resolve({
                     message : constants.apiResponses.ENTITY_NOT_FOUND,
                     result : []

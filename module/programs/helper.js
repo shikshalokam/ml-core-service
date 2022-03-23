@@ -207,22 +207,21 @@ module.exports = class ProgramsHelper {
         let scope = {};
 
         if( scopeData.entityType ) {
+
+          let bodyData = {
+            "type" : scopeData.entityType
+          }
+          let entityTypeData = await sunbirdService.learnerLocationSearch( bodyData );
           
-          let entityTypeData =  await entityTypesHelper.entityTypesDocument(
-            {
-              name : scopeData.entityType
-            },
-            ["name"]
-          );
-          
-          if( !entityTypeData.length > 0 ) {
+          if( !entityTypeData.success || !entityTypeData.data.response.length > 0 ) {
             return resolve({
               status : httpStatusCode.bad_request.status,
               message : constants.apiResponses.ENTITY_TYPES_NOT_FOUND
             });
           }
 
-          scope["entityType"] = entityTypeData[0].name;
+          scope["entityType"] = entityTypeData.data.response[0].type;
+  
         }
 
         if( scopeData.entities && scopeData.entities.length > 0 ) {
@@ -243,15 +242,14 @@ module.exports = class ProgramsHelper {
 
           
           let entityData = await sunbirdService.learnerLocationSearch( bodyData );
-
-          
-          let entities = entityData.data.response;
-          if( !entities.length > 0 ) {
+          if( !entityData.success || !entityData.data.response.length > 0 ) {
             return resolve({
               status : httpStatusCode.bad_request.status,
               message : constants.apiResponses.ENTITIES_NOT_FOUND
             });
           }
+
+          let entities = entityData.data.response;
   
           scope["entities"] = entities.map(entity => {
             return entity.id;
@@ -741,8 +739,8 @@ module.exports = class ProgramsHelper {
         
         let entitiesData = await sunbirdService.learnerLocationSearch( bodyData );
         
-
-        if( !entitiesData.data.count > 0 ) {
+        
+        if( !entitiesData.success || !entitiesData.data.count > 0 ) {
             throw {
               message : constants.apiResponses.ENTITIES_NOT_FOUND
             };
