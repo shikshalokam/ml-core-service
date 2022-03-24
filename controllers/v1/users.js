@@ -566,8 +566,8 @@ module.exports = class Users extends Abstract {
                             message: constants.apiResponses.ENTITIES_NOT_ALLOWED_IN_ROLE
                         };
                     }
-
-                    targetedEntities.result = targetedEntity.data;
+                    
+                    targetedEntities.result = targetedEntity.data[0];
                 }
             }
 
