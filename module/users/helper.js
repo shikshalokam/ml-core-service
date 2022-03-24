@@ -599,7 +599,7 @@ module.exports = class UsersHelper {
         }
 
         const entitiesData = await entitiesHelper.entityDocuments(filterQuery, [
-          "_id",
+          "_id", "childHierarchyPath"
         ]);
 
         if (!entitiesData.length > 0) {
@@ -623,24 +623,33 @@ module.exports = class UsersHelper {
 
         let entityTypes = [];
         let stateEntityExists = false;
+        let roleEntityType = "";
 
         rolesDocument[0].entityTypes.forEach((roleDocument) => {
           if (roleDocument.entityType === constants.common.STATE_ENTITY_TYPE) {
             stateEntityExists = true;
           }
+          if (entitiesData[0].childHierarchyPath.includes(roleDocument.entityType)) {
+            roleEntityType = roleDocument.entityType;
+          }
+
         });
+
+        let entityTypeIndex =
+        entitiesData[0].childHierarchyPath.findIndex(path => path === roleEntityType);
 
         if (stateEntityExists) {
           entityTypes = [constants.common.STATE_ENTITY_TYPE];
         } else {
-          let entitiesMappingForm = await this.entitiesMappingForm(
-            entitiesData[0]._id,
-            rolesDocument[0]._id
-          );
+          for (
+            let pointerToChildHierarchy = 0;
+            pointerToChildHierarchy < entityTypeIndex + 1;
+            pointerToChildHierarchy++
+          ) {
 
-          entitiesMappingForm.result.forEach((entitiesMappingData) => {
-            entityTypes.push(entitiesMappingData.field);
-          });
+            let entityType = entitiesData[0].childHierarchyPath[pointerToChildHierarchy];
+            entityTypes.push(entityType);
+          }
         }
 
         return resolve({
