@@ -172,7 +172,7 @@ module.exports = class UsersHelper {
             }
           });
 
-          if( locationIds.length > 0 ){
+          if ( locationIds.length > 0 ){
 
             bodyData = {
               "id" : locationIds
@@ -187,7 +187,7 @@ module.exports = class UsersHelper {
               });
             }
 
-            entityData.data.response.forEach(entity =>{
+            entityData.data.response.forEach( entity => {
               entitiesData.push(entity.id)
             });
 
@@ -195,7 +195,7 @@ module.exports = class UsersHelper {
             
           }
 
-          if( orgExternalId.length > 0 ) {
+          if ( orgExternalId.length > 0 ) {
             let filterData = {
               "externalId" : orgExternalId
             }
