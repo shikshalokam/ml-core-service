@@ -3,8 +3,14 @@ module.exports = {
     schema: {
       externalId: String,
       isReusable: Boolean,
-      name: String,
-      description: String,
+      name: {
+        type : String,
+        index : true
+      },
+      description: {
+        type : String,
+        index : true
+      },
       author: String,
       parentSolutionId: "ObjectId",
       resourceType: Array,
@@ -87,7 +93,10 @@ module.exports = {
       },
       criteriaLevelReport : Boolean,
       license:Object,
-      link: String,
+      link: {
+        type : String,
+        index : true
+      },
       minNoOfSubmissionsRequired: {
         type: Number,
         default: 1
