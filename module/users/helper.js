@@ -69,7 +69,7 @@ module.exports = class UsersHelper {
       try {
 
         let userPrivateProgram = {};
-        let dateFormat = gen.utils.epochTime();
+        let uuid = gen.utils.generateUniqueId();
         let parentSolutionInformation = {};
 
         createADuplicateSolution = gen.utils.convertStringToBoolean(
@@ -105,7 +105,7 @@ module.exports = class UsersHelper {
             let duplicateProgram = checkforProgramExist[0];
             duplicateProgram = await _createProgramData(
               duplicateProgram.name,
-              duplicateProgram.externalId ? duplicateProgram.externalId + "-" + dateFormat : duplicateProgram.name + "-" + dateFormat,
+              duplicateProgram.externalId ? duplicateProgram.externalId + "-" + uuid : duplicateProgram.name + "-" + uuid,
               true,
               constants.common.ACTIVE,
               duplicateProgram.description,
@@ -126,7 +126,7 @@ module.exports = class UsersHelper {
             data.programName,
             data.programExternalId
               ? data.programExternalId
-              : data.programName + "-" + dateFormat,
+              : data.programName + "-" + uuid,
             true,
             constants.common.ACTIVE,
             data.programDescription
@@ -201,7 +201,7 @@ module.exports = class UsersHelper {
             let duplicateSolution = solutionData[0];
             let solutionCreationData = await _createSolutionData(
               duplicateSolution.name,
-              duplicateSolution.externalId ? duplicateSolution.externalId + "-" + dateFormat : duplicateSolution.name + "-" + dateFormat,
+              duplicateSolution.externalId ? duplicateSolution.externalId + "-" + uuid : duplicateSolution.name + "-" + uuid,
               true,
               constants.common.ACTIVE,
               duplicateSolution.description,
@@ -248,14 +248,14 @@ module.exports = class UsersHelper {
               
               externalId = data.solutionExternalId
                 ? data.solutionExternalId
-                : data.solutionName + "-" + dateFormat;
+                : data.solutionName + "-" + uuid;
               description = data.solutionDescription
                 ? data.solutionDescription
                 : data.solutionName;
 
             } else {
               
-              externalId = userId + "-" + dateFormat;
+              externalId = userId + "-" + uuid;
               description = userPrivateProgram.programDescription;
             }
 
