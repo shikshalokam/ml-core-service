@@ -46,13 +46,13 @@ const learnerLocationSearch = function ( filterData, limit = "", offset = ""  ) 
             json : bodyData
         };
 
-        request.post(url,options,kendraCallback);
+        request.post(url,options,sunbirdCallback);
 
         let result = {
             success : true
         };
 
-        function kendraCallback(err, data) {
+        function sunbirdCallback(err, data) {
 
             
             if (err) {
@@ -112,11 +112,11 @@ const formRead = function ( subTypeData ) {
                 json : bodyData
             };
   
-            request.post(url,options,kendraCallback);
+            request.post(url,options,sunbirdCallback);
             let result = {
                 success : true
             };  
-            function kendraCallback(err, data) {
+            function sunbirdCallback(err, data) {
   
                
                 if (err) {
@@ -174,12 +174,12 @@ const schoolData = function ( filterData ) {
                 json : bodyData
             };
   
-            request.post(url,options,kendraCallback);
+            request.post(url,options,sunbirdCallback);
             let result = {
                 success : true
             };
   
-            function kendraCallback(err, data) {
+            function sunbirdCallback(err, data) {
   
                 
   
