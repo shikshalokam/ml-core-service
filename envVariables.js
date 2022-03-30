@@ -129,6 +129,10 @@ let enviromentVariables = {
     "message" : "App Portal base url",
     "optional" : true,
     "default": "https://dev.sunbirded.org"
+  },
+  "SUNBIRD_SERVICE_URL" : {
+    "message" : "Required sunbird service url",
+    "optional" : false
   }
 }
 

@@ -808,7 +808,6 @@ module.exports = class SolutionsHelper {
         }
 
         queryData.data["_id"] = solutionId;
-        
         let targetedSolutionDetails = 
         await this.solutionDocuments(
           queryData.data,
