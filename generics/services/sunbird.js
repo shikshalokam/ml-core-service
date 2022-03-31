@@ -10,7 +10,7 @@
 
 const request = require('request');
 const sunbirdBaseUrl = process.env.SUNBIRD_SERVICE_URL;
-const sunbirdOrgBaseUrl = process.env.SUNBIRD_ORG_URL;
+const serverTimeout = process.env.SUNBIRD_SERVER_TIMEOUT ? parseInt(process.env.SUNBIRD_SERVER_TIMEOUT) : 500;
 
 /**
   * 
@@ -73,7 +73,7 @@ const learnerLocationSearch = function ( filterData, limit = "", offset = ""  ) 
            return reject (result = {
                success : false
             });
-        }, constants.common.SUNBIRD_SERVER_TIMEOUT);
+        }, serverTimeout);
 
 
       } catch (error) {
@@ -138,7 +138,7 @@ const formRead = function ( subTypeData ) {
                 return reject (result = {
                     success : false
                  });
-             }, constants.common.SUNBIRD_SERVER_TIMEOUT);
+             }, serverTimeout);
 
         } catch (error) {
             return reject(error);
@@ -201,7 +201,7 @@ const schoolData = function ( filterData ) {
                 return reject (result = {
                     success : false
                  });
-             }, constants.common.SUNBIRD_SERVER_TIMEOUT);
+             }, serverTimeout);
 
         } catch (error) {
             return reject(error);

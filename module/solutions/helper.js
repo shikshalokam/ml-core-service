@@ -139,7 +139,7 @@ module.exports = class SolutionsHelper {
             
 
             let entitiesDetails = await sunbirdService.learnerLocationSearch( bodyData );
-            if( !entitiesDetails.success || !entitiesDetails.data.response.length > 0 ) {
+            if( !entitiesDetails.success || !entitiesDetails.data || !entitiesDetails.data.response.length > 0 ) {
               throw {
                 message : constants.apiResponses.ENTITIES_NOT_FOUND
               }
@@ -264,7 +264,7 @@ module.exports = class SolutionsHelper {
               };
               
               let entityDetails = await sunbirdService.learnerLocationSearch(bodyData);
-              if( !entityDetails.success || !entityDetails.data.response.length > 0 ) {
+              if( !entityDetails.success || !entityDetails.data || !entityDetails.data.response.length > 0 ) {
                 return resolve({
                   status : httpStatusCode.bad_request.status,
                   message : constants.apiResponses.ENTITIES_NOT_FOUND
@@ -1011,7 +1011,7 @@ module.exports = class SolutionsHelper {
 
         let entitiesDetails = await sunbirdService.learnerLocationSearch( bodyData );
 
-        if( !entitiesDetails.success || !entitiesDetails.data.response.length > 0 ) {
+        if( !entitiesDetails.success || !entitiesDetails.data || !entitiesDetails.data.response.length > 0 ) {
           return resolve({
             status : httpStatusCode.bad_request.status,
             message : constants.apiResponses.ENTITIES_NOT_FOUND
@@ -2002,7 +2002,7 @@ async function entitiesInParent( solutionEntities,currentEntityType,matchingData
   
   let entityDetails = await sunbirdService.learnerLocationSearch(bodyData);
 
-  if( ( !entityDetails.success || !entityDetails.data.response.length > 0) && !matchingData.length > 0 ) {
+  if( ( !entityDetails.success || !entityDetails.data || !entityDetails.data.response.length > 0) && !matchingData.length > 0 ) {
     return ({
       status : httpStatusCode.bad_request.status,
       message : constants.apiResponses.ENTITIES_NOT_FOUND

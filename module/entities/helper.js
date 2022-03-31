@@ -252,7 +252,7 @@ module.exports = class EntitiesHelper {
                 
                 let entitiesData = await sunbirdService.learnerLocationSearch( bodyData );
                 
-                if( !entitiesData.success ||!entitiesData.data.response.length > 0 ) {
+                if( !entitiesData.success || !entitiesData.data || !entitiesData.data.response.length > 0 ) {
                     return resolve(entitiesData.data.response) 
                 }
          
@@ -523,7 +523,7 @@ module.exports = class EntitiesHelper {
                     }
                     let subentitiesCode = await sunbirdService.schoolData( filterData );
                     let schoolDetails = subentitiesCode.data.response.content;
-                    if( !schoolDetails.length > 0 ) {
+                    if( !subentitiesCode.success || !schoolDetails.length > 0 ) {
                         return resolve(schoolDetails) 
                     }
                     
@@ -910,7 +910,7 @@ module.exports = class EntitiesHelper {
                     
                     let entitiesData = await sunbirdService.learnerLocationSearch( bodyData );
 
-                    if( !entitiesData.success || !entitiesData.data.response.length > 0 ) {
+                    if( !entitiesData.success || !entitiesData.data || !entitiesData.data.response.length > 0 ) {
                         return resolve({
                             message : constants.apiResponses.ENTITY_NOT_FOUND,
                             result : []
@@ -1067,7 +1067,7 @@ async function subEntitiesWithMatchingType( parentIds,entityType,matchingData ){
     
     let entityDetails = await sunbirdService.learnerLocationSearch(bodyData);
 
-    if( ( !entityDetails.success || !entityDetails.data.response.length > 0 ) && !matchingData.length > 0 ) {
+    if( ( !entityDetails.success || !entityDetails.data || !entityDetails.data.response.length > 0 ) && !matchingData.length > 0 ) {
       return matchingData;
     }
     

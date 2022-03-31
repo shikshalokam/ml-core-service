@@ -213,7 +213,7 @@ module.exports = class ProgramsHelper {
           }
           let entityTypeData = await sunbirdService.learnerLocationSearch( bodyData );
           
-          if( !entityTypeData.success || !entityTypeData.data.response.length > 0 ) {
+          if( !entityTypeData.success || !entityTypeData.data || !entityTypeData.data.response.length > 0 ) {
             return resolve({
               status : httpStatusCode.bad_request.status,
               message : constants.apiResponses.ENTITY_TYPES_NOT_FOUND
@@ -242,7 +242,7 @@ module.exports = class ProgramsHelper {
 
           
           let entityData = await sunbirdService.learnerLocationSearch( bodyData );
-          if( !entityData.success || !entityData.data.response.length > 0 ) {
+          if( !entityData.success || !entityData.data || !entityData.data.response.length > 0 ) {
             return resolve({
               status : httpStatusCode.bad_request.status,
               message : constants.apiResponses.ENTITIES_NOT_FOUND
@@ -740,7 +740,7 @@ module.exports = class ProgramsHelper {
         let entitiesData = await sunbirdService.learnerLocationSearch( bodyData );
         
         
-        if( !entitiesData.success || !entitiesData.data.count > 0 ) {
+        if( !entitiesData.success || !entitiesData.data || !entitiesData.data.count > 0 ) {
             throw {
               message : constants.apiResponses.ENTITIES_NOT_FOUND
             };
