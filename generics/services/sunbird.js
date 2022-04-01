@@ -11,7 +11,7 @@
 const request = require('request');
 const sunbirdBaseUrl = process.env.SUNBIRD_SERVICE_URL;
 const serverTimeout = process.env.SUNBIRD_SERVER_TIMEOUT ? parseInt(process.env.SUNBIRD_SERVER_TIMEOUT) : 500;
-
+const dataLimit = process.env.SUNBIRD_RESPONSE_DATA_LIMIT ? parseInt(process.env.SUNBIRD_RESPONSE_DATA_LIMIT) : 10000;
 /**
   * 
   * @function
@@ -21,18 +21,27 @@ const serverTimeout = process.env.SUNBIRD_SERVER_TIMEOUT ? parseInt(process.env.
   * @returns {Promise} returns a promise.
 */
 
-const learnerLocationSearch = function ( filterData, limit = "", offset = ""  ) {
+const learnerLocationSearch = function ( filterData, pageSize = "", pageNo = "", searchKey = "" ) {
   return new Promise(async (resolve, reject) => {
       try {
-
-        let bodyData={};
+        
+        let bodyData = {};
         bodyData["request"] = {};
         bodyData["request"]["filters"] = filterData;
-        if( limit !== "" ) {
-            bodyData["request"]["limit"] = limit;
+
+        if ( pageSize !== "" ) {
+            bodyData["request"]["limit"] = pageSize;
+        } else {
+            bodyData["request"]["limit"] = dataLimit;
         }
-        if( offset !== "" ) {
-            bodyData["request"]["offset"] = offset;
+
+        if ( pageNo !== "" ) {
+            let offsetValue = pageSize * ( pageNo - 1 ); 
+            bodyData["request"]["offset"] = offsetValue;
+        }
+
+        if ( searchKey !== "" ) {
+            bodyData["request"]["query"] = searchKey
         }
         
           
@@ -154,15 +163,28 @@ const formRead = function ( subTypeData ) {
   * @param {object} bodyData -  location id
   * @returns {Promise} returns a promise.
 */
-const schoolData = function ( filterData ) {
+const schoolData = function ( filterData, pageSize = "", pageNo = "", searchKey = "" ) {
     return new Promise(async (resolve, reject) => {
         try {
             
-            let bodyData = {
-                request : {
-                    filters : filterData
-                }
+            let bodyData = {};
+            bodyData["request"] = {};
+            bodyData["request"]["filters"] = filterData;
+
+            if ( pageSize !== "" ) {
+                bodyData["request"]["limit"] = pageSize;
+            } 
+    
+            if ( pageNo !== "" ) {
+                let offsetValue = pageSize * ( pageNo - 1 ); 
+                bodyData["request"]["offset"] = offsetValue;
             }
+    
+            if ( searchKey !== "" ) {
+                bodyData["request"]["query"] = searchKey
+            }
+            
+            
             
             const url = 
             sunbirdBaseUrl + constants.endpoints.GET_SCHOOL_DATA;

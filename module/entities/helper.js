@@ -250,24 +250,39 @@ module.exports = class EntitiesHelper {
                     "parentId" : entityId
                 };
                 
-                let entitiesData = await sunbirdService.learnerLocationSearch( bodyData );
+                let entitiesData = await sunbirdService.learnerLocationSearch(
+                    bodyData,
+                    pageSize,
+                    pageNo,
+                    searchText
+                );
                 
                 if( !entitiesData.success || !entitiesData.data || !entitiesData.data.response.length > 0 ) {
-                    return resolve(entitiesData.data.response) 
+                    return resolve({
+                        data : entitiesData.data.response,
+                        count : entitiesData.data.count
+                    }); 
                 }
          
                 let immediateLocation = entitiesData.data.response;
                 
-                if( searchText !== "" ){
-                    let matchEntities = [];
-                    immediateLocation.map( entityData => {
-                        if( entityData.name.match(new RegExp(searchText, 'i')) || entityData.code.match(new RegExp("^" + searchText, 'm')) ) {
-                            matchEntities.push(entityData)
-                        }
-                    });
-                    immediateLocation = [];
-                    immediateLocation = matchEntities;
-                }
+
+                return resolve({
+                    data : immediateLocation,
+                    count : entitiesData.data.count
+                });
+
+
+                // if( searchText !== "" ){
+                //     let matchEntities = [];
+                //     immediateLocation.map( entityData => {
+                //         if( entityData.name.match(new RegExp(searchText, 'i')) || entityData.code.match(new RegExp("^" + searchText, 'm')) ) {
+                //             matchEntities.push(entityData)
+                //         }
+                //     });
+                //     immediateLocation = [];
+                //     immediateLocation = matchEntities;
+                // }
 
                 // let formatedEntities = [];
 
@@ -285,7 +300,7 @@ module.exports = class EntitiesHelper {
                 // immediateLocation = [];
                 // immediateLocation = formatedEntities;
 
-                return resolve(immediateLocation);
+                
                 
                 
                 
@@ -367,64 +382,87 @@ module.exports = class EntitiesHelper {
             try {
                 
                 let result = {};
-                let aggregateEntitiesData = [];
+                let subentitiesResult = {};
                 let uniqueEntities = [];
                 let obj = {
                     entityId : entityId,
                     type : type,
-                    search : search
+                    search : search,
+                    limit :limit,
+                    pageNo : pageNo
                 }
                 
                 if ( entityId !== "" ) {
-                    uniqueEntities = await this.subEntities(
+                    subentitiesResult = await this.subEntities(
                         obj
                     );
                 } else {
-                    await Promise.all(entities.map(async (entity)=> {
-    
-                        obj["entityId"] = entity;
-                        let entitiesDocument = await this.subEntities(
+                        obj["entityId"] = entities;
+                        subentitiesResult = await this.subEntities(
                             obj
                         );
-                        if( Array.isArray(entitiesDocument) && 
-                        entitiesDocument.length > 0
-                        ) {
-                            entitiesDocument.forEach(entityData => {
-                                aggregateEntitiesData.push(entityData);
-                            });
-                        } 
-                    }));
-                    aggregateEntitiesData.map( data => {
-                        if (uniqueEntities.includes(data) === false) uniqueEntities.push(data);
-                    });
+                        
                 }
-                let formatedEntities = [];
-
-                uniqueEntities.map( entityData => {
-                    let data = {};
-                    data._id = entityData.id;
-                    data.entityType = entityData.type;
-                    data.name = entityData.name;
-                    data.externalId = entityData.code;
-                    data.label = entityData.name;
-                    data.value = entityData.id
-                    formatedEntities.push(data)
-                } );
-
-                uniqueEntities = [];
-                uniqueEntities = formatedEntities;
-
                 
-                let totalcount = uniqueEntities.length;
-                if (uniqueEntities.length > 0) {
-                    let startIndex = limit * (pageNo - 1);
-                    let endIndex = startIndex + limit;
-                    uniqueEntities = uniqueEntities.slice(startIndex, endIndex);
+                
+                if ( subentitiesResult && subentitiesResult.data && subentitiesResult.data.length > 0 ) { 
+                    let formatedEntities = [];
+                    uniqueEntities = subentitiesResult.data
+                    uniqueEntities.map( entityData => {
+                        let data = {};
+                        data._id = entityData.id;
+                        data.entityType = entityData.type;
+                        data.name = entityData.name;
+                        data.externalId = entityData.code;
+                        data.label = entityData.name;
+                        data.value = entityData.id
+                        formatedEntities.push(data)
+                    } );
+                    uniqueEntities = [];
+                    uniqueEntities = formatedEntities;
                 }
+                
                 result.data = uniqueEntities;
-                result.count = totalcount;
+                result.count = subentitiesResult.count;
+                
+                resolve({
+                    message: constants.apiResponses.ENTITIES_FETCHED,
+                    result: result
+                }); 
 
+                //remove when new code  confirmed.
+                
+                //let totalcount = uniqueEntities.length;
+                // if (uniqueEntities.length > 0) {
+                //     let startIndex = limit * (pageNo - 1);
+                //     let endIndex = startIndex + limit;
+                //     uniqueEntities = uniqueEntities.slice(startIndex, endIndex);
+                // }
+                
 
+                // if ( entityId !== "" ) {
+                //     uniqueEntities = await this.subEntities(
+                //         obj
+                //     );
+                // } else {
+                //     await Promise.all(entities.map(async (entity)=> {
+    
+                //         obj["entityId"] = entity;
+                //         let entitiesDocument = await this.subEntities(
+                //             obj
+                //         );
+                //         if( Array.isArray(entitiesDocument) && 
+                //         entitiesDocument.length > 0
+                //         ) {
+                //             entitiesDocument.forEach(entityData => {
+                //                 aggregateEntitiesData.push(entityData);
+                //             });
+                //         } 
+                //     }));
+                //     aggregateEntitiesData.map( data => {
+                //         if (uniqueEntities.includes(data) === false) uniqueEntities.push(data);
+                //     });
+                // }
                 // if( result.data && result.data.length > 0 ) {
                 //     result.data = result.data.map(data=>{
                 //         let cloneData = {...data};
@@ -434,10 +472,7 @@ module.exports = class EntitiesHelper {
                 //     })
                 // }
     
-                resolve({
-                    message: constants.apiResponses.ENTITIES_FETCHED,
-                    result: result
-                });   
+                  
             } catch(error) {
                 return reject(error);
             }
@@ -464,14 +499,19 @@ module.exports = class EntitiesHelper {
                     entitiesDocument = await this.entityTraversal(
                         entitiesData.entityId,
                         entitiesData.type,
-                        entitiesData.search
+                        entitiesData.search,
+                        entitiesData.limit,
+                        entitiesData.pageNo
                         );
                 } else {
                     entitiesDocument = await this.immediateEntities(
                         entitiesData.entityId, 
-                        entitiesData.search
+                        entitiesData.search,
+                        entitiesData.limit,
+                        entitiesData.pageNo
                     );
                 }
+                
                 return resolve(entitiesDocument);
 
                 // if( entitiesData.type !== "" ) {
@@ -512,21 +552,30 @@ module.exports = class EntitiesHelper {
    static entityTraversal(
        entityId,
        entityTraversalType = "", 
-       searchText = ""
+       searchText = "",
+       pageSize = "",
+       pageNo = "",
     ) {
         return new Promise(async (resolve, reject) => {
             try {
-                let subentitiesData = [];
+        
                 if( entityTraversalType == constants.common.SCHOOL) {
                     let filterData = {
                         "orgLocation.id" : entityId
                     }
-                    let subentitiesCode = await sunbirdService.schoolData( filterData );
-                    let schoolDetails = subentitiesCode.data.response.content;
-                    if( !subentitiesCode.success || !schoolDetails.length > 0 ) {
-                        return resolve(schoolDetails) 
-                    }
+                    let subentitiesCode = await sunbirdService.schoolData( filterData, pageSize, pageNo, searchText );
                     
+                    if( !subentitiesCode.success ||
+                        !subentitiesCode.data ||
+                        !subentitiesCode.data.response ||
+                        !subentitiesCode.data.response.content ||
+                        !subentitiesCode.data.response.content.length > 0 ) {
+                        return resolve({
+                            data : [],
+                            count : subentitiesCode.data.response.count
+                        }) 
+                    }
+                    let schoolDetails = subentitiesCode.data.response.content;
                     //get code from all data
                     let schoolCodes = [];
                     schoolDetails.map(schoolData=> {
@@ -541,37 +590,57 @@ module.exports = class EntitiesHelper {
                 
                     let entitiesData = await sunbirdService.learnerLocationSearch( bodyData );
                 
-                    if( !entitiesData.data.response.length > 0 ) {
-                        return resolve(entitiesData.data.response) 
+                    if( !entitiesData.success || !entitiesData.data || !entitiesData.data.response.length > 0 ) {
+                        return resolve({
+                            data : [],
+                            count : 0
+                        }) 
                     }
-
-                    
                     subentitiesData = entitiesData.data.response;
+                    return resolve({
+                        data : subentitiesData,
+                        count : subentitiesCode.data.response.count
+                    }) 
+
 
                 } else {
                     let subEntitiesMatchingType = [];
-                    let parentId = [];
-                    parentId.push(entityId);
-                    let subEntities = await subEntitiesWithMatchingType( parentId,entityTraversalType,subEntitiesMatchingType )
+                    
+                    let subEntities = await subEntitiesWithMatchingType( entityId,entityTraversalType,subEntitiesMatchingType )
                
                     if( !subEntities.length > 0 ) {
-                        return resolve(subEntities) 
+                        return resolve({
+                            data : subEntities,
+                            count : 0
+                        }) 
                     }
-                    subentitiesData = subEntities
                     
+                    let subentitiesData = subEntities
+                    let count = subentitiesData.length;
+                    if( searchText !== "" ){
+                        let matchEntities = [];
+                        subentitiesData.map( entityData => {
+                            if( entityData.name.match(new RegExp(searchText, 'i')) || entityData.code.match(new RegExp("^" + searchText, 'm')) ) {
+                                matchEntities.push(entityData)
+                            }
+                        });
+                        subentitiesData = [];
+                        subentitiesData = matchEntities;
+                    } 
+                    
+                    if (subentitiesData.length > 0) {
+                        let startIndex = pageSize * (pageNo - 1);
+                        let endIndex = startIndex + pageSize;
+                        subentitiesData = subentitiesData.slice(startIndex, endIndex);
+                    }
+                    return resolve({
+                        data : subentitiesData,
+                        count : count
+                    }) 
                 
                 }
                 
-                if( searchText !== "" ){
-                    let matchEntities = [];
-                    subentitiesData.map( entityData => {
-                        if( entityData.name.match(new RegExp(searchText, 'i')) || entityData.code.match(new RegExp("^" + searchText, 'm')) ) {
-                            matchEntities.push(entityData)
-                        }
-                    });
-                    subentitiesData = [];
-                    subentitiesData = matchEntities;
-                }  
+                 
                 // let formatedEntities = [];
 
                 // subentitiesData.map( entityData => {
@@ -588,7 +657,7 @@ module.exports = class EntitiesHelper {
                 // subentitiesData = [];
                 // subentitiesData = formatedEntities;
 
-                return resolve(subentitiesData);
+                
                 
                 // let subEntitiesMatchingType = [];
                 // let parentId = [];
