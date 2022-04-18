@@ -91,6 +91,23 @@ module.exports = {
       minNoOfSubmissionsRequired: {
         type: Number,
         default: 1
-    }
+      },
+      reportInformation : {
+        districts : {
+          type : Array,
+          index : true
+        },
+        organisations : [{
+          orgName : {
+            type : String,
+            index : true
+          },
+          organisationId : {
+            type : String,
+            index : true
+          }
+        }]
+      }
+
     }
   };

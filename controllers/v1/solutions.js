@@ -989,4 +989,66 @@ module.exports = class Solutions extends Abstract {
     })
   }
 
+  /**
+  * @api {get} /kendra/api/v1/solutions/read/:solutionId Read Solution Report Informations
+  * @apiVersion 1.0.0
+  * @apiName Read Solution Report Informations
+  * @apiGroup Solutions
+  * @apiSampleRequest /kendra/api/v1/solutions/read/5ff9d50f9259097d48017bbb
+  * @apiHeader {String} X-authenticated-user-token Authenticity token  
+  * @apiUse successBody
+  * @apiUse errorBody
+  * @apiParamExample {json} Response:
+  * {
+      "message": "Solution details fetched successfully",
+      "status": 200,
+      "result": {
+          "districts": [
+              "2f76dcf5-e43b-4f71-a3f2-c8f19e1fce03",
+              "aecac7ab-15e4-45c9-ac7b-d716444cd652"
+          ],
+          "organisations": [
+              {
+                  "orgName": "TAMILNADU",
+                  "organisationId": "01269878797503692810"
+              },
+              {
+                  "orgName": "JHS NARHARPUR",
+                  "organisationId": "0869878797503692810"
+              }
+          ]
+      }
+  }
+  */
+
+   /**
+   * Read Solution Report Informations.
+   * @method
+   * @name read
+   * @param {Object} req - requested data.
+   * @param {String} req.params._id -  solution id.
+   * @returns {JSON}
+   */
+
+  async read(req) {
+    return new Promise(async (resolve, reject) => {
+      try {
+
+        let solutionData = await solutionsHelper.read(
+          req.params._id, 
+          req.userDetails.id
+        );
+
+        return resolve(solutionData);
+      }
+      catch (error) {
+        reject({
+          status: error.status || httpStatusCode.internal_server_error.status,
+          message: error.message || httpStatusCode.internal_server_error.message,
+          errorObject: error
+        })
+      }
+    })
+  } 
+
 }

@@ -1967,6 +1967,51 @@ module.exports = class SolutionsHelper {
     });
   }
 
+  /**
+   * Solution Report Information.
+   * @method
+   * @name read
+   * @param {String} solutionId - Solution Id.
+   * @returns {Object} - Report Information of the solution.
+   */
+
+  static read(solutionId) {
+    return new Promise(async (resolve, reject) => {
+      try {
+        let solutionData = await this.solutionDocuments({
+          _id: solutionId,
+          isDeleted: false
+        },["reportInformation"]);
+
+        if ( !Array.isArray(solutionData) || solutionData.length < 1 ) {
+          return resolve({
+            message: constants.apiResponses.SOLUTION_NOT_FOUND,
+            result: {},
+          });
+        }
+
+        solutionData = solutionData[0];
+  
+        return resolve({
+          message: constants.apiResponses.SOLUTION_DETAILS_FETCHED,
+          success: true,
+          result: solutionData.reportInformation ? solutionData.reportInformation : {},
+        });
+
+      } catch (error) {
+        return resolve({
+          success: false,
+          status: error.status
+            ? error.status
+            : httpStatusCode['internal_server_error'].status,
+          message: error.message,
+        });
+      }
+    });
+  }
+
+
+
 };
 
  /**
