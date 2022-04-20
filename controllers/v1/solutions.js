@@ -1004,8 +1004,13 @@ module.exports = class Solutions extends Abstract {
       "status": 200,
       "result": {
           "districts": [
-              "2f76dcf5-e43b-4f71-a3f2-c8f19e1fce03",
-              "aecac7ab-15e4-45c9-ac7b-d716444cd652"
+              {
+                "name" : "ANANTAPUR",
+                "locationId" : "2f76dcf5-e43b-4f71-a3f2-c8f19e1fce03",
+              },{
+                "name" : "EAST GODAVARI",
+                "locationId" : "aecac7ab-15e4-45c9-ac7b-d716444cd652",
+              }
           ],
           "organisations": [
               {
