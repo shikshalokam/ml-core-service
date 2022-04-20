@@ -1041,7 +1041,7 @@ module.exports = class Solutions extends Abstract {
 
         let solutionData = await solutionsHelper.read(
           req.params._id, 
-          req.userDetails.id
+          req.userDetails.userId
         );
 
         return resolve(solutionData);
