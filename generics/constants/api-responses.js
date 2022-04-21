@@ -180,5 +180,5 @@ module.exports = {
   "PROJECT_TEMPLATE_ID_NOT_FOUND": "Project templates not exists in solution",
   "SOLUTION_TARGETED_ENTITY" : "Targeted Entity Types Fetched",
   "ENTITY_ID_OR_LOCATION_ID_NOT_FOUND" : "Entity id or location id not found",
-  "NOT_AUTHORIZED_TO_ACCESS" :"The program Manager and Designer can only access this resource"
+  "NOT_AUTHORIZED_TO_ACCESS" :"You are not authorised to access this resource"
 };

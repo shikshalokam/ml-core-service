@@ -6,7 +6,7 @@
  */
 
 // Dependencies
-
+let _ = require("lodash");
 const programsHelper = require(MODULES_BASE_PATH + "/programs/helper");
 const entityTypesHelper = require(MODULES_BASE_PATH + "/entityTypes/helper");
 const entitiesHelper = require(MODULES_BASE_PATH + "/entities/helper");
@@ -1986,18 +1986,42 @@ module.exports = class SolutionsHelper {
             "programRoles.code" : { $in : ["PROGRAM_MANAGER","PROGRAM_DESIGNER"]},
             status: constants.common.ACTIVE,
             isDeleted: false
-        }, { _id: 1 });
+        }, { _id: 1, "programRoles.programs" :1});
 
-        if (!userInformation) {
-           return resolve({
-               status: httpStatusCode.bad_request.status,
-               message: constants.apiResponses.NOT_AUTHORIZED_TO_ACCESS
-           })
+        if ( !userInformation ) {
+            return resolve({
+                status: httpStatusCode.bad_request.status,
+                message: constants.apiResponses.NOT_AUTHORIZED_TO_ACCESS
+            })
+        }
+
+        let userPrograms = userInformation.programRoles ? userInformation.programRoles : [];
+        let programs = [];
+
+        if ( !userPrograms.length > 0 ) {
+            return resolve({
+                status: httpStatusCode.bad_request.status,
+                message: constants.apiResponses.NOT_AUTHORIZED_TO_ACCESS
+            })
+        }
+
+        userPrograms.map(eachProgram => {
+          if ( eachProgram["programs"] && eachProgram["programs"].length > 0 ) {
+              programs.push(...eachProgram["programs"]);
+          }
+        });
+
+        if ( !programs.length > 0 ) {
+            return resolve({
+                status: httpStatusCode.bad_request.status,
+                message: constants.apiResponses.NOT_AUTHORIZED_TO_ACCESS
+            })
         }
 
         let solutionData = await this.solutionDocuments({
           _id: solutionId,
-          isDeleted: false
+          isDeleted: false,
+          programId : { $in : programs }
         },["reportInformation"]);
 
         if ( !Array.isArray(solutionData) || solutionData.length < 1 ) {
