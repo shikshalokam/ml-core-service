@@ -6,7 +6,6 @@
  */
 
 // Dependencies
-let _ = require("lodash");
 const programsHelper = require(MODULES_BASE_PATH + "/programs/helper");
 const entityTypesHelper = require(MODULES_BASE_PATH + "/entityTypes/helper");
 const entitiesHelper = require(MODULES_BASE_PATH + "/entities/helper");
