@@ -13,7 +13,7 @@ const userRolesHelper = require(MODULES_BASE_PATH + "/user-roles/helper");
 const surveyService = require(ROOT_PATH + '/generics/services/survey');
 const improvementProjectService = require(ROOT_PATH + '/generics/services/improvement-project');
 const appsPortalBaseUrl = process.env.APP_PORTAL_BASE_URL + "/" ;
-const userExtensionsHelper = require(MODULES_BASE_PATH + "/user-extension/helper");
+const userExtensionsHelperV2 = require(MODULES_BASE_PATH + "/user-extension/helperv2");
 
 /**
     * SolutionsHelper
@@ -1976,7 +1976,7 @@ module.exports = class SolutionsHelper {
     return new Promise(async (resolve, reject) => {
       try {
 
-        let userInformation = await userExtensionsHelper.userExtensionDocument({
+        let userInformation = await userExtensionsHelperV2.userExtensionDocument({
             userId: userId,
             "programRoles.code" : { $in : ["PROGRAM_MANAGER","PROGRAM_DESIGNER"]},
             status: constants.common.ACTIVE,
