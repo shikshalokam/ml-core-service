@@ -13,7 +13,6 @@ const userRolesHelper = require(MODULES_BASE_PATH + "/user-roles/helper");
 const surveyService = require(ROOT_PATH + '/generics/services/survey');
 const improvementProjectService = require(ROOT_PATH + '/generics/services/improvement-project');
 const appsPortalBaseUrl = process.env.APP_PORTAL_BASE_URL + "/" ;
-const userExtensionsHelper = require(MODULES_BASE_PATH + "/user-extension/helper");
 
 /**
     * SolutionsHelper
@@ -1980,7 +1979,7 @@ module.exports = class SolutionsHelper {
     return new Promise(async (resolve, reject) => {
       try {
 
-        let userInformation = await userExtensionsHelper.userExtensionDocument({
+        let userInformation = await database.models.userExtension.findOne({
             userId: userId,
             "programRoles.code" : { $in : ["PROGRAM_MANAGER","PROGRAM_DESIGNER"]},
             status: constants.common.ACTIVE,
