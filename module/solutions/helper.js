@@ -6,7 +6,6 @@
  */
 
 // Dependencies
-
 const programsHelper = require(MODULES_BASE_PATH + "/programs/helper");
 const entityTypesHelper = require(MODULES_BASE_PATH + "/entityTypes/helper");
 const entitiesHelper = require(MODULES_BASE_PATH + "/entities/helper");
@@ -14,6 +13,7 @@ const userRolesHelper = require(MODULES_BASE_PATH + "/user-roles/helper");
 const surveyService = require(ROOT_PATH + '/generics/services/survey');
 const improvementProjectService = require(ROOT_PATH + '/generics/services/improvement-project');
 const appsPortalBaseUrl = process.env.APP_PORTAL_BASE_URL + "/" ;
+const userExtensionsHelper = require(MODULES_BASE_PATH + "/user-extension/helper");
 
 /**
     * SolutionsHelper
@@ -1963,6 +1963,91 @@ module.exports = class SolutionsHelper {
     });
   }
 
+  /**
+   * Solution Report Information.
+   * @method
+   * @name read
+   * @param {String} solutionId - Solution Id.
+   * @param {String} userId - User Id.
+   * @returns {Object} - Report Information of the solution.
+   */
+
+  static read(solutionId, userId) {
+    return new Promise(async (resolve, reject) => {
+      try {
+
+        let userInformation = await userExtensionsHelper.userExtensionDocument({
+            userId: userId,
+            "programRoles.code" : { $in : ["PROGRAM_MANAGER","PROGRAM_DESIGNER"]},
+            status: constants.common.ACTIVE,
+            isDeleted: false
+        }, { _id: 1, "programRoles.programs" :1});
+
+        if ( !userInformation ) {
+            return resolve({
+                status: httpStatusCode.bad_request.status,
+                message: constants.apiResponses.NOT_AUTHORIZED_TO_ACCESS
+            })
+        }
+
+        let userPrograms = userInformation.programRoles ? userInformation.programRoles : [];
+        let programs = [];
+
+        if ( !userPrograms.length > 0 ) {
+            return resolve({
+                status: httpStatusCode.bad_request.status,
+                message: constants.apiResponses.NOT_AUTHORIZED_TO_ACCESS
+            })
+        }
+
+        userPrograms.map(eachProgram => {
+          if ( eachProgram["programs"] && eachProgram["programs"].length > 0 ) {
+              programs.push(...eachProgram["programs"]);
+          }
+        });
+
+        if ( !programs.length > 0 ) {
+            return resolve({
+                status: httpStatusCode.bad_request.status,
+                message: constants.apiResponses.NOT_AUTHORIZED_TO_ACCESS
+            })
+        }
+
+        let solutionData = await this.solutionDocuments({
+          _id: solutionId,
+          isDeleted: false,
+          programId : { $in : programs }
+        },["reportInformation"]);
+
+        if ( !Array.isArray(solutionData) || solutionData.length < 1 ) {
+          return resolve({
+            message: constants.apiResponses.SOLUTION_NOT_FOUND,
+            result: {},
+          });
+        }
+
+        solutionData = solutionData[0];
+  
+        return resolve({
+          message: constants.apiResponses.SOLUTION_DETAILS_FETCHED,
+          success: true,
+          result: solutionData.reportInformation ? solutionData.reportInformation : {},
+        });
+
+      } catch (error) {
+        return resolve({
+          success: false,
+          status: error.status
+            ? error.status
+            : httpStatusCode['internal_server_error'].status,
+          message: error.message,
+        });
+      }
+    });
+  }
+
+
+
 };
 
  /**
@@ -2006,3 +2091,4 @@ function _generateLink(appsPortalBaseUrl, prefix, solutionLink, solutionType) {
   return link;
 
 }
+
