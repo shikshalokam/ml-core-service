@@ -1978,10 +1978,10 @@ module.exports = class SolutionsHelper {
 
         let userInformation = await userExtensionsHelperV2.userExtensionDocument({
             userId: userId,
-            "programRoles.code" : { $in : ["PROGRAM_MANAGER","PROGRAM_DESIGNER"]},
+            "platformRoles.code" : { $in : ["PROGRAM_MANAGER","PROGRAM_DESIGNER"]},
             status: constants.common.ACTIVE,
             isDeleted: false
-        }, { _id: 1, "programRoles.programs" :1});
+        }, { _id: 1, "platformRoles.programs" :1});
 
         if ( !userInformation ) {
             return resolve({
@@ -1990,7 +1990,7 @@ module.exports = class SolutionsHelper {
             })
         }
 
-        let userPrograms = userInformation.programRoles ? userInformation.programRoles : [];
+        let userPrograms = userInformation.platformRoles ? userInformation.platformRoles : [];
         let programs = [];
 
         if ( !userPrograms.length > 0 ) {
