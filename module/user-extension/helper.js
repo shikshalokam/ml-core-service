@@ -654,7 +654,8 @@ module.exports = class UserExtensionHelper {
                 const solutionDocuments = await solutionsHelper.solutionDocuments({
                     _id: {$in: programDocuments[0].components},
                     programId: programId,
-                    isReusable: false
+                    isReusable: false,
+                    isDeleted: false
                 },[
                     "externalId",
                     "description",

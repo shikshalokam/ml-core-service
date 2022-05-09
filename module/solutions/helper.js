@@ -172,6 +172,14 @@ module.exports = class SolutionsHelper {
             solutionData.entities = entitiesData;
           }
 
+          if( solutionData.minNoOfSubmissionsRequired && 
+            solutionData.minNoOfSubmissionsRequired > constants.common.DEFAULT_SUBMISSION_REQUIRED 
+          ) {
+            if (!solutionData.allowMultipleAssessemts){
+              solutionData.minNoOfSubmissionsRequired = constants.common.DEFAULT_SUBMISSION_REQUIRED;
+            }
+          }
+
           solutionData.status = constants.common.ACTIVE;
     
           let solutionCreation = 
@@ -428,6 +436,14 @@ module.exports = class SolutionsHelper {
           let updateObject = {
             "$set" : {}
           };
+
+          if( solutionData.minNoOfSubmissionsRequired && 
+            solutionData.minNoOfSubmissionsRequired > constants.common.DEFAULT_SUBMISSION_REQUIRED 
+          ) {
+            if (!solutionData.allowMultipleAssessemts){
+              solutionData.minNoOfSubmissionsRequired = constants.common.DEFAULT_SUBMISSION_REQUIRED;
+            }
+          }
 
           let solutionUpdateData = solutionData;
 
@@ -692,7 +708,8 @@ module.exports = class SolutionsHelper {
               "language",
               "creator",
               "endDate",
-              "link"
+              "link",
+              "referenceFrom"
             ]  
           );
         
@@ -756,7 +773,7 @@ module.exports = class SolutionsHelper {
         });
 
         let filterQuery = {
-          "scope.roles.code" : { $in : [constants.common.ALL_ROLES,data.role] },
+          "scope.roles.code" : { $in : [constants.common.ALL_ROLES,...data.role.split(",")] },
           "scope.entities" : { $in : entityIds },
           "scope.entityType" : { $in : entityTypes },
           "isReusable" : false,
@@ -1299,10 +1316,16 @@ module.exports = class SolutionsHelper {
         let totalCount = 0;
         let mergedData = [];
         let solutionIds = [];
-
+        
         if( assignedSolutions.success && assignedSolutions.data ) {
 
-          totalCount = assignedSolutions.data.count;
+          // Remove observation solutions which for project tasks.
+          
+          _.remove(assignedSolutions.data.data, function(solution) {
+              return solution.referenceFrom == constants.common.PROJECT && solution.type == constants.common.OBSERVATION;
+            });
+
+          totalCount = assignedSolutions.data.data && assignedSolutions.data.data.length > 0 ? assignedSolutions.data.data.length : totalCount;
           mergedData = assignedSolutions.data.data;
 
           if ( mergedData.length > 0 ) {
@@ -1640,7 +1663,23 @@ module.exports = class SolutionsHelper {
                   ? detailFromLink.data._id
                   : "";
               }
-            } 
+            } else if ( solutionData.type == constants.common.OBSERVATION ) {
+
+                detailFromLink = await surveyService.getObservationDetail(
+                  solutionData.solutionId,
+                  userToken
+                );
+
+                if (
+                  solutionData.type == constants.common.OBSERVATION && detailFromLink.result &&
+                  detailFromLink.result._id != ""
+                ) {
+                  checkForTargetedSolution.result["observationId"] = detailFromLink
+                    .result._id
+                    ? detailFromLink.result._id
+                    : "";
+                }
+            }
           }
         }
 
@@ -1773,6 +1812,7 @@ module.exports = class SolutionsHelper {
           "type",
           "_id",
           "programId",
+          "name"
         ]);
 
         let queryData = await this.queryBasedOnRoleAndLocation(bodyData);
@@ -1788,12 +1828,14 @@ module.exports = class SolutionsHelper {
           "link",
           "type",
           "programId",
+          "name"
         ]);
 
         if ( !Array.isArray(solutionData) || solutionData.length < 1 ) {
 
           response.solutionId = solutionDetails[0]._id;
           response.type = solutionDetails[0].type;
+          response.name = solutionDetails[0].name;
           response.programId = solutionDetails[0].programId;
           return resolve({
             success: true,

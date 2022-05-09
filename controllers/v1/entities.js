@@ -322,7 +322,7 @@ module.exports = class Entities extends Abstract {
     * @apiVersion 1.0.0
     * @apiGroup Entities
     * @apiHeader {String} X-authenticated-user-token Authenticity token
-    * @apiSampleRequest /kendra/api/v1/entities/subEntityListBasedOnRoleAndLocation/236f5cff-c9af-4366-b0b6-253a1789766a?role=DEO
+    * @apiSampleRequest /kendra/api/v1/entities/subEntityListBasedOnRoleAndLocation/236f5cff-c9af-4366-b0b6-253a1789766a?role=DEO,HM
     * @apiUse successBody
     * @apiUse errorBody
     * @apiParamExample {json} Response:
@@ -351,11 +351,24 @@ module.exports = class Entities extends Abstract {
 
       try {
 
-        const subEntityTypeListData = 
-        await entitiesHelper.subEntityListBasedOnRoleAndLocation(
-          req.params._id,
-          req.query.role
-        );
+
+        let currentMaximumCountOfRequiredEntities = 0;
+        let subEntityTypeListData = new Array;
+        // Calculate required entity type for each of the role and send the output of the role which has maximum length.
+        for (let roleCount = 0; roleCount < req.query.role.split(",").length; roleCount++) {
+            const eachRole = req.query.role.split(",")[roleCount];
+            const entityTypeMappingData = 
+            await entitiesHelper.subEntityListBasedOnRoleAndLocation(
+              req.params._id,
+              eachRole
+            );
+ 
+            if(entityTypeMappingData.result && entityTypeMappingData.result.length > currentMaximumCountOfRequiredEntities) {
+                currentMaximumCountOfRequiredEntities = entityTypeMappingData.result.length;
+                subEntityTypeListData = entityTypeMappingData;
+                subEntityTypeListData.result = entityTypeMappingData.result;
+            }
+        }
        
         resolve(subEntityTypeListData);
 
@@ -373,5 +386,66 @@ module.exports = class Entities extends Abstract {
       }
     });
   }
+
+  /**
+     * @api {get} /kendra/api/v1/entities/details/:entityId
+     * Get entities details information
+     * @apiVersion 1.0.0
+     * @apiGroup Entities
+     * @apiHeader {String} X-authenticated-user-token Authenticity token
+     * @apiSampleRequest /kendra/api/v1/entities/details/5db173598a8e070bedca6ba1
+     * @apiUse successBody
+     * @apiUse errorBody
+     * @apiParamExample {json} Response:
+     * {
+     * "message": "Entity information fetched successfully",
+     * "status": 200,
+     * "result": {
+        "_id": "5db173598a8e070bedca6ba1",
+        "entityTypeId": "5d7a290e6371783ceb11064c",
+        "entityType": "state",
+        "metaInformation": {
+            "externalId": "DL",
+            "name": "Delhi",
+            "region": "NORTH",
+            "capital": "NEW DELHI"
+        },
+        "updatedBy": "2be2fd94-f25e-4402-8e36-20907b45c650",
+        "createdBy": "2be2fd94-f25e-4402-8e36-20907b45c650",
+        "updatedAt": "2019-10-24T10:16:44.833Z",
+        "createdAt": "2019-10-24T09:48:09.005Z"
+      }
+    }
+     /**
+      * Entity details.
+      * @method
+      * @name details
+      * @param {Object} req - requested entity information.
+      * @param {String} req.params._id - entity id
+      * @returns {JSON} - Entity details information.
+    */
+
+      details(req) {
+      
+        return new Promise(async (resolve, reject) => {
+          
+          try {
+            
+            let result = await entitiesHelper.details(
+              req.params._id ? req.params._id :"",req.body ? req.body : {}
+            );
+            
+            return resolve(result);
+          
+          } catch (error) {
+            
+            return reject({
+              status: error.status || httpStatusCode.internal_server_error.status,
+              message: error.message || httpStatusCode.internal_server_error.message,
+              errorObject: error
+            })
+          }
+        })
+      }
   
 };

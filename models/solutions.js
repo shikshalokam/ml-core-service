@@ -27,7 +27,10 @@ module.exports = {
       programDescription: String,
       entityProfileFieldsPerEntityTypes: Object,
       startDate: Date,
-      endDate: Date,
+      endDate: {
+        type : Date,
+        index : true
+      },
       status: String,
       evidenceMethods: Object,
       sections: Object,
@@ -58,7 +61,8 @@ module.exports = {
       },
       isDeleted: {
           default : false,
-          type : Boolean
+          type : Boolean,
+          index : true
       },
       project : Object,
       referenceFrom : String,
@@ -83,6 +87,10 @@ module.exports = {
       },
       criteriaLevelReport : Boolean,
       license:Object,
-      link: String
+      link: String,
+      minNoOfSubmissionsRequired: {
+        type: Number,
+        default: 1
+    }
     }
   };

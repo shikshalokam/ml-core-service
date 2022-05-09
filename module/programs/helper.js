@@ -388,6 +388,7 @@ module.exports = class ProgramsHelper {
         }
 
         if ( searchText !== "" ) {
+
           matchQuery["$or"] = [];
           matchQuery["$or"].push(
             { 
@@ -506,16 +507,14 @@ module.exports = class ProgramsHelper {
               let currentTargetedProgram = targetedPrograms.data.data[targetedProgram];
 
               if( currentTargetedProgram.components.length > 0 ) {
-                
-                let solutions = await database.models.solutions.find({
+
+                let solutions = await solutionsHelper.solutionDocuments({
                   _id : { $in : currentTargetedProgram.components },
                   isDeleted : false,
                   status : constants.common.ACTIVE
-                },{
-                  _id : 1
-                });
+                },["_id"]); 
 
-                if( solutions.length > 0 ) {
+                if( solutions && solutions.length > 0 ) {
                   currentTargetedProgram["solutions"] = solutions.length;
                   delete currentTargetedProgram.components;
                 }
@@ -523,7 +522,7 @@ module.exports = class ProgramsHelper {
               }
             }
         }
-      
+
         return resolve({
           success: true,
           message: constants.apiResponses.TARGETED_PROGRAMS_FETCHED,
@@ -581,7 +580,7 @@ module.exports = class ProgramsHelper {
         });
 
         let filterQuery = {
-          "scope.roles.code" : { $in : [constants.common.ALL_ROLES,data.role] },
+          "scope.roles.code" : { $in : [constants.common.ALL_ROLES,...data.role.split(",")] },
           "scope.entities" : { $in : entityIds },
           "isDeleted" : false,
           status : constants.common.ACTIVE
@@ -916,3 +915,5 @@ module.exports = class ProgramsHelper {
   } 
 
 };
+
+const solutionsHelper = require(MODULES_BASE_PATH + "/solutions/helper");
