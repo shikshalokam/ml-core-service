@@ -498,29 +498,36 @@ module.exports = class ProgramsHelper {
              
         if ( targetedPrograms.success && targetedPrograms.data && targetedPrograms.data.data.length > 0) {
 
-            for ( 
-              let targetedProgram = 0; 
-              targetedProgram < targetedPrograms.data.data.length;
-              targetedProgram ++ 
-            ) {
-              
-              let currentTargetedProgram = targetedPrograms.data.data[targetedProgram];
-
-              if( currentTargetedProgram.components.length > 0 ) {
-
-                let solutions = await solutionsHelper.solutionDocuments({
-                  _id : { $in : currentTargetedProgram.components },
-                  isDeleted : false,
-                  status : constants.common.ACTIVE
-                },["_id"]); 
-
-                if( solutions && solutions.length > 0 ) {
-                  currentTargetedProgram["solutions"] = solutions.length;
-                  delete currentTargetedProgram.components;
-                }
-
+            let componentsIds = [];
+            targetedPrograms.data.data.forEach(targetedProgram => {
+              if( targetedProgram.components.length > 0 ) {
+                componentsIds = componentsIds.concat(targetedProgram.components);
               }
-            }
+            });
+
+            let solutions = await solutionsHelper.solutionDocuments({
+              _id : { $in : componentsIds },
+              isDeleted : false,
+              status : constants.common.ACTIVE
+            },["_id"]);
+
+            const solutionsIds = []
+            solutions.forEach(solution => solutionsIds.push(solution._id.toString()));
+
+            targetedPrograms.data.data.forEach(targetedProgram => {
+            
+              if( targetedProgram.components.length > 0 ) {
+
+                let countSolutions = 0;
+                targetedProgram.components.forEach(component => {
+                  if (solutionsIds.includes(component.toString())) {
+                    countSolutions++;
+                  }
+                });
+                targetedProgram.solutions = countSolutions;
+                delete targetedProgram.components;
+              }
+          });
         }
 
         return resolve({

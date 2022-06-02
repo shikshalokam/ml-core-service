@@ -1379,15 +1379,13 @@ module.exports = class SolutionsHelper {
         }
 
         let targetedSolutions = {
-          success: false,
+          success: false
         };
 
         let getTargetedSolution = true;
 
         if ( filter === constants.common.DISCOVERED_BY_ME ) {
             getTargetedSolution = false;
-        } else if ( solutionType === constants.common.COURSE ) {
-            getTargetedSolution = true;
         } else if ( gen.utils.convertStringToBoolean(surveyReportPage) === true ) {
             getTargetedSolution = false;
         }
@@ -1405,28 +1403,25 @@ module.exports = class SolutionsHelper {
             ); 
       }
 
-      if( targetedSolutions.success ) {
+      if( targetedSolutions.success && targetedSolutions.data.data && targetedSolutions.data.data.length > 0 ) {
+          totalCount += targetedSolutions.data.count;
+          targetedSolutions.data.data.forEach(targetedSolution => {
+              targetedSolution.solutionId = targetedSolution._id;
+              targetedSolution._id = "";
 
-          if( targetedSolutions.data.data && targetedSolutions.data.data.length > 0 ) {
-              totalCount += targetedSolutions.data.count;
-              targetedSolutions.data.data.forEach(targetedSolution => {
-                  targetedSolution.solutionId = targetedSolution._id;
-                  targetedSolution._id = "";
-
-                  if( solutionType !== constants.common.COURSE ) {
-                    targetedSolution["creator"] = targetedSolution.creator ? targetedSolution.creator : "";
-                  }
-                  
-                  if ( solutionType === constants.common.SURVEY ) {
-                    targetedSolution.isCreator = false;
-                  }
-                
-                  mergedData.push(targetedSolution);
-                  delete targetedSolution.type; 
-                  delete targetedSolution.externalId;
+              if( solutionType !== constants.common.COURSE ) {
+                targetedSolution["creator"] = targetedSolution.creator ? targetedSolution.creator : "";
+              }
               
-              });
-          }
+              if ( solutionType === constants.common.SURVEY ) {
+                targetedSolution.isCreator = false;
+              }
+            
+              mergedData.push(targetedSolution);
+              delete targetedSolution.type; 
+              delete targetedSolution.externalId;
+          
+          }); 
       }
 
       if( mergedData.length > 0 ) {
@@ -1440,7 +1435,7 @@ module.exports = class SolutionsHelper {
           message: constants.apiResponses.TARGETED_OBSERVATION_FETCHED,
           data: {
             data: mergedData,
-            count: totalCount,
+            count: totalCount
           },
         });
       } catch (error) {
@@ -1681,8 +1676,8 @@ module.exports = class SolutionsHelper {
             //non targeted project exist
             let checkIfUserProjectExistsQuery = {
               createdBy: userId,
-              referenceFrom: constants.common.LINK,
               link: link,
+              referenceFrom: constants.common.LINK
             };
 
             let checkForProjectExist =
@@ -1734,10 +1729,6 @@ module.exports = class SolutionsHelper {
         let response = {
           verified: false,
         };
-
-        if ( link == "" ) {
-          throw new Error(constants.apiResponses.LINK_REQUIRED_CHECK);
-        }
 
         if ( userToken == "" ) {
           throw new Error(constants.apiResponses.REQUIRED_USER_AUTH_TOKEN);
