@@ -429,50 +429,7 @@ module.exports = class EntitiesHelper {
                     message: constants.apiResponses.ENTITIES_FETCHED,
                     result: result
                 }); 
-
-                //remove when new code  confirmed.
-                
-                //let totalcount = uniqueEntities.length;
-                // if (uniqueEntities.length > 0) {
-                //     let startIndex = limit * (pageNo - 1);
-                //     let endIndex = startIndex + limit;
-                //     uniqueEntities = uniqueEntities.slice(startIndex, endIndex);
-                // }
-                
-
-                // if ( entityId !== "" ) {
-                //     uniqueEntities = await this.subEntities(
-                //         obj
-                //     );
-                // } else {
-                //     await Promise.all(entities.map(async (entity)=> {
-    
-                //         obj["entityId"] = entity;
-                //         let entitiesDocument = await this.subEntities(
-                //             obj
-                //         );
-                //         if( Array.isArray(entitiesDocument) && 
-                //         entitiesDocument.length > 0
-                //         ) {
-                //             entitiesDocument.forEach(entityData => {
-                //                 aggregateEntitiesData.push(entityData);
-                //             });
-                //         } 
-                //     }));
-                //     aggregateEntitiesData.map( data => {
-                //         if (uniqueEntities.includes(data) === false) uniqueEntities.push(data);
-                //     });
-                // }
-                // if( result.data && result.data.length > 0 ) {
-                //     result.data = result.data.map(data=>{
-                //         let cloneData = {...data};
-                //         cloneData["label"] = cloneData.name;
-                //         cloneData["value"] = cloneData._id;
-                //         return cloneData;
-                //     })
-                // }
-    
-                  
+                 
             } catch(error) {
                 return reject(error);
             }
@@ -513,27 +470,6 @@ module.exports = class EntitiesHelper {
                 }
                 
                 return resolve(entitiesDocument);
-
-                // if( entitiesData.type !== "" ) {
-                    
-                //     entitiesDocument = await this.entityTraversal(
-                //         entitiesData.entityId,
-                //         entitiesData.type,
-                //         entitiesData.search,
-                //         entitiesData.limit,
-                //         entitiesData.pageNo
-                //         );
-                // } else {
-                //     console.log("working in else part")
-                //     //type is empty call learner search with parentId
-                //     entitiesDocument = await this.immediateEntities(
-                //         entitiesData.entityId, 
-                //         entitiesData.search,
-                //         entitiesData.limit,
-                //         entitiesData.pageNo
-                //     );
-                // }
-                
                 
             } catch(error) {
                 return reject(error);
@@ -558,12 +494,13 @@ module.exports = class EntitiesHelper {
     ) {
         return new Promise(async (resolve, reject) => {
             try {
-        
+                
                 if( entityTraversalType == constants.common.SCHOOL) {
                     let filterData = {
                         "orgLocation.id" : entityId
                     }
-                    let subentitiesCode = await sunbirdService.schoolData( filterData, pageSize, pageNo, searchText );
+                    let fields = ["externalId"]
+                    let subentitiesCode = await sunbirdService.schoolData( filterData, pageSize, pageNo, searchText, fields );
                     
                     if( !subentitiesCode.success ||
                         !subentitiesCode.data ||
@@ -575,6 +512,7 @@ module.exports = class EntitiesHelper {
                             count : subentitiesCode.data.response.count
                         }) 
                     }
+                    
                     let schoolDetails = subentitiesCode.data.response.content;
                     //get code from all data
                     let schoolCodes = [];
@@ -596,9 +534,9 @@ module.exports = class EntitiesHelper {
                             count : 0
                         }) 
                     }
-                    subentitiesData = entitiesData.data.response;
+                    
                     return resolve({
-                        data : subentitiesData,
+                        data : entitiesData.data.response,
                         count : subentitiesCode.data.response.count
                     }) 
 
@@ -639,98 +577,6 @@ module.exports = class EntitiesHelper {
                     }) 
                 
                 }
-                
-                 
-                // let formatedEntities = [];
-
-                // subentitiesData.map( entityData => {
-                //     let data = {};
-                //     data._id = entityData.id;
-                //     data.entityType = entityData.type;
-                //     data.name = entityData.name;
-                //     data.externalId = entityData.code;
-                //     data.label = entityData.name;
-                //     data.value = entityData.id
-                //     formatedEntities.push(data)
-                // } );
-
-                // subentitiesData = [];
-                // subentitiesData = formatedEntities;
-
-                
-                
-                // let subEntitiesMatchingType = [];
-                // let parentId = [];
-                // parentId.push(entityId);
-                // let subEntities = await subEntitiesWithMatchingType( parentId,entityTraversalType,subEntitiesMatchingType )
-               
-                // if( !subEntities.length > 0 ) {
-                //     return resolve(subEntities) 
-                // }
-
-                // if( searchText !== "" ){
-                //     let matchEntities = [];
-                //     subEntities.map( entityData => {
-                //         if( entityData.name.match(new RegExp(searchText, 'i')) || entityData.code.match(new RegExp("^" + searchText, 'm')) ) {
-                //             matchEntities.push(entityData)
-                //         }
-                //     });
-                //     subEntities = [];
-                //     subEntities = matchEntities;
-                // }
-
-                // let formatedEntities = [];
-
-                // subEntities.map( entityData => {
-                //     let data = {};
-                //     data._id = entityData.id;
-                //     data.entityType = entityData.type;
-                //     data.name = entityData.name;
-                //     data.externalId = entityData.code;
-                //     data.label = entityData.name;
-                //     data.value = entityData.id
-                //     formatedEntities.push(data)
-                // } );
-
-                // subEntities = [];
-                // subEntities = formatedEntities;
-
-                // return resolve(subEntities);
-
-                
-                
-                // let entityTraversal = `groups.${entityTraversalType}`;
-
-                // let entitiesDocument = 
-                // await this.entityDocuments(
-                //     { 
-                //         _id: entityId,
-                //         "groups" : { $exists : true }, 
-                //         [entityTraversal] : { $exists: true } 
-                //     },
-                //     [ entityTraversal ]
-                // );
-
-                // if( !entitiesDocument[0] ) {
-                //     return resolve([]);
-                // }
-
-                // let result = [];
-                
-                // if( entitiesDocument[0].groups[entityTraversalType].length > 0 ) {
-                    
-                //     let entityTraversalData = await this.search(
-                //         searchText,
-                //         pageSize,
-                //         pageNo,
-                //         entitiesDocument[0].groups[entityTraversalType]
-                //     );
-
-                //     result = entityTraversalData[0];
-
-                // }
-
-                // return resolve(result);
 
             } catch(error) {
                 return reject(error);

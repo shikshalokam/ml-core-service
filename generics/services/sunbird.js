@@ -161,9 +161,11 @@ const formRead = function ( subTypeData ) {
   * @name schoolData
   * @param {String} bearerToken - autherization token.
   * @param {object} bodyData -  location id
+  * @param {array} fields - set of data keys need to be fetched.
+  * @param {String} searchKey - search key for fuzzy search.
   * @returns {Promise} returns a promise.
 */
-const schoolData = function ( filterData, pageSize = "", pageNo = "", searchKey = "" ) {
+const schoolData = function ( filterData, pageSize = "", pageNo = "", searchKey = "", fields) {
     return new Promise(async (resolve, reject) => {
         try {
             
@@ -181,10 +183,17 @@ const schoolData = function ( filterData, pageSize = "", pageNo = "", searchKey 
             }
     
             if ( searchKey !== "" ) {
-                bodyData["request"]["query"] = searchKey
+                bodyData["request"]["fuzzy"] = {
+                    "orgName" : searchKey
+                }
             }
             
-            
+            //for getting specified key data only.
+            if ( fields.length > 0 ) {
+                bodyData["request"]["fields"] = fields;
+            }
+
+        
             
             const url = 
             sunbirdBaseUrl + constants.endpoints.GET_SCHOOL_DATA;
