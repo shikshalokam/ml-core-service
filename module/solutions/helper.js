@@ -4,9 +4,6 @@
  * created-date : 03-sep-2020
  * Description : Solution related helper functionality.
  */
-
-
-
 // Dependencies
 
 const programsHelper = require(MODULES_BASE_PATH + "/programs/helper");
@@ -16,7 +13,7 @@ const userRolesHelper = require(MODULES_BASE_PATH + "/user-roles/helper");
 const surveyService = require(ROOT_PATH + '/generics/services/survey');
 const improvementProjectService = require(ROOT_PATH + '/generics/services/improvement-project');
 const appsPortalBaseUrl = process.env.APP_PORTAL_BASE_URL + "/" ;
-const sunbirdService = require(ROOT_PATH + '/generics/services/sunbird');
+const userService = require(ROOT_PATH + "/generics/services/users");
 
 /**
     * SolutionsHelper
@@ -138,8 +135,8 @@ module.exports = class SolutionsHelper {
             };
             
 
-            let entitiesDetails = await sunbirdService.learnerLocationSearch( bodyData );
-            if( !entitiesDetails.success || !entitiesDetails.data || !entitiesDetails.data.response.length > 0 ) {
+            let entitiesDetails = await userService.learnerLocationSearch( bodyData );
+            if( !entitiesDetails.success || !entitiesDetails.data || !entitiesDetails.data.response || !entitiesDetails.data.response.length > 0 ) {
               throw {
                 message : constants.apiResponses.ENTITIES_NOT_FOUND
               }
@@ -263,8 +260,8 @@ module.exports = class SolutionsHelper {
                 "id" : entityLocationIds
               };
               
-              let entityDetails = await sunbirdService.learnerLocationSearch(bodyData);
-              if( !entityDetails.success || !entityDetails.data || !entityDetails.data.response.length > 0 ) {
+              let entityDetails = await userService.learnerLocationSearch(bodyData);
+              if( !entityDetails.success || !entityDetails.data || !entityDetails.data.response || !entityDetails.data.response.length > 0 ) {
                 return resolve({
                   status : httpStatusCode.bad_request.status,
                   message : constants.apiResponses.ENTITIES_NOT_FOUND
@@ -1009,9 +1006,9 @@ module.exports = class SolutionsHelper {
         };
         
 
-        let entitiesDetails = await sunbirdService.learnerLocationSearch( bodyData );
+        let entitiesDetails = await userService.learnerLocationSearch( bodyData );
 
-        if( !entitiesDetails.success || !entitiesDetails.data || !entitiesDetails.data.response.length > 0 ) {
+        if( !entitiesDetails.success || !entitiesDetails.data || !entitiesDetails.data.response || !entitiesDetails.data.response.length > 0 ) {
           return resolve({
             status : httpStatusCode.bad_request.status,
             message : constants.apiResponses.ENTITIES_NOT_FOUND
@@ -1984,12 +1981,12 @@ function _generateLink(appsPortalBaseUrl, prefix, solutionLink, solutionType) {
 
 }
 
-// /**
-//   * get entitiesData of matching type by recursion.
-//   * @method
-//   * @name entitiesInParent
-//   * @returns {Array} - Entities matching the type under the parent.
-//   */
+/**
+  * get entitiesData of matching type by recursion.
+  * @method
+  * @name entitiesInParent
+  * @returns {Array} - Entities matching the type under the parent.
+*/
 
 async function entitiesInParent( solutionEntities,currentEntityType,matchingData ){
   
@@ -2000,9 +1997,9 @@ async function entitiesInParent( solutionEntities,currentEntityType,matchingData
     "parentId" : solutionEntities
   };
   
-  let entityDetails = await sunbirdService.learnerLocationSearch(bodyData);
+  let entityDetails = await userService.learnerLocationSearch(bodyData);
 
-  if( ( !entityDetails.success || !entityDetails.data || !entityDetails.data.response.length > 0) && !matchingData.length > 0 ) {
+  if( ( !entityDetails.success || !entityDetails.data || !entityDetails.data.response || !entityDetails.data.response.length > 0) && !matchingData.length > 0 ) {
     return ({
       status : httpStatusCode.bad_request.status,
       message : constants.apiResponses.ENTITIES_NOT_FOUND

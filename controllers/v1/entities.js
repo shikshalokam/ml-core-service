@@ -152,7 +152,6 @@ module.exports = class Entities extends Abstract {
      */
 
     subEntityList(req) {
-      
       return new Promise(async (resolve, reject) => {
       
         if( !(req.params._id || req.body.entities) ) {
@@ -162,39 +161,37 @@ module.exports = class Entities extends Abstract {
           })
         }
     
-          try {
-            
-            let entityDocuments = await entitiesHelper.subEntityList(
-              req.body.entities ? req.body.entities : "",
-              req.params._id ? req.params._id : "",
-              req.query.type ? req.query.type : "",
-              req.searchText,
-              req.pageSize,
-              req.pageNo
-            );
-            
-            if(entityDocuments.result && entityDocuments.result.data && Array.isArray(entityDocuments.result.data) && entityDocuments.result.data.length > 0) {
-              for (let pointerToEntitiesArray = 0; pointerToEntitiesArray < entityDocuments.result.data.length; pointerToEntitiesArray++) {
-                if(entityDocuments.result.data[pointerToEntitiesArray].entityType == "school") {
-                  entityDocuments.result.data[pointerToEntitiesArray].label += " - " + entityDocuments.result.data[pointerToEntitiesArray].externalId;
-                }
+        try {
+          
+          let entityDocuments = await entitiesHelper.subEntityList(
+            req.body.entities ? req.body.entities : "",
+            req.params._id ? req.params._id : "",
+            req.query.type ? req.query.type : "",
+            req.searchText,
+            req.pageSize,
+            req.pageNo
+          );
+          
+          if(entityDocuments.result && entityDocuments.result.data && Array.isArray(entityDocuments.result.data) && entityDocuments.result.data.length > 0) {
+            for (let pointerToEntitiesArray = 0; pointerToEntitiesArray < entityDocuments.result.data.length; pointerToEntitiesArray++) {
+              if(entityDocuments.result.data[pointerToEntitiesArray].entityType == "school") {
+                entityDocuments.result.data[pointerToEntitiesArray].label += " - " + entityDocuments.result.data[pointerToEntitiesArray].externalId;
               }
             }
-
-            return resolve(entityDocuments);
-    
-          } catch (error) {
-    
-            return reject({
-              status: error.status || httpStatusCode.internal_server_error.status,
-              message: error.message || httpStatusCode.internal_server_error.message,
-              errorObject: error
-            })
-    
           }
-    
-    
-        })
+
+          return resolve(entityDocuments);
+  
+        } catch (error) {
+  
+          return reject({
+            status: error.status || httpStatusCode.internal_server_error.status,
+            message: error.message || httpStatusCode.internal_server_error.message,
+            errorObject: error
+          })
+  
+        }
+      })
     }
 
      /**

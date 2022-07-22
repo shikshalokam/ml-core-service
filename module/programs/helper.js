@@ -10,7 +10,7 @@
 const entityTypesHelper = require(MODULES_BASE_PATH + "/entityTypes/helper");
 const entitiesHelper = require(MODULES_BASE_PATH + "/entities/helper");
 const userRolesHelper = require(MODULES_BASE_PATH + "/user-roles/helper");
-const sunbirdService = require(ROOT_PATH + '/generics/services/sunbird');
+const userService = require(ROOT_PATH + "/generics/services/users");
 
 /**
     * ProgramsHelper
@@ -211,9 +211,9 @@ module.exports = class ProgramsHelper {
           let bodyData = {
             "type" : scopeData.entityType
           }
-          let entityTypeData = await sunbirdService.learnerLocationSearch( bodyData );
+          let entityTypeData = await userService.learnerLocationSearch( bodyData );
           
-          if( !entityTypeData.success || !entityTypeData.data || !entityTypeData.data.response.length > 0 ) {
+          if( !entityTypeData.success || !entityTypeData.data || !entityTypeData.data.response || !entityTypeData.data.response.length > 0 ) {
             return resolve({
               status : httpStatusCode.bad_request.status,
               message : constants.apiResponses.ENTITY_TYPES_NOT_FOUND
@@ -241,8 +241,8 @@ module.exports = class ProgramsHelper {
           }
 
           
-          let entityData = await sunbirdService.learnerLocationSearch( bodyData );
-          if( !entityData.success || !entityData.data || !entityData.data.response.length > 0 ) {
+          let entityData = await userService.learnerLocationSearch( bodyData );
+          if( !entityData.success || !entityData.data || !entityData.data.response || !entityData.data.response.length > 0 ) {
             return resolve({
               status : httpStatusCode.bad_request.status,
               message : constants.apiResponses.ENTITIES_NOT_FOUND
@@ -724,7 +724,6 @@ module.exports = class ProgramsHelper {
           };
         }
         
-
         let locationIds = [];
         let bodyData={};
         
@@ -737,29 +736,25 @@ module.exports = class ProgramsHelper {
           "id" : locationIds
         }
         
-        let entitiesData = await sunbirdService.learnerLocationSearch( bodyData );
+        let entitiesData = await userService.learnerLocationSearch( bodyData );
         
-        
-        if( !entitiesData.success || !entitiesData.data || !entitiesData.data.count > 0 ) {
+        if( !entitiesData.success || !entitiesData.data || !entitiesData.data.response || !entitiesData.data.response.length > 0 ) {
             throw {
               message : constants.apiResponses.ENTITIES_NOT_FOUND
             };
         }
 
-        
         let entityIds = [];
         entitiesData.data.response.forEach(entityResult => {
           entityIds.push(entityResult.id);
         });
         
-
         let updateProgram = await database.models.programs.findOneAndUpdate({
           _id : programId
         },{
           $addToSet : { "scope.entities" : { $each : entityIds } }
         },{ new : true }).lean();
         
-
         if( !updateProgram || !updateProgram._id ) {
           throw {
             message : constants.apiResponses.PROGRAM_NOT_UPDATED

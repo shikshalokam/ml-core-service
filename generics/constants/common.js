@@ -68,7 +68,6 @@ module.exports = {
   "DEFAULT_SUBMISSION_REQUIRED" : 1,
   "SCHOOL" : "school",
   "SUBENTITY" :"subEntity_",
-  "SUNBIRD_SERVER_TIMEOUT" : 5000,
   "CACHE_TIME_PERIOD" : 43200,
   "FORM_API_TYPE" : "profileConfig"
   

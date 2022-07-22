@@ -6,7 +6,7 @@
  */
 
 //dependencies
-const sunbirdService = require(ROOT_PATH + '/generics/services/sunbird');
+const userService = require(ROOT_PATH + "/generics/services/users");
 let cache = require(ROOT_PATH+"/generics/helpers/cache");
 
 /**
@@ -23,7 +23,7 @@ const formData = function ( stateLocationCode, entityKey ) {
     return new Promise(async (resolve, reject) => {
         try {
             
-            let subEntitiesDetails = await sunbirdService.formRead( stateLocationCode );
+            let subEntitiesDetails = await userService.formRead( stateLocationCode );
             if( !subEntitiesDetails.success) {
                 return resolve({
                     message : constants.apiResponses.ENTITY_NOT_FOUND,

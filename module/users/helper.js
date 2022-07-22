@@ -12,7 +12,6 @@ const userRolesHelper = require(MODULES_BASE_PATH + "/user-roles/helper");
 const entitiesHelper = require(MODULES_BASE_PATH + "/entities/helper");
 const improvementProjectService = require(ROOT_PATH + "/generics/services/improvement-project");
 const userService = require(ROOT_PATH + "/generics/services/users");
-const sunbirdService = require(ROOT_PATH + '/generics/services/sunbird');
 let cache = require(ROOT_PATH+"/generics/helpers/cache");
 const formService = require(ROOT_PATH + '/generics/services/form');
 
@@ -161,25 +160,25 @@ module.exports = class UsersHelper {
           let locationIds = [];
           let orgExternalId = [];
           let entitiesData = [];
-          let bodyData={};
+          let bodyData = {};
           
 
-          data.entities.forEach(entity=>{
-            if (gen.utils.checkValidUUID(entity)) {
+          data.entities.forEach( entity => {
+            if ( gen.utils.checkValidUUID(entity) ) {
               locationIds.push(entity);
             } else {
               orgExternalId.push(entity)
             }
           });
 
-          if ( locationIds.length > 0 ){
+          if ( locationIds.length > 0 ) {
 
             bodyData = {
               "id" : locationIds
             } 
-            let entityData = await sunbirdService.learnerLocationSearch( bodyData );
+            let entityData = await userService.learnerLocationSearch( bodyData );
             
-            if ( !entityData.success || !entityData.data || !entityData.data.count > 0 ) {
+            if ( !entityData.success || !entityData.data || !entityData.data.response || !entityData.data.response.length > 0 ) {
               return resolve({
                 status: httpStatusCode["bad_request"].status,
                 message: constants.apiResponses.ENTITY_NOT_FOUND,
@@ -199,9 +198,9 @@ module.exports = class UsersHelper {
             let filterData = {
               "externalId" : orgExternalId
             }
-            let schoolDetails = await sunbirdService.schoolData( filterData );
+            let schoolDetails = await userService.schoolData( filterData );
             let schoolDocuments = schoolDetails.data.response.content;
-            if( !schoolDetails.success || !schoolDocuments.length > 0 ) {
+            if ( !schoolDetails.success || !schoolDocuments.length > 0 ) {
               return resolve({
                 status: httpStatusCode["bad_request"].status,
                 message: constants.apiResponses.ENTITY_NOT_FOUND,
@@ -209,7 +208,7 @@ module.exports = class UsersHelper {
               });
             }
             let schoolData = schoolDetails.data.response.content;
-            schoolData.forEach(entity =>{
+            schoolData.forEach( entity => {
               entitiesData.push(entity.identifier)
             });
 
@@ -643,9 +642,9 @@ module.exports = class UsersHelper {
           };
         }
         
-        let entityData = await sunbirdService.learnerLocationSearch( bodyData );
+        let entityData = await userService.learnerLocationSearch( bodyData );
         
-        if ( !entityData.success || !entityData.data || !entityData.data.response.length > 0) {
+        if ( !entityData.success || !entityData.data || !entityData.data.response || !entityData.data.response.length > 0) {
           throw {
             message: constants.apiResponses.ENTITIES_NOT_EXIST_IN_LOCATION,
           };
@@ -754,8 +753,8 @@ module.exports = class UsersHelper {
               "parentId" : requestedData[targetedEntityType]
             }
           }
-          let entitiesData = await sunbirdService.learnerLocationSearch( filterData );
-          if( !entitiesData.success ||!entityData.data || !entityData.data.response.length > 0 ){
+          let entitiesData = await userService.learnerLocationSearch( filterData );
+          if( !entitiesData.success ||!entityData.data || !entityData.data.response || !entityData.data.response.length > 0 ){
             targetedEntityType = constants.common.STATE_ENTITY_TYPE;
           }          
         }
@@ -769,8 +768,8 @@ module.exports = class UsersHelper {
             "code" : requestedData[targetedEntityType]
           };
         }
-        let entitiesDocument = await sunbirdService.learnerLocationSearch( filterData );
-        if ( !entitiesDocument.success || !entitiesDocument.data || !entitiesDocument.data.count > 0) {
+        let entitiesDocument = await userService.learnerLocationSearch( filterData );
+        if ( !entitiesDocument.success || !entitiesDocument.data || !entitiesDocument.data.response || !entitiesDocument.data.response.length > 0) {
           throw {
             message: constants.apiResponses.ENTITY_NOT_FOUND
           };
@@ -807,7 +806,7 @@ module.exports = class UsersHelper {
    * @returns {Object} - Entity.
    */
 
-  static getHighestTargetedEntity( roleWiseTargetedEntities,requestedData ) {
+  static getHighestTargetedEntity( roleWiseTargetedEntities, requestedData ) {
     return new Promise(async (resolve, reject) => {
       try {
         let entityKey = constants.common.SUBENTITY + requestedData.state;
@@ -817,9 +816,9 @@ module.exports = class UsersHelper {
               "id" : requestedData.state
             };
 
-            let entitiesData = await sunbirdService.learnerLocationSearch( filterData );
+            let entitiesData = await userService.learnerLocationSearch( filterData );
 
-            if( !entitiesData.success || !entitiesData.data || !entitiesData.data.response.length > 0 ) {
+            if( !entitiesData.success || !entitiesData.data || !entitiesData.data.response || !entitiesData.data.response.length > 0 ) {
                 return resolve({
                     message : constants.apiResponses.ENTITY_NOT_FOUND,
                     result : []
