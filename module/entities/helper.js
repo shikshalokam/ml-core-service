@@ -913,7 +913,7 @@ async function subEntitiesWithMatchingType( parentIds,entityType, matchingData )
     });
 
     if( mismatchEntities.length > 0 ){
-      await subEntitiesWithMatchingType(mismatchEntities,entityType,matchingData)
+      await subEntitiesWithMatchingType(mismatchEntities, entityType, matchingData);
     } 
     let uniqueEntities = [];
     matchingData.map( data => {
