@@ -227,34 +227,51 @@ module.exports = class ProgramsHelper {
         if( scopeData.entities && scopeData.entities.length > 0 ) {
           
           //call learners api for search
-
           let locationIds = [];
+          let orgExternalId = [];
+          let entityIds = [];
           let bodyData={};
-
+          
           scopeData.entities.forEach(entity=>{
             if (gen.utils.checkValidUUID(entity)) {
               locationIds.push(entity);
+            } else {
+              orgExternalId.push(entity);
             }
           });
-          bodyData = {
-            "id" : locationIds
+
+          if ( locationIds.length > 0 ) {
+            bodyData = {
+              "id" : locationIds
+            } 
+            let entityData = await userService.learnerLocationSearch( bodyData );
+            if ( entityData.success && entityData.data && entityData.data.response && entityData.data.response.length > 0 ) {
+              entityData.data.response.forEach( entity => {
+                entityIds.push(entity.id)
+              });
+            }
           }
 
+          if ( orgExternalId.length > 0 ) {
+            let filterData = {
+              "externalId" : orgExternalId
+            }
+            let schoolDetails = await userService.schoolData( filterData );
+            
+            if ( schoolDetails.success && schoolDetails.data && schoolDetails.data.response && schoolDetails.data.response.content && schoolDetails.data.response.content.length > 0 ) {
+              let schoolData = schoolDetails.data.response.content;
+              schoolData.forEach( entity => {
+                entityIds.push(entity.externalId) 
+              });
+            }
+          }
           
-          let entityData = await userService.learnerLocationSearch( bodyData );
-          if( !entityData.success || !entityData.data || !entityData.data.response || !entityData.data.response.length > 0 ) {
-            return resolve({
-              status : httpStatusCode.bad_request.status,
-              message : constants.apiResponses.ENTITIES_NOT_FOUND
-            });
+          if( !entityIds.length > 0 ) {
+              throw {
+                message : constants.apiResponses.ENTITIES_NOT_FOUND
+              };
           }
-
-          let entities = entityData.data.response;
-  
-          scope["entities"] = entities.map(entity => {
-            return entity.id;
-          });
-
+          scope["entities"] = entityIds;
         } 
 
         if( scopeData.roles ) {
@@ -710,7 +727,6 @@ module.exports = class ProgramsHelper {
   static addEntitiesInScope( programId,entities ) {
     return new Promise(async (resolve, reject) => {
       try {
-
         let programData = 
         await this.programDocuments({ 
           _id : programId,
@@ -725,30 +741,50 @@ module.exports = class ProgramsHelper {
         }
         
         let locationIds = [];
+        let orgExternalId = [];
+        let entityIds = [];
         let bodyData={};
         
         entities.forEach(entity=>{
           if (gen.utils.checkValidUUID(entity)) {
             locationIds.push(entity);
+          } else {
+            orgExternalId.push(entity);
           }
         });
-        bodyData = {
-          "id" : locationIds
+
+        if ( locationIds.length > 0 ) {
+          bodyData = {
+            "id" : locationIds
+          } 
+          let entityData = await userService.learnerLocationSearch( bodyData );
+          if ( entityData.success && entityData.data && entityData.data.response && entityData.data.response.length > 0 ) {
+            entityData.data.response.forEach( entity => {
+              entityIds.push(entity.id)
+            });
+          }
+        }
+
+        if ( orgExternalId.length > 0 ) {
+          let filterData = {
+            "externalId" : orgExternalId
+          }
+          let schoolDetails = await userService.schoolData( filterData );
+          
+          if ( schoolDetails.success && schoolDetails.data && schoolDetails.data.response && schoolDetails.data.response.content && schoolDetails.data.response.content.length > 0 ) {
+            let schoolData = schoolDetails.data.response.content;
+            schoolData.forEach( entity => {
+              entityIds.push(entity.externalId)
+            });
+          }
         }
         
-        let entitiesData = await userService.learnerLocationSearch( bodyData );
-        
-        if( !entitiesData.success || !entitiesData.data || !entitiesData.data.response || !entitiesData.data.response.length > 0 ) {
+        if( !entityIds.length > 0 ) {
             throw {
               message : constants.apiResponses.ENTITIES_NOT_FOUND
             };
         }
 
-        let entityIds = [];
-        entitiesData.data.response.forEach(entityResult => {
-          entityIds.push(entityResult.id);
-        });
-        
         let updateProgram = await database.models.programs.findOneAndUpdate({
           _id : programId
         },{
@@ -767,6 +803,7 @@ module.exports = class ProgramsHelper {
         });
 
       } catch(error) {
+        
         return resolve({
           success : false,
           status : error.status ? 
@@ -876,19 +913,11 @@ module.exports = class ProgramsHelper {
               message : constants.apiResponses.ENTITIES_NOT_FOUND
             };
         }
- 
-        let entityIds = [];
-        entities.forEach(entity => {
-          if (gen.utils.checkValidUUID(entity)) {
-            entityIds.push(entity);
-          }
-          
-        });
         
         let updateProgram = await database.models.programs.findOneAndUpdate({
           _id : programId
         },{
-          $pull : { "scope.entities" : { $in : entityIds} }
+          $pull : { "scope.entities" : { $in : entities} }
         },{ new : true }).lean();
         
         if( !updateProgram || !updateProgram._id ) {
