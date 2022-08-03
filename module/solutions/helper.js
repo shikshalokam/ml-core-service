@@ -141,7 +141,7 @@ module.exports = class SolutionsHelper {
                 orgExternalId.push(entity);
               }
             });
-            console.log("id arrays : ",locationIds, orgExternalId)
+            
             if ( locationIds.length > 0 ) {
               let bodyData = {
                 "id" : locationIds
@@ -167,7 +167,7 @@ module.exports = class SolutionsHelper {
                 });
               }
             }
-            console.log("entityIds : ",entityIds)
+
             if( !entityIds.length > 0 ) {
                 throw {
                   message : constants.apiResponses.ENTITIES_NOT_FOUND
@@ -214,7 +214,6 @@ module.exports = class SolutionsHelper {
               solutionCreation._id,
               solutionData.scope ? solutionData.scope : {}
             );
-
           }
 
           return resolve({
@@ -247,7 +246,6 @@ module.exports = class SolutionsHelper {
 
     return new Promise(async (resolve, reject) => {
       try {
-
         let programData = 
         await programsHelper.programDocuments({ _id : programId },["_id","scope"]);
  
@@ -266,62 +264,81 @@ module.exports = class SolutionsHelper {
             message : constants.apiResponses.SOLUTION_NOT_FOUND
           });
         }
+       
         if( programData[0].scope ) {
           
           let currentSolutionScope = JSON.parse(JSON.stringify(programData[0].scope));
           
           if( Object.keys(scopeData).length > 0 ) {
-            //if scope data passed with request body
             if( scopeData.entityType ) {
-              currentSolutionScope.entityType = scopeData.entityType;
+              let bodyData = { "type" : scopeData.entityType }
+              let entityTypeData = await userService.learnerLocationSearch( bodyData, 1 );
+              if ( entityTypeData.success && entityTypeData.data && entityTypeData.data.response && entityTypeData.data.response.length > 0 ) {
+                currentSolutionScope.entityType = entityTypeData.data.response[0].type
+              }
             }
-            
+
             if( scopeData.entities && scopeData.entities.length > 0 ) {
-              let entityLocationIds = [];
-              scopeData.entities.forEach(entity => {
+              //call learners api for search
+              let locationIds = [];
+              let orgExternalId = [];
+              let entityIds = [];
+              let bodyData={};
+
+              scopeData.entities.forEach(entity=>{
                 if (gen.utils.checkValidUUID(entity)) {
-                  entityLocationIds.push(entity);
+                  locationIds.push(entity);
+                } else {
+                  orgExternalId.push(entity);
                 }
               });
-              let bodyData = {
-                "id" : entityLocationIds
-              };
-              
-              let entityDetails = await userService.learnerLocationSearch(bodyData);
-              if( !entityDetails.success || !entityDetails.data || !entityDetails.data.response || !entityDetails.data.response.length > 0 ) {
-                return resolve({
-                  status : httpStatusCode.bad_request.status,
-                  message : constants.apiResponses.ENTITIES_NOT_FOUND
-                });
-              }
-              
-              let entityData = entityDetails.data.response;
-              let entities = [];
-              entityData.map(entity => {
-                
-                if( entity.type == currentSolutionScope.entityType ) {
-                  entities.push(entity.id)
+
+              if ( locationIds.length > 0 ) {
+                bodyData = {
+                  "id" : locationIds
+                } 
+                let entityData = await userService.learnerLocationSearch( bodyData );
+                if ( entityData.success && entityData.data && entityData.data.response && entityData.data.response.length > 0 ) {
+                  entityData.data.response.forEach( entity => {
+                    if( entity.type == currentSolutionScope.entityType ) {
+                      entityIds.push(entity.id)
+                    }
+                  });
                 }
-              })
-              
-              if( !entities.length > 0 ) {
+              }
+
+              if ( orgExternalId.length > 0 && currentSolutionScope.entityType == constants.common.SCHOOL ) {
+                let filterData = {
+                  "externalId" : orgExternalId
+                }
+                let schoolDetails = await userService.schoolData( filterData );
+                
+                if ( schoolDetails.success && schoolDetails.data && schoolDetails.data.response && schoolDetails.data.response.content && schoolDetails.data.response.content.length > 0 ) {
+                  let schoolData = schoolDetails.data.response.content;
+                  schoolData.forEach( entity => {
+                    entityIds.push(entity.externalId) 
+                  });
+                }
+              }
+                
+              if( !entityIds.length > 0 ) {
                 return resolve({
                   status : httpStatusCode.bad_request.status,
                   message : constants.apiResponses.ENTITIES_NOT_FOUND
                 });
               }
 
-              let entityIds = [];
-        
+              let entitiesData = [];
+
               if( currentSolutionScope.entityType !== programData[0].scope.entityType ) {
+                
                 let matchData = [];
                 let childEntities = await entitiesInParent(currentSolutionScope.entities,currentSolutionScope.entityType,matchData);
-                
-                if( childEntities.length > 0) {
-                  for( let entitiesIndex = 0; entitiesIndex < entities.length; entitiesIndex++ ) {
+                if( childEntities.length > 0 && entityIds.length > 0 ) {
+                  for( let entitiesIndex = 0; entitiesIndex < entityIds.length; entitiesIndex++ ) {
                     for( let childListIndex = 0; childListIndex < childEntities.length; childListIndex++) {
-                      if( childEntities[childListIndex] == entities[entitiesIndex]){
-                        entityIds.push(entities[entitiesIndex]);
+                      if( childEntities[childListIndex] == entityIds[entitiesIndex]){
+                        entitiesData.push(entityIds[entitiesIndex]);
                         entitiesIndex++;
                       }
                     }
@@ -329,23 +346,21 @@ module.exports = class SolutionsHelper {
                 }
                 
               } else {
-                entityIds = entities.map(entity => {
-                  return entity._id;
-                });
-            }
-
-            if( !entityIds.length > 0 ) {
+                entitiesData = entityIds
+              }
               
-              return resolve({
-                status : httpStatusCode.bad_request.status,
-                message : constants.apiResponses.SCOPE_ENTITY_INVALID
-              });
+              if( !entitiesData.length > 0 ) {
+                
+                return resolve({
+                  status : httpStatusCode.bad_request.status,
+                  message : constants.apiResponses.SCOPE_ENTITY_INVALID
+                });
 
+              }
+
+              currentSolutionScope.entities = entitiesData;
             }
-
-            currentSolutionScope.entities = entityIds;
-            }
-
+        
             if( scopeData.roles ) {
               if( Array.isArray(scopeData.roles) && scopeData.roles.length > 0 ) {
                 
