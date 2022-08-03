@@ -130,24 +130,51 @@ module.exports = class SolutionsHelper {
           }
           
           if( solutionData.entities && solutionData.entities.length > 0 ) {
-            let bodyData={
-              "id" : solutionData.entities
-            };
-            
+            let locationIds = [];
+            let orgExternalId = [];
+            let entityIds = [];
 
-            let entitiesDetails = await userService.learnerLocationSearch( bodyData );
-            if( !entitiesDetails.success || !entitiesDetails.data || !entitiesDetails.data.response || !entitiesDetails.data.response.length > 0 ) {
-              throw {
-                message : constants.apiResponses.ENTITIES_NOT_FOUND
+            solutionData.entities.forEach(entity=>{
+              if (gen.utils.checkValidUUID(entity)) {
+                locationIds.push(entity);
+              } else {
+                orgExternalId.push(entity);
+              }
+            });
+            console.log("id arrays : ",locationIds, orgExternalId)
+            if ( locationIds.length > 0 ) {
+              let bodyData = {
+                "id" : locationIds
+              } 
+              let entityData = await userService.learnerLocationSearch( bodyData );
+              if ( entityData.success && entityData.data && entityData.data.response && entityData.data.response.length > 0 ) {
+                entityData.data.response.forEach( entity => {
+                  entityIds.push(entity.id)
+                });
               }
             }
+           
+            if ( orgExternalId.length > 0 ) {
+              let filterData = {
+                "externalId" : orgExternalId
+              }
+              let schoolDetails = await userService.schoolData( filterData );
+              
+              if ( schoolDetails.success && schoolDetails.data && schoolDetails.data.response && schoolDetails.data.response.content && schoolDetails.data.response.content.length > 0 ) {
+                let schoolData = schoolDetails.data.response.content;
+                schoolData.forEach( entity => {
+                  entityIds.push(entity.externalId) 
+                });
+              }
+            }
+            console.log("entityIds : ",entityIds)
+            if( !entityIds.length > 0 ) {
+                throw {
+                  message : constants.apiResponses.ENTITIES_NOT_FOUND
+                };
+            }
 
-            let entitiesData = entitiesDetails.data.response;
-  
-            entitiesData = entitiesData.map( entity => {
-              return entity.id;
-            })
-            solutionData.entities = entitiesData;
+            solutionData.entities = entityIds;
 
           }
 
