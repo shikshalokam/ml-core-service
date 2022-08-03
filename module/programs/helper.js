@@ -239,7 +239,7 @@ module.exports = class ProgramsHelper {
               orgExternalId.push(entity);
             }
           });
-
+          //locationIds contain id of location data. 
           if ( locationIds.length > 0 ) {
             bodyData = {
               "id" : locationIds

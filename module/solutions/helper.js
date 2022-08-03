@@ -1043,29 +1043,45 @@ module.exports = class SolutionsHelper {
             }
           }
         }
-        let bodyData={
-          "id" : entities
-        };
-        
-
-        let entitiesDetails = await userService.learnerLocationSearch( bodyData );
-
-        if( !entitiesDetails.success || !entitiesDetails.data || !entitiesDetails.data.response || !entitiesDetails.data.response.length > 0 ) {
-          return resolve({
-            status : httpStatusCode.bad_request.status,
-            message : constants.apiResponses.ENTITIES_NOT_FOUND
-          });
-        }
-
-        let entitiesData = entitiesDetails.data.response;
+        let locationIds = [];
+        let orgExternalId = [];
         let entityIds = [];
-
-        entitiesData.map(entity => {
-          if( entity.type == solutionData[0].scope.entityType ) {
-            entityIds.push(entity.id)
+        let bodyData={};
+        
+        entities.forEach(entity=>{
+          if (gen.utils.checkValidUUID(entity)) {
+            locationIds.push(entity);
+          } else {
+            orgExternalId.push(entity);
           }
         });
+
+        if ( locationIds.length > 0 ) {
+          bodyData = {
+            "id" : locationIds
+          } 
+          let entityData = await userService.learnerLocationSearch( bodyData );
+          if ( entityData.success && entityData.data && entityData.data.response && entityData.data.response.length > 0 ) {
+            entityData.data.response.forEach( entity => {
+              entityIds.push(entity.id)
+            });
+          }
+        }
+
+        if ( orgExternalId.length > 0 ) {
+          let filterData = {
+            "externalId" : orgExternalId
+          }
+          let schoolDetails = await userService.schoolData( filterData );
           
+          if ( schoolDetails.success && schoolDetails.data && schoolDetails.data.response && schoolDetails.data.response.content && schoolDetails.data.response.content.length > 0 ) {
+            let schoolData = schoolDetails.data.response.content;
+            schoolData.forEach( entity => {
+              entityIds.push(entity.externalId)
+            });
+          }
+        }
+        
         if( !entityIds.length > 0 ) {
             throw {
               message : constants.apiResponses.ENTITIES_NOT_FOUND
@@ -1212,22 +1228,13 @@ module.exports = class SolutionsHelper {
           };
         }
 
-        let entityIds = [];
-        entities.forEach(entity => {
-          if (gen.utils.checkValidUUID(entity)) {
-            entityIds.push(entity);
-          }
-          
-        });
-
-
         let updateSolution = await database.models.solutions
           .findOneAndUpdate(
             {
               _id: solutionId,
             },
             {
-              $pull: { "scope.entities": { $in: entityIds } },
+              $pull: { "scope.entities": { $in: entities } },
             },
             { new: true }
           )

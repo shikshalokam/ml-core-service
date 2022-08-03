@@ -209,7 +209,7 @@ module.exports = class UsersHelper {
             }
             let schoolData = schoolDetails.data.response.content;
             schoolData.forEach( entity => {
-              entitiesData.push(entity.identifier)
+              entitiesData.push(entity.externalId)
             });
 
             solutionDataToBeUpdated["entityType"] = constants.common.SCHOOL;
