@@ -91,12 +91,11 @@ const learnerLocationSearch = function ( filterData, pageSize = "", pageNo = "",
               bodyData["request"]["query"] = searchKey
           }
           
-            
           const url = 
           userServiceUrl + constants.endpoints.GET_LOCATION_DATA;
           const options = {
               headers : {
-                  "content-type": "application/json"
+                "content-type": "application/json"
               },
               json : bodyData
           };
@@ -209,7 +208,7 @@ const learnerLocationSearch = function ( filterData, pageSize = "", pageNo = "",
     * @param {String} searchKey - search key for fuzzy search.
     * @returns {Promise} returns a promise.
   */
-  const schoolData = function ( filterData, pageSize = "", pageNo = "", searchKey = "", fields) {
+  const schoolData = function ( filterData, pageSize = "", pageNo = "", searchKey = "", fields = [] ) {
         return new Promise(async (resolve, reject) => {
             try {
                 
