@@ -1,7 +1,11 @@
+
+
 const entityTypesHelper = require(MODULES_BASE_PATH + "/entityTypes/helper");
 const userRolesHelper = require(MODULES_BASE_PATH + "/user-roles/helper");
 // const elasticSearch = require(GENERIC_HELPERS_PATH + "/elastic-search");
-
+const userService = require(ROOT_PATH + "/generics/services/users");
+let cache = require(ROOT_PATH+"/generics/helpers/cache");
+const formService = require(ROOT_PATH + '/generics/services/form');
 module.exports = class EntitiesHelper {
 
 
@@ -72,6 +76,7 @@ module.exports = class EntitiesHelper {
                     .skip(skippingValue)
                     .lean();
                 }
+                
                 return resolve(entitiesDocuments);
             } catch (error) {
                 return reject(error);
@@ -101,7 +106,7 @@ module.exports = class EntitiesHelper {
                 queryObject["$match"]["_id"] = {};
                 queryObject["$match"]["_id"]["$in"] = entityIds;
             }
-
+            
             if( searchText !== "") {
                 queryObject["$match"]["$or"] = [
                     { "metaInformation.name": new RegExp(searchText, 'i') },
@@ -141,7 +146,7 @@ module.exports = class EntitiesHelper {
                     }
                 }
             ]);
-
+            
             return resolve(entityDocuments);
 
         } catch (error) {
@@ -241,59 +246,29 @@ module.exports = class EntitiesHelper {
         return new Promise(async (resolve, reject) => {
 
             try {
+                let bodyData={
+                    "parentId" : entityId
+                };
                 
-                let projection = [
-                    constants.schema.ENTITYTYPE,
-                    constants.schema.GROUPS
-                ];
-    
-                let entitiesDocument = await this.entityDocuments({
-                    _id: entityId
-                }, projection);
-    
-                let immediateEntities = [];
-    
-                if (entitiesDocument[0] &&
-                    entitiesDocument[0].groups &&
-                    Object.keys(entitiesDocument[0].groups).length > 0
-                ) {
-    
-                    let getImmediateEntityTypes =
-                        await entityTypesHelper.entityTypesDocument({
-                            name : entitiesDocument[0].entityType
-                        },["immediateChildrenEntityType"]
-                    );
-    
-                    let immediateEntitiesIds;
-    
-                    Object.keys(entitiesDocument[0].groups).forEach(entityGroup => {
-                        if (
-                            getImmediateEntityTypes[0].immediateChildrenEntityType &&
-                            getImmediateEntityTypes[0].immediateChildrenEntityType.length > 0 &&
-                            getImmediateEntityTypes[0].immediateChildrenEntityType.includes(entityGroup)
-                        ) {
-                            immediateEntitiesIds = 
-                            entitiesDocument[0].groups[entityGroup];
-                        }
-                    })
-    
-                    if (
-                        Array.isArray(immediateEntitiesIds) &&
-                        immediateEntitiesIds.length > 0
-                    ) {
-                   
-                        let searchImmediateData = await this.search(
-                            searchText, 
-                            pageSize, 
-                            pageNo, 
-                            immediateEntitiesIds
-                        );
-    
-                        immediateEntities = searchImmediateData[0];
-                    }
+                let entitiesData = await userService.learnerLocationSearch(
+                    bodyData,
+                    pageSize,
+                    pageNo,
+                    searchText
+                );
+                
+                if( !entitiesData.success || !entitiesData.data || !entitiesData.data.response || !entitiesData.data.response.length > 0 ) {
+                    return resolve({
+                        data : entitiesData.data.response,
+                        count : entitiesData.data.count
+                    }); 
                 }
-    
-                return resolve(immediateEntities);
+                let immediateLocation = entitiesData.data.response;
+                
+                return resolve({
+                    data : immediateLocation,
+                    count : entitiesData.data.count
+                });
 
             } catch(error) {
                 return reject(error);
@@ -318,50 +293,56 @@ module.exports = class EntitiesHelper {
         return new Promise(async (resolve, reject) => {
 
             try {
-
-                let result = [];
+                
+                let result = {};
+                let subEntitiesResult = {};
+                let uniqueEntities = [];
                 let obj = {
                     entityId : entityId,
                     type : type,
                     search : search,
-                    limit : limit,
+                    limit :limit,
                     pageNo : pageNo
                 }
-    
+                
                 if ( entityId !== "" ) {
-                    result = await this.subEntities(
+                    subEntitiesResult = await this.subEntities(
                         obj
                     );
                 } else {
-    
-                    await Promise.all(entities.map(async (entity)=> {
-    
-                        obj["entityId"] = entity;
-                        let entitiesDocument = await this.subEntities(
+                        obj["entityId"] = entities;
+                        subEntitiesResult = await this.subEntities(
                             obj
                         );
-
-                        if( Array.isArray(entitiesDocument.data) && 
-                        entitiesDocument.data.length > 0
-                        ) {
-                            result = entitiesDocument;
-                        }
-                    }));
+                        
                 }
-
-                if( result.data && result.data.length > 0 ) {
-                    result.data = result.data.map(data=>{
-                        let cloneData = {...data};
-                        cloneData["label"] = cloneData.name;
-                        cloneData["value"] = cloneData._id;
-                        return cloneData;
-                    })
+                
+                
+                if ( subEntitiesResult && subEntitiesResult.data && subEntitiesResult.data.length > 0 ) { 
+                    let formatedEntities = [];
+                    uniqueEntities = subEntitiesResult.data
+                    uniqueEntities.map( entityData => {
+                        let data = {};
+                        data._id = entityData.id;
+                        data.entityType = entityData.type;
+                        data.name = entityData.name;
+                        data.externalId = entityData.code;
+                        data.label = entityData.name;
+                        data.value = entityData.id
+                        formatedEntities.push(data)
+                    } );
+                    uniqueEntities = [];
+                    uniqueEntities = formatedEntities;
                 }
-    
+                
+                result.data = uniqueEntities;
+                result.count = subEntitiesResult.count;
+                
                 resolve({
                     message: constants.apiResponses.ENTITIES_FETCHED,
                     result: result
-                });   
+                }); 
+                 
             } catch(error) {
                 return reject(error);
             }
@@ -378,11 +359,11 @@ module.exports = class EntitiesHelper {
 
     static subEntities( entitiesData ) {
         return new Promise(async (resolve, reject) => {
-
+            
             try {
-                
+               
                 let entitiesDocument;
-                
+        
                 if( entitiesData.type !== "" ) {
                     
                     entitiesDocument = await this.entityTraversal(
@@ -393,7 +374,6 @@ module.exports = class EntitiesHelper {
                         entitiesData.pageNo
                         );
                 } else {
-                    
                     entitiesDocument = await this.immediateEntities(
                         entitiesData.entityId, 
                         entitiesData.search,
@@ -403,6 +383,7 @@ module.exports = class EntitiesHelper {
                 }
                 
                 return resolve(entitiesDocument);
+                
             } catch(error) {
                 return reject(error);
             }
@@ -421,44 +402,94 @@ module.exports = class EntitiesHelper {
        entityId,
        entityTraversalType = "", 
        searchText = "",
-       pageSize,
-       pageNo
+       pageSize = "",
+       pageNo = "",
     ) {
         return new Promise(async (resolve, reject) => {
             try {
                 
-                let entityTraversal = `groups.${entityTraversalType}`;
-
-                let entitiesDocument = 
-                await this.entityDocuments(
-                    { 
-                        _id: entityId,
-                        "groups" : { $exists : true }, 
-                        [entityTraversal] : { $exists: true } 
-                    },
-                    [ entityTraversal ]
-                );
-
-                if( !entitiesDocument[0] ) {
-                    return resolve([]);
-                }
-
-                let result = [];
-                
-                if( entitiesDocument[0].groups[entityTraversalType].length > 0 ) {
+                if( entityTraversalType == constants.common.SCHOOL) {
+                    let filterData = {
+                        "orgLocation.id" : entityId
+                    }
+                    let fields = ["externalId"]
+                    let subentitiesCode = await userService.schoolData( filterData, pageSize, pageNo, searchText, fields );
                     
-                    let entityTraversalData = await this.search(
-                        searchText,
-                        pageSize,
-                        pageNo,
-                        entitiesDocument[0].groups[entityTraversalType]
-                    );
+                    if( !subentitiesCode.success ||
+                        !subentitiesCode.data ||
+                        !subentitiesCode.data.response ||
+                        !subentitiesCode.data.response.content ||
+                        !subentitiesCode.data.response.content.length > 0 ) {
+                        return resolve({
+                            data : [],
+                            count : subentitiesCode.data.response.count
+                        }) 
+                    }
+                    
+                    let schoolDetails = subentitiesCode.data.response.content;
+                    //get code from all data
+                    let schoolCodes = [];
+                    schoolDetails.map(schoolData=> {
+                        schoolCodes.push(schoolData.externalId);
+                    });
+                    
 
-                    result = entityTraversalData[0];
+                    let bodyData={
+                        "code" : schoolCodes
+                    };
+                    
+                
+                    let entitiesData = await userService.learnerLocationSearch( bodyData );
+                
+                    if( !entitiesData.success || !entitiesData.data || !entitiesData.data.response || !entitiesData.data.response.length > 0 ) {
+                        return resolve({
+                            data : [],
+                            count : 0
+                        }) 
+                    }
+                    
+                    return resolve({
+                        data : entitiesData.data.response,
+                        count : subentitiesCode.data.response.count
+                    }) 
 
+
+                } else {
+                    let subEntitiesMatchingType = [];
+                    
+                    let subEntities = await subEntitiesWithMatchingType( entityId,entityTraversalType,subEntitiesMatchingType )
+               
+                    if( !subEntities.length > 0 ) {
+                        return resolve({
+                            data : subEntities,
+                            count : 0
+                        }) 
+                    }
+                    
+                    let subentitiesData = subEntities
+                    let count = subentitiesData.length;
+                    if( searchText !== "" ){
+                        let matchEntities = [];
+                        subentitiesData.map( entityData => {
+                            if( entityData.name.match(new RegExp(searchText, 'i')) || entityData.code.match(new RegExp("^" + searchText, 'm')) ) {
+                                matchEntities.push(entityData)
+                            }
+                        });
+                        subentitiesData = [];
+                        subentitiesData = matchEntities;
+                    } 
+                    
+                    if (subentitiesData.length > 0) {
+                        let startIndex = pageSize * (pageNo - 1);
+                        let endIndex = startIndex + pageSize;
+                        subentitiesData = subentitiesData.slice(startIndex, endIndex);
+                    }
+                    return resolve({
+                        data : subentitiesData,
+                        count : count
+                    }) 
+                
                 }
-
-                return resolve(result);
 
             } catch(error) {
                 return reject(error);
@@ -685,7 +716,8 @@ module.exports = class EntitiesHelper {
     static subEntityListBasedOnRoleAndLocation( stateLocationId,role ) {   
         return new Promise(async (resolve, reject) => {
             try {
-
+                let entityKey = constants.common.SUBENTITY + stateLocationId;
+                
                 let rolesDocument = await userRolesHelper.roleDocuments({
                     code : role
                 },["entityTypes.entityType"]);
@@ -696,44 +728,51 @@ module.exports = class EntitiesHelper {
                         message: constants.apiResponses.USER_ROLES_NOT_FOUND
                     }
                 }
-
-                let filterQuery = {
-                    "registryDetails.code" : stateLocationId
-                };
-
-                if( gen.utils.checkValidUUID(stateLocationId) ) {
-                    filterQuery = {
-                        "registryDetails.locationId" : stateLocationId
+                
+                let subEntities = await cache.getValue(entityKey);
+               
+                if( !subEntities.length > 0 ) {
+                    let bodyData={
+                        "id" : stateLocationId
                     };
-                } 
+                    
+                    let entitiesData = await userService.learnerLocationSearch( bodyData );
 
-                const entityDocuments = await this.entityDocuments(filterQuery,["childHierarchyPath"]);
-    
-                 if( !entityDocuments.length > 0 ) {
-                     return resolve({
-                         message : constants.apiResponses.ENTITY_NOT_FOUND,
-                         result : []
-                     })
-                 }
+                    if( !entitiesData.success || !entitiesData.data || !entitiesData.data.response || !entitiesData.data.response.length > 0 ) {
+                        return resolve({
+                            message : constants.apiResponses.ENTITY_NOT_FOUND,
+                            result : []
+                        })
+                    }
+                    
+                    let stateLocationCode = entitiesData.data.response[0].code;
+                    subEntities = await formService.formData( stateLocationCode,entityKey );
+                    if( !subEntities.length > 0 ) {
+                        return resolve({
+                            message : constants.apiResponses.ENTITY_NOT_FOUND,
+                            result : []
+                        })
+                    }
+                }
+                
+               
+                let result = [];
 
-                 let result = [];
-
-                 if( rolesDocument[0].entityTypes[0].entityType === constants.common.STATE_ENTITY_TYPE ) {
-                    result = entityDocuments[0].childHierarchyPath;
+                if( rolesDocument[0].entityTypes[0].entityType === constants.common.STATE_ENTITY_TYPE ) {
+                    result = subEntities;
                     result.unshift(constants.common.STATE_ENTITY_TYPE);
-                 } else {
+                } else {
 
                     let targetedEntityType = "";
 
                     rolesDocument[0].entityTypes.forEach(singleEntityType => {
-                       if( entityDocuments[0].childHierarchyPath.includes(singleEntityType.entityType) ) {
+                       if( subEntities.includes(singleEntityType.entityType) ) {
                            targetedEntityType = singleEntityType.entityType;
                        }
                     });
    
                     let findTargetedEntityIndex = 
-                    entityDocuments[0].childHierarchyPath.findIndex(element => element === targetedEntityType);
-   
+                    subEntities.findIndex(element => element === targetedEntityType);
                     if( findTargetedEntityIndex < 0 ) {
                        throw {
                            message : constants.apiResponses.SUB_ENTITY_NOT_FOUND,
@@ -741,14 +780,14 @@ module.exports = class EntitiesHelper {
                        }
                     }
    
-                    result = entityDocuments[0].childHierarchyPath.slice(findTargetedEntityIndex);
-                 }
+                    result = subEntities.slice(findTargetedEntityIndex);
+                }
                  
-                 return resolve({
+                return resolve({
                     success: true,
                     message : constants.apiResponses.ENTITIES_CHILD_HIERACHY_PATH,
                     result : result
-                 });
+                });
     
             } catch (error) {
                 return reject(error);
@@ -835,4 +874,50 @@ module.exports = class EntitiesHelper {
     })
   }
 
+}
+
+/**
+  * get subEntities of matching type by recursion.
+  * @method
+  * @name subEntitiesWithMatchingType
+  * @returns {Array} - Sub entities matching the type .
+*/
+
+async function subEntitiesWithMatchingType( parentIds,entityType, matchingData ) { 
+    
+    if( !parentIds.length > 0 ) {
+      return matchingData;
+    };
+
+    let bodyData = {
+        "parentId" : parentIds
+    };
+    
+    let entityDetails = await userService.learnerLocationSearch(bodyData);
+
+    if( ( !entityDetails.success || !entityDetails.data || !entityDetails.data.response || !entityDetails.data.response.length > 0 ) && !matchingData.length > 0 ) {
+      return matchingData;
+    }
+    
+    let entityData = entityDetails.data.response;
+    
+    let mismatchEntities = [];
+    entityData.map(entity => {
+      
+      if ( entity.type == entityType ) {
+        matchingData.push(entity)
+       
+      } else {
+        mismatchEntities.push(entity.id)
+      }
+    });
+
+    if( mismatchEntities.length > 0 ){
+      await subEntitiesWithMatchingType(mismatchEntities, entityType, matchingData);
+    } 
+    let uniqueEntities = [];
+    matchingData.map( data => {
+      if (uniqueEntities.includes(data) === false) uniqueEntities.push(data);
+    });
+    return uniqueEntities;
 }

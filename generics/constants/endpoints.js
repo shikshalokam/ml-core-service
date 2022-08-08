@@ -30,5 +30,8 @@ module.exports = {
     GET_TEMPLATE_DETAILS : "/v1/project/templates/details",
     LIST_PROJECT : "/v1/userProjects/list",
     GET_QUESTIONS : "/v1/solutions/questions",
-    GET_OBSERVATION : "/v1/observations/details"
+    GET_OBSERVATION : "/v1/observations/details",
+    GET_LOCATION_DATA : "/v1/location/search",
+    GET_FORM_DATA : "/v1/form/read",
+    GET_SCHOOL_DATA : "/v1/org/search"
 }

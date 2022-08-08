@@ -270,7 +270,7 @@ module.exports = class Users extends Abstract {
  solutions(req) {
     return new Promise(async (resolve, reject) => {
       try {
-
+        
         let targetedSolutions = await usersHelper.solutions(
             req.params._id,
             req.body,
@@ -423,7 +423,7 @@ module.exports = class Users extends Abstract {
         return new Promise(async (resolve, reject) => {
 
             try {
-
+                
                 let currentMaximumCountOfRequiredEntities = 0;
                 let requiredEntities = new Array;
 
@@ -502,7 +502,7 @@ module.exports = class Users extends Abstract {
     async targetedEntity(req) {
         return new Promise(async (resolve, reject) => {
           try {
-
+            
             let roleArray = req.body.role.split(",");
             let targetedEntities = {};
 
@@ -538,7 +538,7 @@ module.exports = class Users extends Abstract {
                         roleWiseTargetedEntities.push(detailEntity.data);
                     }
                 }
-
+                
                 //no targeted entity
                 if ( roleWiseTargetedEntities.length  == 0 ) {
                     throw {
@@ -556,7 +556,7 @@ module.exports = class Users extends Abstract {
                 else if ( roleWiseTargetedEntities && roleWiseTargetedEntities.length > 1 ) {
                     
                     let targetedEntity = await usersHelper.getHighestTargetedEntity(
-                        roleWiseTargetedEntities
+                        roleWiseTargetedEntities, req.body
                     );
            
                     if ( !targetedEntity.data ) {

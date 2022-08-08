@@ -66,5 +66,9 @@ module.exports = {
   "LINK" : "link",
   "DISCOVERED_BY_ME" : "discoveredByMe",
   "DEFAULT_SUBMISSION_REQUIRED" : 1,
-  "SCHOOL" : "school"
+  "SCHOOL" : "school",
+  "SUBENTITY" :"subEntity_",
+  "CACHE_TIME_PERIOD" : 43200,
+  "FORM_API_TYPE" : "profileConfig"
+  
 };

@@ -4,7 +4,6 @@
  * created-date : 03-sep-2020
  * Description : Solution related helper functionality.
  */
-
 // Dependencies
 const programsHelper = require(MODULES_BASE_PATH + "/programs/helper");
 const entityTypesHelper = require(MODULES_BASE_PATH + "/entityTypes/helper");
@@ -14,6 +13,7 @@ const surveyService = require(ROOT_PATH + '/generics/services/survey');
 const improvementProjectService = require(ROOT_PATH + '/generics/services/improvement-project');
 const appsPortalBaseUrl = process.env.APP_PORTAL_BASE_URL + "/" ;
 const userExtensionsHelperV2 = require(MODULES_BASE_PATH + "/user-extension/helperv2");
+const userService = require(ROOT_PATH + "/generics/services/users");
 
 /**
     * SolutionsHelper
@@ -119,57 +119,63 @@ module.exports = class SolutionsHelper {
           solutionData.programName = programData[0].name;
           solutionData.programDescription = programData[0].description;
 
-          if( solutionData.type == constants.common.COURSE ) {
+          
+          if( solutionData.type == constants.common.COURSE && !solutionData.link ) {
 
-              if( !solutionData.link ) {
-                return resolve({
-                  status : httpStatusCode.bad_request.status,
-                  message : constants.apiResponses.COURSE_LINK_REQUIRED
-                });
-              }
-          } else {
-
-              if( !solutionData.entityType ){
-
-                return resolve({
-                  status : httpStatusCode.bad_request.status,
-                  message : constants.apiResponses.ENTITY_TYPE_REQUIRED
-                });
+            return resolve({
+              status : httpStatusCode.bad_request.status,
+              message : constants.apiResponses.COURSE_LINK_REQUIRED
+            });
                   
-              }
-
-              let entityTypeData = 
-              await entityTypesHelper.entityTypesDocument({
-                name : solutionData.entityType
-              },["_id"]);
-
-              if( !entityTypeData.length > 0 ) {
-                throw {
-                  message : constants.apiResponses.ENTITY_TYPES_NOT_FOUND
-                }
-              }
-
-              solutionData.entityTypeId = entityTypeData[0]._id; 
           }
-
+          
           if( solutionData.entities && solutionData.entities.length > 0 ) {
-                  
-            let entitiesData = 
-            await entitiesHelper.entityDocuments({
-              _id : { $in : solutionData.entities }
-            },["_id"]);
+            let locationIds = [];
+            let orgExternalId = [];
+            let entityIds = [];
 
-            if( !entitiesData.length > 0 ) {
-              throw {
-                message : constants.apiResponses.ENTITIES_NOT_FOUND
+            solutionData.entities.forEach(entity=>{
+              if (gen.utils.checkValidUUID(entity)) {
+                locationIds.push(entity);
+              } else {
+                orgExternalId.push(entity);
+              }
+            });
+            
+            if ( locationIds.length > 0 ) {
+              let bodyData = {
+                "id" : locationIds
+              } 
+              let entityData = await userService.learnerLocationSearch( bodyData );
+              if ( entityData.success && entityData.data && entityData.data.response && entityData.data.response.length > 0 ) {
+                entityData.data.response.forEach( entity => {
+                  entityIds.push(entity.id)
+                });
+              }
+            }
+           
+            if ( orgExternalId.length > 0 ) {
+              let filterData = {
+                "externalId" : orgExternalId
+              }
+              let schoolDetails = await userService.schoolData( filterData );
+              
+              if ( schoolDetails.success && schoolDetails.data && schoolDetails.data.response && schoolDetails.data.response.content && schoolDetails.data.response.content.length > 0 ) {
+                let schoolData = schoolDetails.data.response.content;
+                schoolData.forEach( entity => {
+                  entityIds.push(entity.externalId) 
+                });
               }
             }
 
-            entitiesData = entitiesData.map( entity => {
-              return entity._id;
-            })
+            if( !entityIds.length > 0 ) {
+                throw {
+                  message : constants.apiResponses.ENTITIES_NOT_FOUND
+                };
+            }
 
-            solutionData.entities = entitiesData;
+            solutionData.entities = entityIds;
+
           }
 
           if( solutionData.minNoOfSubmissionsRequired && 
@@ -208,7 +214,6 @@ module.exports = class SolutionsHelper {
               solutionCreation._id,
               solutionData.scope ? solutionData.scope : {}
             );
-
           }
 
           return resolve({
@@ -240,9 +245,7 @@ module.exports = class SolutionsHelper {
    static setScope( programId,solutionId,scopeData ) {
 
     return new Promise(async (resolve, reject) => {
-
       try {
-
         let programData = 
         await programsHelper.programDocuments({ _id : programId },["_id","scope"]);
  
@@ -252,7 +255,7 @@ module.exports = class SolutionsHelper {
             message : constants.apiResponses.PROGRAM_NOT_FOUND
           });
         }
-
+        
         let solutionData = await this.solutionDocuments({ _id : solutionId },["_id"]);
 
         if( !solutionData.length > 0 ) {
@@ -261,79 +264,103 @@ module.exports = class SolutionsHelper {
             message : constants.apiResponses.SOLUTION_NOT_FOUND
           });
         }
-
+       
         if( programData[0].scope ) {
           
           let currentSolutionScope = JSON.parse(JSON.stringify(programData[0].scope));
-
-          if( Object.keys(scopeData).length > 0 ) {
-
-            if( scopeData.entityType ) {
-              
-              let entityType =  await entityTypesHelper.entityTypesDocument(
-                {
-                  name : scopeData.entityType
-                },
-                ["name","_id"]
-              );
           
-              currentSolutionScope.entityType = entityType[0].name;
-              currentSolutionScope.entityTypeId = entityType[0]._id;
-
+          if( Object.keys(scopeData).length > 0 ) {
+            if( scopeData.entityType ) {
+              let bodyData = { "type" : scopeData.entityType }
+              let entityTypeData = await userService.learnerLocationSearch( bodyData, 1 );
+              if ( entityTypeData.success && entityTypeData.data && entityTypeData.data.response && entityTypeData.data.response.length > 0 ) {
+                currentSolutionScope.entityType = entityTypeData.data.response[0].type
+              }
             }
 
             if( scopeData.entities && scopeData.entities.length > 0 ) {
-              let entities = 
-              await entitiesHelper.entityDocuments(
-                {
-                  _id : { $in : scopeData.entities },
-                  entityTypeId : currentSolutionScope.entityTypeId
-                },["_id"]
-              );
-  
-              if( !entities.length > 0 ) {
+              //call learners api for search
+              let locationIds = [];
+              let orgExternalId = [];
+              let entityIds = [];
+              let bodyData={};
+
+              scopeData.entities.forEach(entity=>{
+                if (gen.utils.checkValidUUID(entity)) {
+                  locationIds.push(entity);
+                } else {
+                  orgExternalId.push(entity);
+                }
+              });
+
+              if ( locationIds.length > 0 ) {
+                bodyData = {
+                  "id" : locationIds
+                } 
+                let entityData = await userService.learnerLocationSearch( bodyData );
+                if ( entityData.success && entityData.data && entityData.data.response && entityData.data.response.length > 0 ) {
+                  entityData.data.response.forEach( entity => {
+                    if( entity.type == currentSolutionScope.entityType ) {
+                      entityIds.push(entity.id)
+                    }
+                  });
+                }
+              }
+
+              if ( orgExternalId.length > 0 && currentSolutionScope.entityType == constants.common.SCHOOL ) {
+                let filterData = {
+                  "externalId" : orgExternalId
+                }
+                let schoolDetails = await userService.schoolData( filterData );
+                
+                if ( schoolDetails.success && schoolDetails.data && schoolDetails.data.response && schoolDetails.data.response.content && schoolDetails.data.response.content.length > 0 ) {
+                  let schoolData = schoolDetails.data.response.content;
+                  schoolData.forEach( entity => {
+                    entityIds.push(entity.externalId) 
+                  });
+                }
+              }
+                
+              if( !entityIds.length > 0 ) {
                 return resolve({
                   status : httpStatusCode.bad_request.status,
                   message : constants.apiResponses.ENTITIES_NOT_FOUND
                 });
               }
 
-              let entityIds = [];
+              let entitiesData = [];
 
-            if( currentSolutionScope.entityType !== programData[0].scope.entityType ) {
-              for( let entity = 0; entity < entities.length; entity ++ ) {
+              if( currentSolutionScope.entityType !== programData[0].scope.entityType ) {
+                
+                let matchData = [];
+                let childEntities = await entitiesInParent(currentSolutionScope.entities,currentSolutionScope.entityType,matchData);
+                if( childEntities.length > 0 && entityIds.length > 0 ) {
+                  for( let entitiesIndex = 0; entitiesIndex < entityIds.length; entitiesIndex++ ) {
+                    for( let childListIndex = 0; childListIndex < childEntities.length; childListIndex++) {
+                      if( childEntities[childListIndex] == entityIds[entitiesIndex]){
+                        entitiesData.push(entityIds[entitiesIndex]);
+                        entitiesIndex++;
+                      }
+                    }
+                  }
+                }
+                
+              } else {
+                entitiesData = entityIds
+              }
               
-                let entityQuery = {
-                  _id : { $in : currentSolutionScope.entities },
-                  [`groups.${currentSolutionScope.entityType}`] : entities[entity]._id
-                }
-    
-                let entityInParent = 
-                await entitiesHelper.entityDocuments(entityQuery);
-    
-                if( entityInParent.length > 0 ) {
-                  entityIds.push(ObjectId(entities[entity]._id));
-                }
+              if( !entitiesData.length > 0 ) {
+                
+                return resolve({
+                  status : httpStatusCode.bad_request.status,
+                  message : constants.apiResponses.SCOPE_ENTITY_INVALID
+                });
+
               }
 
-            } else {
-              entityIds = entities.map(entity => {
-                return ObjectId(entity._id);
-              })
+              currentSolutionScope.entities = entitiesData;
             }
-
-            if( !entityIds.length > 0 ) {
-              
-              return resolve({
-                status : httpStatusCode.bad_request.status,
-                message : constants.apiResponses.SCOPE_ENTITY_INVALID
-              });
-
-            }
-
-            currentSolutionScope.entities = entityIds;
-            }
-
+        
             if( scopeData.roles ) {
               if( Array.isArray(scopeData.roles) && scopeData.roles.length > 0 ) {
                 
@@ -360,21 +387,6 @@ module.exports = class SolutionsHelper {
             }
           }
           
-          if( currentSolutionScope && currentSolutionScope.entities.length > 0 ){
-
-            let entitiesIds = currentSolutionScope.entities;
-
-            for( let eachEntity in entitiesIds ) {
-              if( entitiesIds[eachEntity].toString() == entitiesIds[eachEntity] ) {
-                entitiesIds[eachEntity] = ObjectId(entitiesIds[eachEntity]);
-              }
-            }
-
-            delete currentSolutionScope.entities;
-            currentSolutionScope["entities"] = entitiesIds;
-
-          }
-        
           let updateSolution = 
           await database.models.solutions.findOneAndUpdate(
             {
@@ -590,7 +602,7 @@ module.exports = class SolutionsHelper {
               $arrayElemAt: ["$totalCount.count", 0]
             }
           };
-
+          
           let solutionDocuments = 
           await database.models.solutions.aggregate([
             { $match : matchQuery },
@@ -650,7 +662,7 @@ module.exports = class SolutionsHelper {
             subType,
             programId
           );
-  
+            
           if( !queryData.success ) {
             return resolve(queryData);
           }
@@ -689,7 +701,7 @@ module.exports = class SolutionsHelper {
           if ( programId !== "" ) {
             matchQuery["programId"] = ObjectId(programId);
           }
-  
+          
           let targetedSolutions = await this.list(
             type,
             subType,
@@ -712,7 +724,7 @@ module.exports = class SolutionsHelper {
               "referenceFrom"
             ]  
           );
-        
+          
           return resolve({
             success: true,
             message: constants.apiResponses.TARGETED_SOLUTIONS_FETCHED,
@@ -751,30 +763,15 @@ module.exports = class SolutionsHelper {
           registryIds.push(data[requestedDataKey]);
           entityTypes.push(requestedDataKey);
         })
-
-        let filterData = {
-          $or : [{
-            "registryDetails.code" : { $in : registryIds }
-          },{
-            "registryDetails.locationId" : { $in : registryIds }
-          }]
-        };
-    
-        let entities = await entitiesHelper.entityDocuments(filterData,["_id"]); 
-
-        if( !entities.length > 0 ) {
+        if( !registryIds.length > 0 ) {
           throw {
-            message : constants.apiResponses.NO_ENTITY_FOUND_IN_LOCATION
+            message : constants.apiResponses.NO_LOCATION_ID_FOUND_IN_DATA
           }
         }
-
-        let entityIds = entities.map(entity => {
-          return entity._id;
-        });
-
+        
         let filterQuery = {
           "scope.roles.code" : { $in : [constants.common.ALL_ROLES,...data.role.split(",")] },
-          "scope.entities" : { $in : entityIds },
+          "scope.entities" : { $in : registryIds },
           "scope.entityType" : { $in : entityTypes },
           "isReusable" : false,
           "isDeleted" : false
@@ -850,7 +847,6 @@ module.exports = class SolutionsHelper {
         }
 
         queryData.data["_id"] = solutionId;
-
         let targetedSolutionDetails = 
         await this.solutionDocuments(
           queryData.data,
@@ -871,7 +867,7 @@ module.exports = class SolutionsHelper {
             "link"
           ]
         );
-
+        
         if( !targetedSolutionDetails.length > 0 ) {
           throw {
             status : httpStatusCode["bad_request"].status,
@@ -996,7 +992,6 @@ module.exports = class SolutionsHelper {
   static addEntitiesInScope( solutionId,entities ) {
     return new Promise(async (resolve, reject) => {
       try {
-
         let solutionData = 
         await this.solutionDocuments({ 
           _id : solutionId,
@@ -1011,7 +1006,6 @@ module.exports = class SolutionsHelper {
             message : constants.apiResponses.SOLUTION_NOT_FOUND
           });
         }
-
         let programData = await programsHelper.programDocuments({
           _id : solutionData[0].programId
         },["scope.entities","scope.entityType"]);
@@ -1022,14 +1016,26 @@ module.exports = class SolutionsHelper {
             message : constants.apiResponses.PROGRAM_NOT_FOUND
           });
         }
-
         if( solutionData[0].scope.entityType !== programData[0].scope.entityType ) {
 
-          let checkEntityInParent = 
-          await entitiesHelper.entityDocuments({
-            _id : programData[0].scope.entities,
-            [`groups.${solutionData[0].entityType}`] : entities
-          },["_id"]);
+          let matchData = [];
+          let checkEntityInParent = [];
+          let childEntities = await entitiesInParent(programData[0].scope.entities,solutionData[0].scope.entityType,matchData);
+         
+          if( !childEntities.length > 0 ) {
+            throw {
+              message : constants.apiResponses.ENTITY_NOT_EXISTS_IN_PARENT
+            }
+          }
+          
+          for( let entitiesIndex = 0; entitiesIndex < entities.length; entitiesIndex++ ) {
+            for( let childListIndex = 0; childListIndex < childEntities.length; childListIndex++) {
+              if( childEntities[childListIndex] == entities[entitiesIndex]){
+                checkEntityInParent.push(entities[entitiesIndex]);
+                entitiesIndex++;
+              }
+            }
+          }
 
           if( !checkEntityInParent.length > 0 ) {
             throw {
@@ -1037,24 +1043,50 @@ module.exports = class SolutionsHelper {
             }
           }
         }
+        let locationIds = [];
+        let orgExternalId = [];
+        let entityIds = [];
+        let bodyData={};
+        
+        entities.forEach(entity=>{
+          if (gen.utils.checkValidUUID(entity)) {
+            locationIds.push(entity);
+          } else {
+            orgExternalId.push(entity);
+          }
+        });
 
-        let entitiesData = 
-        await entitiesHelper.entityDocuments({
-          _id : { $in : entities },
-          entityType : solutionData[0].scope.entityType
-        },["_id"]);
+        if ( locationIds.length > 0 ) {
+          bodyData = {
+            "id" : locationIds
+          } 
+          let entityData = await userService.learnerLocationSearch( bodyData );
+          if ( entityData.success && entityData.data && entityData.data.response && entityData.data.response.length > 0 ) {
+            entityData.data.response.forEach( entity => {
+              entityIds.push(entity.id)
+            });
+          }
+        }
+
+        if ( orgExternalId.length > 0 ) {
+          let filterData = {
+            "externalId" : orgExternalId
+          }
+          let schoolDetails = await userService.schoolData( filterData );
           
-        if( !entitiesData.length > 0 ) {
+          if ( schoolDetails.success && schoolDetails.data && schoolDetails.data.response && schoolDetails.data.response.content && schoolDetails.data.response.content.length > 0 ) {
+            let schoolData = schoolDetails.data.response.content;
+            schoolData.forEach( entity => {
+              entityIds.push(entity.externalId)
+            });
+          }
+        }
+        
+        if( !entityIds.length > 0 ) {
             throw {
               message : constants.apiResponses.ENTITIES_NOT_FOUND
             };
         }
-
-        let entityIds = [];
-        
-        entitiesData.forEach(entity => {
-          entityIds.push(entity._id);
-        });
 
         let updateSolution = await database.models.solutions.findOneAndUpdate({
           _id : solutionId
@@ -1072,7 +1104,6 @@ module.exports = class SolutionsHelper {
           message : constants.apiResponses.ENTITIES_ADDED_IN_SOLUTION,
           success : true
         });
-
       } catch(error) {
         return resolve({
           success : false,
@@ -1180,7 +1211,7 @@ module.exports = class SolutionsHelper {
             isReusable: false,
             isDeleted: false,
           },
-          ["_id", "scope.entityTypeId"]
+          ["_id", "scope.entities"]
         );
 
         if (!solutionData.length > 0) {
@@ -1189,26 +1220,13 @@ module.exports = class SolutionsHelper {
             message: constants.apiResponses.SOLUTION_NOT_FOUND,
           });
         }
-
-        let entitiesData = await entitiesHelper.entityDocuments(
-          {
-            _id: { $in: entities },
-            entityTypeId: solutionData[0].scope.entityTypeId,
-          },
-          ["_id"]
-        );
-
-        if (!entitiesData.length > 0) {
+        let entitiesData = [];
+        entitiesData = solutionData[0].scope.entities;
+        if( !entitiesData.length > 0 ) {
           throw {
-            message: constants.apiResponses.ENTITIES_NOT_FOUND,
+            message : constants.apiResponses.ENTITIES_NOT_FOUND
           };
         }
-
-        let entityIds = [];
-
-        entitiesData.forEach((entity) => {
-          entityIds.push(entity._id);
-        });
 
         let updateSolution = await database.models.solutions
           .findOneAndUpdate(
@@ -1216,7 +1234,7 @@ module.exports = class SolutionsHelper {
               _id: solutionId,
             },
             {
-              $pull: { "scope.entities": { $in: entityIds } },
+              $pull: { "scope.entities": { $in: entities } },
             },
             { new: true }
           )
@@ -1596,30 +1614,29 @@ module.exports = class SolutionsHelper {
   static verifyLink(link = "", bodyData = {}, userId = "", userToken = "", createProject = true ) {
     return new Promise(async (resolve, reject) => {
       try {
-        
+       
         let verifySolution = await this.verifySolutionDetails(
           link,
           userId,
           userToken
         );
-
+        
         let checkForTargetedSolution = await this.checkForTargetedSolution(
           link,
           bodyData,
           userId,
           userToken
         );
-
         if( !checkForTargetedSolution || Object.keys(checkForTargetedSolution.result).length <= 0 ) {
           return resolve(checkForTargetedSolution);
         }
-
+        
         let solutionData = checkForTargetedSolution.result;
 
         if( solutionData.type == constants.common.OBSERVATION ) {
           // Targeted solution
           if(checkForTargetedSolution.result.isATargetedSolution) {
-
+            
             let observationDetailFromLink = await surveyService.getObservationDetail(
               solutionData.solutionId,
               userToken
@@ -1635,6 +1652,7 @@ module.exports = class SolutionsHelper {
           // Targeted solution
           if( checkForTargetedSolution.result.isATargetedSolution && createProject ) {
             //targeted user with project creation
+
             let projectDetailFromLink = await improvementProjectService.getProjectDetail(
               solutionData.solutionId,
               userToken,
@@ -1912,7 +1930,7 @@ module.exports = class SolutionsHelper {
           "type",
           "projectTemplateId",
         ]);
-
+        
         if ( !Array.isArray(solutionData) || solutionData.length < 1 ) {
           return resolve({
             message: constants.apiResponses.SOLUTION_NOT_FOUND,
@@ -2050,8 +2068,6 @@ module.exports = class SolutionsHelper {
     });
   }
 
-
-
 };
 
  /**
@@ -2096,3 +2112,49 @@ function _generateLink(appsPortalBaseUrl, prefix, solutionLink, solutionType) {
 
 }
 
+/**
+  * get entitiesData of matching type by recursion.
+  * @method
+  * @name entitiesInParent
+  * @returns {Array} - Entities matching the type under the parent.
+*/
+
+async function entitiesInParent( solutionEntities,currentEntityType,matchingData ){
+  
+  if( !solutionEntities.length > 0 ){
+    return matchingData;
+  }
+  let bodyData={
+    "parentId" : solutionEntities
+  };
+  
+  let entityDetails = await userService.learnerLocationSearch(bodyData);
+
+  if( ( !entityDetails.success || !entityDetails.data || !entityDetails.data.response || !entityDetails.data.response.length > 0) && !matchingData.length > 0 ) {
+    return ({
+      status : httpStatusCode.bad_request.status,
+      message : constants.apiResponses.ENTITIES_NOT_FOUND
+    });
+  }
+  
+  let entityData = entityDetails.data.response;
+  
+  let mismatchEntities = [];
+  entityData.map(entity => {
+    if( entity.type == currentEntityType ) {
+      matchingData.push(entity.id)
+    } else {
+      mismatchEntities.push(entity.id)
+    }
+  });
+  
+  if( mismatchEntities.length > 0 ){
+    await entitiesInParent(mismatchEntities,currentEntityType,matchingData)
+  } 
+  let uniqueEntities = [];
+  matchingData.map( data => {
+    if (uniqueEntities.includes(data) === false) uniqueEntities.push(data);
+  });
+  return uniqueEntities; 
+
+ }
