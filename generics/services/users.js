@@ -8,6 +8,7 @@
 //dependencies
 const request = require('request');
 const userServiceUrl = process.env.USER_SERVICE_URL;
+const formServiceUrl = process.env.FORM_SERVICE_URL;
 const serverTimeout = process.env.SUNBIRD_SERVER_TIMEOUT ? parseInt(process.env.SUNBIRD_SERVER_TIMEOUT) : 500;
 const dataLimit = process.env.SUNBIRD_RESPONSE_DATA_LIMIT ? parseInt(process.env.SUNBIRD_RESPONSE_DATA_LIMIT) : 10000;
 
@@ -157,7 +158,7 @@ const learnerLocationSearch = function ( filterData, pageSize = "", pageNo = "",
                 }
               
                 const url = 
-                userServiceUrl + constants.endpoints.GET_FORM_DATA;
+                formServiceUrl + constants.endpoints.GET_FORM_DATA;
                 const options = {
                     headers : {
                         "content-type": "application/json"
