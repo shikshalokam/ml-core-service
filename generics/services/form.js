@@ -6,15 +6,16 @@
  */
 
 //dependencies
-const userService = require(ROOT_PATH + "/generics/services/users");
-let cache = require(ROOT_PATH+"/generics/helpers/cache");
+const request = require('request');
+const formServiceUrl = process.env.FORM_SERVICE_URL;
+const cacheTimeToLive = parseInt(process.env.CACHE_TTL);
+const serverTimeout = parseInt(process.env.USER_SERVICE_TIMEOUT);
 
 /**
-  * 
   * @function
   * @name formData
   * @param {String} stateLocationCode - state location code.
-  * @param {object} entityKey -  key to store data in cache
+  * @param {object} entityKey -  key to store data in cache.
   * @returns {Promise} returns a promise.
 */
 
@@ -22,9 +23,9 @@ let cache = require(ROOT_PATH+"/generics/helpers/cache");
 const formData = function ( stateLocationCode, entityKey ) {
     return new Promise(async (resolve, reject) => {
         try {
-            
-            let subEntitiesDetails = await userService.formRead( stateLocationCode );
-            if( !subEntitiesDetails.success) {
+            //Get Sub Entity Types present in a particular state
+            let subEntitiesDetails = await formRead( stateLocationCode );
+            if( !subEntitiesDetails.success ) {
                 return resolve({
                     message : constants.apiResponses.ENTITY_NOT_FOUND,
                     result : []
@@ -32,12 +33,12 @@ const formData = function ( stateLocationCode, entityKey ) {
             }
             
             let subEntityData = subEntitiesDetails.data.form.data.fields[1].children.teacher;
-
+            //Entity type is stored in a key called code
             let subEntities = subEntityData.map( subEntity => {
                 return subEntity.code;
             })
-            
-            let setCache = cache.setValue(entityKey, subEntities, constants.common.CACHE_TIME_PERIOD);
+            //set cache data for given state
+            let setCache = cache.setValue(entityKey, subEntities, cacheTimeToLive);
             return resolve(subEntities);
 
         } catch (error) {
@@ -45,6 +46,68 @@ const formData = function ( stateLocationCode, entityKey ) {
         }
     })
 }
+
+/**
+    * 
+    * @function
+    * @name formRead
+    * @param {object} subTypeData -  State location code.
+    * @returns {Promise} returns a promise.
+*/
+async function formRead ( subTypeData ) {
+    return new Promise(async (resolve, reject) => {
+        try {
+          
+            let bodyData = {
+                request : {
+                    type: constants.common.PROFILE_CONFIG_FORM_KEY,
+                    subType: subTypeData,
+                    action: constants.common.GET_METHOD
+                }
+            }
+          
+            const url = 
+            formServiceUrl + constants.endpoints.GET_FORM_DATA;
+            const options = {
+                headers : {
+                    "content-type": "application/json"
+                },
+                json : bodyData
+            };
+
+            request.post(url, options, requestCallBack);
+            let result = {
+                success : true
+            };  
+            function requestCallBack(err, data) {
+             
+                if (err) {
+                    result.success = false;
+                } else {
+                    
+                    let response = data.body;
+                    
+                    if( response.responseCode === constants.common.OK) {
+                        result["data"] = response.result;
+                        result.success = true;
+                    } else {
+                        result.success = false;
+                    }
+                }
+                return resolve(result);
+            }
+            setTimeout(function () {
+                return resolve (result = {
+                    success : false
+                });
+            }, serverTimeout);
+
+        } catch (error) {
+            return reject(error);
+        }
+    })
+}
+
 module.exports = {
     formData : formData
 }

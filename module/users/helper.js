@@ -176,9 +176,9 @@ module.exports = class UsersHelper {
             bodyData = {
               "id" : locationIds
             } 
-            let entityData = await userService.learnerLocationSearch( bodyData );
+            let entityData = await userService.locationSearch( bodyData );
             
-            if ( !entityData.success || !entityData.data || !entityData.data.response || !entityData.data.response.length > 0 ) {
+            if ( !entityData.success ) {
               return resolve({
                 status: httpStatusCode["bad_request"].status,
                 message: constants.apiResponses.ENTITY_NOT_FOUND,
@@ -186,11 +186,11 @@ module.exports = class UsersHelper {
               });
             }
 
-            entityData.data.response.forEach( entity => {
+            entityData.data.forEach( entity => {
               entitiesData.push(entity.id)
             });
 
-            solutionDataToBeUpdated["entityType"] = entityData.data.response[0].type;
+            solutionDataToBeUpdated["entityType"] = entityData.data[0].type;
             
           }
 
@@ -372,9 +372,10 @@ module.exports = class UsersHelper {
                     })
                 }
                 
-                let subEntities = await cache.getValue(entityKey);
+                let subEntities = [];
+                let cacheData= await cache.getValue(entityKey);
                 
-                if( !subEntities.length > 0 ) {
+                if( !cacheData.success ) {
                   subEntities = await formService.formData( stateCode,entityKey );
                   if( !subEntities.length > 0 ) {
                       return resolve({
@@ -382,6 +383,8 @@ module.exports = class UsersHelper {
                           result : []
                       })
                   }
+                } else {
+                  subEntities = cacheData.result;
                 }
                 
                 
@@ -660,9 +663,9 @@ module.exports = class UsersHelper {
           };
         }
         
-        let entityData = await userService.learnerLocationSearch( bodyData );
+        let entityData = await userService.locationSearch( bodyData );
         
-        if ( !entityData.success || !entityData.data || !entityData.data.response || !entityData.data.response.length > 0) {
+        if ( !entityData.success ) {
           throw {
             message: constants.apiResponses.ENTITIES_NOT_EXIST_IN_LOCATION,
           };
@@ -683,7 +686,7 @@ module.exports = class UsersHelper {
           entityTypes = [constants.common.STATE_ENTITY_TYPE];
         } else {
           let entitiesMappingForm = await this.entitiesMappingForm(
-            entityData.data.response[0].code,
+            entityData.data[0].code,
             rolesDocument[0]._id,
             entityKey
           );
@@ -771,8 +774,8 @@ module.exports = class UsersHelper {
               "parentId" : requestedData[targetedEntityType]
             }
           }
-          let entitiesData = await userService.learnerLocationSearch( filterData );
-          if( !entitiesData.success ||!entityData.data || !entityData.data.response || !entityData.data.response.length > 0 ){
+          let entitiesData = await userService.locationSearch( filterData );
+          if( !entitiesData.success ){
             targetedEntityType = constants.common.STATE_ENTITY_TYPE;
           }          
         }
@@ -781,19 +784,19 @@ module.exports = class UsersHelper {
           filterData = {
             "id" : requestedData[targetedEntityType]
           };
-          } else {
+        } else {
           filterData = {
             "code" : requestedData[targetedEntityType]
           };
         }
-        let entitiesDocument = await userService.learnerLocationSearch( filterData );
-        if ( !entitiesDocument.success || !entitiesDocument.data || !entitiesDocument.data.response || !entitiesDocument.data.response.length > 0) {
+        let entitiesDocument = await userService.locationSearch( filterData );
+        if ( !entitiesDocument.success ) {
           throw {
             message: constants.apiResponses.ENTITY_NOT_FOUND
           };
         }
 
-        let entityData = entitiesDocument.data.response;
+        let entityData = entitiesDocument.data;
         let entityDataFormated = {
           "_id" : entityData[0].id,
           "entityType" : entityData[0].type,
@@ -828,30 +831,33 @@ module.exports = class UsersHelper {
     return new Promise(async (resolve, reject) => {
       try {
         let entityKey = constants.common.SUBENTITY + requestedData.state;
-        let subEntities = await cache.getValue(entityKey);
-        if( !subEntities.length > 0 ) {
+        let subEntityTypes = [];
+        let cacheData = await cache.getValue(entityKey);
+        if( !cacheData.success > 0 ) {
             let filterData = {
               "id" : requestedData.state
             };
 
-            let entitiesData = await userService.learnerLocationSearch( filterData );
+            let entitiesData = await userService.locationSearch( filterData );
 
-            if( !entitiesData.success || !entitiesData.data || !entitiesData.data.response || !entitiesData.data.response.length > 0 ) {
+            if( !entitiesData.success ) {
                 return resolve({
                     message : constants.apiResponses.ENTITY_NOT_FOUND,
                     result : []
                 })
             }
-            let stateLocationCode = entitiesData.data.response[0].code;
-            subEntities = await formService.formData( stateLocationCode,entityKey );
-            if( !subEntities.length > 0 ) {
+            let stateLocationCode = entitiesData.data[0].code;
+            subEntityTypes = await formService.formData( stateLocationCode,entityKey );
+            if( !subEntityTypes.length > 0 ) {
                 return resolve({
                     message : constants.apiResponses.ENTITY_NOT_FOUND,
                     result : []
                 })
             }
-        }        
-        let targetedIndex = subEntities.length;
+        } else {
+          subEntityTypes = cacheData.result;
+        }       
+        let targetedIndex = subEntityTypes.length;
         let roleWiseTarget;
         for( let roleWiseEntityIndex = 0; roleWiseEntityIndex < roleWiseTargetedEntities.length; roleWiseEntityIndex++ ) {
           for( let subEntitiesIndex = 0; subEntitiesIndex < subEntities.length; subEntitiesIndex++ ) {

@@ -8,9 +8,8 @@
 //dependencies
 const request = require('request');
 const userServiceUrl = process.env.USER_SERVICE_URL;
-const formServiceUrl = process.env.FORM_SERVICE_URL;
-const serverTimeout = process.env.SUNBIRD_SERVER_TIMEOUT ? parseInt(process.env.SUNBIRD_SERVER_TIMEOUT) : 500;
-const dataLimit = process.env.SUNBIRD_RESPONSE_DATA_LIMIT ? parseInt(process.env.SUNBIRD_RESPONSE_DATA_LIMIT) : 10000;
+const serverTimeout = parseInt(process.env.USER_SERVICE_TIMEOUT);
+const dataLimit = parseInt(process.env.USER_RESPONSE_DATA_LIMIT);
 
 const profile = function ( token,userId = "" ) {
     return new Promise(async (resolve, reject) => {
@@ -63,16 +62,14 @@ const profile = function ( token,userId = "" ) {
 /**
   * 
   * @function
-  * @name learnerLocationSearch
-  * @param {String} bearerToken - autherization token.
+  * @name locationSearch
   * @param {object} filterData -  bodydata .
   * @returns {Promise} returns a promise.
 */
 
-const learnerLocationSearch = function ( filterData, pageSize = "", pageNo = "", searchKey = "" ) {
+const locationSearch = function ( filterData, pageSize = "", pageNo = "", searchKey = "" ) {
     return new Promise(async (resolve, reject) => {
         try {
-          
           let bodyData = {};
           bodyData["request"] = {};
           bodyData["request"]["filters"] = filterData;
@@ -97,26 +94,27 @@ const learnerLocationSearch = function ( filterData, pageSize = "", pageNo = "",
           const options = {
               headers : {
                 "content-type": "application/json"
-              },
+            },
               json : bodyData
           };
-  
-          request.post(url,options,sunbirdCallback);
+          request.post(url,options,requestCallback);
   
           let result = {
               success : true
           };
   
-          function sunbirdCallback(err, data) {
-  
-              
+          function requestCallback(err, data) {
               if (err) {
                   result.success = false;
               } else {
-                    
                   let response = data.body;
-                  if( response.responseCode === constants.common.OK) {
-                      result["data"] = response.result;
+                  if( response.responseCode === constants.common.OK &&
+                      response.result &&
+                      response.result.response &&
+                      response.result.response.length > 0
+                    ) {
+                      result["data"] = response.result.response;
+                      result["count"] = response.result.count;
                   } else {
                         result.success = false;
                   }
@@ -137,67 +135,7 @@ const learnerLocationSearch = function ( filterData, pageSize = "", pageNo = "",
     })
   }
   
-  /**
-    * 
-    * @function
-    * @name formRead
-    * @param {String} bearerToken - autherization token.
-    * @param {object} bodyData -  subType data.
-    * @returns {Promise} returns a promise.
-  */
-    const formRead = function ( subTypeData ) {
-        return new Promise(async (resolve, reject) => {
-            try {
-              
-                let bodyData = {
-                    request : {
-                        type: constants.common.FORM_API_TYPE,
-                        subType: subTypeData,
-                        action: constants.common.GET_METHOD
-                    }
-                }
-              
-                const url = 
-                formServiceUrl + constants.endpoints.GET_FORM_DATA;
-                const options = {
-                    headers : {
-                        "content-type": "application/json"
-                    },
-                    json : bodyData
-                };
-    
-                request.post(url,options,sunbirdCallback);
-                let result = {
-                    success : true
-                };  
-                function sunbirdCallback(err, data) {
-                 
-                    if (err) {
-                        result.success = false;
-                    } else {
-                        
-                        let response = data.body;
-                        
-                        if( response.responseCode === constants.common.OK) {
-                            result["data"] = response.result;
-                            result.success = true;
-                        } else {
-                            result.success = false;
-                        }
-                    }
-                    return resolve(result);
-                }
-                setTimeout(function () {
-                    return resolve (result = {
-                        success : false
-                    });
-                }, serverTimeout);
   
-            } catch (error) {
-                return reject(error);
-            }
-        })
-    }
   
   /**
     * 
@@ -242,16 +180,16 @@ const learnerLocationSearch = function ( filterData, pageSize = "", pageNo = "",
                 const options = {
                     headers : {
                         "content-type": "application/json"
-                    },
+                        },
                     json : bodyData
                 };
     
-                request.post(url,options,sunbirdCallback);
+                request.post(url,options,requestCallback);
                 let result = {
                     success : true
                 };
     
-                function sunbirdCallback(err, data) {
+                function requestCallback(err, data) {
         
                     if (err) {
                         result.success = false;
@@ -281,7 +219,6 @@ const learnerLocationSearch = function ( filterData, pageSize = "", pageNo = "",
   
 module.exports = {
     profile : profile,
-    learnerLocationSearch : learnerLocationSearch,
-    formRead : formRead,
+    locationSearch : locationSearch,
     schoolData :schoolData
 }

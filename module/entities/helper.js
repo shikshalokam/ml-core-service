@@ -246,28 +246,29 @@ module.exports = class EntitiesHelper {
         return new Promise(async (resolve, reject) => {
 
             try {
-                let bodyData={
+                //List of all immediateEntities based on entityId.
+                let bodyData = {
                     "parentId" : entityId
                 };
                 
-                let entitiesData = await userService.learnerLocationSearch(
+                let entitiesData = await userService.locationSearch(
                     bodyData,
                     pageSize,
                     pageNo,
                     searchText
                 );
                 
-                if( !entitiesData.success || !entitiesData.data || !entitiesData.data.response || !entitiesData.data.response.length > 0 ) {
+                if( !entitiesData.success ) {
                     return resolve({
-                        data : entitiesData.data.response,
-                        count : entitiesData.data.count
+                        data : entitiesData.data,
+                        count : entitiesData.count
                     }); 
                 }
-                let immediateLocation = entitiesData.data.response;
+                let immediateLocation = entitiesData.data;
                 
                 return resolve({
                     data : immediateLocation,
-                    count : entitiesData.data.count
+                    count : entitiesData.count
                 });
 
             } catch(error) {
@@ -391,11 +392,11 @@ module.exports = class EntitiesHelper {
     }
 
     /**
-    * Get immediate entities.
+    * Get entities by traversal.
     * @method
-    * @name listByEntityType
+    * @name entityTraversal
     * @param {Object} entityId
-    * @returns {Array} - List of all immediateEntities based on entityId.
+    * @returns {Array} - List of all Entities based on entityId using traversal.
     */
 
    static entityTraversal(
@@ -407,7 +408,7 @@ module.exports = class EntitiesHelper {
     ) {
         return new Promise(async (resolve, reject) => {
             try {
-                
+                //list entities of type {entityTraversalType} which comes under the specified entity{entityId}
                 if( entityTraversalType == constants.common.SCHOOL) {
                     let filterData = {
                         "orgLocation.id" : entityId
@@ -434,14 +435,14 @@ module.exports = class EntitiesHelper {
                     });
                     
 
-                    let bodyData={
+                    let bodyData = {
                         "code" : schoolCodes
                     };
                     
                 
-                    let entitiesData = await userService.learnerLocationSearch( bodyData );
+                    let entitiesData = await userService.locationSearch( bodyData );
                 
-                    if( !entitiesData.success || !entitiesData.data || !entitiesData.data.response || !entitiesData.data.response.length > 0 ) {
+                    if( !entitiesData.success ) {
                         return resolve({
                             data : [],
                             count : 0
@@ -449,15 +450,16 @@ module.exports = class EntitiesHelper {
                     }
                     
                     return resolve({
-                        data : entitiesData.data.response,
+                        data : entitiesData.data,
                         count : subentitiesCode.data.response.count
                     }) 
 
 
                 } else {
-                    let subEntitiesMatchingType = [];
+                    /* if {entityId} is of a state and {entityTraversalType} is block , getSubEntitiesOfGivenType will return all entities of type block in that state*/
+                    let subEntitiesArray = [];  
                     
-                    let subEntities = await subEntitiesWithMatchingType( entityId,entityTraversalType,subEntitiesMatchingType )
+                    let subEntities = await getSubEntitiesOfGivenType( entityId, entityTraversalType, subEntitiesArray )
                
                     if( !subEntities.length > 0 ) {
                         return resolve({
@@ -465,7 +467,7 @@ module.exports = class EntitiesHelper {
                             count : 0
                         }) 
                     }
-                    
+                    //searching here because search with traversal will affect result.
                     let subentitiesData = subEntities
                     let count = subentitiesData.length;
                     if( searchText !== "" ){
@@ -713,9 +715,10 @@ module.exports = class EntitiesHelper {
     * @returns {Array} List of sub entity type.
     */
 
-    static subEntityListBasedOnRoleAndLocation( stateLocationId,role ) {   
+    static subEntityListBasedOnRoleAndLocation( stateLocationId, role ) {   
         return new Promise(async (resolve, reject) => {
             try {
+                //key will be subEntityTypesOf_{stateLocationId}
                 let entityKey = constants.common.SUBENTITY + stateLocationId;
                 
                 let rolesDocument = await userRolesHelper.roleDocuments({
@@ -728,31 +731,35 @@ module.exports = class EntitiesHelper {
                         message: constants.apiResponses.USER_ROLES_NOT_FOUND
                     }
                 }
+                //check if data already available in cache
+                let subEntities = [];
+                let cacheData = await cache.getValue(entityKey);
                 
-                let subEntities = await cache.getValue(entityKey);
-               
-                if( !subEntities.length > 0 ) {
+                if( !cacheData.success ) {
                     let bodyData={
                         "id" : stateLocationId
                     };
                     
-                    let entitiesData = await userService.learnerLocationSearch( bodyData );
-
-                    if( !entitiesData.success || !entitiesData.data || !entitiesData.data.response || !entitiesData.data.response.length > 0 ) {
+                    let entitiesData = await userService.locationSearch( bodyData );
+                    
+                    if( !entitiesData.success ) {
                         return resolve({
                             message : constants.apiResponses.ENTITY_NOT_FOUND,
                             result : []
                         })
                     }
                     
-                    let stateLocationCode = entitiesData.data.response[0].code;
-                    subEntities = await formService.formData( stateLocationCode,entityKey );
+                    let stateLocationCode = entitiesData.data[0].code;
+                    subEntities = await formService.formData( stateLocationCode, entityKey );
+                    
                     if( !subEntities.length > 0 ) {
                         return resolve({
                             message : constants.apiResponses.ENTITY_NOT_FOUND,
                             result : []
                         })
                     }
+                } else {
+                    subEntities = cacheData.result;
                 }
                 
                
@@ -879,11 +886,13 @@ module.exports = class EntitiesHelper {
 /**
   * get subEntities of matching type by recursion.
   * @method
-  * @name subEntitiesWithMatchingType
+  * @name getSubEntitiesOfGivenType
+  * @param parentIds {Array} - Array of entity Ids- for which we are finding sub entities of given entityType
+  * @param entityType {string} - EntityType.
   * @returns {Array} - Sub entities matching the type .
 */
 
-async function subEntitiesWithMatchingType( parentIds,entityType, matchingData ) { 
+async function getSubEntitiesOfGivenType( parentIds, entityType, matchingData ) { 
     
     if( !parentIds.length > 0 ) {
       return matchingData;
@@ -892,14 +901,14 @@ async function subEntitiesWithMatchingType( parentIds,entityType, matchingData )
     let bodyData = {
         "parentId" : parentIds
     };
-    
-    let entityDetails = await userService.learnerLocationSearch(bodyData);
+    //get all immediate subEntities of type {entityType}
+    let entityDetails = await userService.locationSearch(bodyData);
 
-    if( ( !entityDetails.success || !entityDetails.data || !entityDetails.data.response || !entityDetails.data.response.length > 0 ) && !matchingData.length > 0 ) {
+    if( ( !entityDetails.success ) && !matchingData.length > 0 ) {
       return matchingData;
     }
     
-    let entityData = entityDetails.data.response;
+    let entityData = entityDetails.data;
     
     let mismatchEntities = [];
     entityData.map(entity => {
@@ -913,7 +922,7 @@ async function subEntitiesWithMatchingType( parentIds,entityType, matchingData )
     });
 
     if( mismatchEntities.length > 0 ){
-      await subEntitiesWithMatchingType(mismatchEntities, entityType, matchingData);
+      await getSubEntitiesOfGivenType(mismatchEntities, entityType, matchingData);
     } 
     let uniqueEntities = [];
     matchingData.map( data => {

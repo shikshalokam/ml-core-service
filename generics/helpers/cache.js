@@ -21,9 +21,15 @@ function getValue(key){
 
     if (cache.has(key)) {
         data = cache.get(key);
+        return ({
+            success: true,
+            result: data
+        })
+    } else {
+        return ({
+            success: false 
+        })
     }
-
-    return data;
 }
 
 
@@ -38,7 +44,7 @@ function getValue(key){
 
 function setValue(key, value, timeout){
     let data = cache.set( key, value, timeout );
-    return data;
+    return true;
 }
 
 /**
@@ -52,7 +58,7 @@ function setValue(key, value, timeout){
 function removeKey(key){
 
     let data = cache.del(key);
-    return;
+    return true;
 }
 
 module.exports = {

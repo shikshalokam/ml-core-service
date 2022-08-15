@@ -146,9 +146,9 @@ module.exports = class SolutionsHelper {
               let bodyData = {
                 "id" : locationIds
               } 
-              let entityData = await userService.learnerLocationSearch( bodyData );
-              if ( entityData.success && entityData.data && entityData.data.response && entityData.data.response.length > 0 ) {
-                entityData.data.response.forEach( entity => {
+              let entityData = await userService.locationSearch( bodyData );
+              if ( entityData.success ) {
+                entityData.data.forEach( entity => {
                   entityIds.push(entity.id)
                 });
               }
@@ -272,9 +272,9 @@ module.exports = class SolutionsHelper {
           if( Object.keys(scopeData).length > 0 ) {
             if( scopeData.entityType ) {
               let bodyData = { "type" : scopeData.entityType }
-              let entityTypeData = await userService.learnerLocationSearch( bodyData, 1 );
-              if ( entityTypeData.success && entityTypeData.data && entityTypeData.data.response && entityTypeData.data.response.length > 0 ) {
-                currentSolutionScope.entityType = entityTypeData.data.response[0].type
+              let entityTypeData = await userService.locationSearch( bodyData, 1 );
+              if ( entityTypeData.success ) {
+                currentSolutionScope.entityType = entityTypeData.data[0].type
               }
             }
 
@@ -297,9 +297,9 @@ module.exports = class SolutionsHelper {
                 bodyData = {
                   "id" : locationIds
                 } 
-                let entityData = await userService.learnerLocationSearch( bodyData );
-                if ( entityData.success && entityData.data && entityData.data.response && entityData.data.response.length > 0 ) {
-                  entityData.data.response.forEach( entity => {
+                let entityData = await userService.locationSearch( bodyData );
+                if ( entityData.success ) {
+                  entityData.data.forEach( entity => {
                     if( entity.type == currentSolutionScope.entityType ) {
                       entityIds.push(entity.id)
                     }
@@ -333,10 +333,16 @@ module.exports = class SolutionsHelper {
               if( currentSolutionScope.entityType !== programData[0].scope.entityType ) {
                 
                 let matchData = [];
-                let childEntities = await entitiesInParent(currentSolutionScope.entities,currentSolutionScope.entityType,matchData);
-                if( childEntities.length > 0 && entityIds.length > 0 ) {
+                let childEntities = [];
+                let childEntitiesDetails = await entitiesHelper.getSubEntitiesOfGivenType(currentSolutionScope.entities, currentSolutionScope.entityType, matchData);
+
+                childEntitiesDetails.forEach( entity => {
+                  childEntities.push(entity.id) 
+                });
+                
+                if( childEntities.length > 0 ) {
                   for( let entitiesIndex = 0; entitiesIndex < entityIds.length; entitiesIndex++ ) {
-                    for( let childListIndex = 0; childListIndex < childEntities.length; childListIndex++) {
+                    for( let childListIndex = 0; childListIndex < childEntities.length; childListIndex++ ) {
                       if( childEntities[childListIndex] == entityIds[entitiesIndex]){
                         entitiesData.push(entityIds[entitiesIndex]);
                         entitiesIndex++;
@@ -1019,9 +1025,14 @@ module.exports = class SolutionsHelper {
         if( solutionData[0].scope.entityType !== programData[0].scope.entityType ) {
 
           let matchData = [];
+          let childEntities = [];
           let checkEntityInParent = [];
-          let childEntities = await entitiesInParent(programData[0].scope.entities,solutionData[0].scope.entityType,matchData);
-         
+          let childEntitiesDetails = await entitiesHelper.getSubEntitiesOfGivenType(programData[0].scope.entities, solutionData[0].scope.entityType, matchData);
+          
+          childEntitiesDetails.forEach( entity => {
+            childEntities.push(entity.id); 
+          });
+
           if( !childEntities.length > 0 ) {
             throw {
               message : constants.apiResponses.ENTITY_NOT_EXISTS_IN_PARENT
@@ -1060,9 +1071,9 @@ module.exports = class SolutionsHelper {
           bodyData = {
             "id" : locationIds
           } 
-          let entityData = await userService.learnerLocationSearch( bodyData );
-          if ( entityData.success && entityData.data && entityData.data.response && entityData.data.response.length > 0 ) {
-            entityData.data.response.forEach( entity => {
+          let entityData = await userService.locationSearch( bodyData );
+          if ( entityData.success ) {
+            entityData.data.forEach( entity => {
               entityIds.push(entity.id)
             });
           }
@@ -2111,50 +2122,3 @@ function _generateLink(appsPortalBaseUrl, prefix, solutionLink, solutionType) {
   return link;
 
 }
-
-/**
-  * get entitiesData of matching type by recursion.
-  * @method
-  * @name entitiesInParent
-  * @returns {Array} - Entities matching the type under the parent.
-*/
-
-async function entitiesInParent( solutionEntities,currentEntityType,matchingData ){
-  
-  if( !solutionEntities.length > 0 ){
-    return matchingData;
-  }
-  let bodyData={
-    "parentId" : solutionEntities
-  };
-  
-  let entityDetails = await userService.learnerLocationSearch(bodyData);
-
-  if( ( !entityDetails.success || !entityDetails.data || !entityDetails.data.response || !entityDetails.data.response.length > 0) && !matchingData.length > 0 ) {
-    return ({
-      status : httpStatusCode.bad_request.status,
-      message : constants.apiResponses.ENTITIES_NOT_FOUND
-    });
-  }
-  
-  let entityData = entityDetails.data.response;
-  
-  let mismatchEntities = [];
-  entityData.map(entity => {
-    if( entity.type == currentEntityType ) {
-      matchingData.push(entity.id)
-    } else {
-      mismatchEntities.push(entity.id)
-    }
-  });
-  
-  if( mismatchEntities.length > 0 ){
-    await entitiesInParent(mismatchEntities,currentEntityType,matchingData)
-  } 
-  let uniqueEntities = [];
-  matchingData.map( data => {
-    if (uniqueEntities.includes(data) === false) uniqueEntities.push(data);
-  });
-  return uniqueEntities; 
-
- }

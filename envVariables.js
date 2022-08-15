@@ -129,6 +129,21 @@ let enviromentVariables = {
     "message" : "App Portal base url",
     "optional" : true,
     "default": "https://dev.sunbirded.org"
+  },
+  "USER_SERVICE_TIMEOUT" : {
+    "message" : "User Service Timeout",
+    "optional" : true,
+    "default": 5000
+  },
+  "CACHE_TTL" : {
+    "message" : "Cache Time To Live",
+    "optional" : true,
+    "default": 43200
+  },
+  "USER_RESPONSE_DATA_LIMIT" : {
+    "message" : "User Response Data Limit",
+    "optional" : true,
+    "default": 10000
   }
 }
 

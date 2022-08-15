@@ -67,8 +67,8 @@ module.exports = {
   "DISCOVERED_BY_ME" : "discoveredByMe",
   "DEFAULT_SUBMISSION_REQUIRED" : 1,
   "SCHOOL" : "school",
-  "SUBENTITY" :"subEntity_",
-  "CACHE_TIME_PERIOD" : 43200,
-  "FORM_API_TYPE" : "profileConfig"
+  "SUBENTITY" :"subEntityTypesOf_",
+  "CACHE_TTL" : 43200,
+  "PROFILE_CONFIG_FORM_KEY" : "profileConfig"
   
 };

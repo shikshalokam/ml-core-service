@@ -211,7 +211,7 @@ module.exports = class ProgramsHelper {
           let bodyData = {
             "type" : scopeData.entityType
           }
-          let entityTypeData = await userService.learnerLocationSearch( bodyData );
+          let entityTypeData = await userService.locationSearch( bodyData );
           
           if( !entityTypeData.success || !entityTypeData.data || !entityTypeData.data.response || !entityTypeData.data.response.length > 0 ) {
             return resolve({
@@ -244,7 +244,7 @@ module.exports = class ProgramsHelper {
             bodyData = {
               "id" : locationIds
             } 
-            let entityData = await userService.learnerLocationSearch( bodyData );
+            let entityData = await userService.locationSearch( bodyData );
             if ( entityData.success && entityData.data && entityData.data.response && entityData.data.response.length > 0 ) {
               entityData.data.response.forEach( entity => {
                 entityIds.push(entity.id)
@@ -757,7 +757,7 @@ module.exports = class ProgramsHelper {
           bodyData = {
             "id" : locationIds
           } 
-          let entityData = await userService.learnerLocationSearch( bodyData );
+          let entityData = await userService.locationSearch( bodyData );
           if ( entityData.success && entityData.data && entityData.data.response && entityData.data.response.length > 0 ) {
             entityData.data.response.forEach( entity => {
               entityIds.push(entity.id)

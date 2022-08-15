@@ -554,7 +554,7 @@ module.exports = class Users extends Abstract {
                 } 
                 // multiple targeted entity
                 else if ( roleWiseTargetedEntities && roleWiseTargetedEntities.length > 1 ) {
-                    
+                    // request body contain role and entitytype and id
                     let targetedEntity = await usersHelper.getHighestTargetedEntity(
                         roleWiseTargetedEntities, req.body
                     );
