@@ -6,9 +6,9 @@
  */
 
 //dependencies
+const { constants } = require('fs');
 const request = require('request');
 const userServiceUrl = process.env.USER_SERVICE_URL;
-const serverTimeout = parseInt(process.env.USER_SERVICE_TIMEOUT);
 
 const profile = function ( token,userId = "" ) {
     return new Promise(async (resolve, reject) => {
@@ -123,7 +123,7 @@ const locationSearch = function ( filterData, pageSize = "", pageNo = "", search
              return resolve (result = {
                  success : false
               });
-          }, serverTimeout);
+          }, constants.common.SERVER_TIME_OUT);
   
   
         } catch (error) {

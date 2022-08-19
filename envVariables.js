@@ -130,11 +130,6 @@ let enviromentVariables = {
     "optional" : true,
     "default": "https://dev.sunbirded.org"
   },
-  "USER_SERVICE_TIMEOUT" : {
-    "message" : "User Service Timeout",
-    "optional" : true,
-    "default": 5000
-  },
   "FORM_SERVICE_URL" : {
     "message" : "form service base url",
     "optional" : false
