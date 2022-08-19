@@ -375,7 +375,7 @@ module.exports = class UsersHelper {
                 let subEntities = [];
                 let cacheData= await cache.getValue(entityKey);
                 
-                if( !cacheData.success ) {
+                if( !cacheData ) {
                   subEntities = await formService.formData( stateCode,entityKey );
                   if( !subEntities.length > 0 ) {
                       return resolve({
@@ -833,7 +833,7 @@ module.exports = class UsersHelper {
         let entityKey = constants.common.SUBENTITY + requestedData.state;
         let subEntityTypes = [];
         let cacheData = await cache.getValue(entityKey);
-        if( !cacheData.success > 0 ) {
+        if( !cacheData ) {
             let filterData = {
               "id" : requestedData.state
             };

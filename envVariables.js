@@ -135,15 +135,9 @@ let enviromentVariables = {
     "optional" : true,
     "default": 5000
   },
-  "CACHE_TTL" : {
-    "message" : "Cache Time To Live",
-    "optional" : true,
-    "default": 43200
-  },
-  "USER_RESPONSE_DATA_LIMIT" : {
-    "message" : "User Response Data Limit",
-    "optional" : true,
-    "default": 10000
+  "FORM_SERVICE_URL" : {
+    "message" : "form service base url",
+    "optional" : false
   }
 }
 

@@ -21,14 +21,9 @@ function getValue(key){
 
     if (cache.has(key)) {
         data = cache.get(key);
-        return ({
-            success: true,
-            result: data
-        })
+        return data;
     } else {
-        return ({
-            success: false 
-        })
+        return false;
     }
 }
 
@@ -39,7 +34,7 @@ function getValue(key){
   * @name set
   * @params key - name of the cache key.
   * @params value - cache data to set.  
-  * @returns {Array} - cache updated data.
+  * @returns {Boolean} - true
 */
 
 function setValue(key, value, timeout){
@@ -52,7 +47,7 @@ function setValue(key, value, timeout){
   * @method
   * @name remove
   * @params key - cache key need to be removed. 
-  * @returns 
+  * @returns {Boolean} - true
 */
 
 function removeKey(key){

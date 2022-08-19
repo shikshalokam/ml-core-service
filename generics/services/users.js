@@ -9,7 +9,6 @@
 const request = require('request');
 const userServiceUrl = process.env.USER_SERVICE_URL;
 const serverTimeout = parseInt(process.env.USER_SERVICE_TIMEOUT);
-const dataLimit = parseInt(process.env.USER_RESPONSE_DATA_LIMIT);
 
 const profile = function ( token,userId = "" ) {
     return new Promise(async (resolve, reject) => {
@@ -76,9 +75,7 @@ const locationSearch = function ( filterData, pageSize = "", pageNo = "", search
   
           if ( pageSize !== "" ) {
               bodyData["request"]["limit"] = pageSize;
-          } else {
-              bodyData["request"]["limit"] = dataLimit;
-          }
+          } 
   
           if ( pageNo !== "" ) {
               let offsetValue = pageSize * ( pageNo - 1 ); 

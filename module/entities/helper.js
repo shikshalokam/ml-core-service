@@ -735,7 +735,7 @@ module.exports = class EntitiesHelper {
                 let subEntities = [];
                 let cacheData = await cache.getValue(entityKey);
                 
-                if( !cacheData.success ) {
+                if( !cacheData ) {
                     let bodyData={
                         "id" : stateLocationId
                     };
