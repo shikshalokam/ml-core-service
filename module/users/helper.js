@@ -743,6 +743,8 @@ module.exports = class UsersHelper {
             Object.keys(entities[0].groups).length > 0
           ) {
             targetedEntityType = constants.common.STATE_ENTITY_TYPE;
+          } else if ( targetedEntityType === constants.common.SCHOOL ) {
+              targetedEntityType = constants.common.STATE_ENTITY_TYPE;
           }
         }
 
