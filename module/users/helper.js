@@ -12,7 +12,6 @@ const userRolesHelper = require(MODULES_BASE_PATH + "/user-roles/helper");
 const entitiesHelper = require(MODULES_BASE_PATH + "/entities/helper");
 const improvementProjectService = require(ROOT_PATH + "/generics/services/improvement-project");
 const userService = require(ROOT_PATH + "/generics/services/users");
-let cache = require(ROOT_PATH+"/generics/helpers/cache");
 const formService = require(ROOT_PATH + '/generics/services/form');
 
 
@@ -384,7 +383,7 @@ module.exports = class UsersHelper {
                       })
                   }
                 } else {
-                  subEntities = cacheData.result;
+                  subEntities = cacheData;
                 }
                 
                 
@@ -768,16 +767,19 @@ module.exports = class UsersHelper {
         }
         let filterData ={};
         if (solutionData[0].entityType === targetedEntityType) {
-  
+          // if solution entity type and user tageted entity type are same
           if (gen.utils.checkValidUUID(requestedData[targetedEntityType])) {
             filterData = {
               "parentId" : requestedData[targetedEntityType]
             }
-          }
-          let entitiesData = await userService.locationSearch( filterData );
-          if( !entitiesData.success ){
+            let entitiesData = await userService.locationSearch( filterData );
+            if( entitiesData.success ){
+              targetedEntityType = constants.common.STATE_ENTITY_TYPE;
+            }  
+          } else if ( targetedEntityType ===  constants.common.SCHOOL ) {
             targetedEntityType = constants.common.STATE_ENTITY_TYPE;
-          }          
+          }
+                  
         }
        
         if (gen.utils.checkValidUUID(requestedData[targetedEntityType])) {
@@ -855,7 +857,7 @@ module.exports = class UsersHelper {
                 })
             }
         } else {
-          subEntityTypes = cacheData.result;
+          subEntityTypes = cacheData;
         }       
         let targetedIndex = subEntityTypes.length;
         let roleWiseTarget;

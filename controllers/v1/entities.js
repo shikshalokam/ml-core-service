@@ -359,7 +359,7 @@ module.exports = class Entities extends Abstract {
               req.params._id,
               eachRole
             );
- 
+            
             if(entityTypeMappingData.result && entityTypeMappingData.result.length > currentMaximumCountOfRequiredEntities) {
                 currentMaximumCountOfRequiredEntities = entityTypeMappingData.result.length;
                 subEntityTypeListData = entityTypeMappingData;

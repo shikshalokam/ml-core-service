@@ -6,7 +6,6 @@
  */
 
 //dependencies
-const { constants } = require('fs');
 const request = require('request');
 const userServiceUrl = process.env.USER_SERVICE_URL;
 
@@ -62,7 +61,10 @@ const profile = function ( token,userId = "" ) {
   * 
   * @function
   * @name locationSearch
-  * @param {object} filterData -  bodydata .
+  * @param {object} filterData -  contain filter object.
+  * @param {String} pageSize -  requested page size.
+  * @param {String} pageNo -  requested page number.
+  * @param {String} searchKey -  search string.
   * @returns {Promise} returns a promise.
 */
 
@@ -90,7 +92,7 @@ const locationSearch = function ( filterData, pageSize = "", pageNo = "", search
           userServiceUrl + constants.endpoints.GET_LOCATION_DATA;
           const options = {
               headers : {
-                "content-type": "application/json"
+                "content-type": "application/json",
             },
               json : bodyData
           };
@@ -138,9 +140,10 @@ const locationSearch = function ( filterData, pageSize = "", pageNo = "", search
     * 
     * @function
     * @name schoolData
-    * @param {String} bearerToken - autherization token.
-    * @param {object} bodyData -  location id
-    * @param {array} fields - set of data keys need to be fetched.
+    *  @param {object} filterData -  contain filter object.
+    * @param {String} pageSize -  requested page size.
+  * @param {String} pageNo -  requested page number.
+  * @param {String} searchKey -  search string.
     * @param {String} searchKey - search key for fuzzy search.
     * @returns {Promise} returns a promise.
   */
@@ -176,7 +179,7 @@ const locationSearch = function ( filterData, pageSize = "", pageNo = "", search
                 userServiceUrl + constants.endpoints.GET_SCHOOL_DATA;
                 const options = {
                     headers : {
-                        "content-type": "application/json"
+                        "content-type": "application/json",
                         },
                     json : bodyData
                 };

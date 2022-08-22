@@ -207,20 +207,20 @@ module.exports = class ProgramsHelper {
         let scope = {};
 
         if( scopeData.entityType ) {
-
+          // Get entity details of type {scopeData.entityType}
           let bodyData = {
             "type" : scopeData.entityType
           }
           let entityTypeData = await userService.locationSearch( bodyData );
           
-          if( !entityTypeData.success || !entityTypeData.data || !entityTypeData.data.response || !entityTypeData.data.response.length > 0 ) {
+          if( !entityTypeData.success ) {
             return resolve({
               status : httpStatusCode.bad_request.status,
               message : constants.apiResponses.ENTITY_TYPES_NOT_FOUND
             });
           }
 
-          scope["entityType"] = entityTypeData.data.response[0].type;
+          scope["entityType"] = entityTypeData.data[0].type;
   
         }
 
@@ -245,13 +245,13 @@ module.exports = class ProgramsHelper {
               "id" : locationIds
             } 
             let entityData = await userService.locationSearch( bodyData );
-            if ( entityData.success && entityData.data && entityData.data.response && entityData.data.response.length > 0 ) {
-              entityData.data.response.forEach( entity => {
+            if ( entityData.success ) {
+              entityData.data.forEach( entity => {
                 entityIds.push(entity.id)
               });
             }
           }
-
+          // 
           if ( orgExternalId.length > 0 ) {
             let filterData = {
               "externalId" : orgExternalId
@@ -724,7 +724,7 @@ module.exports = class ProgramsHelper {
    * @returns {JSON} - Added entities data.
    */
 
-  static addEntitiesInScope( programId,entities ) {
+  static addEntitiesInScope( programId, entities ) {
     return new Promise(async (resolve, reject) => {
       try {
         let programData = 
@@ -758,8 +758,8 @@ module.exports = class ProgramsHelper {
             "id" : locationIds
           } 
           let entityData = await userService.locationSearch( bodyData );
-          if ( entityData.success && entityData.data && entityData.data.response && entityData.data.response.length > 0 ) {
-            entityData.data.response.forEach( entity => {
+          if ( entityData.success ) {
+            entityData.data.forEach( entity => {
               entityIds.push(entity.id)
             });
           }

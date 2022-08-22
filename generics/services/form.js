@@ -8,14 +8,12 @@
 //dependencies
 const request = require('request');
 const formServiceUrl = process.env.FORM_SERVICE_URL;
-const cacheTimeToLive = parseInt(process.env.CACHE_TTL);
-const serverTimeout = parseInt(process.env.USER_SERVICE_TIMEOUT);
 
 /**
   * @function
   * @name formData
-  * @param {String} stateLocationCode - state location code.
-  * @param {object} entityKey -  key to store data in cache.
+  * @param {String} stateLocationCode - state location code. eg: 28
+  * @param {object} entityKey -  key to store data in cache. eg: subEntityTypesOf_bc75cc99-9205-463e-a722-5326857838f8
   * @returns {Promise} returns a promise.
 */
 
@@ -38,7 +36,7 @@ const formData = function ( stateLocationCode, entityKey ) {
                 return subEntity.code;
             })
             //set cache data for given state
-            let setCache = cache.setValue(entityKey, subEntities, cacheTimeToLive);
+            let setCache = cache.setValue(entityKey, subEntities, constants.common.CACHE_TTL);
             return resolve(subEntities);
 
         } catch (error) {
@@ -51,17 +49,17 @@ const formData = function ( stateLocationCode, entityKey ) {
     * 
     * @function
     * @name formRead
-    * @param {object} subTypeData -  State location code.
+    * @param {String} stateLocationCode -  State location code.
     * @returns {Promise} returns a promise.
 */
-async function formRead ( subTypeData ) {
+async function formRead ( stateLocationCode ) {
     return new Promise(async (resolve, reject) => {
         try {
           
             let bodyData = {
                 request : {
                     type: constants.common.PROFILE_CONFIG_FORM_KEY,
-                    subType: subTypeData,
+                    subType: stateLocationCode,
                     action: constants.common.GET_METHOD
                 }
             }
@@ -70,7 +68,7 @@ async function formRead ( subTypeData ) {
             formServiceUrl + constants.endpoints.GET_FORM_DATA;
             const options = {
                 headers : {
-                    "content-type": "application/json"
+                    "content-type": "application/json",
                 },
                 json : bodyData
             };
@@ -100,7 +98,7 @@ async function formRead ( subTypeData ) {
                 return resolve (result = {
                     success : false
                 });
-            }, serverTimeout);
+            }, constants.common.SERVER_TIME_OUT);
 
         } catch (error) {
             return reject(error);

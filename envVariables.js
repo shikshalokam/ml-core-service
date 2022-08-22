@@ -131,7 +131,7 @@ let enviromentVariables = {
     "default": "https://dev.sunbirded.org"
   },
   "FORM_SERVICE_URL" : {
-    "message" : "form service base url",
+    "message" : "Form service base url",
     "optional" : false
   }
 }

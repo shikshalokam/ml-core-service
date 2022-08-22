@@ -4,7 +4,6 @@ const entityTypesHelper = require(MODULES_BASE_PATH + "/entityTypes/helper");
 const userRolesHelper = require(MODULES_BASE_PATH + "/user-roles/helper");
 // const elasticSearch = require(GENERIC_HELPERS_PATH + "/elastic-search");
 const userService = require(ROOT_PATH + "/generics/services/users");
-let cache = require(ROOT_PATH+"/generics/helpers/cache");
 const formService = require(ROOT_PATH + '/generics/services/form');
 module.exports = class EntitiesHelper {
 
@@ -242,7 +241,7 @@ module.exports = class EntitiesHelper {
     * @returns {Array} - List of all immediateEntities based on entityId.
     */
 
-    static immediateEntities(entityId, searchText = "",pageSize="",pageNo="") {
+    static immediateEntities(entityId, searchText = "", pageSize = "", pageNo = "") {
         return new Promise(async (resolve, reject) => {
 
             try {
@@ -250,18 +249,18 @@ module.exports = class EntitiesHelper {
                 let bodyData = {
                     "parentId" : entityId
                 };
-                
+                // When filter passed as parentId all immediate child or sub entities data is returned.
                 let entitiesData = await userService.locationSearch(
                     bodyData,
                     pageSize,
                     pageNo,
                     searchText
                 );
-                
+                // No data found or API call failure
                 if( !entitiesData.success ) {
                     return resolve({
-                        data : entitiesData.data,
-                        count : entitiesData.count
+                        data : [],
+                        count : 0
                     }); 
                 }
                 let immediateLocation = entitiesData.data;
@@ -278,7 +277,7 @@ module.exports = class EntitiesHelper {
     }
 
     /**
-     * Get immediate entities for requested Array.
+     * Get sub entities for requested Array.
      * @method
      * @name subList
      * @param {params} entities - array of entitity ids
@@ -290,14 +289,14 @@ module.exports = class EntitiesHelper {
      * @returns {Array} - List of all sub list entities.
      */
 
-    static subEntityList( entities,entityId,type,search,limit,pageNo ) {
+    static subEntityList( entities, entityId, type, search, limit, pageNo ) {
         return new Promise(async (resolve, reject) => {
 
             try {
                 
                 let result = {};
                 let subEntitiesResult = {};
-                let uniqueEntities = [];
+                let listOfSubEntities = [];
                 let obj = {
                     entityId : entityId,
                     type : type,
@@ -321,22 +320,23 @@ module.exports = class EntitiesHelper {
                 
                 if ( subEntitiesResult && subEntitiesResult.data && subEntitiesResult.data.length > 0 ) { 
                     let formatedEntities = [];
-                    uniqueEntities = subEntitiesResult.data
-                    uniqueEntities.map( entityData => {
-                        let data = {};
-                        data._id = entityData.id;
-                        data.entityType = entityData.type;
-                        data.name = entityData.name;
-                        data.externalId = entityData.code;
-                        data.label = entityData.name;
-                        data.value = entityData.id
+                    listOfSubEntities = subEntitiesResult.data
+                    listOfSubEntities.map( entityData => {
+                        let data = {
+                            _id: entityData.id,
+                            entityType: entityData.type,
+                            name: entityData.name,
+                            externalId: entityData.code,
+                            label: entityData.name,
+                            value: entityData.id
+                        };
                         formatedEntities.push(data)
                     } );
-                    uniqueEntities = [];
-                    uniqueEntities = formatedEntities;
+                    listOfSubEntities = [];
+                    listOfSubEntities = formatedEntities;
                 }
                 
-                result.data = uniqueEntities;
+                result.data = listOfSubEntities;
                 result.count = subEntitiesResult.count;
                 
                 resolve({
@@ -366,7 +366,7 @@ module.exports = class EntitiesHelper {
                 let entitiesDocument;
         
                 if( entitiesData.type !== "" ) {
-                    
+                    // If requested for a specific entity tye use entityTraversal
                     entitiesDocument = await this.entityTraversal(
                         entitiesData.entityId,
                         entitiesData.type,
@@ -375,6 +375,7 @@ module.exports = class EntitiesHelper {
                         entitiesData.pageNo
                         );
                 } else {
+                    // Get immediate entities 
                     entitiesDocument = await this.immediateEntities(
                         entitiesData.entityId, 
                         entitiesData.search,
@@ -414,6 +415,7 @@ module.exports = class EntitiesHelper {
                         "orgLocation.id" : entityId
                     }
                     let fields = ["externalId"]
+                    // Get school location code using org search.
                     let subentitiesCode = await userService.schoolData( filterData, pageSize, pageNo, searchText, fields );
                     
                     if( !subentitiesCode.success ||
@@ -430,6 +432,7 @@ module.exports = class EntitiesHelper {
                     let schoolDetails = subentitiesCode.data.response.content;
                     //get code from all data
                     let schoolCodes = [];
+                    //some default field is also coming. So filtering externalId from result
                     schoolDetails.map(schoolData=> {
                         schoolCodes.push(schoolData.externalId);
                     });
@@ -439,7 +442,7 @@ module.exports = class EntitiesHelper {
                         "code" : schoolCodes
                     };
                     
-                
+                    // Get school data using location code fetched using org api call
                     let entitiesData = await userService.locationSearch( bodyData );
                 
                     if( !entitiesData.success ) {
@@ -736,10 +739,11 @@ module.exports = class EntitiesHelper {
                 let cacheData = await cache.getValue(entityKey);
                 
                 if( !cacheData ) {
+                   
                     let bodyData={
                         "id" : stateLocationId
                     };
-                    
+                    // Calling location search to fetch state code
                     let entitiesData = await userService.locationSearch( bodyData );
                     
                     if( !entitiesData.success ) {
@@ -748,10 +752,9 @@ module.exports = class EntitiesHelper {
                             result : []
                         })
                     }
-                    
+                    // form search using state location code
                     let stateLocationCode = entitiesData.data[0].code;
                     subEntities = await formService.formData( stateLocationCode, entityKey );
-                    
                     if( !subEntities.length > 0 ) {
                         return resolve({
                             message : constants.apiResponses.ENTITY_NOT_FOUND,
@@ -759,36 +762,29 @@ module.exports = class EntitiesHelper {
                         })
                     }
                 } else {
-                    subEntities = cacheData.result;
+                    subEntities = cacheData;
                 }
                 
-               
-                let result = [];
+                let result = subEntities;    
+                let targetedEntityType = "";
 
-                if( rolesDocument[0].entityTypes[0].entityType === constants.common.STATE_ENTITY_TYPE ) {
-                    result = subEntities;
-                    result.unshift(constants.common.STATE_ENTITY_TYPE);
-                } else {
-
-                    let targetedEntityType = "";
-
-                    rolesDocument[0].entityTypes.forEach(singleEntityType => {
-                       if( subEntities.includes(singleEntityType.entityType) ) {
-                           targetedEntityType = singleEntityType.entityType;
-                       }
-                    });
-   
-                    let findTargetedEntityIndex = 
-                    subEntities.findIndex(element => element === targetedEntityType);
-                    if( findTargetedEntityIndex < 0 ) {
-                       throw {
-                           message : constants.apiResponses.SUB_ENTITY_NOT_FOUND,
-                           result : []
-                       }
+                rolesDocument[0].entityTypes.forEach(singleEntityType => {
+                    if( subEntities.includes(singleEntityType.entityType) ) {
+                        targetedEntityType = singleEntityType.entityType;
                     }
-   
-                    result = subEntities.slice(findTargetedEntityIndex);
+                });
+
+                let findTargetedEntityIndex = 
+                subEntities.findIndex(element => element === targetedEntityType);
+                if( findTargetedEntityIndex < 0 ) {
+                    throw {
+                        message : constants.apiResponses.SUB_ENTITY_NOT_FOUND,
+                        result : []
+                    }
                 }
+
+                result = subEntities.slice(findTargetedEntityIndex);
+               
                  
                 return resolve({
                     success: true,
