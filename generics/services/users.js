@@ -142,9 +142,10 @@ const locationSearch = function ( filterData, pageSize = "", pageNo = "", search
     * @name schoolData
     *  @param {object} filterData -  contain filter object.
     * @param {String} pageSize -  requested page size.
-  * @param {String} pageNo -  requested page number.
-  * @param {String} searchKey -  search string.
+    * @param {String} pageNo -  requested page number.
+    * @param {String} searchKey -  search string.
     * @param {String} searchKey - search key for fuzzy search.
+    * @param {String} fields -  required field filter.
     * @returns {Promise} returns a promise.
   */
   const schoolData = function ( filterData, pageSize = "", pageNo = "", searchKey = "", fields = [] ) {
