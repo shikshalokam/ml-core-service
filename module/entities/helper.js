@@ -304,12 +304,13 @@ module.exports = class EntitiesHelper {
                     limit :limit,
                     pageNo : pageNo
                 }
-                
+                //entity id passed as query parameter
                 if ( entityId !== "" ) {
                     subEntitiesResult = await this.subEntities(
                         obj
                     );
                 } else {
+                        // entityId is an Array of entities passed in request body
                         obj["entityId"] = entities;
                         subEntitiesResult = await this.subEntities(
                             obj
@@ -317,7 +318,7 @@ module.exports = class EntitiesHelper {
                         
                 }
                 
-                
+                //formating sub entities data. 
                 if ( subEntitiesResult && subEntitiesResult.data && subEntitiesResult.data.length > 0 ) { 
                     let formatedEntities = [];
                     listOfSubEntities = subEntitiesResult.data
