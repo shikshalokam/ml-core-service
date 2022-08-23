@@ -375,7 +375,7 @@ module.exports = class UsersHelper {
                 let cacheData= await cache.getValue(entityKey);
                 
                 if( !cacheData ) {
-                  subEntities = await formService.formData( stateCode,entityKey );
+                  subEntities = await formService.configForStateLocation( stateCode,entityKey );
                   if( !subEntities.length > 0 ) {
                       return resolve({
                           message : constants.apiResponses.ENTITY_NOT_FOUND,
@@ -849,7 +849,7 @@ module.exports = class UsersHelper {
                 })
             }
             let stateLocationCode = entitiesData.data[0].code;
-            subEntityTypes = await formService.formData( stateLocationCode,entityKey );
+            subEntityTypes = await formService.configForStateLocation( stateLocationCode,entityKey );
             if( !subEntityTypes.length > 0 ) {
                 return resolve({
                     message : constants.apiResponses.ENTITY_NOT_FOUND,

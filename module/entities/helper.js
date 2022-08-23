@@ -755,7 +755,7 @@ module.exports = class EntitiesHelper {
                     }
                     // form search using state location code
                     let stateLocationCode = entitiesData.data[0].code;
-                    subEntities = await formService.formData( stateLocationCode, entityKey );
+                    subEntities = await formService.configForStateLocation( stateLocationCode, entityKey );
                     if( !subEntities.length > 0 ) {
                         return resolve({
                             message : constants.apiResponses.ENTITY_NOT_FOUND,
@@ -889,40 +889,40 @@ module.exports = class EntitiesHelper {
   * @returns {Array} - Sub entities matching the type .
 */
 
-async function getSubEntitiesOfGivenType( parentIds, entityType, matchingData ) { 
+async function getSubEntitiesOfGivenType( entityIds, entityType, result ) { 
     
-    if( !parentIds.length > 0 ) {
-      return matchingData;
+    if( !entityIds.length > 0 ) {
+      return result;
     };
 
     let bodyData = {
-        "parentId" : parentIds
+        "parentId" : entityIds
     };
     //get all immediate subEntities of type {entityType}
-    let entityDetails = await userService.locationSearch(bodyData);
+    let childEntities = await userService.locationSearch(bodyData);
 
-    if( ( !entityDetails.success ) && !matchingData.length > 0 ) {
-      return matchingData;
+    if( ( !childEntities.success ) && !result.length > 0 ) {
+      return result;
     }
     
-    let entityData = entityDetails.data;
+    let entityData = childEntities.data;
     
-    let mismatchEntities = [];
+    let parentEntities = [];
     entityData.map(entity => {
       
       if ( entity.type == entityType ) {
-        matchingData.push(entity)
+        result.push(entity)
        
       } else {
-        mismatchEntities.push(entity.id)
+        parentEntities.push(entity.id)
       }
     });
 
-    if( mismatchEntities.length > 0 ){
-      await getSubEntitiesOfGivenType(mismatchEntities, entityType, matchingData);
+    if( parentEntities.length > 0 ){
+      await getSubEntitiesOfGivenType(parentEntities, entityType, result);
     } 
     let uniqueEntities = [];
-    matchingData.map( data => {
+    result.map( data => {
       if (uniqueEntities.includes(data) === false) uniqueEntities.push(data);
     });
     return uniqueEntities;
