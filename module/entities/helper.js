@@ -905,25 +905,15 @@ async function getSubEntitiesOfGivenType( entityIds, entityType, result ) {
       return result;
     }
     
-    let entityData = childEntities.data;
-    
     let parentEntities = [];
-    entityData.map(entity => {
-      
-      if ( entity.type == entityType ) {
-        result.push(entity)
-       
-      } else {
-        parentEntities.push(entity.id)
-      }
-    });
-
+    if( childEntities.data[0].type == entityType ) {
+        result = childEntities.data;
+    } else {
+        parentEntities = childEntities.data;
+    }
+    
     if( parentEntities.length > 0 ){
       await getSubEntitiesOfGivenType(parentEntities, entityType, result);
     } 
-    let uniqueEntities = [];
-    result.map( data => {
-      if (uniqueEntities.includes(data) === false) uniqueEntities.push(data);
-    });
-    return uniqueEntities;
+    return result;
 }
