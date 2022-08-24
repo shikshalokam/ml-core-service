@@ -130,21 +130,12 @@ module.exports = class SolutionsHelper {
           }
           
           if( solutionData.entities && solutionData.entities.length > 0 ) {
-            let locationIds = [];
-            let orgExternalId = [];
             let entityIds = [];
-
-            solutionData.entities.forEach(entity=>{
-              if (gen.utils.checkValidUUID(entity)) {
-                locationIds.push(entity);
-              } else {
-                orgExternalId.push(entity);
-              }
-            });
-            
-            if ( locationIds.length > 0 ) {
+            let locationData = gen.utils.filterLocationIdandCode(solutionData.entities)
+          
+            if ( locationData.ids.length > 0 ) {
               let bodyData = {
-                "id" : locationIds
+                "id" : locationData.ids
               } 
               let entityData = await userService.locationSearch( bodyData );
               if ( entityData.success ) {
@@ -154,14 +145,14 @@ module.exports = class SolutionsHelper {
               }
             }
            
-            if ( orgExternalId.length > 0 ) {
+            if ( locationData.codes.length > 0 ) {
               let filterData = {
-                "externalId" : orgExternalId
+                "externalId" : locationData.codes
               }
-              let schoolDetails = await userService.schoolData( filterData );
+              let schoolDetails = await userService.orgSchoolSearch( filterData );
               
-              if ( schoolDetails.success && schoolDetails.data && schoolDetails.data.response && schoolDetails.data.response.content && schoolDetails.data.response.content.length > 0 ) {
-                let schoolData = schoolDetails.data.response.content;
+              if ( schoolDetails.success ) {
+                let schoolData = schoolDetails.data;
                 schoolData.forEach( entity => {
                   entityIds.push(entity.externalId) 
                 });
@@ -280,22 +271,13 @@ module.exports = class SolutionsHelper {
 
             if( scopeData.entities && scopeData.entities.length > 0 ) {
               //call learners api for search
-              let locationIds = [];
-              let orgExternalId = [];
               let entityIds = [];
               let bodyData={};
+              let locationData = gen.utils.filterLocationIdandCode(sscopeData.entities)
 
-              scopeData.entities.forEach(entity=>{
-                if (gen.utils.checkValidUUID(entity)) {
-                  locationIds.push(entity);
-                } else {
-                  orgExternalId.push(entity);
-                }
-              });
-
-              if ( locationIds.length > 0 ) {
+              if ( locationData.ids.length > 0 ) {
                 bodyData = {
-                  "id" : locationIds
+                  "id" : locationData.ids
                 } 
                 let entityData = await userService.locationSearch( bodyData );
                 if ( entityData.success ) {
@@ -307,14 +289,14 @@ module.exports = class SolutionsHelper {
                 }
               }
 
-              if ( orgExternalId.length > 0 && currentSolutionScope.entityType == constants.common.SCHOOL ) {
+              if ( locationData.codes.length > 0 && currentSolutionScope.entityType == constants.common.SCHOOL ) {
                 let filterData = {
-                  "externalId" : orgExternalId
+                  "externalId" : locationData.codes
                 }
-                let schoolDetails = await userService.schoolData( filterData );
+                let schoolDetails = await userService.orgSchoolSearch( filterData );
                 
-                if ( schoolDetails.success && schoolDetails.data && schoolDetails.data.response && schoolDetails.data.response.content && schoolDetails.data.response.content.length > 0 ) {
-                  let schoolData = schoolDetails.data.response.content;
+                if ( schoolDetails.success ) {
+                  let schoolData = schoolDetails.data;
                   schoolData.forEach( entity => {
                     entityIds.push(entity.externalId) 
                   });
@@ -1054,22 +1036,13 @@ module.exports = class SolutionsHelper {
             }
           }
         }
-        let locationIds = [];
-        let orgExternalId = [];
         let entityIds = [];
         let bodyData={};
+        let locationData = gen.utils.filterLocationIdandCode(entities)
         
-        entities.forEach(entity=>{
-          if (gen.utils.checkValidUUID(entity)) {
-            locationIds.push(entity);
-          } else {
-            orgExternalId.push(entity);
-          }
-        });
-
-        if ( locationIds.length > 0 ) {
+        if ( locationData.ids.length > 0 ) {
           bodyData = {
-            "id" : locationIds
+            "id" : locationData.ids
           } 
           let entityData = await userService.locationSearch( bodyData );
           if ( entityData.success ) {
@@ -1079,14 +1052,14 @@ module.exports = class SolutionsHelper {
           }
         }
 
-        if ( orgExternalId.length > 0 ) {
+        if ( locationData.codes.length > 0 ) {
           let filterData = {
-            "externalId" : orgExternalId
+            "externalId" : locationData.codes
           }
-          let schoolDetails = await userService.schoolData( filterData );
+          let schoolDetails = await userService.orgSchoolSearch( filterData );
           
-          if ( schoolDetails.success && schoolDetails.data && schoolDetails.data.response && schoolDetails.data.response.content && schoolDetails.data.response.content.length > 0 ) {
-            let schoolData = schoolDetails.data.response.content;
+          if ( schoolDetails.success ) {
+            let schoolData = schoolDetails.data;
             schoolData.forEach( entity => {
               entityIds.push(entity.externalId)
             });

@@ -154,26 +154,16 @@ module.exports = class UsersHelper {
           data.entities &&
           data.entities.length > 0
         ) {
-          
-
-          let locationIds = [];
-          let orgExternalId = [];
+    
           let entitiesData = [];
           let bodyData = {};
           
-
-          data.entities.forEach( entity => {
-            if ( gen.utils.checkValidUUID(entity) ) {
-              locationIds.push(entity);
-            } else {
-              orgExternalId.push(entity)
-            }
-          });
-
-          if ( locationIds.length > 0 ) {
+          let locationData = gen.utils.filterLocationIdandCode(data.entities)
+          
+          if ( locationData.ids.length > 0 ) {
 
             bodyData = {
-              "id" : locationIds
+              "id" : locationData.ids
             } 
             let entityData = await userService.locationSearch( bodyData );
             
@@ -193,12 +183,12 @@ module.exports = class UsersHelper {
             
           }
 
-          if ( orgExternalId.length > 0 ) {
+          if ( locationData.codes.length > 0 ) {
             let filterData = {
-              "externalId" : orgExternalId
+              "externalId" : locationData.codes
             }
-            let schoolDetails = await userService.schoolData( filterData );
-            let schoolDocuments = schoolDetails.data.response.content;
+            let schoolDetails = await userService.orgSchoolSearch( filterData );
+            let schoolDocuments = schoolDetails.data;
             if ( !schoolDetails.success || !schoolDocuments.length > 0 ) {
               return resolve({
                 status: httpStatusCode["bad_request"].status,
@@ -206,8 +196,8 @@ module.exports = class UsersHelper {
                 result: {}
               });
             }
-            let schoolData = schoolDetails.data.response.content;
-            schoolData.forEach( entity => {
+
+            schoolDocuments.forEach( entity => {
               entitiesData.push(entity.externalId)
             });
 

@@ -417,20 +417,16 @@ module.exports = class EntitiesHelper {
                     }
                     let fields = ["externalId"]
                     // Get school location code using org search.
-                    let subentitiesCode = await userService.schoolData( filterData, pageSize, pageNo, searchText, fields );
+                    let subentitiesCode = await userService.orgSchoolSearch( filterData, pageSize, pageNo, searchText, fields );
                     
-                    if( !subentitiesCode.success ||
-                        !subentitiesCode.data ||
-                        !subentitiesCode.data.response ||
-                        !subentitiesCode.data.response.content ||
-                        !subentitiesCode.data.response.content.length > 0 ) {
+                    if( !subentitiesCode.success ) {
                         return resolve({
                             data : [],
-                            count : subentitiesCode.data.response.count
+                            count : subentitiesCode.count
                         }) 
                     }
                     
-                    let schoolDetails = subentitiesCode.data.response.content;
+                    let schoolDetails = subentitiesCode.data;
                     //get code from all data
                     let schoolCodes = [];
                     //some default field is also coming. So filtering externalId from result
@@ -455,7 +451,7 @@ module.exports = class EntitiesHelper {
                     
                     return resolve({
                         data : entitiesData.data,
-                        count : subentitiesCode.data.response.count
+                        count : subentitiesCode.count
                     }) 
 
 

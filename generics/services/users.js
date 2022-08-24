@@ -139,7 +139,7 @@ const locationSearch = function ( filterData, pageSize = "", pageNo = "", search
   /**
     * 
     * @function
-    * @name schoolData
+    * @name orgSchoolSearch
     *  @param {object} filterData -  contain filter object.
     * @param {String} pageSize -  requested page size.
     * @param {String} pageNo -  requested page number.
@@ -148,7 +148,7 @@ const locationSearch = function ( filterData, pageSize = "", pageNo = "", search
     * @param {String} fields -  required field filter.
     * @returns {Promise} returns a promise.
   */
-  const schoolData = function ( filterData, pageSize = "", pageNo = "", searchKey = "", fields = [] ) {
+  const orgSchoolSearch = function ( filterData, pageSize = "", pageNo = "", searchKey = "", fields = [] ) {
         return new Promise(async (resolve, reject) => {
             try {
                 
@@ -195,11 +195,15 @@ const locationSearch = function ( filterData, pageSize = "", pageNo = "", search
                     if (err) {
                         result.success = false;
                     } else {
-                        
                         let response = data.body;
-                        
-                        if( response.responseCode === constants.common.OK) {
-                            result["data"] = response.result;
+                        if( response.responseCode === constants.common.OK &&
+                            response.result &&
+                            response.result.response &&
+                            response.result.response.content &&
+                            response.result.response.content.length > 0
+                        ){
+                            result["data"] = response.result.response.content;
+                            result["count"] = response.result.response.count;
                         } else {
                             result.success = false;
                         }
@@ -221,5 +225,5 @@ const locationSearch = function ( filterData, pageSize = "", pageNo = "", search
 module.exports = {
     profile : profile,
     locationSearch : locationSearch,
-    schoolData :schoolData
+    orgSchoolSearch :orgSchoolSearch
 }

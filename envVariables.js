@@ -132,7 +132,7 @@ let enviromentVariables = {
   },
   "FORM_SERVICE_URL" : {
     "message" : "Form service base url",
-    "optional" : false,
+    "optional" : true,
     "default": "http://player:3000"
   }
 }
