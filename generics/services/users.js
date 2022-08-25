@@ -74,29 +74,29 @@ const profile = function ( token,userId = "" ) {
 const locationSearch = function ( filterData, pageSize = "", pageNo = "", searchKey = "" , formatResult = false, returnObject = false, resultForSearchEntities = false ) {
     return new Promise(async (resolve, reject) => {
         try {
-          let bodyData = {};
-          bodyData["request"] = {};
-          bodyData["request"]["filters"] = filterData;
-  
-          if ( pageSize !== "" ) {
-              bodyData["request"]["limit"] = pageSize;
-          } 
-  
-          if ( pageNo !== "" ) {
-              let offsetValue = pageSize * ( pageNo - 1 ); 
-              bodyData["request"]["offset"] = offsetValue;
-          }
-  
-          if ( searchKey !== "" ) {
-              bodyData["request"]["query"] = searchKey
-          }
-          
+        let bodyData = {};
+        bodyData["request"] = {};
+        bodyData["request"]["filters"] = filterData;
+
+        if ( pageSize !== "" ) {
+            bodyData["request"]["limit"] = pageSize;
+        } 
+
+        if ( pageNo !== "" ) {
+            let offsetValue = pageSize * ( pageNo - 1 ); 
+            bodyData["request"]["offset"] = offsetValue;
+        }
+
+        if ( searchKey !== "" ) {
+            bodyData["request"]["query"] = searchKey
+        }
+
           const url = 
           userServiceUrl + constants.endpoints.GET_LOCATION_DATA;
           const options = {
               headers : {
-                "content-type": "application/json",
-            },
+                "content-type": "application/json"
+               },
               json : bodyData
           };
           request.post(url,options,requestCallback);
@@ -219,7 +219,7 @@ const locationSearch = function ( filterData, pageSize = "", pageNo = "", search
                 userServiceUrl + constants.endpoints.GET_SCHOOL_DATA;
                 const options = {
                     headers : {
-                        "content-type": "application/json",
+                        "content-type": "application/json"
                         },
                     json : bodyData
                 };
@@ -285,12 +285,11 @@ async function getSubEntitiesBasedOnEntityType( entityIds, entityType, result ) 
     if( ( !childEntities.success ) && !result.length > 0 ) {
       return result;
     }
-    
     let parentEntities = [];
     if( childEntities.data[0].type == entityType ) {
         result = childEntities.data;
     } else {
-        parentEntities = childEntities.data;
+        parentEntities = childEntities.map(function (entity) { return entity.id; });
     }
     
     if( parentEntities.length > 0 ){
