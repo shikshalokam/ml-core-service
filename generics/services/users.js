@@ -260,9 +260,48 @@ const locationSearch = function ( filterData, pageSize = "", pageNo = "", search
             }
         })
     }
+
+/**
+  * get subEntities of matching type by recursion.
+  * @method
+  * @name getSubEntitiesBasedOnEntityType
+  * @param parentIds {Array} - Array of entity Ids- for which we are finding sub entities of given entityType
+  * @param entityType {string} - EntityType.
+  * @returns {Array} - Sub entities matching the type .
+*/
+
+async function getSubEntitiesBasedOnEntityType( entityIds, entityType, result ) { 
+    
+    if( !entityIds.length > 0 ) {
+      return result;
+    };
+
+    let bodyData = {
+        "parentId" : entityIds
+    };
+    //get all immediate subEntities of type {entityType}
+    let childEntities = await locationSearch(bodyData);
+
+    if( ( !childEntities.success ) && !result.length > 0 ) {
+      return result;
+    }
+    
+    let parentEntities = [];
+    if( childEntities.data[0].type == entityType ) {
+        result = childEntities.data;
+    } else {
+        parentEntities = childEntities.data;
+    }
+    
+    if( parentEntities.length > 0 ){
+      await getSubEntitiesBasedOnEntityType(parentEntities, entityType, result);
+    } 
+    return result;
+}
   
 module.exports = {
     profile : profile,
     locationSearch : locationSearch,
-    orgSchoolSearch :orgSchoolSearch
+    orgSchoolSearch :orgSchoolSearch,
+    getSubEntitiesBasedOnEntityType : getSubEntitiesBasedOnEntityType
 }

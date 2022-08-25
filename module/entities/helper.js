@@ -456,10 +456,10 @@ module.exports = class EntitiesHelper {
 
 
                 } else {
-                    /* if {entityId} is of a state and {entityTraversalType} is block , getSubEntitiesOfGivenType will return all entities of type block in that state*/
+                    /* if {entityId} is of a state and {entityTraversalType} is block , getSubEntitiesBasedOnEntityType will return all entities of type block in that state*/
                     let subEntitiesArray = [];  
                     
-                    let subEntities = await getSubEntitiesOfGivenType( entityId, entityTraversalType, subEntitiesArray )
+                    let subEntities = await userService.getSubEntitiesBasedOnEntityType( entityId, entityTraversalType, subEntitiesArray )
                
                     if( !subEntities.length > 0 ) {
                         return resolve({
@@ -874,42 +874,4 @@ module.exports = class EntitiesHelper {
     })
   }
 
-}
-
-/**
-  * get subEntities of matching type by recursion.
-  * @method
-  * @name getSubEntitiesOfGivenType
-  * @param parentIds {Array} - Array of entity Ids- for which we are finding sub entities of given entityType
-  * @param entityType {string} - EntityType.
-  * @returns {Array} - Sub entities matching the type .
-*/
-
-async function getSubEntitiesOfGivenType( entityIds, entityType, result ) { 
-    
-    if( !entityIds.length > 0 ) {
-      return result;
-    };
-
-    let bodyData = {
-        "parentId" : entityIds
-    };
-    //get all immediate subEntities of type {entityType}
-    let childEntities = await userService.locationSearch(bodyData);
-
-    if( ( !childEntities.success ) && !result.length > 0 ) {
-      return result;
-    }
-    
-    let parentEntities = [];
-    if( childEntities.data[0].type == entityType ) {
-        result = childEntities.data;
-    } else {
-        parentEntities = childEntities.data;
-    }
-    
-    if( parentEntities.length > 0 ){
-      await getSubEntitiesOfGivenType(parentEntities, entityType, result);
-    } 
-    return result;
 }

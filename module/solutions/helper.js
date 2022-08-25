@@ -316,7 +316,7 @@ module.exports = class SolutionsHelper {
                 
                 let matchData = [];
                 let childEntities = [];
-                let childEntitiesDetails = await entitiesHelper.getSubEntitiesOfGivenType(currentSolutionScope.entities, currentSolutionScope.entityType, matchData);
+                let childEntitiesDetails = await userService.getSubEntitiesBasedOnEntityType(currentSolutionScope.entities, currentSolutionScope.entityType, matchData);
 
                 childEntitiesDetails.forEach( entity => {
                   childEntities.push(entity.id) 
@@ -1009,7 +1009,7 @@ module.exports = class SolutionsHelper {
           let matchData = [];
           let childEntities = [];
           let checkEntityInParent = [];
-          let childEntitiesDetails = await entitiesHelper.getSubEntitiesOfGivenType(programData[0].scope.entities, solutionData[0].scope.entityType, matchData);
+          let childEntitiesDetails = await userService.getSubEntitiesBasedOnEntityType(programData[0].scope.entities, solutionData[0].scope.entityType, matchData);
           
           childEntitiesDetails.forEach( entity => {
             childEntities.push(entity.id); 
