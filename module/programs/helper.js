@@ -724,7 +724,7 @@ module.exports = class ProgramsHelper {
           _id : programId,
           scope : { $exists : true },
           isAPrivateProgram : false 
-        },["_id"]);
+        },["_id","scope.entityType"]);
        
         if( !programData.length > 0 ) {
           throw {
@@ -738,7 +738,8 @@ module.exports = class ProgramsHelper {
         
         if ( locationData.ids.length > 0 ) {
           bodyData = {
-            "id" : locationData.ids
+            "id" : locationData.ids,
+            "type": programData[0].scope.entityType
           } 
           let entityData = await userService.locationSearch( bodyData );
           if ( entityData.success ) {
@@ -750,7 +751,8 @@ module.exports = class ProgramsHelper {
 
         if ( locationData.codes.length > 0 ) {
           let filterData = {
-            "externalId" : locationData.codes
+            "externalId" : locationData.codes,
+            "type": programData[0].scope.entityType
           }
           let schoolDetails = await userService.orgSchoolSearch( filterData );
           
