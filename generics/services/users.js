@@ -65,10 +65,13 @@ const profile = function ( token,userId = "" ) {
   * @param {String} pageSize -  requested page size.
   * @param {String} pageNo -  requested page number.
   * @param {String} searchKey -  search string.
+  * @param {Boolean} formatResult - format result
+  * @param {Boolean} returnObject - return object or array.
+  * @param {Boolean} resultForSearchEntities - format result for searchEntities api call.
   * @returns {Promise} returns a promise.
 */
 
-const locationSearch = function ( filterData, pageSize = "", pageNo = "", searchKey = "" ) {
+const locationSearch = function ( filterData, pageSize = "", pageNo = "", searchKey = "" , formatResult = false, returnObject = false, resultForSearchEntities = false ) {
     return new Promise(async (resolve, reject) => {
         try {
           let bodyData = {};
@@ -107,13 +110,49 @@ const locationSearch = function ( filterData, pageSize = "", pageNo = "", search
                   result.success = false;
               } else {
                   let response = data.body;
+                  
                   if( response.responseCode === constants.common.OK &&
                       response.result &&
                       response.result.response &&
                       response.result.response.length > 0
                     ) {
-                      result["data"] = response.result.response;
-                      result["count"] = response.result.count;
+                      // format result if true
+                        if ( formatResult ) {
+                            let entityDocument = [];
+                            response.result.response.map(entityData => {
+                                let data = {};
+                                data._id = entityData.id;
+                                data.entityType = entityData.type;
+                                data.metaInformation = {};
+                                data.metaInformation.name = entityData.name;
+                                data.metaInformation.externalId = entityData.code;
+                                data.registryDetails = {};
+                                data.registryDetails.locationId = entityData.id;
+                                data.registryDetails.code = entityData.code;
+                                entityDocument.push(data);
+                            });
+                            if ( returnObject ) {
+                                result["data"] = entityDocument[0];
+                                result["count"] = response.result.count;
+                            } else {
+                                result["data"] = entityDocument;
+                                result["count"] = response.result.count;
+                            }
+                        } else if ( resultForSearchEntities ) {
+                            let entityDocument = [];
+                            response.result.response.map(entityData => {
+                                let data = {};
+                                data._id = entityData.id;
+                                data.name = entityData.name;
+                                data.externalId = entityData.code;
+                                entityDocument.push(data);
+                            });
+                            result["data"] = entityDocument;
+                            result["count"] = response.result.count;
+                        }else {
+                            result["data"] = response.result.response;
+                            result["count"] = response.result.count;
+                        }
                   } else {
                         result.success = false;
                   }
