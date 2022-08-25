@@ -263,7 +263,7 @@ module.exports = class SolutionsHelper {
           if( Object.keys(scopeData).length > 0 ) {
             if( scopeData.entityType ) {
               let bodyData = { "type" : scopeData.entityType }
-              let entityTypeData = await userService.locationSearch( bodyData, 1 );
+              let entityTypeData = await userService.locationSearch( bodyData);
               if ( entityTypeData.success ) {
                 currentSolutionScope.entityType = entityTypeData.data[0].type
               }
@@ -273,7 +273,7 @@ module.exports = class SolutionsHelper {
               //call learners api for search
               let entityIds = [];
               let bodyData={};
-              let locationData = gen.utils.filterLocationIdandCode(sscopeData.entities)
+              let locationData = gen.utils.filterLocationIdandCode(scopeData.entities)
 
               if ( locationData.ids.length > 0 ) {
                 bodyData = {
