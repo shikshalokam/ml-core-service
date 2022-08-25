@@ -467,28 +467,21 @@ module.exports = class EntitiesHelper {
                             count : 0
                         }) 
                     }
-                    //searching here because search with traversal will affect result.
-                    let subentitiesData = subEntities
-                    let count = subentitiesData.length;
-                    if( searchText !== "" ){
-                        let matchEntities = [];
-                        subentitiesData.map( entityData => {
-                            if( entityData.name.match(new RegExp(searchText, 'i')) || entityData.code.match(new RegExp("^" + searchText, 'm')) ) {
-                                matchEntities.push(entityData)
-                            }
-                        });
-                        subentitiesData = [];
-                        subentitiesData = matchEntities;
-                    } 
-                    
-                    if (subentitiesData.length > 0) {
-                        let startIndex = pageSize * (pageNo - 1);
-                        let endIndex = startIndex + pageSize;
-                        subentitiesData = subentitiesData.slice(startIndex, endIndex);
+                    // call locationSearch with search and pagination
+                    let subEntityIds = subEntities.map(function (entity) { return entity.id; });
+                    let filter = {
+                        "id" : subEntityIds
                     }
+                    let subentitiesData = await userService.locationSearch(
+                        filter,
+                        pageSize,
+                        pageNo,
+                        searchText
+                    );
+                    
                     return resolve({
-                        data : subentitiesData,
-                        count : count
+                        data : subentitiesData.data,
+                        count : subentitiesData.count
                     }) 
                 
                 }
