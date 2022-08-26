@@ -68,7 +68,6 @@ module.exports = {
       referenceFrom : String,
       scope : {
         entityType : String,
-        entityTypeId : "ObjectId",
         entities : {
           type : Array,
           index : true

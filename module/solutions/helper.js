@@ -166,7 +166,6 @@ module.exports = class SolutionsHelper {
             }
 
             solutionData.entities = entityIds;
-
           }
 
           if( solutionData.minNoOfSubmissionsRequired && 
@@ -197,7 +196,7 @@ module.exports = class SolutionsHelper {
             }, { 
               $addToSet: { components : solutionCreation._id } 
           });
-
+      
           if( !solutionData.excludeScope && programData[0].scope ) {
             let solutionScope = 
             await this.setScope(
@@ -255,7 +254,6 @@ module.exports = class SolutionsHelper {
             message : constants.apiResponses.SOLUTION_NOT_FOUND
           });
         }
-       
         if( programData[0].scope ) {
           
           let currentSolutionScope = JSON.parse(JSON.stringify(programData[0].scope));
@@ -277,28 +275,27 @@ module.exports = class SolutionsHelper {
 
               if ( locationData.ids.length > 0 ) {
                 bodyData = {
-                  "id" : locationData.ids
+                  "id" : locationData.ids,
+                  "type" : currentSolutionScope.entityType
                 } 
                 let entityData = await userService.locationSearch( bodyData );
                 if ( entityData.success ) {
                   entityData.data.forEach( entity => {
-                    if( entity.type == currentSolutionScope.entityType ) {
-                      entityIds.push(entity.id)
-                    }
+                    entityIds.push(entity.id)
                   });
                 }
               }
 
-              if ( locationData.codes.length > 0 && currentSolutionScope.entityType == constants.common.SCHOOL ) {
+              if ( locationData.codes.length > 0 ) {
                 let filterData = {
-                  "externalId" : locationData.codes
+                  "code" : locationData.codes,
+                  "type" : currentSolutionScope.entityType
                 }
-                let schoolDetails = await userService.orgSchoolSearch( filterData );
+                let entityDetails = await userService.locationSearch( filterData );
                 
-                if ( schoolDetails.success ) {
-                  let schoolData = schoolDetails.data;
-                  schoolData.forEach( entity => {
-                    entityIds.push(entity.externalId) 
+                if ( entityDetails.success ) {
+                  entityDetails.data.forEach( entity => {
+                    entityIds.push(entity.id) 
                   });
                 }
               }
@@ -309,30 +306,15 @@ module.exports = class SolutionsHelper {
                   message : constants.apiResponses.ENTITIES_NOT_FOUND
                 });
               }
-
+              
               let entitiesData = [];
-
+      
               if( currentSolutionScope.entityType !== programData[0].scope.entityType ) {
-                
-                let matchData = [];
-                let childEntities = [];
-                let childEntitiesDetails = await userService.getSubEntitiesBasedOnEntityType(currentSolutionScope.entities, currentSolutionScope.entityType, matchData);
-
-                childEntitiesDetails.forEach( entity => {
-                  childEntities.push(entity.id) 
-                });
-                
+                let result = [];
+                let childEntities = await userService.getSubEntitiesBasedOnEntityType(currentSolutionScope.entities, currentSolutionScope.entityType, result);
                 if( childEntities.length > 0 ) {
-                  for( let entitiesIndex = 0; entitiesIndex < entityIds.length; entitiesIndex++ ) {
-                    for( let childListIndex = 0; childListIndex < childEntities.length; childListIndex++ ) {
-                      if( childEntities[childListIndex] == entityIds[entitiesIndex]){
-                        entitiesData.push(entityIds[entitiesIndex]);
-                        entitiesIndex++;
-                      }
-                    }
-                  }
+                  entitiesData = entityIds.filter(element => childEntities.includes(element));
                 }
-                
               } else {
                 entitiesData = entityIds
               }
@@ -1007,14 +989,9 @@ module.exports = class SolutionsHelper {
         if( solutionData[0].scope.entityType !== programData[0].scope.entityType ) {
 
           let matchData = [];
-          let childEntities = [];
           let checkEntityInParent = [];
-          let childEntitiesDetails = await userService.getSubEntitiesBasedOnEntityType(programData[0].scope.entities, solutionData[0].scope.entityType, matchData);
+          let childEntities = await userService.getSubEntitiesBasedOnEntityType(programData[0].scope.entities, solutionData[0].scope.entityType, matchData);
           
-          childEntitiesDetails.forEach( entity => {
-            childEntities.push(entity.id); 
-          });
-
           if( !childEntities.length > 0 ) {
             throw {
               message : constants.apiResponses.ENTITY_NOT_EXISTS_IN_PARENT
@@ -1318,7 +1295,6 @@ module.exports = class SolutionsHelper {
         let totalCount = 0;
         let mergedData = [];
         let solutionIds = [];
-        
         if( assignedSolutions.success && assignedSolutions.data ) {
 
           // Remove observation solutions which for project tasks.
