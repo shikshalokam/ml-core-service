@@ -986,6 +986,7 @@ module.exports = class SolutionsHelper {
             message : constants.apiResponses.PROGRAM_NOT_FOUND
           });
         }
+        
         if( solutionData[0].scope.entityType !== programData[0].scope.entityType ) {
 
           let matchData = [];
@@ -997,16 +998,7 @@ module.exports = class SolutionsHelper {
               message : constants.apiResponses.ENTITY_NOT_EXISTS_IN_PARENT
             }
           }
-          
-          for( let entitiesIndex = 0; entitiesIndex < entities.length; entitiesIndex++ ) {
-            for( let childListIndex = 0; childListIndex < childEntities.length; childListIndex++) {
-              if( childEntities[childListIndex] == entities[entitiesIndex]){
-                checkEntityInParent.push(entities[entitiesIndex]);
-                entitiesIndex++;
-              }
-            }
-          }
-
+          checkEntityInParent = entities.filter(element => childEntities.includes(element));
           if( !checkEntityInParent.length > 0 ) {
             throw {
               message : constants.apiResponses.ENTITY_NOT_EXISTS_IN_PARENT
@@ -1019,7 +1011,8 @@ module.exports = class SolutionsHelper {
         
         if ( locationData.ids.length > 0 ) {
           bodyData = {
-            "id" : locationData.ids
+            "id" : locationData.ids,
+            "type" : solutionData[0].scope.entityType
           } 
           let entityData = await userService.locationSearch( bodyData );
           if ( entityData.success ) {
@@ -1031,14 +1024,14 @@ module.exports = class SolutionsHelper {
 
         if ( locationData.codes.length > 0 ) {
           let filterData = {
-            "externalId" : locationData.codes
+            "code" : locationData.codes,
+            "type" : solutionData[0].scope.entityType
           }
-          let schoolDetails = await userService.orgSchoolSearch( filterData );
+          let entityDetails = await userService.locationSearch( filterData );
           
-          if ( schoolDetails.success ) {
-            let schoolData = schoolDetails.data;
-            schoolData.forEach( entity => {
-              entityIds.push(entity.externalId)
+          if ( entityDetails.success ) {
+            entityDetails.data.forEach( entity => {
+              entityIds.push(entity.id)
             });
           }
         }

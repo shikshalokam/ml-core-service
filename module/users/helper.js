@@ -185,11 +185,11 @@ module.exports = class UsersHelper {
 
           if ( locationData.codes.length > 0 ) {
             let filterData = {
-              "externalId" : locationData.codes
+              "code" : locationData.codes
             }
-            let schoolDetails = await userService.orgSchoolSearch( filterData );
-            let schoolDocuments = schoolDetails.data;
-            if ( !schoolDetails.success || !schoolDocuments.length > 0 ) {
+            let entityDetails = await userService.locationSearch( filterData );
+            let entityDocuments = entityDetails.data;
+            if ( !entityDetails.success || !entityDocuments.length > 0 ) {
               return resolve({
                 status: httpStatusCode["bad_request"].status,
                 message: constants.apiResponses.ENTITY_NOT_FOUND,
@@ -197,8 +197,8 @@ module.exports = class UsersHelper {
               });
             }
 
-            schoolDocuments.forEach( entity => {
-              entitiesData.push(entity.externalId)
+            entityDocuments.forEach( entity => {
+              entitiesData.push(entity.id)
             });
 
             solutionDataToBeUpdated["entityType"] = constants.common.SCHOOL;

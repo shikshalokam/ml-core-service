@@ -91,11 +91,12 @@ const locationSearch = function ( filterData, pageSize = "", pageNo = "", search
             bodyData["request"]["query"] = searchKey
         }
 
+          
           const url = 
           userServiceUrl + constants.endpoints.GET_LOCATION_DATA;
           const options = {
               headers : {
-                "content-type": "application/json"
+                "content-type": "application/json",       
                },
               json : bodyData
           };
@@ -219,8 +220,8 @@ const locationSearch = function ( filterData, pageSize = "", pageNo = "", search
                 userServiceUrl + constants.endpoints.GET_SCHOOL_DATA;
                 const options = {
                     headers : {
-                        "content-type": "application/json"
-                        },
+                        "content-type": "application/json",
+                    },
                     json : bodyData
                 };
     
@@ -253,7 +254,7 @@ const locationSearch = function ( filterData, pageSize = "", pageNo = "", search
                     return resolve (result = {
                         success : false
                     });
-                }, serverTimeout);
+                }, constants.common.SERVER_TIME_OUT);
   
             } catch (error) {
                 return reject(error);
@@ -270,32 +271,36 @@ const locationSearch = function ( filterData, pageSize = "", pageNo = "", search
   * @returns {Array} - Sub entities matching the type .
 */
 
-async function getSubEntitiesBasedOnEntityType( entityIds, entityType, result ) { 
-    
-    if( !entityIds.length > 0 ) {
-      return result;
-    };
+async function getSubEntitiesBasedOnEntityType( parentIds, entityType, result ) {
 
-    let bodyData = {
-        "parentId" : entityIds
-    };
-    //get all immediate subEntities of type {entityType}
-    let childEntities = await locationSearch(bodyData);
-
-    if( ( !childEntities.success ) && !result.length > 0 ) {
-      return result;
+    if( !parentIds.length > 0 ){
+        return result;
     }
+    let bodyData={
+        "parentId" : parentIds
+    };
+
+    let entityDetails = await locationSearch(bodyData);
+    if( !entityDetails.success ) {
+        return (result);
+    }
+
+    let entityData = entityDetails.data;
     let parentEntities = [];
-    if( childEntities.data[0].type == entityType ) {
-        result = childEntities.data;
+    entityData.map(entity => {
+    if( entity.type == entityType ) {
+        result.push(entity.id)
     } else {
-        parentEntities = childEntities.map(function (entity) { return entity.id; });
+        parentEntities.push(entity.id)
     }
+    });
     
     if( parentEntities.length > 0 ){
-      await getSubEntitiesBasedOnEntityType(parentEntities, entityType, result);
+        await getSubEntitiesBasedOnEntityType(parentEntities,entityType,result)
     } 
-    return result;
+    
+    let uniqueEntities = _.uniq(result);
+    return uniqueEntities;    
 }
   
 module.exports = {
