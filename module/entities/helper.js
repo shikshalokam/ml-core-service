@@ -21,66 +21,65 @@ module.exports = class EntitiesHelper {
    * @returns {Array} - returns an array of entities data.
    */
 
-  static entityDocuments(
-    findQuery = "all", 
-    fields = "all",
-    skipFields = "none", 
-    limitingValue = "", 
-    skippingValue = "",
-    sortedData = ""
-    ) {
-        return new Promise(async (resolve, reject) => {
-            try {
-                
-                let queryObject = {};
-                
-                if (findQuery != "all") {
-                    queryObject = findQuery;
-                    if( queryObject._id && typeof queryObject._id != "object" && !gen.utils.isValidMongoId(queryObject._id.toString()) ) {
-                        queryObject["registryDetails.locationId"] = queryObject._id;
-                        delete queryObject._id
+      static entityDocuments(
+        findQuery = "all", 
+        fields = "all",
+        skipFields = "none", 
+        limitingValue = "", 
+        skippingValue = "",
+        sortedData = ""
+        ) {
+            return new Promise(async (resolve, reject) => {
+                try {
+                    
+                    let queryObject = {};
+                    
+                    if (findQuery != "all") {
+                        queryObject = findQuery;
+                        if( queryObject._id && typeof queryObject._id != "object" && !gen.utils.isValidMongoId(queryObject._id.toString()) ) {
+                            queryObject["registryDetails.locationId"] = queryObject._id;
+                            delete queryObject._id
+                        }
                     }
-                }
-                
-                let projectionObject = {};
-                
-                if (fields != "all") {
                     
-                    fields.forEach(element => {
-                        projectionObject[element] = 1;
-                    });
-                }
-
-                if (skipFields != "none") {
-                    skipFields.forEach(element => {
-                        projectionObject[element] = 0;
-                    });
-                }
-                
-                let entitiesDocuments;
-                
-                if( sortedData !== "" ) {
+                    let projectionObject = {};
                     
-                    entitiesDocuments = await database.models.entities
-                    .find(queryObject, projectionObject)
-                    .sort(sortedData)
-                    .limit(limitingValue)
-                    .skip(skippingValue)
-                    .lean();
-                } else {
+                    if (fields != "all") {
+                        
+                        fields.forEach(element => {
+                            projectionObject[element] = 1;
+                        });
+                    }
+    
+                    if (skipFields != "none") {
+                        skipFields.forEach(element => {
+                            projectionObject[element] = 0;
+                        });
+                    }
                     
-                    entitiesDocuments = await database.models.entities
-                    .find(queryObject, projectionObject)
-                    .limit(limitingValue)
-                    .skip(skippingValue)
-                    .lean();
+                    let entitiesDocuments;
+                    
+                    if( sortedData !== "" ) {
+                        
+                        entitiesDocuments = await database.models.entities
+                        .find(queryObject, projectionObject)
+                        .sort(sortedData)
+                        .limit(limitingValue)
+                        .skip(skippingValue)
+                        .lean();
+                    } else {
+                        
+                        entitiesDocuments = await database.models.entities
+                        .find(queryObject, projectionObject)
+                        .limit(limitingValue)
+                        .skip(skippingValue)
+                        .lean();
+                    }
+                    return resolve(entitiesDocuments);
+                } catch (error) {
+                    return reject(error);
                 }
-                
-                return resolve(entitiesDocuments);
-            } catch (error) {
-                return reject(error);
-            }
-        });
+            });
     }
 
      /**
@@ -460,7 +459,7 @@ module.exports = class EntitiesHelper {
                     let subEntitiesArray = [];  
                     
                     let subEntities = await userService.getSubEntitiesBasedOnEntityType( entityId, entityTraversalType, subEntitiesArray )
-               
+                    
                     if( !subEntities.length > 0 ) {
                         return resolve({
                             data : subEntities,
@@ -468,9 +467,8 @@ module.exports = class EntitiesHelper {
                         }) 
                     }
                     // call locationSearch with search and pagination
-                    let subEntityIds = subEntities.map(function (entity) { return entity.id; });
                     let filter = {
-                        "id" : subEntityIds
+                        "id" : subEntities
                     }
                     let subentitiesData = await userService.locationSearch(
                         filter,
