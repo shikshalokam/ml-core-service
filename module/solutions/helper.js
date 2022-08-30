@@ -263,7 +263,7 @@ module.exports = class SolutionsHelper {
         }
 
         if( programData[0].scope ) {
-          
+
           let currentSolutionScope = JSON.parse(JSON.stringify(programData[0].scope));
 
           if( Object.keys(scopeData).length > 0 ) {
@@ -290,7 +290,7 @@ module.exports = class SolutionsHelper {
                   entityTypeId : currentSolutionScope.entityTypeId
                 },["_id"]
               );
-  
+
               if( !entities.length > 0 ) {
                 return resolve({
                   status : httpStatusCode.bad_request.status,
@@ -301,6 +301,7 @@ module.exports = class SolutionsHelper {
               let entityIds = [];
 
             if( currentSolutionScope.entityType !== programData[0].scope.entityType ) {
+
               for( let entity = 0; entity < entities.length; entity ++ ) {
               
                 let entityQuery = {
@@ -310,7 +311,7 @@ module.exports = class SolutionsHelper {
     
                 let entityInParent = 
                 await entitiesHelper.entityDocuments(entityQuery);
-    
+                
                 if( entityInParent.length > 0 ) {
                   entityIds.push(ObjectId(entities[entity]._id));
                 }
@@ -709,7 +710,8 @@ module.exports = class SolutionsHelper {
               "creator",
               "endDate",
               "link",
-              "referenceFrom"
+              "referenceFrom",
+              "entityType"
             ]  
           );
         
