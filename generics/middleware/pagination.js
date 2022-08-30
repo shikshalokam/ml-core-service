@@ -15,8 +15,7 @@ module.exports = (req, res, next) => {
         Number(req.query.limit) : 100;
 
         req.searchText = (req.query.search && req.query.search != "") 
-        ? decodeURI(req.query.search) : "";
-        
+        ? encodeURIComponent(req.query.search) : "";
         delete req.query.page;
         delete req.query.limit;
     }
