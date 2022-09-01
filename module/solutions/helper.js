@@ -309,15 +309,15 @@ module.exports = class SolutionsHelper {
               
               let entitiesData = [];
       
-              if( currentSolutionScope.entityType !== programData[0].scope.entityType ) {
-                let result = [];
-                let childEntities = await userService.getSubEntitiesBasedOnEntityType(currentSolutionScope.entities, currentSolutionScope.entityType, result);
-                if( childEntities.length > 0 ) {
-                  entitiesData = entityIds.filter(element => childEntities.includes(element));
-                }
-              } else {
+              // if( currentSolutionScope.entityType !== programData[0].scope.entityType ) {
+              //   let result = [];
+              //   let childEntities = await userService.getSubEntitiesBasedOnEntityType(currentSolutionScope.entities, currentSolutionScope.entityType, result);
+              //   if( childEntities.length > 0 ) {
+              //     entitiesData = entityIds.filter(element => childEntities.includes(element));
+              //   }
+              // } else {
                 entitiesData = entityIds
-              }
+              // }
               
               if( !entitiesData.length > 0 ) {
                 
