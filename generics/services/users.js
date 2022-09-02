@@ -302,10 +302,47 @@ async function getSubEntitiesBasedOnEntityType( parentIds, entityType, result ) 
     let uniqueEntities = _.uniq(result);
     return uniqueEntities;    
 }
+
+/**
+  * get Parent Entities of an entity.
+  * @method
+  * @name getParentEntities
+  * @param {String} entityId - entity id
+  * @returns {Array} - parent entities.
+*/
+
+async function getParentEntities( entityId, iteration = 0, parentEntities ) {
+
+    if ( iteration == 0 ) {
+        parentEntities = [];
+    }
+
+    let filterQuery = {
+        "id" : entityId
+    };
+
+    let entityDetails = await locationSearch(filterQuery);
+    if ( !entityDetails.success ) {
+        return parentEntities;
+    } else {
+        
+        let entityData = entityDetails.data[0];
+        if ( iteration > 0 ) parentEntities.push(entityData);
+        if ( entityData.parentId ) {
+            iteration = iteration + 1;
+            entityId = entityData.parentId;
+            await getParentEntities(entityId, iteration, parentEntities);
+        }
+    }
+
+    return parentEntities;
+
+}
   
 module.exports = {
     profile : profile,
     locationSearch : locationSearch,
     orgSchoolSearch :orgSchoolSearch,
     getSubEntitiesBasedOnEntityType : getSubEntitiesBasedOnEntityType
+    getParentEntities : getParentEntities
 }
