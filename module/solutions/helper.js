@@ -236,6 +236,7 @@ module.exports = class SolutionsHelper {
 
     return new Promise(async (resolve, reject) => {
       try {
+        
         let programData = 
         await programsHelper.programDocuments({ _id : programId },["_id","scope"]);
  
@@ -378,7 +379,7 @@ module.exports = class SolutionsHelper {
           success : true,
           message : constants.apiResponses.SOLUTION_UPDATED
         });
-
+   
       } catch (error) {
           return resolve({
             success : false
@@ -691,7 +692,8 @@ module.exports = class SolutionsHelper {
               "creator",
               "endDate",
               "link",
-              "referenceFrom"
+              "referenceFrom",
+              "entityType"
             ]  
           );
           

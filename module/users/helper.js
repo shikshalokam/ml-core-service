@@ -768,6 +768,8 @@ module.exports = class UsersHelper {
             }  
           } else if ( targetedEntityType ===  constants.common.SCHOOL ) {
             targetedEntityType = constants.common.STATE_ENTITY_TYPE;
+          } else if ( targetedEntityType === constants.common.SCHOOL ) {
+              targetedEntityType = constants.common.STATE_ENTITY_TYPE;
           }
                   
         }
