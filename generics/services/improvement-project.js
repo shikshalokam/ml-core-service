@@ -32,7 +32,6 @@ var assignedProjects = function ( token,search = "",filter = "" ) {
 
     //finding the type of language
     if (!patternForDetectLang.test(search)) {
-        console.log("encodeed")
         url = encodeURI(url);
     }
 
