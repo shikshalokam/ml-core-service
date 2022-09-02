@@ -343,6 +343,6 @@ module.exports = {
     profile : profile,
     locationSearch : locationSearch,
     orgSchoolSearch :orgSchoolSearch,
-    getSubEntitiesBasedOnEntityType : getSubEntitiesBasedOnEntityType
+    getSubEntitiesBasedOnEntityType : getSubEntitiesBasedOnEntityType,
     getParentEntities : getParentEntities
 }
