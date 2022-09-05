@@ -6,7 +6,7 @@
  */
 
 const path = require("path");
-let rootPath = path.join(__dirname, '..')
+let rootPath = path.join(__dirname, '../../')
 require('dotenv').config({ path: rootPath+'/.env' })
 let _ = require("lodash");
 let mongoUrl = process.env.MONGODB_URL;

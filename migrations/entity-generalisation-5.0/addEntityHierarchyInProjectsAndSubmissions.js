@@ -1,7 +1,7 @@
 let _ = require("lodash");
 const request = require('request');
 const path = require("path");
-let rootPath = path.join(__dirname, '..')
+let rootPath = path.join(__dirname, '../../')
 let endPoints = require(rootPath+'/generics/constants/endpoints')
 require('dotenv').config({ path: rootPath+'/.env' })
 let MongoClient = require("mongodb").MongoClient;
@@ -10,9 +10,6 @@ let userServiceUrl = process.env.USER_SERVICE_URL;
 let mongoUrl = process.env.MONGODB_URL;
 let dbName = mongoUrl.split("/").pop();
 let url = mongoUrl.split(dbName)[0];
-
-
-
 
 (async () => {
     
