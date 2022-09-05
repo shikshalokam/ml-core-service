@@ -1352,15 +1352,13 @@ module.exports = class SolutionsHelper {
         }
 
         let targetedSolutions = {
-          success: false,
+          success: false
         };
 
         let getTargetedSolution = true;
 
         if ( filter === constants.common.DISCOVERED_BY_ME ) {
             getTargetedSolution = false;
-        } else if ( solutionType === constants.common.COURSE ) {
-            getTargetedSolution = true;
         } else if ( gen.utils.convertStringToBoolean(surveyReportPage) === true ) {
             getTargetedSolution = false;
         }
@@ -1380,11 +1378,12 @@ module.exports = class SolutionsHelper {
 
       if( targetedSolutions.success ) {
 
-          if( targetedSolutions.data.data && targetedSolutions.data.data.length > 0 ) {
-              totalCount += targetedSolutions.data.count;
-              targetedSolutions.data.data.forEach(targetedSolution => {
-                  targetedSolution.solutionId = targetedSolution._id;
-                  targetedSolution._id = "";
+        if( targetedSolutions.success && targetedSolutions.data.data && targetedSolutions.data.data.length > 0 ) {
+
+          totalCount += targetedSolutions.data.count;
+          targetedSolutions.data.data.forEach(targetedSolution => {
+              targetedSolution.solutionId = targetedSolution._id;
+              targetedSolution._id = "";
 
                   if( solutionType !== constants.common.COURSE ) {
                     targetedSolution["creator"] = targetedSolution.creator ? targetedSolution.creator : "";
@@ -1393,7 +1392,7 @@ module.exports = class SolutionsHelper {
                   if ( solutionType === constants.common.SURVEY ) {
                     targetedSolution.isCreator = false;
                   }
-                
+    
                   mergedData.push(targetedSolution);
                   delete targetedSolution.type; 
                   delete targetedSolution.externalId;
@@ -1413,8 +1412,8 @@ module.exports = class SolutionsHelper {
           message: constants.apiResponses.TARGETED_OBSERVATION_FETCHED,
           data: {
             data: mergedData,
-            count: totalCount,
-          },
+            count: totalCount
+          }
         });
       } catch (error) {
         return reject({
@@ -1708,10 +1707,6 @@ module.exports = class SolutionsHelper {
           verified: false,
         };
 
-        if ( link == "" ) {
-          throw new Error(constants.apiResponses.LINK_REQUIRED_CHECK);
-        }
-
         if ( userToken == "" ) {
           throw new Error(constants.apiResponses.REQUIRED_USER_AUTH_TOKEN);
         }
@@ -1771,7 +1766,8 @@ module.exports = class SolutionsHelper {
           message: constants.apiResponses.LINK_VERIFIED,
           result: response,
         });
-      } catch (error) {
+      } 
+      catch (error) {
         return resolve({
           success: false,
           status: error.status

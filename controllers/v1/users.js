@@ -426,10 +426,11 @@ module.exports = class Users extends Abstract {
                 
                 let currentMaximumCountOfRequiredEntities = 0;
                 let requiredEntities = new Array;
+                let roleArray = req.query.role.split(",");
 
                 // Calculate required entities for each of the role and send the output of the role which has maximum length.
-                for (let roleCount = 0; roleCount < req.query.role.split(",").length; roleCount++) {
-                    const eachRole = req.query.role.split(",")[roleCount];
+                for (let roleCount = 0; roleCount < roleArray.length; roleCount++) {
+                    const eachRole = roleArray[roleCount];
                     const entitiesMappingData = 
                     await usersHelper.entityTypesByLocationAndRole(
                         req.params._id,
@@ -565,8 +566,8 @@ module.exports = class Users extends Abstract {
                             message: constants.apiResponses.ENTITIES_NOT_ALLOWED_IN_ROLE
                         };
                     }
-
-                    targetedEntities.result = targetedEntity.data;
+                    
+                    targetedEntities.result = targetedEntity.data[0];
                 }
             }
 

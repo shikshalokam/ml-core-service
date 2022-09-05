@@ -833,7 +833,7 @@ module.exports = class Solutions extends Abstract {
    * @method
    * @name verifyLink
    * @param {Object} req - requested data.
-   * @param {String} req.params._id - solution Id
+   * @param {String} req.params._id - solution link
    * @returns {Array}
    */
 

@@ -517,8 +517,6 @@ module.exports = class UsersHelper {
               
               
               if( projectSolutionIdIndexMap[importedProject.solutionInformation._id] !== undefined  ) {
-
-                
                 mergedData[projectSolutionIdIndexMap[importedProject.solutionInformation._id]].projectId = importedProject._id;
               } else {
                 let data = importedProject.solutionInformation;
@@ -639,8 +637,6 @@ module.exports = class UsersHelper {
           };
         }
         
-
-
         let bodyData={};    
         if (gen.utils.checkValidUUID(stateLocationId)) {
           bodyData = {
