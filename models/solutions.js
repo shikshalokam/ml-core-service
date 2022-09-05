@@ -22,7 +22,6 @@ module.exports = {
       themes: Array,
       flattenedThemes : Array,
       questionSequenceByEcm: Object,
-      entityTypeId: "ObjectId",
       entityType: String,
       type: String,
       subType: String,
@@ -74,7 +73,6 @@ module.exports = {
       referenceFrom : String,
       scope : {
         entityType : String,
-        entityTypeId : "ObjectId",
         entities : {
           type : Array,
           index : true

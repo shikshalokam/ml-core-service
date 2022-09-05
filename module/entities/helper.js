@@ -1,7 +1,10 @@
+
+
 const entityTypesHelper = require(MODULES_BASE_PATH + "/entityTypes/helper");
 const userRolesHelper = require(MODULES_BASE_PATH + "/user-roles/helper");
 // const elasticSearch = require(GENERIC_HELPERS_PATH + "/elastic-search");
-
+const userService = require(ROOT_PATH + "/generics/services/users");
+const formService = require(ROOT_PATH + '/generics/services/form');
 module.exports = class EntitiesHelper {
 
 
@@ -18,65 +21,65 @@ module.exports = class EntitiesHelper {
    * @returns {Array} - returns an array of entities data.
    */
 
-  static entityDocuments(
-    findQuery = "all", 
-    fields = "all",
-    skipFields = "none", 
-    limitingValue = "", 
-    skippingValue = "",
-    sortedData = ""
-    ) {
-        return new Promise(async (resolve, reject) => {
-            try {
-                
-                let queryObject = {};
-                
-                if (findQuery != "all") {
-                    queryObject = findQuery;
-                    if( queryObject._id && typeof queryObject._id != "object" && !gen.utils.isValidMongoId(queryObject._id.toString()) ) {
-                        queryObject["registryDetails.locationId"] = queryObject._id;
-                        delete queryObject._id
+      static entityDocuments(
+        findQuery = "all", 
+        fields = "all",
+        skipFields = "none", 
+        limitingValue = "", 
+        skippingValue = "",
+        sortedData = ""
+        ) {
+            return new Promise(async (resolve, reject) => {
+                try {
+                    
+                    let queryObject = {};
+                    
+                    if (findQuery != "all") {
+                        queryObject = findQuery;
+                        if( queryObject._id && typeof queryObject._id != "object" && !gen.utils.isValidMongoId(queryObject._id.toString()) ) {
+                            queryObject["registryDetails.locationId"] = queryObject._id;
+                            delete queryObject._id
+                        }
                     }
-                }
-                
-                let projectionObject = {};
-                
-                if (fields != "all") {
                     
-                    fields.forEach(element => {
-                        projectionObject[element] = 1;
-                    });
-                }
-
-                if (skipFields != "none") {
-                    skipFields.forEach(element => {
-                        projectionObject[element] = 0;
-                    });
-                }
-                
-                let entitiesDocuments;
-                
-                if( sortedData !== "" ) {
+                    let projectionObject = {};
                     
-                    entitiesDocuments = await database.models.entities
-                    .find(queryObject, projectionObject)
-                    .sort(sortedData)
-                    .limit(limitingValue)
-                    .skip(skippingValue)
-                    .lean();
-                } else {
+                    if (fields != "all") {
+                        
+                        fields.forEach(element => {
+                            projectionObject[element] = 1;
+                        });
+                    }
+    
+                    if (skipFields != "none") {
+                        skipFields.forEach(element => {
+                            projectionObject[element] = 0;
+                        });
+                    }
                     
-                    entitiesDocuments = await database.models.entities
-                    .find(queryObject, projectionObject)
-                    .limit(limitingValue)
-                    .skip(skippingValue)
-                    .lean();
+                    let entitiesDocuments;
+                    
+                    if( sortedData !== "" ) {
+                        
+                        entitiesDocuments = await database.models.entities
+                        .find(queryObject, projectionObject)
+                        .sort(sortedData)
+                        .limit(limitingValue)
+                        .skip(skippingValue)
+                        .lean();
+                    } else {
+                        
+                        entitiesDocuments = await database.models.entities
+                        .find(queryObject, projectionObject)
+                        .limit(limitingValue)
+                        .skip(skippingValue)
+                        .lean();
+                    }
+                    return resolve(entitiesDocuments);
+                } catch (error) {
+                    return reject(error);
                 }
-                return resolve(entitiesDocuments);
-            } catch (error) {
-                return reject(error);
-            }
-        });
+            });
     }
 
      /**
@@ -101,7 +104,7 @@ module.exports = class EntitiesHelper {
                 queryObject["$match"]["_id"] = {};
                 queryObject["$match"]["_id"]["$in"] = entityIds;
             }
-
+            
             if( searchText !== "") {
                 queryObject["$match"]["$or"] = [
                     { "metaInformation.name": new RegExp(searchText, 'i') },
@@ -141,7 +144,7 @@ module.exports = class EntitiesHelper {
                     }
                 }
             ]);
-
+            
             return resolve(entityDocuments);
 
         } catch (error) {
@@ -237,63 +240,34 @@ module.exports = class EntitiesHelper {
     * @returns {Array} - List of all immediateEntities based on entityId.
     */
 
-    static immediateEntities(entityId, searchText = "",pageSize="",pageNo="") {
+    static immediateEntities(entityId, searchText = "", pageSize = "", pageNo = "") {
         return new Promise(async (resolve, reject) => {
 
             try {
-                
-                let projection = [
-                    constants.schema.ENTITYTYPE,
-                    constants.schema.GROUPS
-                ];
-    
-                let entitiesDocument = await this.entityDocuments({
-                    _id: entityId
-                }, projection);
-    
-                let immediateEntities = [];
-    
-                if (entitiesDocument[0] &&
-                    entitiesDocument[0].groups &&
-                    Object.keys(entitiesDocument[0].groups).length > 0
-                ) {
-    
-                    let getImmediateEntityTypes =
-                        await entityTypesHelper.entityTypesDocument({
-                            name : entitiesDocument[0].entityType
-                        },["immediateChildrenEntityType"]
-                    );
-    
-                    let immediateEntitiesIds;
-    
-                    Object.keys(entitiesDocument[0].groups).forEach(entityGroup => {
-                        if (
-                            getImmediateEntityTypes[0].immediateChildrenEntityType &&
-                            getImmediateEntityTypes[0].immediateChildrenEntityType.length > 0 &&
-                            getImmediateEntityTypes[0].immediateChildrenEntityType.includes(entityGroup)
-                        ) {
-                            immediateEntitiesIds = 
-                            entitiesDocument[0].groups[entityGroup];
-                        }
-                    })
-    
-                    if (
-                        Array.isArray(immediateEntitiesIds) &&
-                        immediateEntitiesIds.length > 0
-                    ) {
-                   
-                        let searchImmediateData = await this.search(
-                            searchText, 
-                            pageSize, 
-                            pageNo, 
-                            immediateEntitiesIds
-                        );
-    
-                        immediateEntities = searchImmediateData[0];
-                    }
+                //List of all immediateEntities based on entityId.
+                let bodyData = {
+                    "parentId" : entityId
+                };
+                // When filter passed as parentId all immediate child or sub entities data is returned.
+                let entitiesData = await userService.locationSearch(
+                    bodyData,
+                    pageSize,
+                    pageNo,
+                    searchText
+                );
+                // No data found or API call failure
+                if( !entitiesData.success ) {
+                    return resolve({
+                        data : [],
+                        count : 0
+                    }); 
                 }
-    
-                return resolve(immediateEntities);
+                let immediateLocation = entitiesData.data;
+                
+                return resolve({
+                    data : immediateLocation,
+                    count : entitiesData.count
+                });
 
             } catch(error) {
                 return reject(error);
@@ -302,7 +276,7 @@ module.exports = class EntitiesHelper {
     }
 
     /**
-     * Get immediate entities for requested Array.
+     * Get sub entities for requested Array.
      * @method
      * @name subList
      * @param {params} entities - array of entitity ids
@@ -314,54 +288,62 @@ module.exports = class EntitiesHelper {
      * @returns {Array} - List of all sub list entities.
      */
 
-    static subEntityList( entities,entityId,type,search,limit,pageNo ) {
+    static subEntityList( entities, entityId, type, search, limit, pageNo ) {
         return new Promise(async (resolve, reject) => {
 
             try {
-
-                let result = [];
+                
+                let result = {};
+                let subEntitiesResult = {};
+                let listOfSubEntities = [];
                 let obj = {
                     entityId : entityId,
                     type : type,
                     search : search,
-                    limit : limit,
+                    limit :limit,
                     pageNo : pageNo
                 }
-    
+                //entity id passed as query parameter
                 if ( entityId !== "" ) {
-                    result = await this.subEntities(
+                    subEntitiesResult = await this.subEntities(
                         obj
                     );
                 } else {
-    
-                    await Promise.all(entities.map(async (entity)=> {
-    
-                        obj["entityId"] = entity;
-                        let entitiesDocument = await this.subEntities(
+                        // entityId is an Array of entities passed in request body
+                        obj["entityId"] = entities;
+                        subEntitiesResult = await this.subEntities(
                             obj
                         );
-
-                        if( Array.isArray(entitiesDocument.data) && 
-                        entitiesDocument.data.length > 0
-                        ) {
-                            result = entitiesDocument;
-                        }
-                    }));
+                        
                 }
-
-                if( result.data && result.data.length > 0 ) {
-                    result.data = result.data.map(data=>{
-                        let cloneData = {...data};
-                        cloneData["label"] = cloneData.name;
-                        cloneData["value"] = cloneData._id;
-                        return cloneData;
-                    })
+                
+                //formating sub entities data. 
+                if ( subEntitiesResult && subEntitiesResult.data && subEntitiesResult.data.length > 0 ) { 
+                    let formatedEntities = [];
+                    listOfSubEntities = subEntitiesResult.data
+                    listOfSubEntities.map( entityData => {
+                        let data = {
+                            _id: entityData.id,
+                            entityType: entityData.type,
+                            name: entityData.name,
+                            externalId: entityData.code,
+                            label: entityData.name,
+                            value: entityData.id
+                        };
+                        formatedEntities.push(data)
+                    } );
+                    listOfSubEntities = [];
+                    listOfSubEntities = formatedEntities;
                 }
-    
+                
+                result.data = listOfSubEntities;
+                result.count = subEntitiesResult.count;
+                
                 resolve({
                     message: constants.apiResponses.ENTITIES_FETCHED,
                     result: result
-                });   
+                }); 
+                 
             } catch(error) {
                 return reject(error);
             }
@@ -378,13 +360,13 @@ module.exports = class EntitiesHelper {
 
     static subEntities( entitiesData ) {
         return new Promise(async (resolve, reject) => {
-
+            
             try {
-                
+               
                 let entitiesDocument;
-                
+        
                 if( entitiesData.type !== "" ) {
-                    
+                    // If requested for a specific entity tye use entityTraversal
                     entitiesDocument = await this.entityTraversal(
                         entitiesData.entityId,
                         entitiesData.type,
@@ -393,7 +375,7 @@ module.exports = class EntitiesHelper {
                         entitiesData.pageNo
                         );
                 } else {
-                    
+                    // Get immediate entities 
                     entitiesDocument = await this.immediateEntities(
                         entitiesData.entityId, 
                         entitiesData.search,
@@ -403,6 +385,7 @@ module.exports = class EntitiesHelper {
                 }
                 
                 return resolve(entitiesDocument);
+                
             } catch(error) {
                 return reject(error);
             }
@@ -410,55 +393,96 @@ module.exports = class EntitiesHelper {
     }
 
     /**
-    * Get immediate entities.
+    * Get entities by traversal.
     * @method
-    * @name listByEntityType
+    * @name entityTraversal
     * @param {Object} entityId
-    * @returns {Array} - List of all immediateEntities based on entityId.
+    * @returns {Array} - List of all Entities based on entityId using traversal.
     */
 
    static entityTraversal(
        entityId,
        entityTraversalType = "", 
        searchText = "",
-       pageSize,
-       pageNo
+       pageSize = "",
+       pageNo = "",
     ) {
         return new Promise(async (resolve, reject) => {
             try {
-                
-                let entityTraversal = `groups.${entityTraversalType}`;
-
-                let entitiesDocument = 
-                await this.entityDocuments(
-                    { 
-                        _id: entityId,
-                        "groups" : { $exists : true }, 
-                        [entityTraversal] : { $exists: true } 
-                    },
-                    [ entityTraversal ]
-                );
-
-                if( !entitiesDocument[0] ) {
-                    return resolve([]);
-                }
-
-                let result = [];
-                
-                if( entitiesDocument[0].groups[entityTraversalType].length > 0 ) {
+                //list entities of type {entityTraversalType} which comes under the specified entity{entityId}
+                if( entityTraversalType == constants.common.SCHOOL) {
+                    let filterData = {
+                        "orgLocation.id" : entityId
+                    }
+                    let fields = ["externalId"]
+                    // Get school location code using org search.
+                    let subentitiesCode = await userService.orgSchoolSearch( filterData, pageSize, pageNo, searchText, fields );
                     
-                    let entityTraversalData = await this.search(
-                        searchText,
+                    if( !subentitiesCode.success ) {
+                        return resolve({
+                            data : [],
+                            count : subentitiesCode.count
+                        }) 
+                    }
+                    
+                    let schoolDetails = subentitiesCode.data;
+                    //get code from all data
+                    let schoolCodes = [];
+                    //some default field is also coming. So filtering externalId from result
+                    schoolDetails.map(schoolData=> {
+                        schoolCodes.push(schoolData.externalId);
+                    });
+                    
+
+                    let bodyData = {
+                        "code" : schoolCodes
+                    };
+                    
+                    // Get school data using location code fetched using org api call
+                    let entitiesData = await userService.locationSearch( bodyData );
+                
+                    if( !entitiesData.success ) {
+                        return resolve({
+                            data : [],
+                            count : 0
+                        }) 
+                    }
+                    
+                    return resolve({
+                        data : entitiesData.data,
+                        count : subentitiesCode.count
+                    }) 
+
+
+                } else {
+                    /* if {entityId} is of a state and {entityTraversalType} is block , getSubEntitiesBasedOnEntityType will return all entities of type block in that state*/
+                    let subEntitiesArray = [];  
+                    
+                    let subEntities = await userService.getSubEntitiesBasedOnEntityType( entityId, entityTraversalType, subEntitiesArray )
+                    
+                    if( !subEntities.length > 0 ) {
+                        return resolve({
+                            data : subEntities,
+                            count : 0
+                        }) 
+                    }
+                    // call locationSearch with search and pagination
+                    let filter = {
+                        "id" : subEntities
+                    }
+                    let subentitiesData = await userService.locationSearch(
+                        filter,
                         pageSize,
                         pageNo,
-                        entitiesDocument[0].groups[entityTraversalType]
+                        searchText
                     );
-
-                    result = entityTraversalData[0];
-
+                    
+                    return resolve({
+                        data : subentitiesData.data,
+                        count : subentitiesData.count
+                    }) 
+                
                 }
-
-                return resolve(result);
 
             } catch(error) {
                 return reject(error);
@@ -682,10 +706,12 @@ module.exports = class EntitiesHelper {
     * @returns {Array} List of sub entity type.
     */
 
-    static subEntityListBasedOnRoleAndLocation( stateLocationId,role ) {   
+    static subEntityListBasedOnRoleAndLocation( stateLocationId, role ) {   
         return new Promise(async (resolve, reject) => {
             try {
-
+                //key will be subEntityTypesOf_{stateLocationId}
+                let entityKey = constants.common.SUBENTITY + stateLocationId;
+                
                 let rolesDocument = await userRolesHelper.roleDocuments({
                     code : role
                 },["entityTypes.entityType"]);
@@ -696,59 +722,63 @@ module.exports = class EntitiesHelper {
                         message: constants.apiResponses.USER_ROLES_NOT_FOUND
                     }
                 }
-
-                let filterQuery = {
-                    "registryDetails.code" : stateLocationId
-                };
-
-                if( gen.utils.checkValidUUID(stateLocationId) ) {
-                    filterQuery = {
-                        "registryDetails.locationId" : stateLocationId
+                //check if data already available in cache
+                let subEntities = [];
+                let cacheData = await cache.getValue(entityKey);
+                
+                if( !cacheData ) {
+                   
+                    let bodyData={
+                        "id" : stateLocationId
                     };
-                } 
-
-                const entityDocuments = await this.entityDocuments(filterQuery,["childHierarchyPath"]);
-    
-                 if( !entityDocuments.length > 0 ) {
-                     return resolve({
-                         message : constants.apiResponses.ENTITY_NOT_FOUND,
-                         result : []
-                     })
-                 }
-
-                 let result = [];
-
-                 if( rolesDocument[0].entityTypes[0].entityType === constants.common.STATE_ENTITY_TYPE ) {
-                    result = entityDocuments[0].childHierarchyPath;
-                    result.unshift(constants.common.STATE_ENTITY_TYPE);
-                 } else {
-
-                    let targetedEntityType = "";
-
-                    rolesDocument[0].entityTypes.forEach(singleEntityType => {
-                       if( entityDocuments[0].childHierarchyPath.includes(singleEntityType.entityType) ) {
-                           targetedEntityType = singleEntityType.entityType;
-                       }
-                    });
-   
-                    let findTargetedEntityIndex = 
-                    entityDocuments[0].childHierarchyPath.findIndex(element => element === targetedEntityType);
-   
-                    if( findTargetedEntityIndex < 0 ) {
-                       throw {
-                           message : constants.apiResponses.SUB_ENTITY_NOT_FOUND,
-                           result : []
-                       }
+                    // Calling location search to fetch state code
+                    let entitiesData = await userService.locationSearch( bodyData );
+                    
+                    if( !entitiesData.success ) {
+                        return resolve({
+                            message : constants.apiResponses.ENTITY_NOT_FOUND,
+                            result : []
+                        })
                     }
-   
-                    result = entityDocuments[0].childHierarchyPath.slice(findTargetedEntityIndex);
-                 }
+                    // form search using state location code
+                    let stateLocationCode = entitiesData.data[0].code;
+                    subEntities = await formService.configForStateLocation( stateLocationCode, entityKey );
+                    if( !subEntities.length > 0 ) {
+                        return resolve({
+                            message : constants.apiResponses.ENTITY_NOT_FOUND,
+                            result : []
+                        })
+                    }
+                } else {
+                    subEntities = cacheData;
+                }
+                
+                let result = subEntities;    
+                let targetedEntityType = "";
+
+                rolesDocument[0].entityTypes.forEach(singleEntityType => {
+                    if( subEntities.includes(singleEntityType.entityType) ) {
+                        targetedEntityType = singleEntityType.entityType;
+                    }
+                });
+
+                let findTargetedEntityIndex = 
+                subEntities.findIndex(element => element === targetedEntityType);
+                if( findTargetedEntityIndex < 0 ) {
+                    throw {
+                        message : constants.apiResponses.SUB_ENTITY_NOT_FOUND,
+                        result : []
+                    }
+                }
+
+                result = subEntities.slice(findTargetedEntityIndex);
+               
                  
-                 return resolve({
+                return resolve({
                     success: true,
                     message : constants.apiResponses.ENTITIES_CHILD_HIERACHY_PATH,
                     result : result
-                 });
+                });
     
             } catch (error) {
                 return reject(error);

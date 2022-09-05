@@ -129,6 +129,11 @@ let enviromentVariables = {
     "message" : "App Portal base url",
     "optional" : true,
     "default": "https://dev.sunbirded.org"
+  },
+  "FORM_SERVICE_URL" : {
+    "message" : "Form service base url",
+    "optional" : true,
+    "default": "http://player:3000"
   }
 }
 

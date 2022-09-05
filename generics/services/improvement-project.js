@@ -34,7 +34,7 @@ var assignedProjects = function ( token,search = "",filter = "" ) {
     if (!patternForDetectLang.test(search)) {
         url = encodeURI(url);
     }
-    
+
     return new Promise(async (resolve, reject) => {
         try {
 
