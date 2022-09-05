@@ -29,7 +29,6 @@ module.exports = class UserRolesHelper {
   ) {
     return new Promise(async (resolve, reject) => {
         try {
-    
             let queryObject = (filterQuery != "all") ? filterQuery : {};
     
             let projection = {}
@@ -50,7 +49,7 @@ module.exports = class UserRolesHelper {
               queryObject, 
               projection
             ).lean();
-            
+        
             return resolve(userRolesData);
             
         } catch (error) {

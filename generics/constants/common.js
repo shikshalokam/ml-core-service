@@ -66,5 +66,10 @@ module.exports = {
   "LINK" : "link",
   "DISCOVERED_BY_ME" : "discoveredByMe",
   "DEFAULT_SUBMISSION_REQUIRED" : 1,
-  "SCHOOL" : "school"
+  "SCHOOL" : "school",
+  "SUBENTITY" :"subEntityTypesOf_",
+  "CACHE_TTL" : 43200,    
+  "PROFILE_CONFIG_FORM_KEY" : "profileConfig",
+  "SERVER_TIME_OUT" : 5000
+  
 };
