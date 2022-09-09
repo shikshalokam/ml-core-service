@@ -375,8 +375,6 @@ module.exports = class UsersHelper {
                 } else {
                   subEntities = cacheData;
                 }
-                
-                
                 let roleEntityType = "";
 
                 rolesData[0].entityTypes.forEach(roleData => {
@@ -735,10 +733,10 @@ module.exports = class UsersHelper {
             message: constants.apiResponses.USER_ROLES_NOT_FOUND
           };
         }
-
+      
         let requestedEntityTypes = Object.keys(_.omit(requestedData, ['role']));
         let targetedEntityType = "";
-        
+  
         rolesDocument[0].entityTypes.forEach((singleEntityType) => {
           if (requestedEntityTypes.includes(singleEntityType.entityType)) {
             targetedEntityType = singleEntityType.entityType;
@@ -764,10 +762,7 @@ module.exports = class UsersHelper {
             }  
           } else if ( targetedEntityType ===  constants.common.SCHOOL ) {
             targetedEntityType = constants.common.STATE_ENTITY_TYPE;
-          } else if ( targetedEntityType === constants.common.SCHOOL ) {
-              targetedEntityType = constants.common.STATE_ENTITY_TYPE;
-          }
-                  
+          }         
         }
        
         if (gen.utils.checkValidUUID(requestedData[targetedEntityType])) {
@@ -823,6 +818,7 @@ module.exports = class UsersHelper {
         let entityKey = constants.common.SUBENTITY + requestedData.state;
         let subEntityTypes = [];
         let cacheData = await cache.getValue(entityKey);
+        
         if( !cacheData ) {
             let filterData = {
               "id" : requestedData.state
@@ -847,11 +843,12 @@ module.exports = class UsersHelper {
         } else {
           subEntityTypes = cacheData;
         }       
+        
         let targetedIndex = subEntityTypes.length;
         let roleWiseTarget;
         for( let roleWiseEntityIndex = 0; roleWiseEntityIndex < roleWiseTargetedEntities.length; roleWiseEntityIndex++ ) {
-          for( let subEntitiesIndex = 0; subEntitiesIndex < subEntities.length; subEntitiesIndex++ ) {
-            if( roleWiseTargetedEntities[roleWiseEntityIndex].entityType == subEntities[subEntitiesIndex] ) {
+          for( let subEntitiesIndex = 0; subEntitiesIndex < subEntityTypes.length; subEntitiesIndex++ ) {
+            if( roleWiseTargetedEntities[roleWiseEntityIndex].entityType == subEntityTypes[subEntitiesIndex] ) {
                 if( subEntitiesIndex < targetedIndex) {
                   targetedIndex = subEntitiesIndex;
                   roleWiseTarget = roleWiseEntityIndex;
@@ -859,7 +856,6 @@ module.exports = class UsersHelper {
             }
           }
         }
-        
         let targetedEntity = roleWiseTargetedEntities[roleWiseTarget];
         return resolve({
           message: constants.apiResponses.SOLUTION_TARGETED_ENTITY,
