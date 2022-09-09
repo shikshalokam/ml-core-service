@@ -539,7 +539,6 @@ module.exports = class Users extends Abstract {
                         roleWiseTargetedEntities.push(detailEntity.data);
                     }
                 }
-                
                 //no targeted entity
                 if ( roleWiseTargetedEntities.length  == 0 ) {
                     throw {
@@ -566,8 +565,7 @@ module.exports = class Users extends Abstract {
                             message: constants.apiResponses.ENTITIES_NOT_ALLOWED_IN_ROLE
                         };
                     }
-                    
-                    targetedEntities.result = targetedEntity.data[0];
+                    targetedEntities.result = targetedEntity.data;
                 }
             }
 
