@@ -70,7 +70,5 @@ module.exports = {
   "SUBENTITY" :"subEntityTypesOf_",
   "CACHE_TTL" : 43200,    
   "PROFILE_CONFIG_FORM_KEY" : "profileConfig",
-  "SERVER_TIME_OUT" : 5000,
-  "FIND" : "find",
-  "UPDATE" : "update"
+  "SERVER_TIME_OUT" : 5000
 };

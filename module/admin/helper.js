@@ -225,7 +225,7 @@ module.exports = class adminHelper {
                 }
 
                 return resolve({
-                  message : constants.apiResponses.DATA_UPDATED_SUCCESSFULLY,
+                  message : constants.apiResponses.DATA_CREATED_SUCCESSFULLY,
                   success : true,
                   result : {
                     _id : insertData._id

@@ -182,10 +182,10 @@ module.exports = {
   "ENTITY_ID_OR_LOCATION_ID_NOT_FOUND" : "Entity id or location id not found",
   "NOT_AUTHORIZED_TO_ACCESS" :"You are not authorised to access this resource",
   "NO_LOCATION_ID_FOUND_IN_DATA" : "Location Id not found in data",
-  "QUERY_REQUIRED" : "required findQuery or updateQuery",
   "DATA_FETCHED_SUCCESSFULLY" : "Data fetched successfully",
   "DATA_DELETED_SUCCESSFULLY" : "Data deleted successfully",
   "DATA_UPDATED_SUCCESSFULLY" : "Data updated successfully",
+  "DATA_CREATED_SUCCESSFULLY" : "Data created successfully",
   "FAILED_TO_CREATE_RECORD" : "Failed to create record in DB",
 
 };
