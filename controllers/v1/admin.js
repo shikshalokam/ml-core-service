@@ -93,6 +93,8 @@
      * {
      * "query" : {
      * "_id": { $in : ["601921e86ffa9c5e9d0b53e7","60193ce26ffa9c5e9d0b53fe"]},
+        },
+        "mongoIdKeys" : ["_id"] 
       }
      * @apiParamExample {json} Response:
      * {
@@ -141,8 +143,13 @@
      * @apiSampleRequest /kendra/api/v1/admin/dbUpdate/projects
      * @param {json} Request-Body:
      * {
-     * "query" : {
-     * "_id": { $in : ["601921e86ffa9c5e9d0b53e7","60193ce26ffa9c5e9d0b53fe"]},
+        "findQuery": {
+            "_id": { "$in" : ["601921e86ffa9c5e9d0b53e7"] }
+        },
+        "mongoIdKeys" : ["_id"],
+        "updateQuery" : {
+            "$set" : { "status": "started"}
+        }
       }
      * @apiParamExample {json} Response:
      * {
