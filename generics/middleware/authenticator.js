@@ -102,7 +102,12 @@ module.exports = async function (req, res, next) {
     "/solutions/addRolesInScope",
     "/solutions/addEntitiesInScope",
     "solutions/removeRolesInScope",
-    "/solutions/removeEntitiesInScope"
+    "/solutions/removeEntitiesInScope",
+    "/programs/details",
+    "/admin/dbUpdate",
+    "/admin/dbFind",
+    "/admin/dbDelete",
+    "/admin/dbCreate"
   ];
 
   for(let path = 0; path < mandatoryInternalAccessApiPaths.length ; path++ ) {

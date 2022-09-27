@@ -258,6 +258,10 @@ function filterLocationIdandCode(dataArray) {
   });
 }
 
+function arrayIdsTobjectIds(ids) {
+  return ids.map(id => ObjectId(id));
+}
+
 module.exports = {
   camelCaseToTitleCase : camelCaseToTitleCase,
   lowerCase : lowerCase,
@@ -273,5 +277,6 @@ module.exports = {
   checkValidUUID : checkValidUUID,
   convertStringToBoolean : convertStringToBoolean,
   md5Hash : md5Hash,
-  filterLocationIdandCode : filterLocationIdandCode
+  filterLocationIdandCode : filterLocationIdandCode,
+  arrayIdsTobjectIds : arrayIdsTobjectIds
 };

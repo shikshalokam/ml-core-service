@@ -70,11 +70,16 @@ var databaseConfiguration = function () {
     return model;
   };
 
+  var getCollection = function (modelName) {
+    return db.collection(modelName);
+  } 
+
   return {
     database: db,
     createModel: createModel,
     ObjectId: objectId,
-    models: db.models
+    models: db.models,
+    getCollection : getCollection
   };
 };
 

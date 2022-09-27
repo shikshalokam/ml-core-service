@@ -1222,7 +1222,7 @@ module.exports = class SolutionsHelper {
    * Solution details.
    * @method
    * @name details
-   * @param {String} solutionId - Program Id.
+   * @param {String} solutionId - Solution Id.
    * @returns {Object} - Details of the solution.
    */
 
