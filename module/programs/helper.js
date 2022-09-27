@@ -933,6 +933,47 @@ module.exports = class ProgramsHelper {
         })
       }
     })
+  }
+
+  /**
+   * Program details.
+   * @method
+   * @name details
+   * @param {String} programId - Program Id.
+   * @returns {Object} - Details of the program.
+   */
+
+  static details(programId) {
+    return new Promise(async (resolve, reject) => {
+      try {
+
+        let programData = await this.programDocuments({
+          _id: programId
+        });
+
+        if ( !programData.length > 0 ) {
+          return resolve({
+            status: httpStatusCode.bad_request.status,
+            message: constants.apiResponses.PROGRAM_NOT_FOUND
+          });
+        }
+
+        return resolve({
+          message: constants.apiResponses.PROGRAMS_FETCHED,
+          success: true,
+          data: programData[0]
+        });
+
+      } catch (error) {
+        return resolve({
+          success: false,
+          status: error.status
+            ? error.status
+            : httpStatusCode['internal_server_error'].status,
+          message: error.message
+        });
+      }
+    });
   } 
 
 };

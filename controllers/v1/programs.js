@@ -442,4 +442,54 @@ module.exports = class Programs extends Abstract {
     });
   }
 
+  /**
+    * @api {get} /assessment/api/v1/programs/details/:programId Program Details
+    * @apiVersion 1.0.0
+    * @apiName Program Details
+    * @apiGroup Programs
+    * @apiHeader {String} X-authenticated-user-token Authenticity token
+    * @apiSampleRequest /assessment/api/v1/programs/details/5ffbf8909259097d48017bbf
+    * @apiUse successBody
+    * @apiUse errorBody
+    * @apiParamExample {json} Response:
+    * {
+    "message": "Program details fetched successfully",
+    "status": 200,
+    "result": {
+
+      }
+    }
+    */
+
+     /**
+   * Details of the program
+   * @method
+   * @name details
+   * @param {Object} req - requested data.
+   * @param {String} req.params._id - program id.
+   * @returns {Array} Program scope roles.
+   */
+
+  async details(req) {
+    return new Promise(async (resolve, reject) => {
+      try {
+
+        let programData = await programsHelper.details(
+          req.params._id
+        );
+
+        programData["result"] = programData.data;
+    
+        return resolve(programData);
+        
+      } catch (error) {
+        return reject({
+          status: error.status || httpStatusCode.internal_server_error.status,
+          message: error.message || httpStatusCode.internal_server_error.message,
+          errorObject: error
+        });
+      }
+    });
+  }
+
 }
