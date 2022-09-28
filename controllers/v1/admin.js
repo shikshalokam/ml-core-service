@@ -83,112 +83,112 @@
     })
   }
 
-  /**
-     * @api {post} /kendra/api/v1/admin/dbDelete/:collectionName
-     * Delete the data from collection
-     * @apiVersion 1.0.0
-     * @apiGroup Admin
-     * @apiSampleRequest /kendra/api/v1/admin/dbDelete/projects
-     * @param {json} Request-Body:
-     * {
-     * "query" : {
-     * "_id": { $in : ["601921e86ffa9c5e9d0b53e7","60193ce26ffa9c5e9d0b53fe"]},
-        },
-        "mongoIdKeys" : ["_id"] 
-      }
-     * @apiParamExample {json} Response:
-     * {
-          "message": "Data deleted successfully",
-          "status": 200
-     * }   
-     * @apiUse successBody
-     * @apiUse errorBody
-     */
+  // /**
+  //    * @api {post} /kendra/api/v1/admin/dbDelete/:collectionName
+  //    * Delete the data from collection
+  //    * @apiVersion 1.0.0
+  //    * @apiGroup Admin
+  //    * @apiSampleRequest /kendra/api/v1/admin/dbDelete/projects
+  //    * @param {json} Request-Body:
+  //    * {
+  //    * "query" : {
+  //    * "_id": { $in : ["601921e86ffa9c5e9d0b53e7","60193ce26ffa9c5e9d0b53fe"]},
+  //       },
+  //       "mongoIdKeys" : ["_id"] 
+  //     }
+  //    * @apiParamExample {json} Response:
+  //    * {
+  //         "message": "Data deleted successfully",
+  //         "status": 200
+  //    * }   
+  //    * @apiUse successBody
+  //    * @apiUse errorBody
+  //    */
 
-    /**
-      * Delete the data from collection
-      * @method
-      * @name dbDelete
-      * @param {String} _id - MongoDB Collection Name
-      * @param {Object} req - Req Body
-      * @returns {JSON} list of data.
-    */
+  //   /**
+  //     * Delete the data from collection
+  //     * @method
+  //     * @name dbDelete
+  //     * @param {String} _id - MongoDB Collection Name
+  //     * @param {Object} req - Req Body
+  //     * @returns {JSON} list of data.
+  //   */
 
-  async dbDelete(req) {
-    return new Promise(async (resolve, reject) => {
-      try {
+  // async dbDelete(req) {
+  //   return new Promise(async (resolve, reject) => {
+  //     try {
 
-          let result = await adminHelper.dbDelete(
-            req.params._id,
-            req.body
-          );
+  //         let result = await adminHelper.dbDelete(
+  //           req.params._id,
+  //           req.body
+  //         );
 
-          return resolve(result);
+  //         return resolve(result);
         
-        } catch (error) {
-          return reject({
-            status: error.status || httpStatusCode.internal_server_error.status,
-            message: error.message || httpStatusCode.internal_server_error.message,
-            errorObject: error
-          })
-        }
-    })
-  }
+  //       } catch (error) {
+  //         return reject({
+  //           status: error.status || httpStatusCode.internal_server_error.status,
+  //           message: error.message || httpStatusCode.internal_server_error.message,
+  //           errorObject: error
+  //         })
+  //       }
+  //   })
+  // }
 
-  /**
-     * @api {post} /kendra/api/v1/admin/dbUpdate/:collectionName
-     * Update the data in collection
-     * @apiVersion 1.0.0
-     * @apiGroup Admin
-     * @apiSampleRequest /kendra/api/v1/admin/dbUpdate/projects
-     * @param {json} Request-Body:
-     * {
-        "findQuery": {
-            "_id": { "$in" : ["601921e86ffa9c5e9d0b53e7"] }
-        },
-        "mongoIdKeys" : ["_id"],
-        "updateQuery" : {
-            "$set" : { "status": "started"}
-        }
-      }
-     * @apiParamExample {json} Response:
-     * {
-          "message": "Data Updated successfully",
-          "status": 200
-     * }   
-     * @apiUse successBody
-     * @apiUse errorBody
-     */
+  // *
+  //    * @api {post} /kendra/api/v1/admin/dbUpdate/:collectionName
+  //    * Update the data in collection
+  //    * @apiVersion 1.0.0
+  //    * @apiGroup Admin
+  //    * @apiSampleRequest /kendra/api/v1/admin/dbUpdate/projects
+  //    * @param {json} Request-Body:
+  //    * {
+  //       "findQuery": {
+  //           "_id": { "$in" : ["601921e86ffa9c5e9d0b53e7"] }
+  //       },
+  //       "mongoIdKeys" : ["_id"],
+  //       "updateQuery" : {
+  //           "$set" : { "status": "started"}
+  //       }
+  //     }
+  //    * @apiParamExample {json} Response:
+  //    * {
+  //         "message": "Data Updated successfully",
+  //         "status": 200
+  //    * }   
+  //    * @apiUse successBody
+  //    * @apiUse errorBody
+     
 
-    /**
-      * Update the data in collection
-      * @method
-      * @name dbUpdate
-      * @param {String} _id - MongoDB Collection Name
-      * @param {Object} req - Req Body
-      * @returns {JSON} list of data.
-    */
+  //   /**
+  //     * Update the data in collection
+  //     * @method
+  //     * @name dbUpdate
+  //     * @param {String} _id - MongoDB Collection Name
+  //     * @param {Object} req - Req Body
+  //     * @returns {JSON} list of data.
+  //   */
 
-  async dbUpdate(req) {
-    return new Promise(async (resolve, reject) => {
-      try {
+  // async dbUpdate(req) {
+  //   return new Promise(async (resolve, reject) => {
+  //     try {
 
-          let result = await adminHelper.dbUpdate(
-            req.params._id,
-            req.body
-          );
+  //         let result = await adminHelper.dbUpdate(
+  //           req.params._id,
+  //           req.body
+  //         );
 
-          return resolve(result);
+  //         return resolve(result);
         
-        } catch (error) {
-          return reject({
-            status: error.status || httpStatusCode.internal_server_error.status,
-            message: error.message || httpStatusCode.internal_server_error.message,
-            errorObject: error
-          })
-        }
-    })
-  }
+  //       } catch (error) {
+  //         return reject({
+  //           status: error.status || httpStatusCode.internal_server_error.status,
+  //           message: error.message || httpStatusCode.internal_server_error.message,
+  //           errorObject: error
+  //         })
+  //       }
+  //   })
+  // }
 
   /**
      * @api {post} /kendra/api/v1/admin/dbCreate/:collectionName
