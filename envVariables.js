@@ -134,7 +134,11 @@ let enviromentVariables = {
     "message" : "Form service base url",
     "optional" : true,
     "default": "http://player:3000"
-  }
+  },
+  "CERTIFICATE_ISSUER_KID": {
+    "message" : "Required certificate issuer kid",
+    "optional" : false
+  },
 }
 
 let success = true;
