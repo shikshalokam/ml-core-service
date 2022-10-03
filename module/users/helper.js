@@ -216,7 +216,7 @@ module.exports = class UsersHelper {
             {
               _id: data.solutionId,
             },
-            ["name", "link", "type", "subType", "externalId", "description"]
+            ["name", "link", "type", "subType", "externalId", "description", "certificateTemplateId"]
           );
 
           if ( !solutionData.length > 0 ) {

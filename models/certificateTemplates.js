@@ -7,8 +7,8 @@ module.exports = {
       },
       issuer: Object,
       status: String,
-      solutionId: String,
-      programId: String,
+      solutionId: "ObjectId",
+      programId: "ObjectId",
       criteria: Object
     }
   };
