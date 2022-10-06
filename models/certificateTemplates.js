@@ -1,14 +1,14 @@
 module.exports = {
     name: "certificateTemplates",
     schema: {
-      templateUrl: {
-        type : String,
-        index : true
-      },
+      templateUrl: String,
       issuer: Object,
       status: String,
-      solutionId: "ObjectId",
+      solutionId: {
+        type : "ObjectId",
+        index : true
+      },
       programId: "ObjectId",
       criteria: Object
     }
-  };
+};
