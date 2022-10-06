@@ -3,12 +3,18 @@ module.exports = {
     schema: {
       templateUrl: String,
       issuer: Object,
-      status: String,
+      status: {
+        type : String,
+        required : true
+      },
       solutionId: {
         type : "ObjectId",
         index : true
       },
       programId: "ObjectId",
-      criteria: Object
+      criteria: {
+        type : Object,
+        required : true
+      }
     }
 };

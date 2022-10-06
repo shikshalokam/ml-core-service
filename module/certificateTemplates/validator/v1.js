@@ -16,6 +16,7 @@ module.exports = (req) => {
                 req.checkBody('programId', 'programId is required').exists({checkFalsy: true}).isLength({ min: 1 });
                 req.checkBody("issuer").exists().withMessage("issuer is required");
                 req.checkBody("criteria").exists().withMessage("criteria is required");
+                req.checkBody("status").exists().withMessage("status is required");
             } else if ( req.method === "PATCH" ) {
                 req.checkParams("_id").exists().withMessage("required certificate templateId");
             }

@@ -83,7 +83,9 @@ module.exports = class FilesHelper {
 
             if (referenceType == constants.common.DHITI) {
               folderPath = "reports/"
-
+            } else if (referenceType == constants.common.CERTIFICATE) {
+              //  Folder path specifically for project certificates
+              folderPath = "certificate/" + payloadIds[0] + "/" + userId + "/" + gen.utils.generateUniqueId() + "/";
             } else {
               folderPath = "survey/" + payloadIds[0] + "/" + userId + "/" + gen.utils.generateUniqueId() + "/";
             }
