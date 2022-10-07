@@ -86,7 +86,7 @@ module.exports = class FilesHelper {
               folderPath = "reports/"
             } else if (referenceType == constants.common.CERTIFICATE) {
               //  Folder path specifically for project certificates
-              folderPath = "certificate/" + payloadIds[0] + "/" + templateId + "/";
+              folderPath = "certificateTemplates/" + templateId + "/";
             } else {
               folderPath = "survey/" + payloadIds[0] + "/" + userId + "/" + gen.utils.generateUniqueId() + "/";
             }
