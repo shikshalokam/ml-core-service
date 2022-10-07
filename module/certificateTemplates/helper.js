@@ -99,35 +99,41 @@ module.exports = class CertificateTemplatesHelper {
    * @method uploadToCloud
    * @name uploadToCloud
    * @param {Object} fileData - file to upload.
-   *  @param {String} userId - user Id.
+   * @param {String} templateId - templateId.
+   * @param {String} userId - user Id.
    * @returns {JSON} Uploaded certificate template details. 
   */
   
-  static uploadToCloud(fileData, userId = "") {
+  static uploadToCloud(fileData, templateId, userId = "") {
     return new Promise(async (resolve, reject) => {
         try {
+          const now = new Date();
+          const date = now.getFullYear() + "-"+ now.getMonth() + "-" + now.getDate() + "-" + now.getTime();
+          const fileName = userId + "_" + date + ".svg"; 
           const requestData = {
-            "template": {
-              "files": [fileData.file.name]
+            "templates": {
+              "files": [fileName]
             }
           };
+
           let signedUrl =
           await filesHelpers.preSignedUrls(
               requestData,
               constants.common.CERTIFICATE,
-              userId
+              userId,
+              templateId
           );
           
           //  upload file using signed Url
           if (signedUrl.data && 
             Object.keys(signedUrl.data).length > 0 &&
-            signedUrl.data.template &&
-            signedUrl.data.template.files.length > 0 &&
-            signedUrl.data.template.files[0].url &&
-            signedUrl.data.template.files[0].url !== ""
+            signedUrl.data.templates &&
+            signedUrl.data.templates.files.length > 0 &&
+            signedUrl.data.templates.files[0].url &&
+            signedUrl.data.templates.files[0].url !== ""
           ) {
              
-            let fileUploadUrl = signedUrl.data.template.files[0].url;
+            let fileUploadUrl = signedUrl.data.templates.files[0].url;
             let file = fileData.file.data;
            
             try { 
@@ -140,11 +146,19 @@ module.exports = class CertificateTemplatesHelper {
                     },
                   body: file
                 })
+                //  Update certificate template url in certificateTemplates collection
+                let updateCertificateTemplate = await this.update(
+                  templateId,
+                  { 
+                    templateUrl : signedUrl.data.templates.files[0].payload.sourcePath
+                  }
+                );
                 
                 return resolve({
                     success: true,
                     data: {
-                      templateUrl: signedUrl.data.template.files[0].payload.sourcePath
+                      templateId: updateCertificateTemplate.data.id,
+                      templateUrl: signedUrl.data.templates.files[0].payload.sourcePath
                     }
                 })
                 

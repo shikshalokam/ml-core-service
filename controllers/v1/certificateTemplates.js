@@ -173,7 +173,8 @@ module.exports = class CertificateTemplates extends Abstract {
             if ( req.files && req.files.file ) {
                 let uploadedTemplateDetails = 
                 await certificateTemplateHelper.uploadToCloud( 
-                    req.files, 
+                    req.files,
+                    req.params._id, 
                     req.userDetails ? req.userDetails.userId : "" 
                 );
                 return resolve({

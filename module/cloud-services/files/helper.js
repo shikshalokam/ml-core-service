@@ -24,10 +24,11 @@ module.exports = class FilesHelper {
    * @param {Array} payloadData - payload for files data.
    * @param {String} referenceType - reference type
    * @param {String} userId - Logged in user id.
+   * @param {String} templateId - certificateTemplateId.
    * @returns {Array} - consists of all signed urls files.
    */
 
-  static preSignedUrls(payloadData, referenceType,userId) {
+  static preSignedUrls(payloadData, referenceType, userId, templateId = "") {
     return new Promise(async (resolve, reject) => {
       try {
           
@@ -85,7 +86,7 @@ module.exports = class FilesHelper {
               folderPath = "reports/"
             } else if (referenceType == constants.common.CERTIFICATE) {
               //  Folder path specifically for project certificates
-              folderPath = "certificate/" + payloadIds[0] + "/" + userId + "/" + gen.utils.generateUniqueId() + "/";
+              folderPath = "certificate/" + payloadIds[0] + "/" + templateId + "/";
             } else {
               folderPath = "survey/" + payloadIds[0] + "/" + userId + "/" + gen.utils.generateUniqueId() + "/";
             }

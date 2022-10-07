@@ -1,10 +1,7 @@
 module.exports = {
     name: "certificateTemplates",
     schema: {
-      templateUrl: {
-        type : String,
-        required : true
-      },
+      templateUrl: String,
       issuer: Object,
       status: {
         type : String,

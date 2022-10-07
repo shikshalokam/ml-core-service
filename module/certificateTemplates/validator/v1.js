@@ -11,7 +11,6 @@ module.exports = (req) => {
 
         create : function () {
             if ( req.method === "POST" ) {
-                req.checkBody('templateUrl', 'templateUrl is required').exists({checkFalsy: true}).isLength({ min: 1 });
                 req.checkBody('solutionId', 'solutionId is required').exists({checkFalsy: true}).isLength({ min: 1 });
                 req.checkBody('programId', 'programId is required').exists({checkFalsy: true}).isLength({ min: 1 });
                 req.checkBody("issuer").exists().withMessage("issuer is required");
@@ -21,6 +20,9 @@ module.exports = (req) => {
                 req.checkParams("_id").exists().withMessage("required certificate templateId");
             }
             
+        },
+        uploadCertificateTemplate : function () {
+            req.checkParams("_id").exists().withMessage("required certificate templateId");
         }
     }
 
