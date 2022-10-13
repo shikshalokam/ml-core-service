@@ -20,7 +20,7 @@ module.exports = class CertificateTemplates extends Abstract {
     * @apiName Create certificate template
     * @apiGroup CreateTemplates
     * @apiParamExample {json} Request-Body:
-    *   {   "templateUrl" :"certificate/template/ba9aa220-ff1b-4717-b6ea-ace55f04fc16/c9dbee8d-8c0b-4e0d-9d10-37d4a8f6afc6/wow.svg",
+    *   {   "templateUrl" :"certificateTemplates/6343bd978f9d8980b7841e85/ba9aa220-ff1b-4717-b6ea-ace55f04fc16_2022-9-10-1665383945769.svg?",
             "criteria" : {
                 "validationText" : "Complete validation message",
                 "expression" : "C1&&C2&&C3",
@@ -152,7 +152,7 @@ module.exports = class CertificateTemplates extends Abstract {
             "result": {
                 "success": true,
                 "data": {
-                    "templateUrl": "certificate/template/ba9aa220-ff1b-4717-b6ea-ace55f04fc16/c9dbee8d-8c0b-4e0d-9d10-37d4a8f6afc6/template.svg"
+                    "templateUrl": "certificateTemplates/6343bd978f9d8980b7841e85/ba9aa220-ff1b-4717-b6ea-ace55f04fc16_2022-9-10-1665383945769.svg?"
                 }
             }
         }
