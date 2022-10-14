@@ -76,11 +76,15 @@ module.exports = class adminHelper {
                     .limit(limitingValue)
                     .toArray();
                 }
+                // finding document count from db. We can't get it from result array length because a limiting value is passed
+                let docCount = await database.getCollection(collection)
+                    .find(queryObject).count();
 
                 return resolve({
                     success: true,
                     message: constants.apiResponses.DATA_FETCHED_SUCCESSFULLY,
-                    data: mongoDBDocuments
+                    data: mongoDBDocuments,
+                    count: docCount
                 });
 
             } catch (error) {
@@ -125,7 +129,8 @@ module.exports = class adminHelper {
                 return resolve({
                   message : constants.apiResponses.DATA_FETCHED_SUCCESSFULLY,
                   success : true,
-                  result: mongoDBDocuments.data ? mongoDBDocuments.data : []
+                  result: mongoDBDocuments.data ? mongoDBDocuments.data : [],
+                  count: mongoDBDocuments.count ? mongoDBDocuments.count : 0
                 });
 
             } catch (error) {
