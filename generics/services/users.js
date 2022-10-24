@@ -57,6 +57,292 @@ const profile = function ( token,userId = "" ) {
     })
 }
 
+/**
+  * 
+  * @function
+  * @name locationSearch
+  * @param {object} filterData -  contain filter object.
+  * @param {String} pageSize -  requested page size.
+  * @param {String} pageNo -  requested page number.
+  * @param {String} searchKey -  search string.
+  * @param {Boolean} formatResult - format result
+  * @param {Boolean} returnObject - return object or array.
+  * @param {Boolean} resultForSearchEntities - format result for searchEntities api call.
+  * @returns {Promise} returns a promise.
+*/
+
+const locationSearch = function ( filterData, pageSize = "", pageNo = "", searchKey = "" , formatResult = false, returnObject = false, resultForSearchEntities = false ) {
+    return new Promise(async (resolve, reject) => {
+        try {
+        let bodyData = {};
+        bodyData["request"] = {};
+        bodyData["request"]["filters"] = filterData;
+
+        if ( pageSize !== "" ) {
+            bodyData["request"]["limit"] = pageSize;
+        } 
+
+        if ( pageNo !== "" ) {
+            let offsetValue = pageSize * ( pageNo - 1 ); 
+            bodyData["request"]["offset"] = offsetValue;
+        }
+
+        if ( searchKey !== "" ) {
+            bodyData["request"]["query"] = searchKey
+        }
+
+          
+          const url = 
+          userServiceUrl + constants.endpoints.GET_LOCATION_DATA;
+          const options = {
+              headers : {
+                "content-type": "application/json",       
+               },
+              json : bodyData
+          };
+          request.post(url,options,requestCallback);
+  
+          let result = {
+              success : true
+          };
+  
+          function requestCallback(err, data) {
+              if (err) {
+                  result.success = false;
+              } else {
+                  let response = data.body;
+                  
+                  if( response.responseCode === constants.common.OK &&
+                      response.result &&
+                      response.result.response &&
+                      response.result.response.length > 0
+                    ) {
+                      // format result if true
+                        if ( formatResult ) {
+                            let entityDocument = [];
+                            response.result.response.map(entityData => {
+                                let data = {};
+                                data._id = entityData.id;
+                                data.entityType = entityData.type;
+                                data.metaInformation = {};
+                                data.metaInformation.name = entityData.name;
+                                data.metaInformation.externalId = entityData.code;
+                                data.registryDetails = {};
+                                data.registryDetails.locationId = entityData.id;
+                                data.registryDetails.code = entityData.code;
+                                entityDocument.push(data);
+                            });
+                            if ( returnObject ) {
+                                result["data"] = entityDocument[0];
+                                result["count"] = response.result.count;
+                            } else {
+                                result["data"] = entityDocument;
+                                result["count"] = response.result.count;
+                            }
+                        } else if ( resultForSearchEntities ) {
+                            let entityDocument = [];
+                            response.result.response.map(entityData => {
+                                let data = {};
+                                data._id = entityData.id;
+                                data.name = entityData.name;
+                                data.externalId = entityData.code;
+                                entityDocument.push(data);
+                            });
+                            result["data"] = entityDocument;
+                            result["count"] = response.result.count;
+                        }else {
+                            result["data"] = response.result.response;
+                            result["count"] = response.result.count;
+                        }
+                  } else {
+                        result.success = false;
+                  }
+              }
+              return resolve(result);
+          }
+  
+          setTimeout(function () {
+             return resolve (result = {
+                 success : false
+              });
+          }, constants.common.SERVER_TIME_OUT);
+  
+  
+        } catch (error) {
+            return reject(error);
+        }
+    })
+  }
+  
+  
+  
+  /**
+    * 
+    * @function
+    * @name orgSchoolSearch
+    *  @param {object} filterData -  contain filter object.
+    * @param {String} pageSize -  requested page size.
+    * @param {String} pageNo -  requested page number.
+    * @param {String} searchKey -  search string.
+    * @param {String} searchKey - search key for fuzzy search.
+    * @param {String} fields -  required field filter.
+    * @returns {Promise} returns a promise.
+  */
+  const orgSchoolSearch = function ( filterData, pageSize = "", pageNo = "", searchKey = "", fields = [] ) {
+        return new Promise(async (resolve, reject) => {
+            try {
+                
+                let bodyData = {};
+                bodyData["request"] = {};
+                bodyData["request"]["filters"] = filterData;
+    
+                if ( pageSize !== "" ) {
+                    bodyData["request"]["limit"] = pageSize;
+                } 
+        
+                if ( pageNo !== "" ) {
+                    let offsetValue = pageSize * ( pageNo - 1 ); 
+                    bodyData["request"]["offset"] = offsetValue;
+                }
+        
+                if ( searchKey !== "" ) {
+                    bodyData["request"]["fuzzy"] = {
+                        "orgName" : searchKey
+                    }
+                }
+                
+                //for getting specified key data only.
+                if ( fields.length > 0 ) {
+                    bodyData["request"]["fields"] = fields;
+                }
+  
+                const url = 
+                userServiceUrl + constants.endpoints.GET_SCHOOL_DATA;
+                const options = {
+                    headers : {
+                        "content-type": "application/json",
+                    },
+                    json : bodyData
+                };
+    
+                request.post(url,options,requestCallback);
+                let result = {
+                    success : true
+                };
+    
+                function requestCallback(err, data) {
+        
+                    if (err) {
+                        result.success = false;
+                    } else {
+                        let response = data.body;
+                        if( response.responseCode === constants.common.OK &&
+                            response.result &&
+                            response.result.response &&
+                            response.result.response.content &&
+                            response.result.response.content.length > 0
+                        ){
+                            result["data"] = response.result.response.content;
+                            result["count"] = response.result.response.count;
+                        } else {
+                            result.success = false;
+                        }
+                    }
+                    return resolve(result);
+                }
+                setTimeout(function () {
+                    return resolve (result = {
+                        success : false
+                    });
+                }, constants.common.SERVER_TIME_OUT);
+  
+            } catch (error) {
+                return reject(error);
+            }
+        })
+    }
+
+/**
+  * get subEntities of matching type by recursion.
+  * @method
+  * @name getSubEntitiesBasedOnEntityType
+  * @param parentIds {Array} - Array of entity Ids- for which we are finding sub entities of given entityType
+  * @param entityType {string} - EntityType.
+  * @returns {Array} - Sub entities matching the type .
+*/
+
+async function getSubEntitiesBasedOnEntityType( parentIds, entityType, result ) {
+
+    if( !parentIds.length > 0 ){
+        return result;
+    }
+    let bodyData={
+        "parentId" : parentIds
+    };
+
+    let entityDetails = await locationSearch(bodyData);
+    if( !entityDetails.success ) {
+        return (result);
+    }
+
+    let entityData = entityDetails.data;
+    let parentEntities = [];
+    entityData.map(entity => {
+    if( entity.type == entityType ) {
+        result.push(entity.id)
+    } else {
+        parentEntities.push(entity.id)
+    }
+    });
+    
+    if( parentEntities.length > 0 ){
+        await getSubEntitiesBasedOnEntityType(parentEntities,entityType,result)
+    } 
+    
+    let uniqueEntities = _.uniq(result);
+    return uniqueEntities;    
+}
+
+/**
+  * get Parent Entities of an entity.
+  * @method
+  * @name getParentEntities
+  * @param {String} entityId - entity id
+  * @returns {Array} - parent entities.
+*/
+
+async function getParentEntities( entityId, iteration = 0, parentEntities ) {
+
+    if ( iteration == 0 ) {
+        parentEntities = [];
+    }
+
+    let filterQuery = {
+        "id" : entityId
+    };
+
+    let entityDetails = await locationSearch(filterQuery);
+    if ( !entityDetails.success ) {
+        return parentEntities;
+    } else {
+        
+        let entityData = entityDetails.data[0];
+        if ( iteration > 0 ) parentEntities.push(entityData);
+        if ( entityData.parentId ) {
+            iteration = iteration + 1;
+            entityId = entityData.parentId;
+            await getParentEntities(entityId, iteration, parentEntities);
+        }
+    }
+
+    return parentEntities;
+
+}
+  
 module.exports = {
-    profile : profile
+    profile : profile,
+    locationSearch : locationSearch,
+    orgSchoolSearch :orgSchoolSearch,
+    getSubEntitiesBasedOnEntityType : getSubEntitiesBasedOnEntityType,
+    getParentEntities : getParentEntities
 }

@@ -270,7 +270,7 @@ module.exports = class Users extends Abstract {
  solutions(req) {
     return new Promise(async (resolve, reject) => {
       try {
-
+        
         let targetedSolutions = await usersHelper.solutions(
             req.params._id,
             req.body,
@@ -423,13 +423,14 @@ module.exports = class Users extends Abstract {
         return new Promise(async (resolve, reject) => {
 
             try {
-
+                
                 let currentMaximumCountOfRequiredEntities = 0;
                 let requiredEntities = new Array;
+                let roleArray = req.query.role.split(",");
 
                 // Calculate required entities for each of the role and send the output of the role which has maximum length.
-                for (let roleCount = 0; roleCount < req.query.role.split(",").length; roleCount++) {
-                    const eachRole = req.query.role.split(",")[roleCount];
+                for (let roleCount = 0; roleCount < roleArray.length; roleCount++) {
+                    const eachRole = roleArray[roleCount];
                     const entitiesMappingData = 
                     await usersHelper.entityTypesByLocationAndRole(
                         req.params._id,
@@ -502,7 +503,7 @@ module.exports = class Users extends Abstract {
     async targetedEntity(req) {
         return new Promise(async (resolve, reject) => {
           try {
-
+            
             let roleArray = req.body.role.split(",");
             let targetedEntities = {};
 
@@ -538,7 +539,6 @@ module.exports = class Users extends Abstract {
                         roleWiseTargetedEntities.push(detailEntity.data);
                     }
                 }
-
                 //no targeted entity
                 if ( roleWiseTargetedEntities.length  == 0 ) {
                     throw {
@@ -554,9 +554,9 @@ module.exports = class Users extends Abstract {
                 } 
                 // multiple targeted entity
                 else if ( roleWiseTargetedEntities && roleWiseTargetedEntities.length > 1 ) {
-                    
+                    // request body contain role and entity information
                     let targetedEntity = await usersHelper.getHighestTargetedEntity(
-                        roleWiseTargetedEntities
+                        roleWiseTargetedEntities, req.body
                     );
            
                     if ( !targetedEntity.data ) {
@@ -565,7 +565,6 @@ module.exports = class Users extends Abstract {
                             message: constants.apiResponses.ENTITIES_NOT_ALLOWED_IN_ROLE
                         };
                     }
-
                     targetedEntities.result = targetedEntity.data;
                 }
             }

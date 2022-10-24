@@ -12,6 +12,7 @@ const userRolesHelper = require(MODULES_BASE_PATH + "/user-roles/helper");
 const entitiesHelper = require(MODULES_BASE_PATH + "/entities/helper");
 const improvementProjectService = require(ROOT_PATH + "/generics/services/improvement-project");
 const userService = require(ROOT_PATH + "/generics/services/users");
+const formService = require(ROOT_PATH + '/generics/services/form');
 
 
 /**
@@ -32,7 +33,7 @@ module.exports = class UsersHelper {
      static privatePrograms(userId) {
       return new Promise(async (resolve, reject) => {
           try {
-
+            
               let userPrivatePrograms =
                   await programsHelper.userPrivatePrograms(
                       userId
@@ -67,7 +68,7 @@ module.exports = class UsersHelper {
   ) {
     return new Promise(async (resolve, reject) => {
       try {
-
+      
         let userPrivateProgram = {};
         let dateFormat = gen.utils.epochTime();
         let parentSolutionInformation = {};
@@ -91,7 +92,7 @@ module.exports = class UsersHelper {
             "all",
             ["__v"]
           );
-
+          
           if ( !checkforProgramExist.length > 0 ) {
             return resolve({
               status: httpStatusCode["bad_request"].status,
@@ -134,8 +135,9 @@ module.exports = class UsersHelper {
               : data.programName,
             userId
           );
-
+          
           userPrivateProgram = await programsHelper.create(programData);
+          
         }
 
         let solutionDataToBeUpdated = {
@@ -152,30 +154,59 @@ module.exports = class UsersHelper {
           data.entities &&
           data.entities.length > 0
         ) {
+    
+          let entitiesData = [];
+          let bodyData = {};
+          
+          let locationData = gen.utils.filterLocationIdandCode(data.entities)
+          
+          if ( locationData.ids.length > 0 ) {
 
-          let entityData = await entitiesHelper.entityDocuments(
-            {
-              _id: { $in: data.entities }
-            },
-            ["entityType", "entityTypeId"]
-          );
+            bodyData = {
+              "id" : locationData.ids
+            } 
+            let entityData = await userService.locationSearch( bodyData );
+            
+            if ( !entityData.success ) {
+              return resolve({
+                status: httpStatusCode["bad_request"].status,
+                message: constants.apiResponses.ENTITY_NOT_FOUND,
+                result: {}
+              });
+            }
 
-          if ( !entityData.length > 0 ) {
-            return resolve({
-              status: httpStatusCode["bad_request"].status,
-              message: constants.apiResponses.ENTITY_NOT_FOUND,
-              result: {}
+            entityData.data.forEach( entity => {
+              entitiesData.push(entity.id)
             });
+
+            solutionDataToBeUpdated["entityType"] = entityData.data[0].type;
+            
+          }
+
+          if ( locationData.codes.length > 0 ) {
+            let filterData = {
+              "code" : locationData.codes
+            }
+            let entityDetails = await userService.locationSearch( filterData );
+            let entityDocuments = entityDetails.data;
+            if ( !entityDetails.success || !entityDocuments.length > 0 ) {
+              return resolve({
+                status: httpStatusCode["bad_request"].status,
+                message: constants.apiResponses.ENTITY_NOT_FOUND,
+                result: {}
+              });
+            }
+
+            entityDocuments.forEach( entity => {
+              entitiesData.push(entity.id)
+            });
+
+            solutionDataToBeUpdated["entityType"] = constants.common.SCHOOL;
           }
 
           if ( data.type && data.type !== constants.common.IMPROVEMENT_PROJECT ) {
-            solutionDataToBeUpdated["entities"] = entityData.map(
-              (entity) => entity._id
-            );
+            solutionDataToBeUpdated["entities"] = entitiesData;
           }
-
-          solutionDataToBeUpdated["entityType"] = entityData[0].entityType;
-          solutionDataToBeUpdated["entityTypeId"] = entityData[0].entityTypeId;
         }
 
         //solution part
@@ -310,15 +341,15 @@ module.exports = class UsersHelper {
       * Entities mapping form data.
       * @method
       * @name entitiesMappingForm
-      * @param {String} stateId - state id.
+      * @param {String} stateCode - state code.
       * @param {String} roleId - role id.
       * @returns {Object} returns a list of entitiesMappingForm.
      */
 
-    static entitiesMappingForm(stateId, roleId) {
+    static entitiesMappingForm(stateCode, roleId, entityKey) {
         return new Promise(async (resolve, reject) => {
             try {
-
+                
                 const rolesData = await userRolesHelper.roleDocuments({
                     _id: roleId
                 }, ["entityTypes.entityType"]);
@@ -329,31 +360,32 @@ module.exports = class UsersHelper {
                         result: []
                     })
                 }
-
-                const entitiesData = await entitiesHelper.entityDocuments(
-                    {
-                        _id: stateId
-                    }, ["childHierarchyPath"]
-                );
-
-                if (!entitiesData.length > 0) {
-                    return resolve({
-                        message: constants.apiResponses.ENTITY_NOT_FOUND,
-                        result: []
-                    })
+                
+                let subEntities = [];
+                let cacheData= await cache.getValue(entityKey);
+                
+                if( !cacheData ) {
+                  subEntities = await formService.configForStateLocation( stateCode,entityKey );
+                  if( !subEntities.length > 0 ) {
+                      return resolve({
+                          message : constants.apiResponses.ENTITY_NOT_FOUND,
+                          result : []
+                      })
+                  }
+                } else {
+                  subEntities = cacheData;
                 }
-
                 let roleEntityType = "";
 
                 rolesData[0].entityTypes.forEach(roleData => {
-                    if (entitiesData[0].childHierarchyPath.includes(roleData.entityType)) {
+                    if (subEntities.includes(roleData.entityType)) {
                         roleEntityType = roleData.entityType;
                     }
                 })
-
+                
                 let entityTypeIndex =
-                entitiesData[0].childHierarchyPath.findIndex(path => path === roleEntityType);
-
+                subEntities.findIndex(path => path === roleEntityType);
+                
                 let form = {
                     "field": "",
                     "label": "",
@@ -369,12 +401,12 @@ module.exports = class UsersHelper {
                 let forms = [];
 
                 for (
-                    let pointerToChildHierarchy = 0;
+                    let pointerToChildHierarchy = 1;
                     pointerToChildHierarchy < entityTypeIndex + 1;
                     pointerToChildHierarchy++
                 ) {
                     let cloneForm = JSON.parse(JSON.stringify(form));
-                    let entityType = entitiesData[0].childHierarchyPath[pointerToChildHierarchy];
+                    let entityType = subEntities[pointerToChildHierarchy];
                     cloneForm["field"] = entityType;
                     cloneForm["label"] = `Select ${gen.utils.camelCaseToTitleCase(entityType)}`;
 
@@ -389,7 +421,6 @@ module.exports = class UsersHelper {
                     message: constants.apiResponses.ENTITIES_MAPPING_FORM_FETCHED,
                     result: forms
                 });
-
             } catch (error) {
                 return reject(error);
             }
@@ -410,6 +441,7 @@ module.exports = class UsersHelper {
 
   static solutions(programId, requestedData, pageSize, pageNo, search, token) {
     return new Promise(async (resolve, reject) => {
+      
       try {
         let programData = await programsHelper.programDocuments(
           {
@@ -417,7 +449,7 @@ module.exports = class UsersHelper {
           },
           ["name"]
         );
-
+        
         if (!programData.length > 0) {
           return resolve({
             status: httpStatusCode["bad_request"].status,
@@ -435,9 +467,11 @@ module.exports = class UsersHelper {
             constants.common.DEFAULT_PAGE_NO,
             search
           );
-
+            
         let totalCount = 0;
         let mergedData = [];
+
+        let projectSolutionIdIndexMap = {}
 
         if (
           autoTargetedSolutions.data.data &&
@@ -450,33 +484,47 @@ module.exports = class UsersHelper {
               return solution.referenceFrom == constants.common.PROJECT && solution.type == constants.common.OBSERVATION;
             });
 
-          totalCount = autoTargetedSolutions.data.data.count;
-
+          totalCount = autoTargetedSolutions.data.data.length;
           mergedData = autoTargetedSolutions.data.data;
 
-          mergedData = mergedData.map((targetedData) => {
+          mergedData = mergedData.map((targetedData, index) => {
+            if(targetedData.type == constants.common.IMPROVEMENT_PROJECT) {
+              projectSolutionIdIndexMap[targetedData._id.toString()] = index;
+            }
             delete targetedData.programId;
             delete targetedData.programName;
             return targetedData;
           });
 
-          
         }
 
+        // Get projects already started by a user in a given program
+        
         let importedProjects = await improvementProjectService.importedProjects(
           token,
           programId
         );
-
+          
+        // Add projectId to the solution object if the user has already started a project for the improvement project solution.
+        
         if (importedProjects.success) {
+
           if (importedProjects.data && importedProjects.data.length > 0) {
-            totalCount += importedProjects.data.length;
 
             importedProjects.data.forEach((importedProject) => {
-              let data = importedProject.solutionInformation;
-              data['projectTemplateId'] = importedProject.projectTemplateId;
-              data["type"] = constants.common.IMPROVEMENT_PROJECT;
-              mergedData.push(data);
+              
+              
+              if( projectSolutionIdIndexMap[importedProject.solutionInformation._id] !== undefined  ) {
+                mergedData[projectSolutionIdIndexMap[importedProject.solutionInformation._id]].projectId = importedProject._id;
+              } else {
+                let data = importedProject.solutionInformation;
+                data['projectTemplateId'] = importedProject.projectTemplateId;
+                data['projectId'] = importedProject._id;
+                data["type"] = constants.common.IMPROVEMENT_PROJECT;
+                mergedData.push(data);
+                totalCount = totalCount + 1;
+              }
+
             });
           }
         }
@@ -570,58 +618,60 @@ module.exports = class UsersHelper {
    * @param {String} role - role.
    * @returns {Object} returns a list of entity type by location and role.
    */
-
-  static entityTypesByLocationAndRole(stateLocationId, role) {
+   static entityTypesByLocationAndRole(stateLocationId, role) {
     return new Promise(async (resolve, reject) => {
       try {
-        let filterQuery = {
-          "registryDetails.code": stateLocationId,
-        };
-
-        if (gen.utils.checkValidUUID(stateLocationId)) {
-          filterQuery = {
-            "registryDetails.locationId": stateLocationId,
-          };
-        }
-
-        const entitiesData = await entitiesHelper.entityDocuments(filterQuery, [
-          "_id",
-        ]);
-
-        if (!entitiesData.length > 0) {
-          throw {
-            message: constants.apiResponses.ENTITIES_NOT_EXIST_IN_LOCATION,
-          };
-        }
-
+        let entityKey = constants.common.SUBENTITY + stateLocationId;
         const rolesDocument = await userRolesHelper.roleDocuments(
           {
             code: role.toUpperCase(),
           },
           ["_id", "entityTypes.entityType"]
         );
-
+        
         if (!rolesDocument.length > 0) {
           throw {
             message: constants.apiResponses.USER_ROLES_NOT_FOUND
           };
         }
-
+        
+        let bodyData={};    
+        if (gen.utils.checkValidUUID(stateLocationId)) {
+          bodyData = {
+            "id" : stateLocationId
+          };
+        } else {
+          bodyData = {
+            "code" : stateLocationId
+          };
+        }
+        
+        let entityData = await userService.locationSearch( bodyData );
+        
+        if ( !entityData.success ) {
+          throw {
+            message: constants.apiResponses.ENTITIES_NOT_EXIST_IN_LOCATION,
+          };
+        }
+        
+      
         let entityTypes = [];
         let stateEntityExists = false;
 
         rolesDocument[0].entityTypes.forEach((roleDocument) => {
+         
           if (roleDocument.entityType === constants.common.STATE_ENTITY_TYPE) {
             stateEntityExists = true;
           }
         });
-
+        
         if (stateEntityExists) {
           entityTypes = [constants.common.STATE_ENTITY_TYPE];
         } else {
           let entitiesMappingForm = await this.entitiesMappingForm(
-            entitiesData[0]._id,
-            rolesDocument[0]._id
+            entityData.data[0].code,
+            rolesDocument[0]._id,
+            entityKey
           );
 
           entitiesMappingForm.result.forEach((entitiesMappingData) => {
@@ -642,6 +692,7 @@ module.exports = class UsersHelper {
       }
     });
   }
+  
 
   /**
    * User Targeted entity.
@@ -669,7 +720,6 @@ module.exports = class UsersHelper {
             message: constants.apiResponses.SOLUTION_NOT_FOUND
           });
         }
-
         let rolesDocument = await userRolesHelper.roleDocuments(
           {
             code: requestedData.role
@@ -683,85 +733,65 @@ module.exports = class UsersHelper {
             message: constants.apiResponses.USER_ROLES_NOT_FOUND
           };
         }
-
+      
         let requestedEntityTypes = Object.keys(_.omit(requestedData, ['role']));
         let targetedEntityType = "";
-
+  
         rolesDocument[0].entityTypes.forEach((singleEntityType) => {
           if (requestedEntityTypes.includes(singleEntityType.entityType)) {
             targetedEntityType = singleEntityType.entityType;
           }
         });
-
+        
         if (!requestedData[targetedEntityType]) {
           throw {
             status: httpStatusCode["bad_request"].status,
             message: constants.apiResponses.ENTITIES_NOT_ALLOWED_IN_ROLE
           };
         }
-
+        let filterData ={};
         if (solutionData[0].entityType === targetedEntityType) {
-          let filterQuery = {
-            "registryDetails.code": requestedData[targetedEntityType]
-          };
-
+          // if solution entity type and user tageted entity type are same
           if (gen.utils.checkValidUUID(requestedData[targetedEntityType])) {
-            filterQuery = {
-              "registryDetails.locationId": requestedData[targetedEntityType]
-            };
-          }
-
-          let entities = await entitiesHelper.entityDocuments(filterQuery, [
-            "groups",
-          ]);
-
-          if (!entities.length > 0) {
-            throw {
-              message: constants.apiResponses.ENTITY_NOT_FOUND
-            };
-          }
-
-          if (
-            entities[0] &&
-            entities[0].groups &&
-            Object.keys(entities[0].groups).length > 0
-          ) {
+            filterData = {
+              "parentId" : requestedData[targetedEntityType]
+            }
+            let entitiesData = await userService.locationSearch( filterData );
+            if( entitiesData.success ){
+              targetedEntityType = constants.common.STATE_ENTITY_TYPE;
+            }  
+          } else if ( targetedEntityType ===  constants.common.SCHOOL ) {
             targetedEntityType = constants.common.STATE_ENTITY_TYPE;
-          }
+          }         
         }
-
-        let filterData = {
-          "registryDetails.code": requestedData[targetedEntityType]
-        };
-
+       
         if (gen.utils.checkValidUUID(requestedData[targetedEntityType])) {
           filterData = {
-            "registryDetails.locationId": requestedData[targetedEntityType]
+            "id" : requestedData[targetedEntityType]
+          };
+        } else {
+          filterData = {
+            "code" : requestedData[targetedEntityType]
           };
         }
-
-        let entities = await entitiesHelper.entityDocuments(filterData, [
-          "metaInformation.name",
-          "entityType"
-        ]);
-
-        if (!entities.length > 0) {
+        let entitiesDocument = await userService.locationSearch( filterData );
+        if ( !entitiesDocument.success ) {
           throw {
             message: constants.apiResponses.ENTITY_NOT_FOUND
           };
         }
 
-        if (entities[0].metaInformation && entities[0].metaInformation.name) {
-          entities[0]['entityName'] = entities[0].metaInformation.name;
-          delete entities[0].metaInformation;
+        let entityData = entitiesDocument.data;
+        let entityDataFormated = {
+          "_id" : entityData[0].id,
+          "entityType" : entityData[0].type,
+          "entityName" : entityData[0].name
         }
-
         return resolve({
           message: constants.apiResponses.SOLUTION_TARGETED_ENTITY,
           success: true,
-          data: entities[0]
+          data: entityDataFormated
         });
-        
       } catch (error) {
         return resolve({
           success: false,
@@ -782,60 +812,56 @@ module.exports = class UsersHelper {
    * @returns {Object} - Entity.
    */
 
-  static getHighestTargetedEntity( roleWiseTargetedEntities ) {
+  static getHighestTargetedEntity( roleWiseTargetedEntities, requestedData ) {
     return new Promise(async (resolve, reject) => {
       try {
+        let entityKey = constants.common.SUBENTITY + requestedData.state;
+        let subEntityTypes = [];
+        let cacheData = await cache.getValue(entityKey);
+        
+        if( !cacheData ) {
+            let filterData = {
+              "id" : requestedData.state
+            };
 
-        let allTargetedEntities = {};
-        let targetedEntity = {};
+            let entitiesData = await userService.locationSearch( filterData );
 
-        for( let pointerToEntities = 0 ; pointerToEntities < roleWiseTargetedEntities.length ; pointerToEntities++ ) {
-          
-          let currentEntity = roleWiseTargetedEntities[pointerToEntities];
-
-          if ( !allTargetedEntities.hasOwnProperty(currentEntity._id) ) {
-            allTargetedEntities[currentEntity._id] = new Array();
-          }
-
-          let otherEntities = roleWiseTargetedEntities.filter((entity) => entity.entityType !== currentEntity.entityType);
-
-          if ( !otherEntities || !otherEntities.length > 0 ) {
-            continue; 
-          }
-
-          let entitiesDocument = await entitiesHelper.entityDocuments({
-              _id: ObjectId(currentEntity._id)
-          }, ["groups"]);
-
-          if ( !entitiesDocument || !entitiesDocument.length > 0 ) {
-            continue;
-          }
-
-          entitiesDocument = entitiesDocument[0];
-          for( let entityCounter = 0 ; entityCounter < otherEntities.length ; entityCounter++ ) {
-
-            let entityDoc = otherEntities[entityCounter];
-          
-            if ( !entitiesDocument.groups || !entitiesDocument.groups.hasOwnProperty(entityDoc.entityType) ) {
-              break;
+            if( !entitiesData.success ) {
+                return resolve({
+                    message : constants.apiResponses.ENTITY_NOT_FOUND,
+                    result : []
+                })
             }
-
-            allTargetedEntities[currentEntity._id].push(true);
-            
-            if ( allTargetedEntities[currentEntity._id].length == otherEntities.length ) {
-              targetedEntity = roleWiseTargetedEntities.filter((entity) => entity._id == currentEntity._id);
-              break;
+            let stateLocationCode = entitiesData.data[0].code;
+            subEntityTypes = await formService.configForStateLocation( stateLocationCode,entityKey );
+            if( !subEntityTypes.length > 0 ) {
+                return resolve({
+                    message : constants.apiResponses.ENTITY_NOT_FOUND,
+                    result : []
+                })
+            }
+        } else {
+          subEntityTypes = cacheData;
+        }       
+        
+        let targetedIndex = subEntityTypes.length;
+        let roleWiseTarget;
+        for( let roleWiseEntityIndex = 0; roleWiseEntityIndex < roleWiseTargetedEntities.length; roleWiseEntityIndex++ ) {
+          for( let subEntitiesIndex = 0; subEntitiesIndex < subEntityTypes.length; subEntitiesIndex++ ) {
+            if( roleWiseTargetedEntities[roleWiseEntityIndex].entityType == subEntityTypes[subEntitiesIndex] ) {
+                if( subEntitiesIndex < targetedIndex) {
+                  targetedIndex = subEntitiesIndex;
+                  roleWiseTarget = roleWiseEntityIndex;
+                }
             }
           }
-
         }
-      
+        let targetedEntity = roleWiseTargetedEntities[roleWiseTarget];
         return resolve({
           message: constants.apiResponses.SOLUTION_TARGETED_ENTITY,
           success: true,
           data: targetedEntity
         });
-        
       } catch (error) {
         return resolve({
           success: false,

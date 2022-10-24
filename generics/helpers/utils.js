@@ -235,6 +235,33 @@ function md5Hash(value) {
   return md5(value);
 }
 
+/**
+  * filter out location id and code
+  * @function
+  * @name filterLocationIdandCode
+  * @returns {Object} - Object contain locationid and location code array.  
+*/
+
+function filterLocationIdandCode(dataArray) {
+  let locationIds = [];
+  let locationCodes = [];
+  dataArray.forEach(element=>{
+      if (this.checkValidUUID(element)) {
+          locationIds.push(element);
+      } else {
+          locationCodes.push(element);
+      }
+  });
+  return ({
+    ids : locationIds,
+    codes : locationCodes
+  });
+}
+
+function arrayIdsTobjectIds(ids) {
+  return ids.map(id => ObjectId(id));
+}
+
 module.exports = {
   camelCaseToTitleCase : camelCaseToTitleCase,
   lowerCase : lowerCase,
@@ -249,5 +276,7 @@ module.exports = {
   valueParser : valueParser,
   checkValidUUID : checkValidUUID,
   convertStringToBoolean : convertStringToBoolean,
-  md5Hash : md5Hash
+  md5Hash : md5Hash,
+  filterLocationIdandCode : filterLocationIdandCode,
+  arrayIdsTobjectIds : arrayIdsTobjectIds
 };

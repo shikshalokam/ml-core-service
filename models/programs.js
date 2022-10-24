@@ -2,8 +2,14 @@ module.exports = {
     name: "programs",
     schema: {
       externalId: String,
-      name: String,
-      description: String,
+      name: {
+        type : String,
+        index : true
+      },
+      description: {
+        type : String,
+        index : true
+      },
       owner: String,
       createdBy: String,
       updatedBy: String,
@@ -20,11 +26,11 @@ module.exports = {
       components: ["json"],
       isAPrivateProgram : {
         default : false,
-        type : Boolean
+        type : Boolean,
+        index : true
       },
       scope : {
         entityType : String,
-        entityTypeId : "ObjectId",
         entities : {
           type : Array,
           index : true

@@ -7,6 +7,7 @@
 
 //dependencies
 const request = require('request');
+const patternForDetectLang = /^[A-Za-z0-9]*$/;
 
 /**
   * List of user assigned projects.
@@ -28,7 +29,12 @@ var assignedProjects = function ( token,search = "",filter = "" ) {
     if( filter !== "" ) {
         url = url + "&filter=" + filter;
     }
-    
+
+    //finding the type of language
+    if (!patternForDetectLang.test(search)) {
+        url = encodeURI(url);
+    }
+
     return new Promise(async (resolve, reject) => {
         try {
 

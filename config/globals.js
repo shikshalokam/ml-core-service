@@ -99,4 +99,7 @@ module.exports = function () {
     }
   });
 
+  //define cache as global variable
+  global.cache = require(ROOT_PATH+"/generics/helpers/cache");
+
 };
