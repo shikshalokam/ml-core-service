@@ -18,7 +18,7 @@ module.exports = class CertificateTemplates extends Abstract {
     * @api {post/patch} /kendra/api/v1/certificateTemplates/create
     * @apiVersion 1.0.0
     * @apiName Create certificate template
-    * @apiGroup CreateTemplates
+    * @apiGroup CertificateTemplates
     * @apiParamExample {json} Request-Body:
     *   {   "templateUrl" :"certificateTemplates/6343bd978f9d8980b7841e85/ba9aa220-ff1b-4717-b6ea-ace55f04fc16_2022-9-10-1665383945769.svg",
             "criteria" : {
@@ -87,6 +87,7 @@ module.exports = class CertificateTemplates extends Abstract {
             "programId" : "605083ba09b7bd61555580fb"
 
         }
+
     * @apiHeader {String} internal-access-token - internal access token  
     * @apiHeader {String} X-authenticated-user-token - Authenticity token
     * @apiSampleRequest /kendra/api/v1/certificateTemplates/create
@@ -159,14 +160,14 @@ module.exports = class CertificateTemplates extends Abstract {
     */
 
     /**
-     * uploadCertificateTemplate.
+     * uploadTemplate.
      * @method
-     * @name uploadCertificateTemplate
+     * @name uploadTemplate
      * @param {Object} req - requested data.
      * @returns {JSON} file uploaded details.
     */
 
-     async uploadCertificateTemplate(req) {
+     async uploadTemplate(req) {
         return new Promise(async (resolve, reject) => {
         try {
 

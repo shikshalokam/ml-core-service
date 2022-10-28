@@ -150,6 +150,7 @@ module.exports = class CertificateTemplatesHelper {
                 let updateCertificateTemplate = await this.update(
                   templateId,
                   { 
+                    // certificateTemplates/6343bd978f9d8980b7841e85/ba9aa220-ff1b-4717-b6ea-ace55f04fc16_2022-9-10-1665383945769.svg
                     templateUrl : signedUrl.data.templates.files[0].payload.sourcePath
                   }
                 );
