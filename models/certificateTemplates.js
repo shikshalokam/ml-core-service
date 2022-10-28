@@ -8,7 +8,8 @@ module.exports = {
       },
       status: {
         type : String,
-        required : true
+        required : true,
+        default : "ACTIVE"
       },
       solutionId: {
         type : "ObjectId",
