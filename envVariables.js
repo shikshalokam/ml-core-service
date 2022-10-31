@@ -135,10 +135,18 @@ let enviromentVariables = {
     "optional" : true,
     "default": "http://player:3000"
   },
-  "CERTIFICATE_ISSUER_KID": {
-    "message" : "Required certificate issuer kid",
+  "PROJECT_CERTIFICATE_ON_OFF" : {
+    "message" : "Enable/Disable project certification",
     "optional" : false
   },
+  "CERTIFICATE_ISSUER_KID" : {
+    "message" : "Required certificate issuer kid",
+    "optional" : true,
+    "requiredIf" : {
+      "key": "PROJECT_CERTIFICATE_ON_OFF",
+      "value" : "ON"
+    }
+  }
 }
 
 let success = true;
