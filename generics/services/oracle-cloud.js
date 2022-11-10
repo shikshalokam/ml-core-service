@@ -88,7 +88,8 @@ let getDownloadableUrl = function( filePath,bucketName ) {
                 Bucket: bucket,
                 Key: filePath
             });
-            return resolve(downloadableUrl);
+            let urlWithoutQueryParam = downloadableUrl.split('?')
+            return resolve(urlWithoutQueryParam[0]);
         } catch(error) {
             return reject(error);
         }
