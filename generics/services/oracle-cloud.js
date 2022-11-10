@@ -82,14 +82,11 @@ let getDownloadableUrl = function( filePath,bucketName ) {
                 throw new Error(httpStatusCode.bad_request.status);
             }
 
-            let noOfMinutes = constants.common.NO_OF_MINUTES;
-            let expiry = constants.common.NO_OF_EXPIRY_TIME * noOfMinutes;
             let bucket = bucketName ? bucketName : process.env.DEFAULT_BUCKET_NAME;
 
             const downloadableUrl = s3.getSignedUrl('getObject', {
                 Bucket: bucket,
-                Key: filePath,
-                Expires: expiry
+                Key: filePath
             });
             return resolve(downloadableUrl);
         } catch(error) {
