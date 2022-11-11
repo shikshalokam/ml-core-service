@@ -151,7 +151,7 @@ let enviromentVariables = {
     "requiredIf" : {
       "key": "CLOUD_STORAGE",
       "operator": "EQUALS",
-      "value" : "OC"
+      "value" : "OCI"
     }
   }, 
   "OCI_SECRET_ACCESS_KEY" : {
@@ -160,7 +160,7 @@ let enviromentVariables = {
     "requiredIf" : {
       "key": "CLOUD_STORAGE",
       "operator": "EQUALS",
-      "value" : "OC"
+      "value" : "OCI"
     }
   }, 
   "OCI_BUCKET_NAME" : {
@@ -169,7 +169,7 @@ let enviromentVariables = {
     "requiredIf" : {
       "key": "CLOUD_STORAGE",
       "operator": "EQUALS",
-      "value" : "OC"
+      "value" : "OCI"
     }
   }, 
   "OCI_BUCKET_REGION" : {
@@ -178,7 +178,7 @@ let enviromentVariables = {
     "requiredIf" : {
       "key": "CLOUD_STORAGE",
       "operator": "EQUALS",
-      "value" : "OC"
+      "value" : "OCI"
     }
   }, 
   "OCI_BUCKET_ENDPOINT" : {
@@ -187,7 +187,7 @@ let enviromentVariables = {
     "requiredIf" : {
       "key": "CLOUD_STORAGE",
       "operator": "EQUALS",
-      "value" : "OC"
+      "value" : "OCI"
     }
   }, 
 }

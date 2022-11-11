@@ -78,18 +78,10 @@ let getDownloadableUrl = function( filePath,bucketName ) {
     return new Promise( async(resolve,reject)=>{
 
         try {
-            if( filePath == "" ) {
-                throw new Error(httpStatusCode.bad_request.status);
-            }
-
             let bucket = bucketName ? bucketName : process.env.DEFAULT_BUCKET_NAME;
-
-            const downloadableUrl = s3.getSignedUrl('getObject', {
-                Bucket: bucket,
-                Key: filePath
-            });
-            let urlWithoutQueryParam = downloadableUrl.split('?')
-            return resolve(urlWithoutQueryParam[0]);
+            let downloadableUrl = 
+            `${process.env.OCI_BUCKET_ENDPOINT}/${bucket}/${filePath}`;
+            return resolve(downloadableUrl);
         } catch(error) {
             return reject(error);
         }
