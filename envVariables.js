@@ -142,6 +142,7 @@ let enviromentVariables = {
   "CERTIFICATE_ISSUER_KID" : {
     "message" : "Required certificate issuer kid",
     "optional" : true,
+    "operator" : "EQUALS",
     "requiredIf" : {
       "key": "PROJECT_CERTIFICATE_ON_OFF",
       "value" : "ON"
@@ -159,7 +160,7 @@ module.exports = function() {
     };
   
     let keyCheckPass = true;
-
+    let validRequiredIfOperators = ["EQUALS","NOT_EQUALS"]
 
     if(enviromentVariables[eachEnvironmentVariable].optional === true
       && enviromentVariables[eachEnvironmentVariable].requiredIf
