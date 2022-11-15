@@ -40,6 +40,8 @@ module.exports = class FilesHelper {
               bucketName = process.env.AWS_BUCKET_NAME;
           } else if (cloudStorage === "GC" ) {
             bucketName = process.env.GCP_BUCKET_NAME;
+          }  else if (cloudStorage === constants.common.ORACLE_CLOUD_SERVICE ) {
+            bucketName = process.env.OCI_BUCKET_NAME;
           } else {
             bucketName = process.env.AZURE_STORAGE_CONTAINER;
           }
@@ -136,7 +138,10 @@ module.exports = class FilesHelper {
             bucketName = process.env.AWS_BUCKET_NAME;
           } else if (cloudStorage === "GC") {
             bucketName = process.env.GCP_BUCKET_NAME;
-          } else {
+          }  else if (cloudStorage === constants.common.ORACLE_CLOUD_SERVICE) {
+            bucketName = process.env.OCI_BUCKET_NAME;
+          } 
+          else {
             bucketName = process.env.AZURE_STORAGE_CONTAINER;
           }
   
