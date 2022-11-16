@@ -28,7 +28,7 @@ module.exports = class FilesHelper {
    * @returns {Array} - consists of all signed urls files.
    */
 
-  static preSignedUrls(payloadData, referenceType, userId, templateId = "") {
+  static preSignedUrls(payloadData, referenceType, userId = "", templateId = "") {
     return new Promise(async (resolve, reject) => {
       try {
           

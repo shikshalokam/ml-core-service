@@ -27,7 +27,7 @@ module.exports = class CertificateTemplatesHelper {
   static create(data) {
     return new Promise(async (resolve, reject) => {
         try {
-            data.issuer.kid = process.env.CERTIFICATE_ISSUER_KID;
+          //#remove data.issuer.kid = process.env.CERTIFICATE_ISSUER_KID;
             let certificateTemplateCreated = 
             await database.models.certificateTemplates.create(
               data
@@ -57,10 +57,6 @@ module.exports = class CertificateTemplatesHelper {
   static update(templateId, data) {
     return new Promise(async (resolve, reject) => {
         try {
-            //  Adding issuer kid from env
-            if ( data.issuer ) {
-                data.issuer.kid = process.env.CERTIFICATE_ISSUER_KID;
-            }
             //  If templateUrl value passed as empty string. 
             if ( !data.templateUrl ) {
                 delete data.templateUrl;
@@ -108,7 +104,7 @@ module.exports = class CertificateTemplatesHelper {
     return new Promise(async (resolve, reject) => {
         try {
           const now = new Date();
-          const date = now.getFullYear() + "-"+ now.getMonth() + "-" + now.getDate() + "-" + now.getTime();
+          const date = now.getDate() + "-"+ now.getMonth() + "-" + now.getFullYear() + "-" + now.getTime();
           const fileName = userId + "_" + date + ".svg"; 
           const requestData = {
             "templates": {
@@ -118,10 +114,10 @@ module.exports = class CertificateTemplatesHelper {
 
           let signedUrl =
           await filesHelpers.preSignedUrls(
-              requestData,
-              constants.common.CERTIFICATE,
-              userId,
-              templateId
+              requestData, // data to upload
+              constants.common.CERTIFICATE, // referenceType
+              "",
+              templateId // certificate template i
           );
           
           //  upload file using signed Url
