@@ -16,7 +16,11 @@ module.exports = {
         index : true,
         unique : true
       },
-      programId: "ObjectId",
+      programId: {
+        type : "ObjectId",
+        index : true,
+        required : true
+      },
       criteria: {
         type : Object,
         required : true
