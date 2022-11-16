@@ -15,7 +15,7 @@ module.exports = class CertificateTemplates extends Abstract {
     }
 
     /**
-    * @api {post/patch} /kendra/api/v1/certificateTemplates/create
+    * @api {post/patch} /kendra/api/v1/certificateTemplates/createOrUpdate
     * @apiVersion 1.0.0
     * @apiName Create certificate template
     * @apiGroup CertificateTemplates
@@ -106,12 +106,12 @@ module.exports = class CertificateTemplates extends Abstract {
     /**
      * Create/update certificate template.
      * @method
-     * @name create
+     * @name createOrUpdate
      * @param {Object} req - requested data.
      * @returns {JSON} Created certificate template data.
     */
 
-    async create(req) {
+    async createOrUpdate(req) {
         return new Promise(async (resolve, reject) => {
         try {
             if ( req.method === "POST" ) {
