@@ -134,19 +134,6 @@ let enviromentVariables = {
     "message" : "Form service base url",
     "optional" : true,
     "default": "http://player:3000"
-  },
-  "PROJECT_CERTIFICATE_ON_OFF" : {
-    "message" : "Enable/Disable project certification",
-    "optional" : false
-  },
-  "CERTIFICATE_ISSUER_KID" : {
-    "message" : "Required certificate issuer kid",
-    "optional" : true,
-    "operator" : "EQUALS",
-    "requiredIf" : {
-      "key": "PROJECT_CERTIFICATE_ON_OFF",
-      "value" : "ON"
-    }
   }
 }
 

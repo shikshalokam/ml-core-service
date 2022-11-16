@@ -27,7 +27,6 @@ module.exports = class CertificateTemplatesHelper {
   static create(data) {
     return new Promise(async (resolve, reject) => {
         try {
-          //#remove data.issuer.kid = process.env.CERTIFICATE_ISSUER_KID;
             let certificateTemplateCreated = 
             await database.models.certificateTemplates.create(
               data
