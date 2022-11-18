@@ -262,6 +262,17 @@ function arrayIdsTobjectIds(ids) {
   return ids.map(id => ObjectId(id));
 }
 
+/**
+  * check whether string contains only number
+  * @function
+  * @name checkIfStringIsNumber
+  * @returns {Boolean} returns a Boolean value true/false
+*/
+
+function checkIfStringIsNumber(str) {
+  return /^[0-9]+$/.test(str);
+}
+
 module.exports = {
   camelCaseToTitleCase : camelCaseToTitleCase,
   lowerCase : lowerCase,
@@ -278,5 +289,6 @@ module.exports = {
   convertStringToBoolean : convertStringToBoolean,
   md5Hash : md5Hash,
   filterLocationIdandCode : filterLocationIdandCode,
-  arrayIdsTobjectIds : arrayIdsTobjectIds
+  arrayIdsTobjectIds : arrayIdsTobjectIds,
+  checkIfStringIsNumber : checkIfStringIsNumber
 };
