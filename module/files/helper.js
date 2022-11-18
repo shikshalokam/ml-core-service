@@ -14,6 +14,7 @@ const awsServices = require(ROOT_PATH + '/generics/services/aws');
 const googleCloudServices = require(ROOT_PATH +
   '/generics/services/google-cloud');
 const azureService = require(ROOT_PATH + '/generics/services/azure');
+const oracleSerices = require(ROOT_PATH + '/generics/services/oracle-cloud');
 
 /**
  * FilesHelper
@@ -77,6 +78,12 @@ module.exports = class FilesHelper {
           cloudStorage === constants.common.AZURE_SERVICE
         ) {
           result = await azureService.uploadFile(
+            file,
+            filePathForBucket,
+            bucketName
+          )
+        } else if (cloudStorage === constants.common.ORACLE_CLOUD_SERVICE) {
+          result = await oracleSerices.uploadFile(
             file,
             filePathForBucket,
             bucketName
@@ -202,6 +209,8 @@ module.exports = class FilesHelper {
             signedUrlResponse = await awsServices.signedUrl(file, bucket)
           } else if (cloudStorage === constants.common.AZURE_SERVICE) {
             signedUrlResponse = await azureService.signedUrl(file, bucket)
+          } else if (cloudStorage === constants.common.ORACLE_CLOUD_SERVICE) {
+            signedUrlResponse = await oracleSerices.signedUrl(file, bucket)
           }
 
           if (signedUrlResponse.success) {
@@ -396,8 +405,9 @@ function _getLinkFromCloudService(filePath, bucketName, cloudStorage) {
         )
       } else if (cloudStorage === constants.common.AZURE_SERVICE) {
         result = await azureService.getDownloadableUrl(filePath, bucketName)
+      } else if (cloudStorage === constants.common.ORACLE_CLOUD_SERVICE) {
+        result = await oracleSerices.getDownloadableUrl(filePath, bucketName)
       }
-
       return resolve(result)
     } catch (error) {
       return reject(error)
