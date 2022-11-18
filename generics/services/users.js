@@ -206,9 +206,16 @@ const locationSearch = function ( filterData, pageSize = "", pageNo = "", search
                 }
         
                 if ( searchKey !== "" ) {
-                    bodyData["request"]["fuzzy"] = {
-                        "orgName" : searchKey
+                    if ( gen.utils.checkIfStringIsNumber(searchKey) ) {
+                        bodyData["request"]["fuzzy"] = {
+                            "externalId" : searchKey
+                        }
+                    } else {
+                        bodyData["request"]["fuzzy"] = {
+                            "orgName" : searchKey
+                        }
                     }
+                   
                 }
                 
                 //for getting specified key data only.
@@ -220,7 +227,7 @@ const locationSearch = function ( filterData, pageSize = "", pageNo = "", search
                 userServiceUrl + constants.endpoints.GET_SCHOOL_DATA;
                 const options = {
                     headers : {
-                        "content-type": "application/json",
+                        "content-type": "application/json"
                     },
                     json : bodyData
                 };
