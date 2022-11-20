@@ -104,7 +104,7 @@ module.exports = class CertificateTemplatesHelper {
         try {
           const now = new Date();
           const date = now.getDate() + "-"+ now.getMonth() + "-" + now.getFullYear() + "-" + now.getTime();
-          const fileName = userId + "_" + date + ".svg"; 
+          const fileName = templateId + '/' + userId + "_" + date + ".svg"; 
           const requestData = {
             "templates": {
               "files": [fileName]
@@ -115,8 +115,7 @@ module.exports = class CertificateTemplatesHelper {
           await filesHelpers.preSignedUrls(
               requestData, // data to upload
               constants.common.CERTIFICATE, // referenceType
-              "",
-              templateId // certificate template i
+              ""
           );
           
           //  upload file using signed Url
