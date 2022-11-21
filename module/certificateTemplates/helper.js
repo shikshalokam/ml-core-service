@@ -56,37 +56,39 @@ module.exports = class CertificateTemplatesHelper {
   static update(templateId, data) {
     return new Promise(async (resolve, reject) => {
         try {
-            //  If templateUrl value passed as empty string. 
-            if ( !data.templateUrl ) {
-                delete data.templateUrl;
+
+          // in case support team pass below values as empty string (not valid) we cant check it with validator. So adding it here
+          //  If templateUrl value passed as empty string. 
+          if ( !data.templateUrl ) {
+              delete data.templateUrl;
+          }
+          //  If solutionId value passed as empty string. 
+          if ( !data.solutionId ) {
+              delete data.solutionId;
+          }
+          //  If programId value passed as empty string. 
+          if ( !data.programId ) {
+              delete data.programId;
+          }
+          let updateObject = {
+              "$set" : data
+            };
+          let certificateTemplateUpdated = 
+          await database.models.certificateTemplates.findOneAndUpdate(
+              {_id: templateId},
+              updateObject
+          );
+          if ( certificateTemplateUpdated == null ) {
+            throw{
+              message: constants.apiResponses.CERTIFICATE_TEMPLATE_NOT_UPDATED
             }
-            //  If solutionId value passed as empty string. 
-            if ( !data.solutionId ) {
-                delete data.solutionId;
-            }
-            //  If programId value passed as empty string. 
-            if ( !data.programId ) {
-                delete data.programId;
-            }
-            let updateObject = {
-                "$set" : data
-              };
-            let certificateTemplateUpdated = 
-            await database.models.certificateTemplates.findOneAndUpdate(
-                {_id: templateId},
-                updateObject
-            );
-            if ( certificateTemplateUpdated == null ) {
-              throw{
-                message: constants.apiResponses.CERTIFICATE_TEMPLATE_NOT_UPDATED
+          }
+          return resolve({
+              message : constants.apiResponses.CERTIFICATE_TEMPLATE_UPDATED,
+              data : {
+                id : certificateTemplateUpdated._id
               }
-            }
-            return resolve({
-                message : constants.apiResponses.CERTIFICATE_TEMPLATE_UPDATED,
-                data : {
-                  id : certificateTemplateUpdated._id
-                }
-              });
+            });
             
         } catch (error) {
             return reject(error);
