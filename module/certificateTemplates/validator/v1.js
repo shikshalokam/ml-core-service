@@ -9,7 +9,7 @@ module.exports = (req) => {
 
     let certificateTemplatesValidator = {
 
-        create : function () {
+        createOrUpdate : function () {
             if ( req.method === "POST" ) {
                 req.checkBody('solutionId', 'solutionId is required').exists({checkFalsy: true}).isLength({ min: 1 });
                 req.checkBody('programId', 'programId is required').exists({checkFalsy: true}).isLength({ min: 1 });
