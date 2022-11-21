@@ -190,6 +190,4 @@ module.exports = {
   "CERTIFICATE_TEMPLATE_ADDED" : "Template added successfully",
   "CERTIFICATE_TEMPLATE_UPDATED" : "Template updated successfully",
   "CERTIFICATE_TEMPLATE_NOT_UPDATED" : "Template updation failed"
-
-
 };
