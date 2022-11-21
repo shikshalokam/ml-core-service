@@ -215,7 +215,7 @@ const locationSearch = function ( filterData, pageSize = "", pageNo = "", search
                             "orgName" : searchKey
                         }
                     }
-                    
+                   
                 }
                 
                 //for getting specified key data only.
@@ -238,7 +238,7 @@ const locationSearch = function ( filterData, pageSize = "", pageNo = "", search
                 };
     
                 function requestCallback(err, data) {
-
+        
                     if (err) {
                         result.success = false;
                     } else {

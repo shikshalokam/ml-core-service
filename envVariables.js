@@ -29,6 +29,7 @@ let enviromentVariables = {
     "optional" : true,
     "requiredIf" : {
       "key": "CLOUD_STORAGE",
+      "operator": "EQUALS",
       "value" : "GC"
     }
   },
@@ -37,6 +38,7 @@ let enviromentVariables = {
     "optional" : true,
     "requiredIf" : {
       "key": "CLOUD_STORAGE",
+      "operator": "EQUALS",
       "value" : "GC"
     }
   },
@@ -45,6 +47,7 @@ let enviromentVariables = {
     "optional" : true,
     "requiredIf" : {
       "key": "CLOUD_STORAGE",
+      "operator": "EQUALS",
       "value" : "AZURE"
     }
   },
@@ -53,6 +56,7 @@ let enviromentVariables = {
     "optional" : true,
     "requiredIf" : {
       "key": "CLOUD_STORAGE",
+      "operator": "EQUALS",
       "value" : "AZURE"
     }
   },
@@ -61,6 +65,7 @@ let enviromentVariables = {
     "optional" : true,
     "requiredIf" : {
       "key": "CLOUD_STORAGE",
+      "operator": "EQUALS",
       "value" : "AZURE"
     }
   },
@@ -69,6 +74,7 @@ let enviromentVariables = {
     "optional" : true,
     "requiredIf" : {
       "key": "CLOUD_STORAGE",
+      "operator": "EQUALS",
       "value" : "AWS"
     }
   }, 
@@ -77,6 +83,7 @@ let enviromentVariables = {
     "optional" : true,
     "requiredIf" : {
       "key": "CLOUD_STORAGE",
+      "operator": "EQUALS",
       "value" : "AWS"
     }
   }, 
@@ -85,6 +92,7 @@ let enviromentVariables = {
     "optional" : true,
     "requiredIf" : {
       "key": "CLOUD_STORAGE",
+      "operator": "EQUALS",
       "value" : "AWS"
     }
   }, 
@@ -93,6 +101,7 @@ let enviromentVariables = {
     "optional" : true,
     "requiredIf" : {
       "key": "CLOUD_STORAGE",
+      "operator": "EQUALS",
       "value" : "AWS"
     }
   }, 
@@ -101,6 +110,7 @@ let enviromentVariables = {
     "optional" : true,
     "requiredIf" : {
       "key": "CLOUD_STORAGE",
+      "operator": "EQUALS",
       "value" : "AWS"
     }
   }, 
@@ -134,7 +144,52 @@ let enviromentVariables = {
     "message" : "Form service base url",
     "optional" : true,
     "default": "http://player:3000"
-  }
+  },
+  "OCI_ACCESS_KEY_ID" : {
+    "message" : "Required oracle access key id",
+    "optional" : true,
+    "requiredIf" : {
+      "key": "CLOUD_STORAGE",
+      "operator": "EQUALS",
+      "value" : "OCI"
+    }
+  }, 
+  "OCI_SECRET_ACCESS_KEY" : {
+    "message" : "Required Oracle secret access key",
+    "optional" : true,
+    "requiredIf" : {
+      "key": "CLOUD_STORAGE",
+      "operator": "EQUALS",
+      "value" : "OCI"
+    }
+  }, 
+  "OCI_BUCKET_NAME" : {
+    "message" : "Required Oracle bucket name",
+    "optional" : true,
+    "requiredIf" : {
+      "key": "CLOUD_STORAGE",
+      "operator": "EQUALS",
+      "value" : "OCI"
+    }
+  }, 
+  "OCI_BUCKET_REGION" : {
+    "message" : "Required Oracle bucket region",
+    "optional" : true,
+    "requiredIf" : {
+      "key": "CLOUD_STORAGE",
+      "operator": "EQUALS",
+      "value" : "OCI"
+    }
+  }, 
+  "OCI_BUCKET_ENDPOINT" : {
+    "message" : "Required Oracle bucket endpoint",
+    "optional" : true,
+    "requiredIf" : {
+      "key": "CLOUD_STORAGE",
+      "operator": "EQUALS",
+      "value" : "OCI"
+    }
+  }, 
 }
 
 let success = true;
@@ -147,7 +202,7 @@ module.exports = function() {
     };
   
     let keyCheckPass = true;
-
+    let validRequiredIfOperators = ["EQUALS","NOT_EQUALS"]
 
     if(enviromentVariables[eachEnvironmentVariable].optional === true
       && enviromentVariables[eachEnvironmentVariable].requiredIf
