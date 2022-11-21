@@ -11,6 +11,14 @@ module.exports = (req) => {
 
         details : function () {
             req.checkParams('_id').exists().withMessage("required form name")
+        },
+        create : function () {
+            req.checkBody('name').exists().withMessage("required form name");
+            req.checkBody('value').exists().withMessage("required form value");
+        },
+        update : function () {
+            req.checkParams('_id').exists().withMessage("required form name")
+            req.checkBody('value').exists().withMessage("required form value");
         }
     }
 
