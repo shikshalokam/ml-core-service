@@ -188,6 +188,8 @@ module.exports = {
   "DATA_CREATED_SUCCESSFULLY" : "Data created successfully",
   "FAILED_TO_CREATE_RECORD" : "Failed to create record in DB",
   "CERTIFICATE_TEMPLATE_ADDED" : "Template added successfully",
-  "CERTIFICATE_TEMPLATE_UPDATED" : "Template updated successfully"
+  "CERTIFICATE_TEMPLATE_UPDATED" : "Template updated successfully",
+  "CERTIFICATE_TEMPLATE_NOT_UPDATED" : "Template updation failed"
+
 
 };

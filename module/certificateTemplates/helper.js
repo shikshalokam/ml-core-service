@@ -76,6 +76,11 @@ module.exports = class CertificateTemplatesHelper {
                 {_id: templateId},
                 updateObject
             );
+            if ( certificateTemplateUpdated == null ) {
+              throw{
+                message: constants.apiResponses.CERTIFICATE_TEMPLATE_NOT_UPDATED
+              }
+            }
             return resolve({
                 message : constants.apiResponses.CERTIFICATE_TEMPLATE_UPDATED,
                 data : {
@@ -113,11 +118,10 @@ module.exports = class CertificateTemplatesHelper {
 
           let signedUrl =
           await filesHelpers.preSignedUrls(
-              requestData, // data to upload
-              constants.common.CERTIFICATE, // referenceType
-              ""
+            requestData, // data to upload
+            constants.common.CERTIFICATE, // referenceType  
           );
-          
+
           //  upload file using signed Url
           if (signedUrl.data && 
             Object.keys(signedUrl.data).length > 0 &&
