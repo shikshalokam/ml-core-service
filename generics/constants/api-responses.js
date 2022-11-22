@@ -191,6 +191,6 @@ module.exports = {
   "CERTIFICATE_TEMPLATE_UPDATED" : "Template updated successfully",
   "FORM_CREATED_SUCCESSFULLY": "Form created successfully ",
   "FORM_UPDATED_SUCCESSFULLY": "Form updated successfully ",
-  "FAILED_TO_UPDATE_FORM" : "Failed to update form"
-
+  "FAILED_TO_UPDATE_FORM" : "Failed to update form",
+  "CERTIFICATE_TEMPLATE_NOT_UPDATED" : "Template updation failed"
 };
