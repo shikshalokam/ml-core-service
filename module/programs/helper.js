@@ -204,101 +204,12 @@ module.exports = class ProgramsHelper {
           });
         }
 
-        let scope = {};
-
-        if( scopeData.entityType ) {
-          // Get entity details of type {scopeData.entityType}
-          let bodyData = {
-            "type" : scopeData.entityType
-          }
-          let entityTypeData = await userService.locationSearch( bodyData );
-          
-          if( !entityTypeData.success ) {
-            return resolve({
-              status : httpStatusCode.bad_request.status,
-              message : constants.apiResponses.ENTITY_TYPES_NOT_FOUND
-            });
-          }
-
-          scope["entityType"] = entityTypeData.data[0].type;
-  
-        }
-
-        if( scopeData.entities && scopeData.entities.length > 0 ) {
-          
-          //call learners api for search
-          let entityIds = [];
-          let bodyData={};
-          let locationData = gen.utils.filterLocationIdandCode(scopeData.entities)
-          
-          //locationIds contain id of location data. 
-          if ( locationData.ids.length > 0 ) {
-            bodyData = {
-              "id" : locationData.ids,
-              "type" : scopeData.entityType
-            } 
-            let entityData = await userService.locationSearch( bodyData );
-            if ( entityData.success ) {
-              entityData.data.forEach( entity => {
-                entityIds.push(entity.id)
-              });
-            }
-          }
-          
-          if ( locationData.codes.length > 0 ) {
-            let filterData = {
-              "code" : locationData.codes,
-              "type" : scopeData.entityType
-            }
-            let entityDetails = await userService.locationSearch( filterData );
-            
-            if ( entityDetails.success ) {
-              let entitiesData = entityDetails.data;
-              entitiesData.forEach( entity => {
-                entityIds.push(entity.id) 
-              });
-            }
-          }
-          
-          if( !entityIds.length > 0 ) {
-              throw {
-                message : constants.apiResponses.ENTITIES_NOT_FOUND
-              };
-          }
-          scope["entities"] = entityIds;
-        } 
-
-        if( scopeData.roles ) {
-          
-          if( Array.isArray(scopeData.roles) && scopeData.roles.length > 0 ) {
-            
-            let userRoles = await userRolesHelper.roleDocuments({
-              code : { $in : scopeData.roles }
-            },["_id","code"]);
-            
-            if( !userRoles.length > 0 ) {
-              return resolve({
-                status : httpStatusCode.bad_request.status,
-                message : constants.apiResponses.INVALID_ROLE_CODE
-              });
-            }
-    
-            scope["roles"] = userRoles;
-          } else {
-            if( scopeData.roles === constants.common.ALL_ROLES ) {
-              scope["roles"] = [{
-                "code" : constants.common.ALL_ROLES
-              }]; 
-            }
-          }
-        }
-
         let updateProgram = 
         await database.models.programs.findOneAndUpdate(
           {
             _id : programId
           },
-          { $set : { scope : scope }},{ new: true }
+          { $set : { scope : scopeData }},{ new: true }
         ).lean();
 
         if( !updateProgram._id ) {
@@ -661,7 +572,7 @@ module.exports = class ProgramsHelper {
           
           let userRoles = await userRolesHelper.roleDocuments({
             code : { $in : roles }
-          },["_id","code"]
+          },["code"]
           );
           
           if( !userRoles.length > 0 ) {
@@ -671,21 +582,26 @@ module.exports = class ProgramsHelper {
             });
           }
 
+          let roles = [];
+          for ( const role of userRoles ) {
+            roles.push(role.code);
+          }
+
           await database.models.programs.findOneAndUpdate({
             _id : programId
           },{
-            $pull : { "scope.roles" : { code : constants.common.ALL_ROLES } }
+            $pull : { "scope.roles" : constants.common.ALL_ROLES }
           },{ new : true }).lean();
 
           updateQuery["$addToSet"] = {
-            "scope.roles" : { $each : userRoles }
+            "scope.roles" : roles
           }
 
         } else {
           if( roles === constants.common.ALL_ROLES ) {
             
             updateQuery["$set"] = {
-              "scope.roles" : [{ "code" : constants.common.ALL_ROLES }]
+              "scope.roles" : [constants.common.ALL_ROLES]
             }
           }
         }
@@ -846,10 +762,15 @@ module.exports = class ProgramsHelper {
           });
         }
 
+        let roles = [];
+        for ( const role of userRoles ) {
+          roles.push(role.code);
+        }
+
         let updateProgram = await database.models.programs.findOneAndUpdate({
           _id : programId
         },{
-          $pull : { "scope.roles" : { $in : userRoles } }
+          $pull : { "scope.roles" : { $in : roles } }
         },{ new : true }).lean();
 
         if( !updateProgram || !updateProgram._id ) {

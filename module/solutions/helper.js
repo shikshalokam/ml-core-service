@@ -232,20 +232,10 @@ module.exports = class SolutionsHelper {
    * @returns {JSON} - scope in solution.
    */
 
-   static setScope( programId,solutionId,scopeData ) {
+   static setScope( solutionId,scopeData ) {
 
     return new Promise(async (resolve, reject) => {
       try {
-        
-        let programData = 
-        await programsHelper.programDocuments({ _id : programId },["_id","scope"]);
- 
-        if( !programData.length > 0 ) {
-          return resolve({
-            status : httpStatusCode.bad_request.status,
-            message : constants.apiResponses.PROGRAM_NOT_FOUND
-          });
-        }
         
         let solutionData = await this.solutionDocuments({ _id : solutionId },["_id"]);
 
@@ -255,125 +245,22 @@ module.exports = class SolutionsHelper {
             message : constants.apiResponses.SOLUTION_NOT_FOUND
           });
         }
-        if( programData[0].scope ) {
-          
-          let currentSolutionScope = JSON.parse(JSON.stringify(programData[0].scope));
-          
-          if( Object.keys(scopeData).length > 0 ) {
-            if( scopeData.entityType ) {
-              let bodyData = { "type" : scopeData.entityType }
-              let entityTypeData = await userService.locationSearch( bodyData);
-              if ( entityTypeData.success ) {
-                currentSolutionScope.entityType = entityTypeData.data[0].type
-              }
-            }
-
-            if( scopeData.entities && scopeData.entities.length > 0 ) {
-              //call learners api for search
-              let entityIds = [];
-              let bodyData={};
-              let locationData = gen.utils.filterLocationIdandCode(scopeData.entities)
-
-              if ( locationData.ids.length > 0 ) {
-                bodyData = {
-                  "id" : locationData.ids,
-                  "type" : currentSolutionScope.entityType
-                } 
-                let entityData = await userService.locationSearch( bodyData );
-                if ( entityData.success ) {
-                  entityData.data.forEach( entity => {
-                    entityIds.push(entity.id)
-                  });
-                }
-              }
-
-              if ( locationData.codes.length > 0 ) {
-                let filterData = {
-                  "code" : locationData.codes,
-                  "type" : currentSolutionScope.entityType
-                }
-                let entityDetails = await userService.locationSearch( filterData );
-                
-                if ( entityDetails.success ) {
-                  entityDetails.data.forEach( entity => {
-                    entityIds.push(entity.id) 
-                  });
-                }
-              }
-                
-              if( !entityIds.length > 0 ) {
-                return resolve({
-                  status : httpStatusCode.bad_request.status,
-                  message : constants.apiResponses.ENTITIES_NOT_FOUND
-                });
-              }
-              
-              let entitiesData = [];
-      
-              // if( currentSolutionScope.entityType !== programData[0].scope.entityType ) {
-              //   let result = [];
-              //   let childEntities = await userService.getSubEntitiesBasedOnEntityType(currentSolutionScope.entities, currentSolutionScope.entityType, result);
-              //   if( childEntities.length > 0 ) {
-              //     entitiesData = entityIds.filter(element => childEntities.includes(element));
-              //   }
-              // } else {
-                entitiesData = entityIds
-              // }
-              
-              if( !entitiesData.length > 0 ) {
-                
-                return resolve({
-                  status : httpStatusCode.bad_request.status,
-                  message : constants.apiResponses.SCOPE_ENTITY_INVALID
-                });
-
-              }
-
-              currentSolutionScope.entities = entitiesData;
-            }
         
-            if( scopeData.roles ) {
-              if( Array.isArray(scopeData.roles) && scopeData.roles.length > 0 ) {
-                
-                let userRoles = await userRolesHelper.roleDocuments({
-                  code : { $in : scopeData.roles }
-                },["_id","code"]);
-    
-                if( !userRoles.length > 0 ) {
-                  return resolve({
-                    status : httpStatusCode.bad_request.status,
-                    message : constants.apiResponses.INVALID_ROLE_CODE
-                  });
-                }
-    
-                currentSolutionScope["roles"] = userRoles;
+        let updateSolution = 
+        await database.models.solutions.findOneAndUpdate(
+          {
+            _id : solutionId
+          },
+          { $set : { scope : scopeData }},{ new: true }
+        ).lean();
   
-              } else {
-                if( scopeData.roles === constants.common.ALL_ROLES ) {
-                  currentSolutionScope["roles"] = [{
-                    "code" : constants.common.ALL_ROLES
-                  }]; 
-                }
-              }
-            }
-          }
-          
-          let updateSolution = 
-          await database.models.solutions.findOneAndUpdate(
-            {
-              _id : solutionId
-            },
-            { $set : { scope : currentSolutionScope }},{ new: true }
-          ).lean();
-  
-          if( !updateSolution._id ) {
-            throw {
-              status : constants.apiResponses.SOLUTION_SCOPE_NOT_ADDED
-            };
-          }
-          solutionData = updateSolution;
-
+        if( !updateSolution._id ) {
+          throw {
+            status : constants.apiResponses.SOLUTION_SCOPE_NOT_ADDED
+          };
         }
+          
+        solutionData = updateSolution;
 
         return resolve({
           success : true,
@@ -450,7 +337,6 @@ module.exports = class SolutionsHelper {
 
             let solutionScope = 
             await this.setScope(
-              solutionUpdatedData.programId,
               solutionUpdatedData._id,
               solutionData.scope
             );
@@ -900,7 +786,7 @@ module.exports = class SolutionsHelper {
           
           let userRoles = await userRolesHelper.roleDocuments({
             code : { $in : roles }
-          },["_id","code"]
+          },["code"]
           );
           
           if( !userRoles.length > 0 ) {
@@ -910,18 +796,23 @@ module.exports = class SolutionsHelper {
             });
           }
 
+          let roles = [];
+          for ( const role of userRoles ) {
+            roles.push(role.code);
+          }
+
           await database.models.solutions.findOneAndUpdate({
             _id : solutionId
-          },{ $pull : { "scope.roles" : { code : constants.common.ALL_ROLES }}},{ new : true }).lean();
+          },{ $pull : { "scope.roles" : constants.common.ALL_ROLES }},{ new : true }).lean();
 
           updateQuery["$addToSet"] = {
-            "scope.roles" : { $each : userRoles } 
+            "scope.roles" : { $each : roles } 
           };
 
         } else {
           if( roles === constants.common.ALL_ROLES ) {
             updateQuery["$set"] = { 
-              "scope.roles" : [{ "code" : constants.common.ALL_ROLES }]
+              "scope.roles" : [constants.common.ALL_ROLES ]
             };
           }
         }
@@ -1104,7 +995,7 @@ module.exports = class SolutionsHelper {
           {
             code: { $in: roles },
           },
-          ["_id", "code"]
+          ["code"]
         );
 
         if (!userRoles.length > 0) {
@@ -1114,13 +1005,18 @@ module.exports = class SolutionsHelper {
           });
         }
 
+        let roles = [];
+        for ( const role of userRoles ) {
+          roles.push(role.code);
+        }
+
         let updateSolution = await database.models.solutions
           .findOneAndUpdate(
             {
               _id: solutionId,
             },
             {
-              $pull: { "scope.roles": { $in: userRoles } },
+              $pull: { "scope.roles": { $in: roles } },
             },
             { new: true }
           )

@@ -29,20 +29,7 @@ module.exports = {
         type : Boolean,
         index : true
       },
-      scope : {
-        entityType : String,
-        entities : {
-          type : Array,
-          index : true
-        },
-        roles : [{
-          _id : "ObjectId",
-          code : {
-            type : String,
-            index : true
-          }
-        }]
-      },
+      scope : Object,
       isDeleted: {
         default : false,
         type : Boolean,
