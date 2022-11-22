@@ -23,6 +23,9 @@ module.exports = (req) => {
         },
         uploadCertificateTemplate : function () {
             req.checkParams("_id").exists().withMessage("required certificate templateId");
+        },
+        editSvg : function () {
+            req.checkQuery("baseTemplateFilePath").not().isEmpty().withMessage("Please provide base template filepath as baseTemplateFilePath. This cannot be empty")
         }
     }
 
