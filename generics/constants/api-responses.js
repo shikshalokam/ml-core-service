@@ -189,5 +189,6 @@ module.exports = {
   "FAILED_TO_CREATE_RECORD" : "Failed to create record in DB",
   "CERTIFICATE_TEMPLATE_ADDED" : "Template added successfully",
   "CERTIFICATE_TEMPLATE_UPDATED" : "Template updated successfully",
-  "CERTIFICATE_TEMPLATE_NOT_UPDATED" : "Template updation failed"
+  "CERTIFICATE_TEMPLATE_NOT_UPDATED" : "Template updation failed",
+  "BASE_CERTIFICATE_TEMPLATE_NOT_FOUND" : "Base certificate template not found"
 };

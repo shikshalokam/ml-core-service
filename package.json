@@ -29,6 +29,7 @@
     "cache-manager": "^2.9.0",
     "chai": "^4.2.0",
     "chai-http": "^4.3.0",
+    "cheerio": "^1.0.0-rc.12",
     "cli-table": "^0.3.1",
     "commander": "^2.20.0",
     "cors": "^2.8.4",
