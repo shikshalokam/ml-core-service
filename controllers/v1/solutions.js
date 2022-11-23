@@ -255,7 +255,10 @@ module.exports = class Solutions extends Abstract {
           req.query.programId ? req.query.programId : "",
           req.pageSize,
           req.pageNo,
-          req.searchText
+          req.searchText,
+          req.headers["x-app-ver"] ? req.headers["x-app-ver"] : req.headers.appversion ? req.headers.appversion : "",
+          req.userDetails.userId,
+          req.userDetails.userToken
         );
           
         targetedSolutions["result"] = targetedSolutions.data;
@@ -320,7 +323,10 @@ module.exports = class Solutions extends Abstract {
         let solutionDetails = 
         await solutionsHelper.detailsBasedOnRoleAndLocation(
           req.params._id,
-          req.body
+          req.body,
+          req.headers["x-app-ver"] ? req.headers["x-app-ver"] : req.headers.appversion ? req.headers.appversion : "",
+          req.userDetails.userId,
+          req.userDetails.userToken
         );
           
         solutionDetails.result = solutionDetails.data;

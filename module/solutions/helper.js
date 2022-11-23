@@ -4,6 +4,9 @@
  * created-date : 03-sep-2020
  * Description : Solution related helper functionality.
  */
+
+const FormHelper = require("../forms/helper");
+
 // Dependencies
 const programsHelper = require(MODULES_BASE_PATH + "/programs/helper");
 const entityTypesHelper = require(MODULES_BASE_PATH + "/entityTypes/helper");
@@ -508,10 +511,25 @@ module.exports = class SolutionsHelper {
       programId, 
       pageSize, 
       pageNo,
-      searchText = "" 
+      searchText = "",
+      appVersion = "",
+      userId = "", 
+      userToken = ""
     ) {
       return new Promise(async (resolve, reject) => {
         try {
+
+          //to convert the bodyData
+          let convertedBodyData = await this.checkForConvertBodyData(
+            bodyData, 
+            appVersion, 
+            userId, 
+            userToken
+          );
+
+          if( !convertedBodyData.success ) {
+            bodyData = convertedBodyData
+          }
   
           let queryData = await this.queryBasedOnRoleAndLocation(
             bodyData,
@@ -692,11 +710,23 @@ module.exports = class SolutionsHelper {
    * @returns {JSON} - Details of solution based on role and location.
    */
 
-   static detailsBasedOnRoleAndLocation( solutionId,bodyData ) {
+   static detailsBasedOnRoleAndLocation( solutionId, bodyData, appVersion, userId, userToken ) {
 
     return new Promise(async (resolve, reject) => {
 
       try {
+
+        //to convert the bodyData
+        let convertedBodyData = await this.checkForConvertBodyData(
+          bodyData, 
+          appVersion, 
+          userId, 
+          userToken
+        );
+
+        if( !convertedBodyData.success ) {
+          bodyData = convertedBodyData
+        }
 
         let queryData = await this.queryBasedOnRoleAndLocation(bodyData);
 
@@ -740,7 +770,6 @@ module.exports = class SolutionsHelper {
         });
 
       } catch (error) {
-
         return resolve({
           success : false,
           message : error.message,
@@ -1914,6 +1943,81 @@ module.exports = class SolutionsHelper {
       }
     });
   }
+
+  /**
+   * Check For update data
+   * @method
+   * @name checkForConvertBodyData
+   * @param {Object} bodyData - Requested body data.
+   * @param {String} appVersion - app version.
+   * @param {String} userId - user id.
+   * @returns {JSON} - Converted Body Data.
+   */
+  
+   static checkForConvertBodyData( bodyData, appVersion = "", userId = "", userToken = "" ) {
+    return new Promise(async (resolve, reject) => {
+      try {
+
+        let updatedBodyData = {};
+        let convertedBodyData = {};
+
+        if ( !appVersion ) {
+          //convert the data if appVersion is not present
+          updatedBodyData = await gen.utils.convertUserRoleAndLocationData(bodyData);
+        } else {
+          //check the bodyData need to convert or not
+          let convertUserDataorNot = await gen.utils.convertUserDataorNot(appVersion);
+          if ( convertUserDataorNot ) {
+            //update bodyData
+            updatedBodyData = await gen.utils.convertUserRoleAndLocationData(bodyData);
+          } else {
+            updatedBodyData = bodyData;
+          }
+        }
+
+        let addMissingFields = false;
+        //check and update the missing fields in bodyData from profile
+        if ( userId !== "" && userToken !== "" ) {
+          //fetch scope form 
+          let formData = await FormHelper.formsDocument(
+            {
+                name : constants.common.SCOPE_FORM_NAME
+            },["value"]
+          );
+
+          //fetch userProfile
+          let userProfile = await userService.profile( userToken, userId ); 
+        
+          if ( formData.length > 0 && userProfile.success ) {
+            addMissingFields = true;
+          }
+ 
+          //add missing fields to bodyData
+          if ( addMissingFields ) {
+            convertedBodyData = await gen.utils.addMissingUserProfileDataToRequestBody( 
+              updatedBodyData, 
+              userProfile.data, 
+              formData[0].value 
+            );
+          }
+        }
+
+        return resolve({
+          success : true,
+          data : ( convertedBodyData && Object.keys(convertedBodyData).length > 0 ) ? convertedBodyData : updatedBodyData
+        });
+
+      } catch(error) {
+        return resolve({
+          success : false,
+          status : error.status ? 
+          error.status : httpStatusCode['internal_server_error'].status,
+          message : error.message,
+          data : {}
+        })
+      }
+    })   
+  } 
 
 };
 

@@ -16,7 +16,7 @@ module.exports = {
     SUNBIRD_DIALCODE_STATUS : "/dialcode/v1/read",
     SUNBIRD_CONTENT_LINK : "/dialcode/v1/content/link",
     SUNBIRD_PUBLISH_CONTENT : "/v1/content/v1/publish",
-    USER_READ : "/api/user/v1/read",
+    USER_READ : "/v5/user/read",
     SUNBIRD_INDEX_SYNC : "/data/v1/index/sync",
     SUNBIRD_CREATE_CONTENT : "/content/v1/create",
     SUNBIRD_UPLOAD_CONTENT : "/content/v1/upload",

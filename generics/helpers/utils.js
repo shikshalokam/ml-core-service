@@ -273,6 +273,123 @@ function checkIfStringIsNumber(str) {
   return /^[0-9]+$/.test(str);
 }
 
+/**
+  * convert user data for program targeting.
+  * @function
+  * @name convertUserRoleAndLocationData
+  * @param {Object} userReqBody 
+  * @returns {Object} returns the converted req body
+*/
+
+function convertUserRoleAndLocationData( bodyData ) {
+
+  if ( bodyData.entities ) {
+    return bodyData;
+  }
+
+  let convertedData = {};
+  convertedData.entities = _.omit(bodyData,["role"]);
+  if ( bodyData.role ) {
+    convertedData.roles = bodyData.role;
+  }
+
+  return convertedData;
+  
+}
+
+/**
+   * convert userData or not
+   * @method
+   * @name convertUserDatarNot 
+   * @param {String} appVersion - app Version.
+   * @returns {Boolean} - true or false
+*/
+
+function convertUserDataorNot( appVersion ) {
+
+  let appVer = appVersion.split('.',2).join('.');
+  let appVersionNo = Number(appVer);
+  if ( !isNaN(appVersionNo) && appVersionNo < 5.1 ) {
+      return true
+  } else {
+      return false
+  }
+
+}
+
+/**
+  * add missing user data for program targeting.
+  * @function
+  * @name addMissingUserProfileDataToRequestBody
+  * @param {Object} userReqBody 
+  * @returns {Object} returns the converted req body
+*/
+
+function addMissingUserProfileDataToRequestBody( bodyData, userProfile, formData ) {
+  
+  let missingFields = {};
+  let keysInBodyData = Object.keys(bodyData);
+
+  if ( userProfile && Object.keys(userProfile).length > 0 && 
+      formData && formData.length > 0 
+  ) {
+      //loop all form fields
+      for ( let pointerToform = 0; pointerToform < formData.length; pointerToform++ ) {
+        let currentFormValue = formData[pointerToform];
+        //check requestKey exist in bodyData
+        let keyExistInReqBody = currentFormValue.requestKey.some(key => keysInBodyData.includes(key))
+      
+        if ( !keyExistInReqBody ) {
+          //add from userProfile
+          let api = currentFormValue.api;
+          if ( api && 
+            api.name === constants.common.USER_PROFILE && 
+            api.responseSchema &&
+            Object.keys(api.responseSchema).length > 0 
+          ) {
+              if ( api.responseSchema.path === constants.common.ROOT &&
+              api.responseSchema.key != "" && 
+              api.responseSchema.projection && 
+              api.responseSchema.projection.length > 0
+              ) {
+
+                if ( userProfile[api.responseSchema.key] ) {
+                
+                  for ( let pointerToProjection = 0 ; pointerToProjection < api.responseSchema.projection.length; pointerToProjection++ ) {
+                  
+                    let eachProjection = api.responseSchema.projection[pointerToProjection];
+
+                    if ( userProfile[api.responseSchema.key] && userProfile[api.responseSchema.key].length > 0 ) {
+                      
+                      missingFields[currentFormValue.scopeKey] = [];
+                      
+                      for ( let pointerToItem = 0; pointerToItem < userProfile[api.responseSchema.key].length; pointerToItem++ ) {
+                        
+                        let currentItem = userProfile[api.responseSchema.key][pointerToItem];
+
+                        if ( currentItem[eachProjection] ) {
+                          missingFields[currentFormValue.scopeKey].push(currentItem[eachProjection]);
+                        }
+                      }
+                    }
+                  }
+                } 
+                
+              }
+            }
+
+        }
+      }
+    }
+  
+  if ( missingFields && Object.keys(missingFields).length > 0 ) {
+    Object.assign(bodyData, missingFields);
+  }
+
+  return bodyData;
+  
+}
+
 module.exports = {
   camelCaseToTitleCase : camelCaseToTitleCase,
   lowerCase : lowerCase,
@@ -290,5 +407,8 @@ module.exports = {
   md5Hash : md5Hash,
   filterLocationIdandCode : filterLocationIdandCode,
   arrayIdsTobjectIds : arrayIdsTobjectIds,
-  checkIfStringIsNumber : checkIfStringIsNumber
+  checkIfStringIsNumber : checkIfStringIsNumber,
+  convertUserDataorNot : convertUserDataorNot,
+  convertUserRoleAndLocationData : convertUserRoleAndLocationData,
+  addMissingUserProfileDataToRequestBody : addMissingUserProfileDataToRequestBody
 };
