@@ -136,7 +136,7 @@ module.exports = class CertificateTemplates extends Abstract {
         });
     }
 
-     /**
+    /**
     * @api {post} /kendra/api/v1/certificateTemplates/uploadCertificateTemplate
     * @apiVersion 1.0.0
     * @apiName upload certificate template
@@ -176,7 +176,8 @@ module.exports = class CertificateTemplates extends Abstract {
                 await certificateTemplateHelper.uploadToCloud( 
                     req.files,
                     req.params._id, 
-                    req.userDetails ? req.userDetails.userId : "" 
+                    req.userDetails ? req.userDetails.userId : "",
+                    req.query.updateTemplate ? req.query.updateTemplate : true
                 );
                 return resolve({
                     message: constants.apiResponses.FILE_UPLOADED,
@@ -189,6 +190,49 @@ module.exports = class CertificateTemplates extends Abstract {
 
                 });
             }
+        } catch (error) {
+            return reject({
+            status: error.status || httpStatusCode.internal_server_error.status,
+            message: error.message || httpStatusCode.internal_server_error.message,
+            errorObject: error
+            });
+        }
+        });
+    }
+    /**
+    * @api {post} /kendra/api/v1/certificateTemplates/editSvg
+    * @apiVersion 1.0.0
+    * @apiName edit certificate template svg
+    * @apiGroup editSvg
+    * @apiHeader {String} internal-access-token - internal access token  
+    * @apiHeader {String} X-authenticated-user-token - Authenticity token
+    * @apiSampleRequest /kendra/api/v1/certificateTemplates/editSvg?baseTemplateFilePath=certificateTemplates/Base_template/ba9aa220-ff1b-4717-b6ea-ace55f04fc16_22-10-2022-1669118494135.svg
+    * @apiUse successBody
+    * @apiUse errorBody
+    * @apiParamExample {json} Response:
+    *   {
+            "message": "Template edited successfully",
+            "status": 200,
+            "result": {
+                "url": "https://sunbirdstagingpublic.blob.core.windows.net/samiksha/certificateTemplates/BASE_TEMPLATE/_22-10-2022-1669120782574.svg?sv=2020-10-02&st=2022-11-22T12%3A39%3A42Z&se=2023-11-22T12%3A49%3A42Z&sr=b&sp=rw&sig=gLnKb1T32swAQQ%2Bgtaaa967d6c0GIL%2FGRcGCwjvpI30%3D"
+        }
+}
+    */
+
+    /**
+     * generate cettificate templateSvg.
+     * @method
+     * @name editSvg
+     * @param {Object} req - requested data.
+     * @returns {JSON} -svg uploaded details.
+    */
+
+     async editSvg(req) {
+        return new Promise(async (resolve, reject) => {
+        try {
+
+            let svgData = await certificateTemplateHelper.editSvg(req.files, req.body,  req.query.baseTemplateFilePath);
+            return resolve(svgData);
         } catch (error) {
             return reject({
             status: error.status || httpStatusCode.internal_server_error.status,
