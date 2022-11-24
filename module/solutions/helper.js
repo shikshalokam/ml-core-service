@@ -817,7 +817,6 @@ module.exports = class SolutionsHelper {
         if( !queryData.success ) {
           return resolve(queryData);
         }
-
         queryData.data["_id"] = solutionId;
         let targetedSolutionDetails = 
         await this.solutionDocuments(
@@ -836,7 +835,8 @@ module.exports = class SolutionsHelper {
             "entityTypeId",
             "language",
             "creator",
-            "link"
+            "link",
+            "certificateTemplateId"
           ]
         );
         
