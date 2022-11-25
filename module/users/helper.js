@@ -572,14 +572,18 @@ module.exports = class UsersHelper {
    * @returns {Array} - Get user targeted programs.
    */
 
-  static programs(bodyData, pageNo, pageSize, searchText) {
+  static programs( bodyData, pageNo, pageSize, searchText, appVersion, userId = "", userToken = "" ) {
     return new Promise(async (resolve, reject) => {
       try {
+
         let targetedProgrms = await programsHelper.forUserRoleAndLocation(
           bodyData,
           pageSize,
           pageNo,
-          searchText
+          searchText,
+          appVersion, 
+          userId, 
+          userToken
         );
 
         if (!targetedProgrms.success) {
@@ -596,6 +600,7 @@ module.exports = class UsersHelper {
           message: constants.apiResponses.USER_TARGETED_PROGRAMS_FETCHED,
           data: targetedProgrms.data
         });
+
       } catch (error) {
         return resolve({
           success: false,

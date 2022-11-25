@@ -5,7 +5,6 @@
  * Description : Solution related helper functionality.
  */
 
-const FormHelper = require("../forms/helper");
 
 // Dependencies
 const programsHelper = require(MODULES_BASE_PATH + "/programs/helper");
@@ -17,6 +16,7 @@ const improvementProjectService = require(ROOT_PATH + '/generics/services/improv
 const appsPortalBaseUrl = process.env.APP_PORTAL_BASE_URL + "/" ;
 const userExtensionsHelperV2 = require(MODULES_BASE_PATH + "/user-extension/helperv2");
 const userService = require(ROOT_PATH + "/generics/services/users");
+const formHelper = require(MODULES_BASE_PATH + "/forms/helper");
 
 /**
     * SolutionsHelper
@@ -527,8 +527,8 @@ module.exports = class SolutionsHelper {
             userToken
           );
 
-          if( !convertedBodyData.success ) {
-            bodyData = convertedBodyData
+          if( convertedBodyData.success ) {
+            bodyData = convertedBodyData.data
           }
   
           let queryData = await this.queryBasedOnRoleAndLocation(
@@ -632,26 +632,47 @@ module.exports = class SolutionsHelper {
     return new Promise(async (resolve, reject) => {
       try {
 
+        let filterQuery = {
+          "isReusable" : false,
+          "isDeleted" : false
+        };
+
         let registryIds = [];
         let entityTypes = [];
+        //entities exist in data
+        if ( data.entities ) {
+          Object.keys(data.entities).forEach( requestedDataKey => {
+            registryIds.push(data.entities[requestedDataKey]);
+            entityTypes.push(requestedDataKey);
+          })
+        }
 
-        Object.keys(_.omit(data,["filter","role"])).forEach( requestedDataKey => {
-          registryIds.push(data[requestedDataKey]);
-          entityTypes.push(requestedDataKey);
-        })
         if( !registryIds.length > 0 ) {
           throw {
             message : constants.apiResponses.NO_LOCATION_ID_FOUND_IN_DATA
           }
         }
-        
-        let filterQuery = {
-          "scope.roles.code" : { $in : [constants.common.ALL_ROLES,...data.role.split(",")] },
-          "scope.entities" : { $in : registryIds },
-          "scope.entityType" : { $in : entityTypes },
-          "isReusable" : false,
-          "isDeleted" : false
-        };
+
+        filterQuery["scope.entities"] = { $in : registryIds };
+        filterQuery["scope.entityType"] = { $in : entityTypes };
+
+        //role exist in data
+        if ( data.roles ) {
+          if ( typeof(data["roles"]) === constants.common.STRING ) {
+            filterQuery["scope.roles"] = { $in : [constants.common.ALL_ROLES,...data.roles.split(",")] };
+          } else {
+            filterQuery["scope.roles"] = { $in : [constants.common.ALL_ROLES,...data[roles]] };
+          }
+        }
+
+        //for all other keys except entities and roles
+        Object.keys(_.omit(data,["entities", "roles"])).forEach( dataKey => {
+          if ( typeof(data[dataKey]) === constants.common.STRING ) {
+            filterQuery["scope."+dataKey] = { $in : [data[dataKey].split(",")] };
+          } else {
+            filterQuery["scope."+dataKey] = { $in : data[dataKey] };
+          }
+        });
 
         if( type === constants.common.SURVEY ) {
 
@@ -724,8 +745,8 @@ module.exports = class SolutionsHelper {
           userToken
         );
 
-        if( !convertedBodyData.success ) {
-          bodyData = convertedBodyData
+        if( convertedBodyData.success ) {
+          bodyData = convertedBodyData.data
         }
 
         let queryData = await this.queryBasedOnRoleAndLocation(bodyData);
@@ -735,8 +756,9 @@ module.exports = class SolutionsHelper {
         }
 
         queryData.data["_id"] = solutionId;
+        
         let targetedSolutionDetails = 
-        await this.solutionDocuments(
+          await this.solutionDocuments(
           queryData.data,
           [
             "name",
@@ -755,14 +777,14 @@ module.exports = class SolutionsHelper {
             "link"
           ]
         );
-        
+
         if( !targetedSolutionDetails.length > 0 ) {
           throw {
             status : httpStatusCode["bad_request"].status,
             message : constants.apiResponses.SOLUTION_NOT_FOUND
           }
         }
-      
+        
         return resolve({
           success: true,
           message: constants.apiResponses.TARGETED_SOLUTIONS_FETCHED,
@@ -1979,7 +2001,7 @@ module.exports = class SolutionsHelper {
         //check and update the missing fields in bodyData from profile
         if ( userId !== "" && userToken !== "" ) {
           //fetch scope form 
-          let formData = await FormHelper.formsDocument(
+          let formData = await formHelper.formsDocument(
             {
                 name : constants.common.SCOPE_FORM_NAME
             },["value"]

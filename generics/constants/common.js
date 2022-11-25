@@ -75,5 +75,7 @@ module.exports = {
   "ORACLE_CLOUD_SERVICE" : "OCI",
   "SCOPE_FORM_NAME" : "scope",
   "USER_PROFILE" : "userProfile",
-  "ROOT" : "root"
+  "ROOT" : "root",
+  "SUB_TYPE" : "subType",
+  "STRING" : "string"
 };

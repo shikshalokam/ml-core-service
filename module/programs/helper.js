@@ -11,6 +11,7 @@ const entityTypesHelper = require(MODULES_BASE_PATH + "/entityTypes/helper");
 const entitiesHelper = require(MODULES_BASE_PATH + "/entities/helper");
 const userRolesHelper = require(MODULES_BASE_PATH + "/user-roles/helper");
 const userService = require(ROOT_PATH + "/generics/services/users");
+const formHelper = require(MODULES_BASE_PATH + "/forms/helper");
 
 /**
     * ProgramsHelper
@@ -405,16 +406,27 @@ module.exports = class ProgramsHelper {
    * @returns {JSON} - List of programs based on role and location.
    */
 
-  static forUserRoleAndLocation( bodyData, pageSize, pageNo,searchText = "" ) {
+  static forUserRoleAndLocation( bodyData, pageSize, pageNo, searchText = "", appVersion, userId = "", userToken = "" ) {
 
     return new Promise(async (resolve, reject) => {
 
       try {
 
+        let convertedBodyData = await this.checkForConvertBodyData(
+          bodyData, 
+          appVersion, 
+          userId, 
+          userToken
+        );
+
+        if ( convertedBodyData.success ) {
+          bodyData = convertedBodyData.data
+        }
+
         let queryData = await this.queryBasedOnRoleAndLocation(
           bodyData
         );
-        
+
         if( !queryData.success ) {
           return resolve(queryData);
         }
@@ -468,7 +480,6 @@ module.exports = class ProgramsHelper {
         });
 
       } catch (error) {
-
         return resolve({
           success : false,
           message : error.message,
@@ -491,24 +502,44 @@ module.exports = class ProgramsHelper {
   static queryBasedOnRoleAndLocation( data ) {
     return new Promise(async (resolve, reject) => {
       try {
-        
-        let locationIds = 
-        Object.values(_.omit(data,["role","filter"])).map(locationId => {
-          return locationId;
-        });
+
+        let filterQuery = {
+          "isDeleted" : false,
+          status : constants.common.ACTIVE
+        };
+
+        let locationIds = [];
+        if ( data.entities ) {
+          Object.keys(data.entities).forEach( requestedDataKey => {
+            locationIds.push(data.entities[requestedDataKey]);
+          })
+        }
+
         if( !locationIds.length > 0 ) {
           throw {
             message : constants.apiResponses.NO_LOCATION_ID_FOUND_IN_DATA
           }
         }
 
-       
-        let filterQuery = {
-          "scope.roles.code" : { $in : [constants.common.ALL_ROLES,...data.role.split(",")] },
-          "scope.entities" : { $in : locationIds },
-          "isDeleted" : false,
-          status : constants.common.ACTIVE
+        filterQuery["scope.entities"] = { $in : locationIds };
+
+        //role exist in data
+        if ( data.roles ) {
+          if ( typeof(data["roles"]) === constants.common.STRING ) {
+            filterQuery["scope.roles"] = { $in : [constants.common.ALL_ROLES,...data.roles.split(",")] };
+          } else {
+            filterQuery["scope.roles"] = { $in : [constants.common.ALL_ROLES,...data[roles]] };
+          }
         }
+
+        //for all other keys except entities and roles
+        Object.keys(_.omit(data,["entities", "roles"])).forEach( dataKey => {
+          if ( typeof(data[dataKey]) === constants.common.STRING ) {
+            filterQuery["scope."+dataKey] = { $in : [data[dataKey].split(",")] };
+          } else {
+            filterQuery["scope."+dataKey] = { $in : data[dataKey] };
+          }
+        });
 
         if( data.filter && Object.keys(data.filter).length > 0 ) {
 
@@ -895,6 +926,81 @@ module.exports = class ProgramsHelper {
         });
       }
     });
+  }
+
+  /**
+   * Check For update data
+   * @method
+   * @name checkForConvertBodyData
+   * @param {Object} bodyData - Requested body data.
+   * @param {String} appVersion - app version.
+   * @param {String} userId - user id.
+   * @returns {JSON} - Converted Body Data.
+   */
+  
+   static checkForConvertBodyData( bodyData, appVersion = "", userId = "", userToken = "" ) {
+    return new Promise(async (resolve, reject) => {
+      try {
+
+        let updatedBodyData = {};
+        let convertedBodyData = {};
+
+        if ( !appVersion ) {
+          //convert the data if appVersion is not present
+          updatedBodyData = await gen.utils.convertUserRoleAndLocationData(bodyData);
+        } else {
+          //check the bodyData need to convert or not
+          let convertUserDataorNot = await gen.utils.convertUserDataorNot(appVersion);
+          if ( convertUserDataorNot ) {
+            //update bodyData
+            updatedBodyData = await gen.utils.convertUserRoleAndLocationData(bodyData);
+          } else {
+            updatedBodyData = bodyData;
+          }
+        }
+
+        let addMissingFields = false;
+        //check and update the missing fields in bodyData from profile
+        if ( userId !== "" && userToken !== "" ) {
+          //fetch scope form 
+          let formData = await formHelper.formsDocument(
+            {
+                name : constants.common.SCOPE_FORM_NAME
+            },["value"]
+          );
+
+          //fetch userProfile
+          let userProfile = await userService.profile( userToken, userId ); 
+        
+          if ( formData.length > 0 && userProfile.success ) {
+            addMissingFields = true;
+          }
+ 
+          //add missing fields to bodyData
+          if ( addMissingFields ) {
+            convertedBodyData = await gen.utils.addMissingUserProfileDataToRequestBody( 
+              updatedBodyData, 
+              userProfile.data, 
+              formData[0].value 
+            );
+          }
+        }
+
+        return resolve({
+          success : true,
+          data : ( convertedBodyData && Object.keys(convertedBodyData).length > 0 ) ? convertedBodyData : updatedBodyData
+        });
+
+      } catch(error) {
+        return resolve({
+          success : false,
+          status : error.status ? 
+          error.status : httpStatusCode['internal_server_error'].status,
+          message : error.message,
+          data : {}
+        })
+      }
+    })   
   } 
 
 };

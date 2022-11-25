@@ -351,35 +351,36 @@ module.exports = class Users extends Abstract {
 
         try {
 
-          let isAPrivateProgram = gen.utils.convertStringToBoolean(req.query.isAPrivateProgram);
+            let isAPrivateProgram = gen.utils.convertStringToBoolean(req.query.isAPrivateProgram);
 
-          if(isAPrivateProgram){
+            if ( isAPrivateProgram ) {
 
-            let programsData = await usersHelper.privatePrograms(req.userDetails.userId);
-            return resolve(programsData);
+                let programsData = await usersHelper.privatePrograms(req.userDetails.userId);
+                return resolve(programsData);
 
-          } else {
+            } else {
             
-            let programs = 
-              await usersHelper.programs( 
-                  req.body,
-                  req.pageNo,
-                  req.pageSize,
-                  req.searchText
-              );
+                let programs = 
+                await usersHelper.programs( 
+                    req.body,
+                    req.pageNo,
+                    req.pageSize,
+                    req.searchText,
+                    req.headers["x-app-ver"] ? req.headers["x-app-ver"] : req.headers.appversion ? req.headers.appversion : "",
+                    req.userDetails.userId,
+                    req.userDetails.userToken
+                );
 
-              programs.result = programs.data;
-              return resolve(programs);
+                programs.result = programs.data;
+                return resolve(programs);
 
-          }
+            }
           
         } catch (error) {
-
             return reject({
                 status: 
                 error.status || 
                 httpStatusCode["internal_server_error"].status,
-
                 message: 
                 error.message || 
                 httpStatusCode["internal_server_error"].message
