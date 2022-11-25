@@ -309,7 +309,7 @@ function convertUserDataorNot( appVersion ) {
 
   let appVer = appVersion.split('.',2).join('.');
   let appVersionNo = Number(appVer);
-  if ( !isNaN(appVersionNo) && appVersionNo < 5.1 ) {
+  if ( !isNaN(appVersionNo) && appVersionNo <= 5.1 ) {
       return true
   } else {
       return false
@@ -342,6 +342,7 @@ function addMissingUserProfileDataToRequestBody( bodyData, userProfile, formData
         if ( !keyExistInReqBody ) {
           //add from userProfile
           let api = currentFormValue.api;
+          //if api is userProfile
           if ( api && 
             api.name === constants.common.USER_PROFILE && 
             api.responseSchema &&
@@ -358,16 +359,18 @@ function addMissingUserProfileDataToRequestBody( bodyData, userProfile, formData
                   for ( let pointerToProjection = 0 ; pointerToProjection < api.responseSchema.projection.length; pointerToProjection++ ) {
                   
                     let eachProjection = api.responseSchema.projection[pointerToProjection];
-
+                    //check key exist in api
                     if ( userProfile[api.responseSchema.key] && userProfile[api.responseSchema.key].length > 0 ) {
-                      
+                      //add the projection data to scopeKey
                       missingFields[currentFormValue.scopeKey] = [];
                       
                       for ( let pointerToItem = 0; pointerToItem < userProfile[api.responseSchema.key].length; pointerToItem++ ) {
                         
                         let currentItem = userProfile[api.responseSchema.key][pointerToItem];
-
-                        if ( currentItem[eachProjection] ) {
+                        //convert role to upper case
+                        if ( currentItem[eachProjection] && eachProjection === constants.common.SUB_TYPE) {
+                          missingFields[currentFormValue.scopeKey].push(currentItem[eachProjection].toUpperCase());
+                        } else {
                           missingFields[currentFormValue.scopeKey].push(currentItem[eachProjection]);
                         }
                       }
@@ -377,7 +380,6 @@ function addMissingUserProfileDataToRequestBody( bodyData, userProfile, formData
                 
               }
             }
-
         }
       }
     }
@@ -387,8 +389,9 @@ function addMissingUserProfileDataToRequestBody( bodyData, userProfile, formData
   }
 
   return bodyData;
-  
 }
+
+
 
 module.exports = {
   camelCaseToTitleCase : camelCaseToTitleCase,
