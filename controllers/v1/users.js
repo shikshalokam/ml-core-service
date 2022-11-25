@@ -11,6 +11,7 @@
  */
 
 const usersHelper = require(MODULES_BASE_PATH + "/users/helper.js");
+const solutionsHelper = require(MODULES_BASE_PATH + "/solutions/helper.js");
 
 /**
     * User
@@ -277,6 +278,8 @@ module.exports = class Users extends Abstract {
             req.pageSize,
             req.pageNo,
             req.searchText,
+            req.headers["x-app-ver"] ? req.headers["x-app-ver"] : req.headers.appversion ? req.headers.appversion : "",
+            req.userDetails.userId,
             req.userDetails.userToken
         );
 
@@ -284,7 +287,6 @@ module.exports = class Users extends Abstract {
         return resolve(targetedSolutions);
 
       } catch (error) {
-
         return reject({
             status: 
             error.status || 
@@ -505,7 +507,18 @@ module.exports = class Users extends Abstract {
         return new Promise(async (resolve, reject) => {
           try {
             
-            let roleArray = req.body.role.split(",");
+            let convertedBodyData = await solutionsHelper.checkForConvertBodyData(
+                req.body, 
+                req.headers["x-app-ver"] ? req.headers["x-app-ver"] : req.headers.appversion ? req.headers.appversion : "",
+                req.userDetails.userId,
+                req.userDetails.userToken
+            );
+
+            if( convertedBodyData.success ) {
+                req.body = convertedBodyData.data
+            }
+
+            let roleArray = req.body.roles.split(",");
             let targetedEntities = {};
 
             if ( roleArray.length === 1 ) {
