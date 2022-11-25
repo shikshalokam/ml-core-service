@@ -613,9 +613,9 @@ module.exports = class ProgramsHelper {
             });
           }
 
-          let roles = [];
+          let roleData = [];
           for ( const role of userRoles ) {
-            roles.push(role.code);
+            roleData.push(role.code);
           }
 
           await database.models.programs.findOneAndUpdate({
@@ -625,7 +625,7 @@ module.exports = class ProgramsHelper {
           },{ new : true }).lean();
 
           updateQuery["$addToSet"] = {
-            "scope.roles" : roles
+            "scope.roles" : { $each : roleData }
           }
 
         } else {
@@ -793,15 +793,15 @@ module.exports = class ProgramsHelper {
           });
         }
 
-        let roles = [];
+        let roleData = [];
         for ( const role of userRoles ) {
-          roles.push(role.code);
+          roleData.push(role.code);
         }
 
         let updateProgram = await database.models.programs.findOneAndUpdate({
           _id : programId
         },{
-          $pull : { "scope.roles" : { $in : roles } }
+          $pull : { "scope.roles" : { $in : roleData } }
         },{ new : true }).lean();
 
         if( !updateProgram || !updateProgram._id ) {

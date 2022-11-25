@@ -530,7 +530,7 @@ module.exports = class SolutionsHelper {
           if( convertedBodyData.success ) {
             bodyData = convertedBodyData.data
           }
-  
+
           let queryData = await this.queryBasedOnRoleAndLocation(
             bodyData,
             type,
@@ -541,7 +541,7 @@ module.exports = class SolutionsHelper {
           if( !queryData.success ) {
             return resolve(queryData);
           }
-  
+
           let matchQuery = queryData.data;
   
           if( type === "" && subType === "" ) {
@@ -576,7 +576,7 @@ module.exports = class SolutionsHelper {
           if ( programId !== "" ) {
             matchQuery["programId"] = ObjectId(programId);
           }
-          
+
           let targetedSolutions = await this.list(
             type,
             subType,
@@ -666,7 +666,7 @@ module.exports = class SolutionsHelper {
         }
 
         //for all other keys except entities and roles
-        Object.keys(_.omit(data,["entities", "roles"])).forEach( dataKey => {
+        Object.keys(_.omit(data,["entities", "roles","filter"])).forEach( dataKey => {
           if ( typeof(data[dataKey]) === constants.common.STRING ) {
             filterQuery["scope."+dataKey] = { $in : [data[dataKey].split(",")] };
           } else {
@@ -847,9 +847,9 @@ module.exports = class SolutionsHelper {
             });
           }
 
-          let roles = [];
+          let roleData = [];
           for ( const role of userRoles ) {
-            roles.push(role.code);
+            roleData.push(role.code);
           }
 
           await database.models.solutions.findOneAndUpdate({
@@ -857,7 +857,7 @@ module.exports = class SolutionsHelper {
           },{ $pull : { "scope.roles" : constants.common.ALL_ROLES }},{ new : true }).lean();
 
           updateQuery["$addToSet"] = {
-            "scope.roles" : { $each : roles } 
+            "scope.roles" : { $each : roleData } 
           };
 
         } else {
@@ -1056,9 +1056,9 @@ module.exports = class SolutionsHelper {
           });
         }
 
-        let roles = [];
+        let roleData = [];
         for ( const role of userRoles ) {
-          roles.push(role.code);
+          roleData.push(role.code);
         }
 
         let updateSolution = await database.models.solutions
@@ -1067,7 +1067,7 @@ module.exports = class SolutionsHelper {
               _id: solutionId,
             },
             {
-              $pull: { "scope.roles": { $in: roles } },
+              $pull: { "scope.roles": { $in: roleData } },
             },
             { new: true }
           )
@@ -1221,7 +1221,9 @@ module.exports = class SolutionsHelper {
     pageNo,
     search,
     filter,
-    surveyReportPage = ""
+    surveyReportPage = "",
+    appVersion = "",
+    userId
   ) {
     return new Promise(async (resolve, reject) => {
       try {
@@ -1319,7 +1321,10 @@ module.exports = class SolutionsHelper {
               "",
               constants.common.DEFAULT_PAGE_SIZE,
               constants.common.DEFAULT_PAGE_NO,
-              search
+              search,
+              appVersion,
+              userId, 
+              userToken
             ); 
       }
 
@@ -1512,7 +1517,7 @@ module.exports = class SolutionsHelper {
    * @returns {Object} - Details of the solution.
    */
 
-  static verifyLink(link = "", bodyData = {}, userId = "", userToken = "", createProject = true ) {
+  static verifyLink(link = "", bodyData = {}, userId = "", userToken = "", createProject = true, appVersion = "" ) {
     return new Promise(async (resolve, reject) => {
       try {
        
@@ -1526,8 +1531,10 @@ module.exports = class SolutionsHelper {
           link,
           bodyData,
           userId,
-          userToken
+          userToken,
+          appVersion
         );
+
         if( !checkForTargetedSolution || Object.keys(checkForTargetedSolution.result).length <= 0 ) {
           return resolve(checkForTargetedSolution);
         }
@@ -1738,7 +1745,8 @@ module.exports = class SolutionsHelper {
     link = "",
     bodyData = {},
     userId = "",
-    userToken = ""
+    userToken = "",
+    appVersion = ""
   ) {
     return new Promise(async (resolve, reject) => {
       try {
@@ -1755,6 +1763,18 @@ module.exports = class SolutionsHelper {
           "name",
           "projectTemplateId"
         ]);
+
+        //to convert the bodyData
+        let convertedBodyData = await this.checkForConvertBodyData(
+          bodyData, 
+          appVersion, 
+          userId, 
+          userToken
+        );
+
+        if( convertedBodyData.success ) {
+          bodyData = convertedBodyData.data
+        }
 
         let queryData = await this.queryBasedOnRoleAndLocation(bodyData);
         if ( !queryData.success ) {
@@ -2009,7 +2029,7 @@ module.exports = class SolutionsHelper {
 
           //fetch userProfile
           let userProfile = await userService.profile( userToken, userId ); 
-        
+          
           if ( formData.length > 0 && userProfile.success ) {
             addMissingFields = true;
           }

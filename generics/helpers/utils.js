@@ -288,9 +288,13 @@ function convertUserRoleAndLocationData( bodyData ) {
   }
 
   let convertedData = {};
-  convertedData.entities = _.omit(bodyData,["role"]);
+  convertedData.entities = _.omit(bodyData,["role","filter"]);
   if ( bodyData.role ) {
     convertedData.roles = bodyData.role;
+  }
+  
+  if ( bodyData.filter ) {
+    convertedData.filter = bodyData.filter;
   }
 
   return convertedData;
@@ -390,8 +394,6 @@ function addMissingUserProfileDataToRequestBody( bodyData, userProfile, formData
 
   return bodyData;
 }
-
-
 
 module.exports = {
   camelCaseToTitleCase : camelCaseToTitleCase,

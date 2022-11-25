@@ -219,10 +219,12 @@ module.exports = class Users extends Abstract {
   * @apiSampleRequest /kendra/api/v1/users/solutions/5ff438b04698083dbfab7284?page=1&limit=10
   * @apiParamExample {json} Request-Body:
   * {
-        "role" : "HM,DEO",
-   		"state" : "236f5cff-c9af-4366-b0b6-253a1789766a",
-        "district" : "1dcbc362-ec4c-4559-9081-e0c2864c2931",
-        "school" : "c5726207-4f9f-4f45-91f1-3e9e8e84d824"
+        "roles" : "HM,DEO",
+   		"entities": {
+            "state" : "236f5cff-c9af-4366-b0b6-253a1789766a",
+            "district" : "1dcbc362-ec4c-4559-9081-e0c2864c2931",
+            "school" : "c5726207-4f9f-4f45-91f1-3e9e8e84d824"
+        }
     }
   * @apiUse successBody
   * @apiUse errorBody
@@ -312,11 +314,13 @@ module.exports = class Users extends Abstract {
      * @apiUse errorBody
      * @apiParamExample {json} Request:
      * {
-        "role" : "HM,DEO",
-        "state" : "236f5cff-c9af-4366-b0b6-253a1789766a",
-        "district" : "1dcbc362-ec4c-4559-9081-e0c2864c2931",
-        "school" : "c5726207-4f9f-4f45-91f1-3e9e8e84d824"
-      }
+        "roles" : "HM,DEO",
+   		"entities": {
+            "state" : "236f5cff-c9af-4366-b0b6-253a1789766a",
+            "district" : "1dcbc362-ec4c-4559-9081-e0c2864c2931",
+            "school" : "c5726207-4f9f-4f45-91f1-3e9e8e84d824"
+        }
+    }
       * @apiParamExample {json} Response:
       * {
       * "message": "Users programs fetched successfully",
@@ -474,10 +478,12 @@ module.exports = class Users extends Abstract {
     * @apiGroup Users
     * @apiParamExample {json} Request-Body:
     * {
-        "state" : "bc75cc99-9205-463e-a722-5326857838f8",
-        "district" : "b54a5c6d-98be-4313-af1c-33040b1703aa",
-        "school" : "2a128c91-a5a2-4e25-aa21-3d9196ad8203",
-        "role" : "DEO,HM"
+        "roles" : "HM,DEO",
+   		"entities": {
+            "state" : "236f5cff-c9af-4366-b0b6-253a1789766a",
+            "district" : "1dcbc362-ec4c-4559-9081-e0c2864c2931",
+            "school" : "c5726207-4f9f-4f45-91f1-3e9e8e84d824"
+        }
     }
     * @apiHeader {String} X-authenticated-user-token Authenticity token
     * @apiSampleRequest /kendra/api/v1/users/targetedEntity/601d41607d4c835cf8b724ad
