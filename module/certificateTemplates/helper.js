@@ -5,10 +5,10 @@
  * Description : Certificate Template related helper functionality.
 */
 // dependencies
-const filesHelpers = require(ROOT_PATH+"/module/cloud-services/files/helper");
 const request = require("request");
-
-const { ObjectId } = require("mongodb");
+let fs = require('fs');
+const cheerio = require('cheerio');
+const filesHelpers = require(ROOT_PATH+"/module/cloud-services/files/helper");
 
 /**
     * CertificateTemplatesHelper
@@ -98,7 +98,7 @@ module.exports = class CertificateTemplatesHelper {
 
   /**
    * upload certificate template.
-   * @method uploadToCloud
+   * @method 
    * @name uploadToCloud
    * @param {Object} fileData - file to upload.
    * @param {String} templateId - templateId.
@@ -106,7 +106,7 @@ module.exports = class CertificateTemplatesHelper {
    * @returns {JSON} Uploaded certificate template details. 
   */
   
-  static uploadToCloud(fileData, templateId, userId = "") {
+  static uploadToCloud(fileData, templateId, userId = "", updateTemplate) {
     return new Promise(async (resolve, reject) => {
         try {
           const now = new Date();
@@ -132,37 +132,44 @@ module.exports = class CertificateTemplatesHelper {
             signedUrl.data.templates.files[0].url &&
             signedUrl.data.templates.files[0].url !== ""
           ) {
-             
             let fileUploadUrl = signedUrl.data.templates.files[0].url;
             let file = fileData.file.data;
            
             try { 
-                await request({
-                  url: fileUploadUrl,
-                  method: 'put',
-                  headers: {
-                      "x-ms-blob-type" : "BlockBlob",
-                      "Content-Type": "multipart/form-data"
-                    },
-                  body: file
-                })
+              await request({
+                url: fileUploadUrl,
+                method: 'put',
+                headers: {
+                    "x-ms-blob-type" : "BlockBlob",
+                    "Content-Type": "multipart/form-data"
+                  },
+                body: file
+              })
+              let updateCertificateTemplate = {};
+              if (updateTemplate === true) {
                 //  Update certificate template url in certificateTemplates collection
-                let updateCertificateTemplate = await this.update(
+                updateCertificateTemplate = await this.update(
                   templateId,
                   { 
                     // certificateTemplates/6343bd978f9d8980b7841e85/ba9aa220-ff1b-4717-b6ea-ace55f04fc16_2022-9-10-1665383945769.svg
                     templateUrl : signedUrl.data.templates.files[0].payload.sourcePath
                   }
                 );
-                
                 return resolve({
-                    success: true,
-                    data: {
-                      templateId: updateCertificateTemplate.data.id,
-                      templateUrl: signedUrl.data.templates.files[0].payload.sourcePath
-                    }
+                  success: true,
+                  data: {
+                    templateId: updateCertificateTemplate.data.id,
+                    templateUrl: signedUrl.data.templates.files[0].payload.sourcePath
+                  }
                 })
-                
+              }
+              return resolve({
+                success: true,
+                data: {
+                  templateUrl: signedUrl.data.templates.files[0].payload.sourcePath
+                }
+              })
+                             
             } catch (error) {
               return reject(error);
             }
@@ -177,4 +184,111 @@ module.exports = class CertificateTemplatesHelper {
         }
     });    
   }
+
+  /**
+   * create svg template by editing base template.
+   * @method 
+   * @name editSvg
+   * @param {Object} files - file to replace.
+   * @param {Object} textData - texts to edit.
+   * @param {String} templateUrl - Base template filepath.
+   * @returns {JSON} Uploaded certificate template details. 
+  */
+  static editSvg( files, textData, templateUrl ) {
+    return new Promise(async (resolve, reject) => {
+        try {
+          // getDownloadable url of svg file that we are using as template
+          let baseTemplateDownloadableUrl = await filesHelpers.getDownloadableUrl([templateUrl]);
+          let baseTemplate = await getBaseTemplate( baseTemplateDownloadableUrl.result[0].url)
+          if ( !baseTemplate.success ) {
+            throw {
+              message: constants.apiResponses.BASE_CERTIFICATE_TEMPLATE_NOT_FOUND
+            }
+          }
+          // load Base template svg elements
+          const $ = cheerio.load(baseTemplate.result);
+          let htmltags = ["<html>","</html>","<head>","</head>","<body>","</body>"];
+          let imageNames = ["stateLogo1","stateLogo2","signatureImg1","signatureImg2"];
+          let textKeys = ["stateTitle","signatureTitle1a","signatureTitle2a"];
+
+          // edit image elements
+          for ( let imageNamesIndex = 0; imageNamesIndex < imageNames.length; imageNamesIndex++ ) {
+
+            if ( files[imageNames[imageNamesIndex]] && files[imageNames[imageNamesIndex]]['data'] && files[imageNames[imageNamesIndex]]['data'] != "" ) {
+              let data = files[imageNames[imageNamesIndex]]['data'];
+              let imageData = 'data:image/png;base64,' + data.toString('base64');
+              const element = $('#' + imageNames[imageNamesIndex]);
+              element.attr('href',imageData);
+            }
+
+          }
+
+          // edit text elements
+          for ( let textKeysIndex = 0; textKeysIndex < textKeys.length; textKeysIndex++ ) {
+
+            if ( textData[textKeys[textKeysIndex]] ) {
+              let updateText = textData[textKeys[textKeysIndex]];
+              const element = $('#' + textKeys[textKeysIndex]);
+              element.text(updateText);
+            }
+          }
+          let updatedSvg = $.html();
+
+          // remove html tags- svg file does not require these tags 
+          for ( let index = 0; index < htmltags.length; index++ ) {
+              updatedSvg = updatedSvg.replace( htmltags[index], "" );
+          }
+
+          // file data to upload to cloud
+          let fileData = {
+            file : {
+              data: updatedSvg
+            }
+          };
+          // upload new svg created from base template to cloud
+          const uploadTemplate = await this.uploadToCloud(fileData, "BASE_TEMPLATE", "", false )
+          if ( !uploadTemplate.success ) {
+            throw {
+              message : constants.apiResponses.COULD_NOT_UPLOAD_CONTENT
+            }
+          }
+
+          // getDownloadable url of uploaded template
+          let downloadableUrl = await filesHelpers.getDownloadableUrl([uploadTemplate.data.templateUrl]);
+          return resolve({
+            message: "Template edited successfully",
+            result: {
+              url: downloadableUrl.result[0].url
+            }
+          });
+        } catch (error) {
+            return reject(error);
+        }
+    })
+  }
+
+}
+
+// Function to fetch data information from cloud using downloadable Url
+const getBaseTemplate = function ( templateUrl ) {
+  return new Promise(async (resolve, reject) => {
+      try {
+        request.get(templateUrl, function (error, response, body) {
+          if (!error && response.statusCode == 200) {
+              
+            return resolve({
+              success: true,
+              result: body
+            });
+          } else {
+            throw {
+              success: false
+            }
+          }
+        });
+          
+      } catch (error) {
+          return reject(error);
+      }
+  })
 }
