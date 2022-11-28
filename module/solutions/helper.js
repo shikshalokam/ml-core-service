@@ -693,7 +693,8 @@ module.exports = class SolutionsHelper {
               "endDate",
               "link",
               "referenceFrom",
-              "entityType"
+              "entityType",
+              "certificateTemplateId"
             ]  
           );
           
