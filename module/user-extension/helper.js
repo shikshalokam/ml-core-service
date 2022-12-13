@@ -667,7 +667,9 @@ module.exports = class UserExtensionHelper {
                     "name",
                     "type",
                     "subType",
-                    "isRubricDriven"
+                    "isRubricDriven",
+                    "scoringSystem",
+                    "criteriaLevelReport"
                 ]);
        
                 return resolve({
