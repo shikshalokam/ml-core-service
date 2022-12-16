@@ -77,5 +77,69 @@ module.exports = class FormHelper {
         }
     });
   }
+
+  /**
+   * Form Create.
+   * @method
+   * @name create
+   * @param {Object} - Form data.
+   * @returns {Object} form data.
+   */
+  
+   static create( data ) {
+    return new Promise(async (resolve, reject) => {
+        try {
+
+            let createForm = await database.models.forms.create(data);
+
+            return resolve({
+                message : constants.apiResponses.FORM_CREATED_SUCCESSFULLY,
+                data : {
+                  id : createForm._id
+                }
+              });
+            
+        } catch (error) {
+            return reject(error);
+        }
+    });
+  }
+
+  /**
+   * Form Update.
+   * @method
+   * @name update
+   * @param {Object} - Form data.
+   * @param {String} formName - form name.
+   * @returns {Object} form data.
+   */
+  
+   static update( formName, data ) {
+    return new Promise(async (resolve, reject) => {
+        try {
+
+            let message = constants.apiResponses.FORM_UPDATED_SUCCESSFULLY;
+            let updateObject = {
+                "$set" : {}
+            };
+            updateObject["$set"]["value"] = data.value;
+
+            let updateForm = await database.models.forms.findOneAndUpdate({name : formName},updateObject);
+            
+            if ( !updateForm ) {
+                throw {
+                    message : constants.apiResponses.FAILED_TO_UPDATE_FORM
+                }
+            }
+            
+            return resolve({
+                message : message
+            });
+            
+        } catch (error) {
+            return reject(error);
+        }
+    });
+  }
   
 }

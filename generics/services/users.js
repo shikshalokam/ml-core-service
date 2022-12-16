@@ -9,14 +9,14 @@
 const request = require('request');
 const userServiceUrl = process.env.USER_SERVICE_URL;
 
-const profile = function ( token,userId = "" ) {
+const profile = function ( token, userId = "" ) {
     return new Promise(async (resolve, reject) => {
         try {
 
             let url = userServiceUrl + constants.endpoints.USER_READ;
 
             if( userId !== "" ) {
-                url = url + "/" + userId;
+                url = url + "/" + userId + "?"  + "fields=organisations,roles,locations,declarations,externalIds"
             }
 
             const options = {

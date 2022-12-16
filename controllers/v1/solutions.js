@@ -209,10 +209,13 @@ module.exports = class Solutions extends Abstract {
     * @apiGroup Solutions
     * @apiParamExample {json} Request-Body:
     * {
-        "role" : "HM,DEO",
-   		  "state" : "236f5cff-c9af-4366-b0b6-253a1789766a",
-        "district" : "1dcbc362-ec4c-4559-9081-e0c2864c2931",
-        "school" : "c5726207-4f9f-4f45-91f1-3e9e8e84d824",
+        "roles" : "HM,DEO",
+   		  "entities": {
+          "block": "81ca90fa-e38b-4d5d-858a-20ae5b402438",
+          "district": "b5c35cfc-6c1e-4266-94ef-a425c43c7f4e",
+          "state": "bc75cc99-9205-463e-a722-5326857838f8",
+          "school": "28236605304"
+        },
         "filter" : {}
       }
     * @apiHeader {String} X-authenticated-user-token Authenticity token
@@ -255,7 +258,10 @@ module.exports = class Solutions extends Abstract {
           req.query.programId ? req.query.programId : "",
           req.pageSize,
           req.pageNo,
-          req.searchText
+          req.searchText,
+          req.headers["x-app-ver"] ? req.headers["x-app-ver"] : req.headers.appversion ? req.headers.appversion : "",
+          req.userDetails.userId,
+          req.userDetails.userToken
         );
           
         targetedSolutions["result"] = targetedSolutions.data;
@@ -278,10 +284,13 @@ module.exports = class Solutions extends Abstract {
     * @apiGroup Solutions
     * @apiParamExample {json} Request-Body:
     * {
-        "role" : "HM,DEO",
-   		  "state" : "236f5cff-c9af-4366-b0b6-253a1789766a",
-        "district" : "1dcbc362-ec4c-4559-9081-e0c2864c2931",
-        "school" : "c5726207-4f9f-4f45-91f1-3e9e8e84d824"
+        "roles" : "HM,DEO",
+   		  "entities": {
+          "block": "81ca90fa-e38b-4d5d-858a-20ae5b402438",
+          "district": "b5c35cfc-6c1e-4266-94ef-a425c43c7f4e",
+          "state": "bc75cc99-9205-463e-a722-5326857838f8",
+          "school": "28236605304"
+        }
       }
     * @apiHeader {String} X-authenticated-user-token Authenticity token
     * @apiSampleRequest /kendra/api/v1/solutions/detailsBasedOnRoleAndLocation/5fc3dff14ea9b44f3340afe2
@@ -320,7 +329,10 @@ module.exports = class Solutions extends Abstract {
         let solutionDetails = 
         await solutionsHelper.detailsBasedOnRoleAndLocation(
           req.params._id,
-          req.body
+          req.body,
+          req.headers["x-app-ver"] ? req.headers["x-app-ver"] : req.headers.appversion ? req.headers.appversion : "",
+          req.userDetails.userId,
+          req.userDetails.userToken
         );
           
         solutionDetails.result = solutionDetails.data;
@@ -680,10 +692,13 @@ module.exports = class Solutions extends Abstract {
     * @apiSampleRequest /kendra/api/v1/solutions/targetedSolutions?type=observation&page=1&limit=10&search=a&filter=assignedToMe
     * @apiParamExample {json} Request:
     * {
-    *   "role" : "HM,DEO",
-   		  "state" : "236f5cff-c9af-4366-b0b6-253a1789766a",
-        "district" : "1dcbc362-ec4c-4559-9081-e0c2864c2931",
-        "school" : "c5726207-4f9f-4f45-91f1-3e9e8e84d824"
+      "entities": {
+        "block": "81ca90fa-e38b-4d5d-858a-20ae5b402438",
+        "district": "b5c35cfc-6c1e-4266-94ef-a425c43c7f4e",
+        "state": "bc75cc99-9205-463e-a722-5326857838f8",
+        "school": "28236605304"
+      },
+      "roles": "DEO,HM"
     }
     * @apiParamExample {json} Response:
     {
@@ -732,7 +747,10 @@ module.exports = class Solutions extends Abstract {
                   req.pageNo,
                   req.searchText,
                   req.query.filter,
-                  req.query.surveyReportPage ? req.query.surveyReportPage : ""
+                  req.query.surveyReportPage ? req.query.surveyReportPage : "",
+                  req.headers["x-app-ver"] ? req.headers["x-app-ver"] : req.headers.appversion ? req.headers.appversion : "",
+                  req.userDetails.userId
+
               );
 
               observations["result"] = observations.data;
@@ -808,10 +826,13 @@ module.exports = class Solutions extends Abstract {
   * @apiUse errorBody
   * @apiParamExample {json} Request:
   * {
-  *   "role" : "HM,DEO",
-      "state" : "236f5cff-c9af-4366-b0b6-253a1789766a",
-      "district" : "1dcbc362-ec4c-4559-9081-e0c2864c2931",
-      "school" : "c5726207-4f9f-4f45-91f1-3e9e8e84d824"
+      "entities": {
+        "block": "81ca90fa-e38b-4d5d-858a-20ae5b402438",
+        "district": "b5c35cfc-6c1e-4266-94ef-a425c43c7f4e",
+        "state": "bc75cc99-9205-463e-a722-5326857838f8",
+        "school": "28236605304"
+      },
+      "roles": "DEO,HM"
     }
   * @apiParamExample {json} Response:
   * {
@@ -846,7 +867,8 @@ module.exports = class Solutions extends Abstract {
           req.body,
           req.userDetails.userId,
           req.userDetails.userToken,
-          req.query.hasOwnProperty("createProject") ? gen.utils.convertStringToBoolean(req.query.createProject) : true
+          req.query.hasOwnProperty("createProject") ? gen.utils.convertStringToBoolean(req.query.createProject) : true,
+          req.headers["x-app-ver"] ? req.headers["x-app-ver"] : req.headers.appversion ? req.headers.appversion : ""
         );
 
         return resolve(solutionData);
@@ -873,10 +895,13 @@ module.exports = class Solutions extends Abstract {
   * @apiUse errorBody
   * @apiParamExample {json} Request:
   * {
-  *   "role" : "HM,DEO",
-      "state" : "236f5cff-c9af-4366-b0b6-253a1789766a",
-      "district" : "1dcbc362-ec4c-4559-9081-e0c2864c2931",
-      "school" : "c5726207-4f9f-4f45-91f1-3e9e8e84d824"
+      "entities": {
+        "block": "81ca90fa-e38b-4d5d-858a-20ae5b402438",
+        "district": "b5c35cfc-6c1e-4266-94ef-a425c43c7f4e",
+        "state": "bc75cc99-9205-463e-a722-5326857838f8",
+        "school": "28236605304"
+      },
+      "roles": "DEO,HM"
     }
   * @apiParamExample {json} Response:
   * {

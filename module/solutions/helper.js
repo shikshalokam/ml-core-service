@@ -4,6 +4,8 @@
  * created-date : 03-sep-2020
  * Description : Solution related helper functionality.
  */
+
+
 // Dependencies
 const programsHelper = require(MODULES_BASE_PATH + "/programs/helper");
 const entityTypesHelper = require(MODULES_BASE_PATH + "/entityTypes/helper");
@@ -14,6 +16,7 @@ const improvementProjectService = require(ROOT_PATH + '/generics/services/improv
 const appsPortalBaseUrl = process.env.APP_PORTAL_BASE_URL + "/" ;
 const userExtensionsHelperV2 = require(MODULES_BASE_PATH + "/user-extension/helperv2");
 const userService = require(ROOT_PATH + "/generics/services/users");
+const formHelper = require(MODULES_BASE_PATH + "/forms/helper");
 
 /**
     * SolutionsHelper
@@ -232,20 +235,10 @@ module.exports = class SolutionsHelper {
    * @returns {JSON} - scope in solution.
    */
 
-   static setScope( programId,solutionId,scopeData ) {
+   static setScope( solutionId,scopeData ) {
 
     return new Promise(async (resolve, reject) => {
       try {
-        
-        let programData = 
-        await programsHelper.programDocuments({ _id : programId },["_id","scope"]);
- 
-        if( !programData.length > 0 ) {
-          return resolve({
-            status : httpStatusCode.bad_request.status,
-            message : constants.apiResponses.PROGRAM_NOT_FOUND
-          });
-        }
         
         let solutionData = await this.solutionDocuments({ _id : solutionId },["_id"]);
 
@@ -255,125 +248,22 @@ module.exports = class SolutionsHelper {
             message : constants.apiResponses.SOLUTION_NOT_FOUND
           });
         }
-        if( programData[0].scope ) {
-          
-          let currentSolutionScope = JSON.parse(JSON.stringify(programData[0].scope));
-          
-          if( Object.keys(scopeData).length > 0 ) {
-            if( scopeData.entityType ) {
-              let bodyData = { "type" : scopeData.entityType }
-              let entityTypeData = await userService.locationSearch( bodyData);
-              if ( entityTypeData.success ) {
-                currentSolutionScope.entityType = entityTypeData.data[0].type
-              }
-            }
-
-            if( scopeData.entities && scopeData.entities.length > 0 ) {
-              //call learners api for search
-              let entityIds = [];
-              let bodyData={};
-              let locationData = gen.utils.filterLocationIdandCode(scopeData.entities)
-
-              if ( locationData.ids.length > 0 ) {
-                bodyData = {
-                  "id" : locationData.ids,
-                  "type" : currentSolutionScope.entityType
-                } 
-                let entityData = await userService.locationSearch( bodyData );
-                if ( entityData.success ) {
-                  entityData.data.forEach( entity => {
-                    entityIds.push(entity.id)
-                  });
-                }
-              }
-
-              if ( locationData.codes.length > 0 ) {
-                let filterData = {
-                  "code" : locationData.codes,
-                  "type" : currentSolutionScope.entityType
-                }
-                let entityDetails = await userService.locationSearch( filterData );
-                
-                if ( entityDetails.success ) {
-                  entityDetails.data.forEach( entity => {
-                    entityIds.push(entity.id) 
-                  });
-                }
-              }
-                
-              if( !entityIds.length > 0 ) {
-                return resolve({
-                  status : httpStatusCode.bad_request.status,
-                  message : constants.apiResponses.ENTITIES_NOT_FOUND
-                });
-              }
-              
-              let entitiesData = [];
-      
-              // if( currentSolutionScope.entityType !== programData[0].scope.entityType ) {
-              //   let result = [];
-              //   let childEntities = await userService.getSubEntitiesBasedOnEntityType(currentSolutionScope.entities, currentSolutionScope.entityType, result);
-              //   if( childEntities.length > 0 ) {
-              //     entitiesData = entityIds.filter(element => childEntities.includes(element));
-              //   }
-              // } else {
-                entitiesData = entityIds
-              // }
-              
-              if( !entitiesData.length > 0 ) {
-                
-                return resolve({
-                  status : httpStatusCode.bad_request.status,
-                  message : constants.apiResponses.SCOPE_ENTITY_INVALID
-                });
-
-              }
-
-              currentSolutionScope.entities = entitiesData;
-            }
         
-            if( scopeData.roles ) {
-              if( Array.isArray(scopeData.roles) && scopeData.roles.length > 0 ) {
-                
-                let userRoles = await userRolesHelper.roleDocuments({
-                  code : { $in : scopeData.roles }
-                },["_id","code"]);
-    
-                if( !userRoles.length > 0 ) {
-                  return resolve({
-                    status : httpStatusCode.bad_request.status,
-                    message : constants.apiResponses.INVALID_ROLE_CODE
-                  });
-                }
-    
-                currentSolutionScope["roles"] = userRoles;
+        let updateSolution = 
+        await database.models.solutions.findOneAndUpdate(
+          {
+            _id : solutionId
+          },
+          { $set : { scope : scopeData }},{ new: true }
+        ).lean();
   
-              } else {
-                if( scopeData.roles === constants.common.ALL_ROLES ) {
-                  currentSolutionScope["roles"] = [{
-                    "code" : constants.common.ALL_ROLES
-                  }]; 
-                }
-              }
-            }
-          }
-          
-          let updateSolution = 
-          await database.models.solutions.findOneAndUpdate(
-            {
-              _id : solutionId
-            },
-            { $set : { scope : currentSolutionScope }},{ new: true }
-          ).lean();
-  
-          if( !updateSolution._id ) {
-            throw {
-              status : constants.apiResponses.SOLUTION_SCOPE_NOT_ADDED
-            };
-          }
-          solutionData = updateSolution;
-
+        if( !updateSolution._id ) {
+          throw {
+            status : constants.apiResponses.SOLUTION_SCOPE_NOT_ADDED
+          };
         }
+          
+        solutionData = updateSolution;
 
         return resolve({
           success : true,
@@ -450,7 +340,6 @@ module.exports = class SolutionsHelper {
 
             let solutionScope = 
             await this.setScope(
-              solutionUpdatedData.programId,
               solutionUpdatedData._id,
               solutionData.scope
             );
@@ -622,11 +511,26 @@ module.exports = class SolutionsHelper {
       programId, 
       pageSize, 
       pageNo,
-      searchText = "" 
+      searchText = "",
+      appVersion = "",
+      userId = "", 
+      userToken = ""
     ) {
       return new Promise(async (resolve, reject) => {
         try {
-  
+
+          //to convert the bodyData
+          let convertedBodyData = await this.checkForConvertBodyData(
+            bodyData, 
+            appVersion, 
+            userId, 
+            userToken
+          );
+
+          if( convertedBodyData.success ) {
+            bodyData = convertedBodyData.data
+          }
+
           let queryData = await this.queryBasedOnRoleAndLocation(
             bodyData,
             type,
@@ -637,7 +541,7 @@ module.exports = class SolutionsHelper {
           if( !queryData.success ) {
             return resolve(queryData);
           }
-  
+
           let matchQuery = queryData.data;
   
           if( type === "" && subType === "" ) {
@@ -672,7 +576,7 @@ module.exports = class SolutionsHelper {
           if ( programId !== "" ) {
             matchQuery["programId"] = ObjectId(programId);
           }
-          
+
           let targetedSolutions = await this.list(
             type,
             subType,
@@ -729,26 +633,47 @@ module.exports = class SolutionsHelper {
     return new Promise(async (resolve, reject) => {
       try {
 
+        let filterQuery = {
+          "isReusable" : false,
+          "isDeleted" : false
+        };
+
         let registryIds = [];
         let entityTypes = [];
+        //entities exist in data
+        if ( data.entities ) {
+          Object.keys(data.entities).forEach( requestedDataKey => {
+            registryIds.push(data.entities[requestedDataKey]);
+            entityTypes.push(requestedDataKey);
+          })
+        }
 
-        Object.keys(_.omit(data,["filter","role"])).forEach( requestedDataKey => {
-          registryIds.push(data[requestedDataKey]);
-          entityTypes.push(requestedDataKey);
-        })
         if( !registryIds.length > 0 ) {
           throw {
             message : constants.apiResponses.NO_LOCATION_ID_FOUND_IN_DATA
           }
         }
-        
-        let filterQuery = {
-          "scope.roles.code" : { $in : [constants.common.ALL_ROLES,...data.role.split(",")] },
-          "scope.entities" : { $in : registryIds },
-          "scope.entityType" : { $in : entityTypes },
-          "isReusable" : false,
-          "isDeleted" : false
-        };
+
+        filterQuery["scope.entities"] = { $in : registryIds };
+        filterQuery["scope.entityType"] = { $in : entityTypes };
+
+        //role exist in data
+        if ( data.roles ) {
+          if ( typeof(data["roles"]) === constants.common.STRING ) {
+            filterQuery["scope.roles"] = { $in : [constants.common.ALL_ROLES,...data.roles.split(",")] };
+          } else {
+            filterQuery["scope.roles"] = { $in : [constants.common.ALL_ROLES,...data[roles]] };
+          }
+        }
+
+        //for all other keys except entities and roles
+        Object.keys(_.omit(data,["entities", "roles","filter"])).forEach( dataKey => {
+          if ( typeof(data[dataKey]) === constants.common.STRING ) {
+            filterQuery["scope."+dataKey] = { $in : [data[dataKey].split(",")] };
+          } else {
+            filterQuery["scope."+dataKey] = { $in : data[dataKey] };
+          }
+        });
 
         if( type === constants.common.SURVEY ) {
 
@@ -807,11 +732,23 @@ module.exports = class SolutionsHelper {
    * @returns {JSON} - Details of solution based on role and location.
    */
 
-   static detailsBasedOnRoleAndLocation( solutionId,bodyData ) {
+   static detailsBasedOnRoleAndLocation( solutionId, bodyData, appVersion, userId, userToken ) {
 
     return new Promise(async (resolve, reject) => {
 
       try {
+
+        //to convert the bodyData
+        let convertedBodyData = await this.checkForConvertBodyData(
+          bodyData, 
+          appVersion, 
+          userId, 
+          userToken
+        );
+
+        if( convertedBodyData.success ) {
+          bodyData = convertedBodyData.data
+        }
 
         let queryData = await this.queryBasedOnRoleAndLocation(bodyData);
 
@@ -819,8 +756,9 @@ module.exports = class SolutionsHelper {
           return resolve(queryData);
         }
         queryData.data["_id"] = solutionId;
+        
         let targetedSolutionDetails = 
-        await this.solutionDocuments(
+          await this.solutionDocuments(
           queryData.data,
           [
             "name",
@@ -840,14 +778,14 @@ module.exports = class SolutionsHelper {
             "certificateTemplateId"
           ]
         );
-        
+
         if( !targetedSolutionDetails.length > 0 ) {
           throw {
             status : httpStatusCode["bad_request"].status,
             message : constants.apiResponses.SOLUTION_NOT_FOUND
           }
         }
-      
+        
         return resolve({
           success: true,
           message: constants.apiResponses.TARGETED_SOLUTIONS_FETCHED,
@@ -855,7 +793,6 @@ module.exports = class SolutionsHelper {
         });
 
       } catch (error) {
-
         return resolve({
           success : false,
           message : error.message,
@@ -901,7 +838,7 @@ module.exports = class SolutionsHelper {
           
           let userRoles = await userRolesHelper.roleDocuments({
             code : { $in : roles }
-          },["_id","code"]
+          },["code"]
           );
           
           if( !userRoles.length > 0 ) {
@@ -911,18 +848,23 @@ module.exports = class SolutionsHelper {
             });
           }
 
+          let roleData = [];
+          for ( const role of userRoles ) {
+            roleData.push(role.code);
+          }
+
           await database.models.solutions.findOneAndUpdate({
             _id : solutionId
-          },{ $pull : { "scope.roles" : { code : constants.common.ALL_ROLES }}},{ new : true }).lean();
+          },{ $pull : { "scope.roles" : constants.common.ALL_ROLES }},{ new : true }).lean();
 
           updateQuery["$addToSet"] = {
-            "scope.roles" : { $each : userRoles } 
+            "scope.roles" : { $each : roleData } 
           };
 
         } else {
           if( roles === constants.common.ALL_ROLES ) {
             updateQuery["$set"] = { 
-              "scope.roles" : [{ "code" : constants.common.ALL_ROLES }]
+              "scope.roles" : [constants.common.ALL_ROLES ]
             };
           }
         }
@@ -1105,7 +1047,7 @@ module.exports = class SolutionsHelper {
           {
             code: { $in: roles },
           },
-          ["_id", "code"]
+          ["code"]
         );
 
         if (!userRoles.length > 0) {
@@ -1115,13 +1057,18 @@ module.exports = class SolutionsHelper {
           });
         }
 
+        let roleData = [];
+        for ( const role of userRoles ) {
+          roleData.push(role.code);
+        }
+
         let updateSolution = await database.models.solutions
           .findOneAndUpdate(
             {
               _id: solutionId,
             },
             {
-              $pull: { "scope.roles": { $in: userRoles } },
+              $pull: { "scope.roles": { $in: roleData } },
             },
             { new: true }
           )
@@ -1275,7 +1222,9 @@ module.exports = class SolutionsHelper {
     pageNo,
     search,
     filter,
-    surveyReportPage = ""
+    surveyReportPage = "",
+    appVersion = "",
+    userId
   ) {
     return new Promise(async (resolve, reject) => {
       try {
@@ -1373,7 +1322,10 @@ module.exports = class SolutionsHelper {
               "",
               constants.common.DEFAULT_PAGE_SIZE,
               constants.common.DEFAULT_PAGE_NO,
-              search
+              search,
+              appVersion,
+              userId, 
+              userToken
             ); 
       }
 
@@ -1566,7 +1518,7 @@ module.exports = class SolutionsHelper {
    * @returns {Object} - Details of the solution.
    */
 
-  static verifyLink(link = "", bodyData = {}, userId = "", userToken = "", createProject = true ) {
+  static verifyLink(link = "", bodyData = {}, userId = "", userToken = "", createProject = true, appVersion = "" ) {
     return new Promise(async (resolve, reject) => {
       try {
        
@@ -1580,8 +1532,10 @@ module.exports = class SolutionsHelper {
           link,
           bodyData,
           userId,
-          userToken
+          userToken,
+          appVersion
         );
+
         if( !checkForTargetedSolution || Object.keys(checkForTargetedSolution.result).length <= 0 ) {
           return resolve(checkForTargetedSolution);
         }
@@ -1792,7 +1746,8 @@ module.exports = class SolutionsHelper {
     link = "",
     bodyData = {},
     userId = "",
-    userToken = ""
+    userToken = "",
+    appVersion = ""
   ) {
     return new Promise(async (resolve, reject) => {
       try {
@@ -1809,6 +1764,18 @@ module.exports = class SolutionsHelper {
           "name",
           "projectTemplateId"
         ]);
+
+        //to convert the bodyData
+        let convertedBodyData = await this.checkForConvertBodyData(
+          bodyData, 
+          appVersion, 
+          userId, 
+          userToken
+        );
+
+        if( convertedBodyData.success ) {
+          bodyData = convertedBodyData.data
+        }
 
         let queryData = await this.queryBasedOnRoleAndLocation(bodyData);
         if ( !queryData.success ) {
@@ -2019,6 +1986,81 @@ module.exports = class SolutionsHelper {
       }
     });
   }
+
+  /**
+   * Check For update data
+   * @method
+   * @name checkForConvertBodyData
+   * @param {Object} bodyData - Requested body data.
+   * @param {String} appVersion - app version.
+   * @param {String} userId - user id.
+   * @returns {JSON} - Converted Body Data.
+   */
+  
+   static checkForConvertBodyData( bodyData, appVersion = "", userId = "", userToken = "" ) {
+    return new Promise(async (resolve, reject) => {
+      try {
+
+        let updatedBodyData = {};
+        let convertedBodyData = {};
+
+        if ( !appVersion ) {
+          //convert the data if appVersion is not present
+          updatedBodyData = await gen.utils.convertUserRoleAndLocationData(bodyData);
+        } else {
+          //check the bodyData need to convert or not
+          let convertUserDataorNot = await gen.utils.convertUserDataorNot(appVersion);
+          if ( convertUserDataorNot ) {
+            //update bodyData
+            updatedBodyData = await gen.utils.convertUserRoleAndLocationData(bodyData);
+          } else {
+            updatedBodyData = bodyData;
+          }
+        }
+
+        let addMissingFields = false;
+        //check and update the missing fields in bodyData from profile
+        if ( userId !== "" && userToken !== "" ) {
+          //fetch scope form 
+          let formData = await formHelper.formsDocument(
+            {
+                name : constants.common.SCOPE_FORM_NAME
+            },["value"]
+          );
+
+          //fetch userProfile
+          let userProfile = await userService.profile( userToken, userId ); 
+          
+          if ( formData.length > 0 && userProfile.success ) {
+            addMissingFields = true;
+          }
+ 
+          //add missing fields to bodyData
+          if ( addMissingFields ) {
+            convertedBodyData = await gen.utils.addMissingUserProfileDataToRequestBody( 
+              updatedBodyData, 
+              userProfile.data, 
+              formData[0].value 
+            );
+          }
+        }
+
+        return resolve({
+          success : true,
+          data : ( convertedBodyData && Object.keys(convertedBodyData).length > 0 ) ? convertedBodyData : updatedBodyData
+        });
+
+      } catch(error) {
+        return resolve({
+          success : false,
+          status : error.status ? 
+          error.status : httpStatusCode['internal_server_error'].status,
+          message : error.message,
+          data : {}
+        })
+      }
+    })   
+  } 
 
 };
 

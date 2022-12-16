@@ -439,10 +439,11 @@ module.exports = class UsersHelper {
    * @returns {Object} targeted user solutions.
    */
 
-  static solutions(programId, requestedData, pageSize, pageNo, search, token) {
+  static solutions(programId, requestedData, pageSize, pageNo, search, appVersion = "", userId = "", token) {
     return new Promise(async (resolve, reject) => {
       
       try {
+
         let programData = await programsHelper.programDocuments(
           {
             _id: programId
@@ -450,7 +451,7 @@ module.exports = class UsersHelper {
           ["name"]
         );
         
-        if (!programData.length > 0) {
+        if ( !programData.length > 0 ) {
           return resolve({
             status: httpStatusCode["bad_request"].status,
             message: constants.apiResponses.PROGRAM_NOT_FOUND
@@ -465,9 +466,12 @@ module.exports = class UsersHelper {
             programId,
             constants.common.DEFAULT_PAGE_SIZE,
             constants.common.DEFAULT_PAGE_NO,
-            search
+            search,
+            appVersion,
+            userId,
+            token
           );
-            
+
         let totalCount = 0;
         let mergedData = [];
 
@@ -572,14 +576,18 @@ module.exports = class UsersHelper {
    * @returns {Array} - Get user targeted programs.
    */
 
-  static programs(bodyData, pageNo, pageSize, searchText) {
+  static programs( bodyData, pageNo, pageSize, searchText, appVersion, userId = "", userToken = "" ) {
     return new Promise(async (resolve, reject) => {
       try {
+
         let targetedProgrms = await programsHelper.forUserRoleAndLocation(
           bodyData,
           pageSize,
           pageNo,
-          searchText
+          searchText,
+          appVersion, 
+          userId, 
+          userToken
         );
 
         if (!targetedProgrms.success) {
@@ -596,6 +604,7 @@ module.exports = class UsersHelper {
           message: constants.apiResponses.USER_TARGETED_PROGRAMS_FETCHED,
           data: targetedProgrms.data
         });
+
       } catch (error) {
         return resolve({
           success: false,
@@ -706,6 +715,7 @@ module.exports = class UsersHelper {
   static targetedEntity(solutionId, requestedData) {
     return new Promise(async (resolve, reject) => {
       try {
+
         let solutionData = await solutionsHelper.solutionDocuments(
           {
             _id: solutionId,
@@ -722,7 +732,7 @@ module.exports = class UsersHelper {
         }
         let rolesDocument = await userRolesHelper.roleDocuments(
           {
-            code: requestedData.role
+            code: requestedData.roles
           },
           ["entityTypes.entityType"]
         );
@@ -733,8 +743,9 @@ module.exports = class UsersHelper {
             message: constants.apiResponses.USER_ROLES_NOT_FOUND
           };
         }
-      
-        let requestedEntityTypes = Object.keys(_.omit(requestedData, ['role']));
+        
+        let entities = requestedData.entities;
+        let requestedEntityTypes = Object.keys(entities);
         let targetedEntityType = "";
   
         rolesDocument[0].entityTypes.forEach((singleEntityType) => {
@@ -743,7 +754,7 @@ module.exports = class UsersHelper {
           }
         });
         
-        if (!requestedData[targetedEntityType]) {
+        if (!entities[targetedEntityType]) {
           throw {
             status: httpStatusCode["bad_request"].status,
             message: constants.apiResponses.ENTITIES_NOT_ALLOWED_IN_ROLE
@@ -752,9 +763,9 @@ module.exports = class UsersHelper {
         let filterData ={};
         if (solutionData[0].entityType === targetedEntityType) {
           // if solution entity type and user tageted entity type are same
-          if (gen.utils.checkValidUUID(requestedData[targetedEntityType])) {
+          if (gen.utils.checkValidUUID(entities[targetedEntityType])) {
             filterData = {
-              "parentId" : requestedData[targetedEntityType]
+              "parentId" : entities[targetedEntityType]
             }
             let entitiesData = await userService.locationSearch( filterData );
             if( entitiesData.success ){
@@ -765,13 +776,13 @@ module.exports = class UsersHelper {
           }         
         }
        
-        if (gen.utils.checkValidUUID(requestedData[targetedEntityType])) {
+        if (gen.utils.checkValidUUID(entities[targetedEntityType])) {
           filterData = {
-            "id" : requestedData[targetedEntityType]
+            "id" : entities[targetedEntityType]
           };
         } else {
           filterData = {
-            "code" : requestedData[targetedEntityType]
+            "code" : entities[targetedEntityType]
           };
         }
         let entitiesDocument = await userService.locationSearch( filterData );
