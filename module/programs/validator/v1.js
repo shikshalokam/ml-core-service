@@ -31,7 +31,12 @@ module.exports = (req) => {
         removeEntitiesInScope : function () {
             req.checkParams("_id").exists().withMessage("required program id");
             req.checkBody("entities").exists().withMessage("required entities to be added");
-        }
+        },
+        join : function () {
+            req.checkParams("_id").exists().withMessage("required program id");
+            req.checkParams("_id").isMongoId().withMessage("invalid Mongo Id");
+            req.checkBody("userRoleInformation").exists().withMessage("required userRoleInformation to be added");
+        },
     }
 
     if (programsValidator[req.params.method]) {

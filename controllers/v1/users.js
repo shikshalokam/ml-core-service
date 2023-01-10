@@ -277,7 +277,8 @@ module.exports = class Users extends Abstract {
             req.pageSize,
             req.pageNo,
             req.searchText,
-            req.userDetails.userToken
+            req.userDetails.userToken,
+            req.userDetails.userId
         );
 
         targetedSolutions["result"] = targetedSolutions.data;

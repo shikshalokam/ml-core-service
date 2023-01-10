@@ -190,6 +190,14 @@ let enviromentVariables = {
       "value" : "OCI"
     }
   }, 
+  "KAFKA_COMMUNICATIONS_ON_OFF" : {
+    "message" : "Enable/Disable kafka communications",
+    "optional" : false
+  },
+  "KAFKA_URL" : {
+    "message" : "Required",
+    "optional" : false
+  },
 }
 
 let success = true;

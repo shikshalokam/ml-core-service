@@ -11,6 +11,7 @@ const entityTypesHelper = require(MODULES_BASE_PATH + "/entityTypes/helper");
 const entitiesHelper = require(MODULES_BASE_PATH + "/entities/helper");
 const userRolesHelper = require(MODULES_BASE_PATH + "/user-roles/helper");
 const userService = require(ROOT_PATH + "/generics/services/users");
+const kafkaProducersHelper = require(ROOT_PATH + "/generics/kafka/producers");
 
 /**
     * ProgramsHelper
@@ -965,6 +966,132 @@ module.exports = class ProgramsHelper {
         });
 
       } catch (error) {
+        return resolve({
+          success: false,
+          status: error.status
+            ? error.status
+            : httpStatusCode['internal_server_error'].status,
+          message: error.message
+        });
+      }
+    });
+  } 
+
+  /**
+  * Program join.
+  * @method
+  * @name join
+  * @param {String} programId - Program Id.
+  * @param {Object} data - body data.
+  * @param {String} userId - Logged in user id.
+  * @param {String} userToken - User token.
+  * @param {String} [appName = ""] - App Name.
+  * @param {String} [appVersion = ""] - App Version.
+  * @returns {Object} - Details of the program join.
+  */
+
+  static join( programId, data, userId, userToken, appName = "", appVersion = "" ) {
+    return new Promise(async (resolve, reject) => {
+      try {
+        //Using programId fetch program name. Also checking the program status in the query.
+        let programData = await this.programDocuments({
+          _id: programId,
+          status: constants.common.ACTIVE
+        },["name"]);
+        
+        if ( !programData.length > 0 ) {
+          throw ({
+            status: httpStatusCode.bad_request.status,
+            message: constants.apiResponses.PROGRAM_NOT_FOUND
+          });
+        }
+        
+        let programUsersData = {};
+        //Fetch user profile information by calling sunbird's user read api.
+        //!Important check specific fields of userProfile.
+        let userProfile = await userService.profile(userToken, userId);
+        if ( !userProfile.success || 
+             !userProfile.data ||
+             !userProfile.data.response
+        ) {
+          throw ({
+            status: httpStatusCode.bad_request.status,
+            message: constants.apiResponses.PROGRAM_JOIN_FAILED
+          });      
+        } 
+        programUsersData = {
+          programId: programId,
+          userRoleInformation: data.userRoleInformation,
+          userId: userId,
+          userProfile: userProfile.data.response
+        }
+        if( appName != "" ) {
+          programUsersData['appInformation.appName'] = appName;
+        }
+        if( appVersion != "" ) {
+          programUsersData['appInformation.appVersion'] = appVersion;
+        }
+
+        //consentForPIIDataSharing is optional.
+        if( data.consentForPIIDataSharing == true || data.consentForPIIDataSharing == false ) {
+          programUsersData.consentForPIIDataSharing = {
+            agree: data.consentForPIIDataSharing,
+            date: new Date()
+          }
+        }
+
+        //create or update query
+        const query = { 
+          programId: programId,
+          userId: userId
+        };
+
+        //Check data already present in db.
+        const programUsers = await database.models.programUsers.find(
+          query,
+          ["consentForPIIDataSharing"]
+        ).lean();
+        
+        // Data already present in programUsers collection, Require updation, else create new entry.
+        let joinProgram;
+        if( programUsers.length > 0 ) {
+
+          let update = {};
+          if( programUsers[0].consentForPIIDataSharing && (data.consentForPIIDataSharing == true || data.consentForPIIDataSharing == false )) {
+            update['$push'] = { consentHistory: programUsers[0].consentForPIIDataSharing }
+          }
+          update['$set'] = programUsersData;
+          joinProgram = await database.models.programUsers.findOneAndUpdate(query, update, {new:true});
+
+        } else {
+
+          joinProgram = 
+          await database.models.programUsers.create(
+            programUsersData
+          );
+
+        }
+        if (!joinProgram._id) {
+          throw {
+              message: constants.apiResponses.PROGRAM_JOIN_FAILED,
+              status: httpStatusCode.bad_request.status
+          }
+        }
+        joinProgram.programName = programData[0].name;
+
+        //  push programUsers details to kafka
+        await kafkaProducersHelper.pushProgramUsersToKafka(joinProgram);
+
+        return resolve({
+          message: constants.apiResponses.JOINED_PROGRAM,
+          success: true,
+          data: {
+            _id : joinProgram._id
+          }
+        });
+
+      } catch (error) {
+        console.log("error:",error)
         return resolve({
           success: false,
           status: error.status

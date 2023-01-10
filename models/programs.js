@@ -47,6 +47,10 @@ module.exports = {
         default : false,
         type : Boolean,
         index : true
+      },
+      requestForPIIConsent: {
+        type: Boolean,
+        default: false
       }
     }
   };

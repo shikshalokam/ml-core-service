@@ -436,10 +436,12 @@ module.exports = class UsersHelper {
    * @param {String} pageSize page size.
    * @param {String} pageNo page no.
    * @param {String} search search text.
+   * @param {String} token user token.
+   * @param {String} userId user userId.
    * @returns {Object} targeted user solutions.
    */
 
-  static solutions(programId, requestedData, pageSize, pageNo, search, token) {
+  static solutions(programId, requestedData, pageSize, pageNo, search, token, userId) {
     return new Promise(async (resolve, reject) => {
       
       try {
@@ -447,7 +449,7 @@ module.exports = class UsersHelper {
           {
             _id: programId
           },
-          ["name"]
+          ["name","requestForPIIConsent"]
         );
         
         if (!programData.length > 0) {
@@ -539,10 +541,25 @@ module.exports = class UsersHelper {
           programName: programData[0].name,
           programId: programId,
           description: constants.common.TARGETED_SOLUTION_TEXT,
+          requestForPIIConsent: programData[0].requestForPIIConsent ? programData[0].requestForPIIConsent : false,
           data: mergedData,
           count: totalCount
         };
 
+        //check programUsers collection for consentForPIIDataSharing
+        let programUsersData = await database.models.programUsers.find(
+          {
+            programId: programId,
+            userId: userId
+          },
+          ["consentForPIIDataSharing"]
+        ).lean();
+       
+        //if consentForPIIDataSharing is present append with response
+        if( programUsersData.length > 0 && programUsersData[0].consentForPIIDataSharing ) {
+          result.consentForPIIDataSharing = programUsersData[0].consentForPIIDataSharing;
+        }
+        
         return resolve({
           message: constants.apiResponses.PROGRAM_SOLUTIONS_FETCHED,
           success: true,
