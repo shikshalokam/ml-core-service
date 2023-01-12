@@ -13,6 +13,7 @@ const entitiesHelper = require(MODULES_BASE_PATH + "/entities/helper");
 const improvementProjectService = require(ROOT_PATH + "/generics/services/improvement-project");
 const userService = require(ROOT_PATH + "/generics/services/users");
 const formService = require(ROOT_PATH + '/generics/services/form');
+const programUsersHelper = require(MODULES_BASE_PATH + "/programUsers/helper");
 
 
 /**
@@ -547,13 +548,13 @@ module.exports = class UsersHelper {
         };
 
         //check programUsers collection for consentForPIIDataSharing
-        let programUsersData = await database.models.programUsers.find(
+        let programUsersData = await programUsersHelper.find(
           {
             programId: programId,
             userId: userId
           },
           ["consentForPIIDataSharing"]
-        ).lean();
+        );
        
         //if consentForPIIDataSharing is present append with response
         if( programUsersData.length > 0 && programUsersData[0].consentForPIIDataSharing ) {

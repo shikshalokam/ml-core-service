@@ -12,6 +12,7 @@ const entitiesHelper = require(MODULES_BASE_PATH + "/entities/helper");
 const userRolesHelper = require(MODULES_BASE_PATH + "/user-roles/helper");
 const userService = require(ROOT_PATH + "/generics/services/users");
 const kafkaProducersHelper = require(ROOT_PATH + "/generics/kafka/producers");
+const programUsersHelper = require(MODULES_BASE_PATH + "/programUsers/helper");
 
 /**
     * ProgramsHelper
@@ -66,13 +67,13 @@ module.exports = class ProgramsHelper {
     });
   }
 
-     /**
-   * Create program
-   * @method
-   * @name create
-   * @param {Array} data 
-   * @returns {JSON} - create program.
-   */
+  /**
+ * Create program
+ * @method
+ * @name create
+ * @param {Array} data 
+ * @returns {JSON} - create program.
+ */
 
   static create(data) {
 
@@ -1007,12 +1008,16 @@ module.exports = class ProgramsHelper {
         }
         
         let programUsersData = {};
-        //Fetch user profile information by calling sunbird's user read api.
-        //!Important check specific fields of userProfile.
+        // Fetch user profile information by calling sunbird's user read api.
+        // !Important check specific fields of userProfile.
         let userProfile = await userService.profile(userToken, userId);
-        if ( !userProfile.success || 
-             !userProfile.data ||
-             !userProfile.data.response
+        if (!userProfile.success || 
+            !userProfile.data ||
+            !userProfile.data.response ||
+            !userProfile.data.response.profileUserTypes ||
+            !userProfile.data.response.profileUserTypes.length > 0 ||
+            !userProfile.data.response.userLocations ||
+            !userProfile.data.response.userLocations.length > 0
         ) {
           throw ({
             status: httpStatusCode.bad_request.status,
@@ -1047,10 +1052,10 @@ module.exports = class ProgramsHelper {
         };
 
         //Check data already present in db.
-        const programUsers = await database.models.programUsers.find(
+        const programUsers = await programUsersHelper.find(
           query,
           ["consentForPIIDataSharing"]
-        ).lean();
+        );
         
         // Data already present in programUsers collection, Require updation, else create new entry.
         let joinProgram;
@@ -1061,12 +1066,12 @@ module.exports = class ProgramsHelper {
             update['$push'] = { consentHistory: programUsers[0].consentForPIIDataSharing }
           }
           update['$set'] = programUsersData;
-          joinProgram = await database.models.programUsers.findOneAndUpdate(query, update, {new:true});
+          joinProgram = await programUsersHelper.update(query, update, {new:true});
 
         } else {
 
           joinProgram = 
-          await database.models.programUsers.create(
+          await programUsersHelper.create(
             programUsersData
           );
 
@@ -1091,7 +1096,6 @@ module.exports = class ProgramsHelper {
         });
 
       } catch (error) {
-        console.log("error:",error)
         return resolve({
           success: false,
           status: error.status

@@ -192,5 +192,8 @@ module.exports = {
   "CERTIFICATE_TEMPLATE_NOT_UPDATED" : "Template updation failed",
   "BASE_CERTIFICATE_TEMPLATE_NOT_FOUND" : "Base certificate template not found",
   "PROGRAM_JOIN_FAILED" : "Failed to join program",
-  "JOINED_PROGRAM" : "You have joined this program successfully"
+  "JOINED_PROGRAM" : "You have joined this program successfully",
+  "PROGRAM_NOT_CREATED" : "Program not created",
+  "PROGRAM_USERS_NOT_CREATED" : "Program users not created",
+  "PROGRAM_USERS_NOT_UPDATED" : "Program users not updated"
 };
