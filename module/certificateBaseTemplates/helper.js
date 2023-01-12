@@ -24,8 +24,7 @@ module.exports = class CertificateBaseTemplatesHelper {
   static create( data, file, userId ) {
     return new Promise(async (resolve, reject) => {
         try {
-            let dir = "BaseTemplate";
-            let uploadFile = await certificateTemplateHelper.uploadToCloud( file, dir, userId, false );
+            let uploadFile = await certificateTemplateHelper.uploadToCloud( file, "", userId, false );
             if( !uploadFile.success ) {
               throw ({
                 message: constants.apiResponses.COULD_NOT_UPLOAD_CONTENT
@@ -64,8 +63,7 @@ module.exports = class CertificateBaseTemplatesHelper {
     return new Promise(async (resolve, reject) => {
         try {
           if ( Object.keys(file).length > 0 ) {
-            let dir = "BaseTemplate";
-            let uploadFile = await certificateTemplateHelper.uploadToCloud( file, dir, userId, false );
+            let uploadFile = await certificateTemplateHelper.uploadToCloud( file, "", userId, false );
             if( !uploadFile.success ) {
               throw ({
                 message: constants.apiResponses.COULD_NOT_UPLOAD_CONTENT

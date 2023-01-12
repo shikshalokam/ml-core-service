@@ -109,19 +109,32 @@ module.exports = class CertificateTemplatesHelper {
   static uploadToCloud(fileData, templateId, userId = "", updateTemplate) {
     return new Promise(async (resolve, reject) => {
         try {
+          let fileName;
           const now = new Date();
           const date = now.getDate() + "-"+ now.getMonth() + "-" + now.getFullYear() + "-" + now.getTime();
-          const fileName = templateId + '/' + userId + "_" + date + ".svg"; 
+          if ( updateTemplate == false ) {
+            fileName = userId + "_" + date + ".svg"; 
+          } else {
+            fileName = templateId + '/' + userId + "_" + date + ".svg"; 
+          }
+          
           const requestData = {
             "templates": {
               "files": [fileName]
             }
           };
 
+          let referenceType;
+          if ( updateTemplate == false ) {
+            referenceType = "baseTemplates"
+          } else {
+            referenceType = constants.common.CERTIFICATE
+          }
+
           let signedUrl =
           await filesHelpers.preSignedUrls(
             requestData, // data to upload
-            constants.common.CERTIFICATE, // referenceType  
+            referenceType, // referenceType  
           );
 
           //  upload file using signed Url
