@@ -190,5 +190,7 @@ module.exports = {
   "CERTIFICATE_TEMPLATE_ADDED" : "Template added successfully",
   "CERTIFICATE_TEMPLATE_UPDATED" : "Template updated successfully",
   "CERTIFICATE_TEMPLATE_NOT_UPDATED" : "Template updation failed",
-  "BASE_CERTIFICATE_TEMPLATE_NOT_FOUND" : "Base certificate template not found"
+  "BASE_CERTIFICATE_TEMPLATE_NOT_FOUND" : "Base certificate template not found",
+  "CERTIFICATE_BASE_TEMPLATE_UPDATED" : "Base template updated successfully",
+  "CERTIFICATE_BASE_TEMPLATE_NOT_UPDATED" : "Base template updation failed",
 };

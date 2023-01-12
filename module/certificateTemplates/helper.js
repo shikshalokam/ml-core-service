@@ -109,19 +109,32 @@ module.exports = class CertificateTemplatesHelper {
   static uploadToCloud(fileData, templateId, userId = "", updateTemplate) {
     return new Promise(async (resolve, reject) => {
         try {
+          let fileName;
           const now = new Date();
           const date = now.getDate() + "-"+ now.getMonth() + "-" + now.getFullYear() + "-" + now.getTime();
-          const fileName = templateId + '/' + userId + "_" + date + ".svg"; 
+          if ( updateTemplate == false ) {
+            fileName = userId + "_" + date + ".svg"; 
+          } else {
+            fileName = templateId + '/' + userId + "_" + date + ".svg"; 
+          }
+          
           const requestData = {
             "templates": {
               "files": [fileName]
             }
           };
 
+          let referenceType;
+          if ( updateTemplate == false ) {
+            referenceType = "baseTemplates"
+          } else {
+            referenceType = constants.common.CERTIFICATE
+          }
+
           let signedUrl =
           await filesHelpers.preSignedUrls(
             requestData, // data to upload
-            constants.common.CERTIFICATE, // referenceType  
+            referenceType, // referenceType  
           );
 
           //  upload file using signed Url
@@ -188,15 +201,25 @@ module.exports = class CertificateTemplatesHelper {
   /**
    * create svg template by editing base template.
    * @method 
-   * @name editSvg
+   * @name createSvg
    * @param {Object} files - file to replace.
    * @param {Object} textData - texts to edit.
-   * @param {String} templateUrl - Base template filepath.
+   * @param {String} baseTemplateId - Base template Id.
    * @returns {JSON} Uploaded certificate template details. 
   */
-  static editSvg( files, textData, templateUrl ) {
+  static createSvg( files, textData, baseTemplateId ) {
     return new Promise(async (resolve, reject) => {
         try {
+          let baseTemplateData = await database.models.certificateBaseTemplates.find({
+            _id: baseTemplateId
+          },["url"]).lean();
+          
+          if ( !baseTemplateData.length > 0 || !baseTemplateData[0].url || baseTemplateData[0].url == "" ) {
+            throw {
+              message: constants.apiResponses.BASE_CERTIFICATE_TEMPLATE_NOT_FOUND
+            }
+          }
+          let templateUrl = baseTemplateData[0].url;
           // getDownloadable url of svg file that we are using as template
           let baseTemplateDownloadableUrl = await filesHelpers.getDownloadableUrl([templateUrl]);
           let baseTemplate = await getBaseTemplate( baseTemplateDownloadableUrl.result[0].url)
