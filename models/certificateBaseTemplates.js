@@ -3,11 +3,11 @@ module.exports = {
   schema: {
     code: {
       type : String,
-      required : true,
-      index: true
+      required : true
     },
     name: {
-      type : String
+      type : String,
+      required : true
     },
     url: {
       type : String,
