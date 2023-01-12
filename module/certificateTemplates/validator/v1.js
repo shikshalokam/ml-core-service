@@ -24,8 +24,9 @@ module.exports = (req) => {
         uploadCertificateTemplate : function () {
             req.checkParams("_id").exists().withMessage("required certificate templateId");
         },
-        editSvg : function () {
-            req.checkQuery("baseTemplateFilePath").not().isEmpty().withMessage("Please provide base template filepath as baseTemplateFilePath. This cannot be empty")
+        createSvg : function () {
+            req.checkQuery("baseTemplateId").not().isEmpty().withMessage("Please provide base template Id. This cannot be empty");
+            req.checkQuery("baseTemplateId").isMongoId().withMessage("Base template Id is not valid");
         }
     }
 

@@ -188,15 +188,25 @@ module.exports = class CertificateTemplatesHelper {
   /**
    * create svg template by editing base template.
    * @method 
-   * @name editSvg
+   * @name createSvg
    * @param {Object} files - file to replace.
    * @param {Object} textData - texts to edit.
-   * @param {String} templateUrl - Base template filepath.
+   * @param {String} baseTemplateId - Base template Id.
    * @returns {JSON} Uploaded certificate template details. 
   */
-  static editSvg( files, textData, templateUrl ) {
+  static createSvg( files, textData, baseTemplateId ) {
     return new Promise(async (resolve, reject) => {
         try {
+          let baseTemplateData = await database.models.certificateBaseTemplates.find({
+            _id: baseTemplateId
+          },["url"]).lean();
+          
+          if ( !baseTemplateData.length > 0 || !baseTemplateData[0].url || baseTemplateData[0].url == "" ) {
+            throw {
+              message: constants.apiResponses.BASE_CERTIFICATE_TEMPLATE_NOT_FOUND
+            }
+          }
+          let templateUrl = baseTemplateData[0].url;
           // getDownloadable url of svg file that we are using as template
           let baseTemplateDownloadableUrl = await filesHelpers.getDownloadableUrl([templateUrl]);
           let baseTemplate = await getBaseTemplate( baseTemplateDownloadableUrl.result[0].url)
