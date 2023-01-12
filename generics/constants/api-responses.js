@@ -191,6 +191,8 @@ module.exports = {
   "CERTIFICATE_TEMPLATE_UPDATED" : "Template updated successfully",
   "CERTIFICATE_TEMPLATE_NOT_UPDATED" : "Template updation failed",
   "BASE_CERTIFICATE_TEMPLATE_NOT_FOUND" : "Base certificate template not found",
+  "CERTIFICATE_BASE_TEMPLATE_UPDATED" : "Base template updated successfully",
+  "CERTIFICATE_BASE_TEMPLATE_NOT_UPDATED" : "Base template updation failed",
   "PROGRAM_JOIN_FAILED" : "Failed to join program",
   "JOINED_PROGRAM" : "You have joined this program successfully",
   "PROGRAM_NOT_CREATED" : "Program not created",
