@@ -24,6 +24,7 @@ module.exports = {
       criteria: {
         type : Object,
         required : true
-      }
+      },
+      baseTemplateId : "ObjectId"
     }
 };

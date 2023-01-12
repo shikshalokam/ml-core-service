@@ -200,13 +200,13 @@ module.exports = class CertificateTemplates extends Abstract {
         });
     }
     /**
-    * @api {post} /kendra/api/v1/certificateTemplates/editSvg
+    * @api {post} /kendra/api/v1/certificateTemplates/createSvg
     * @apiVersion 1.0.0
-    * @apiName edit certificate template svg
-    * @apiGroup editSvg
+    * @apiName createSvg certificate template svg
+    * @apiGroup createSvg
     * @apiHeader {String} internal-access-token - internal access token  
     * @apiHeader {String} X-authenticated-user-token - Authenticity token
-    * @apiSampleRequest /kendra/api/v1/certificateTemplates/editSvg?baseTemplateFilePath=certificateTemplates/Base_template/ba9aa220-ff1b-4717-b6ea-ace55f04fc16_22-10-2022-1669118494135.svg
+    * @apiSampleRequest /kendra/api/v1/certificateTemplates/createSvg?baseTemplateId=
     * @apiUse successBody
     * @apiUse errorBody
     * @apiParamExample {json} Response:
@@ -222,16 +222,16 @@ module.exports = class CertificateTemplates extends Abstract {
     /**
      * generate cettificate templateSvg.
      * @method
-     * @name editSvg
+     * @name createSvg
      * @param {Object} req - requested data.
      * @returns {JSON} -svg uploaded details.
     */
 
-     async editSvg(req) {
+     async createSvg(req) {
         return new Promise(async (resolve, reject) => {
         try {
 
-            let svgData = await certificateTemplateHelper.editSvg(req.files, req.body,  req.query.baseTemplateFilePath);
+            let svgData = await certificateTemplateHelper.createSvg(req.files, req.body, req.query.baseTemplateId);
             return resolve(svgData);
         } catch (error) {
             return reject({
