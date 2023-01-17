@@ -466,7 +466,7 @@ module.exports = class ProgramsHelper {
        
         let programDocuments = 
         await database.models.programs.aggregate(programDocument);
-
+        
         return resolve({
           success : true,
           message : constants.apiResponses.PROGRAM_LIST,
@@ -1042,6 +1042,7 @@ module.exports = class ProgramsHelper {
             agree: data.consentForPIIDataSharing,
             date: new Date()
           }
+          
         }
 
         //create or update query
@@ -1053,7 +1054,7 @@ module.exports = class ProgramsHelper {
         //Check data already present in db.
         const programUsers = await programUsersHelper.find(
           query,
-          ["consentForPIIDataSharing"]
+          ["_id"]
         );
         
         // Data already present in programUsers collection, Require updation, else create new entry.
@@ -1061,13 +1062,16 @@ module.exports = class ProgramsHelper {
         if( programUsers.length > 0 ) {
 
           let update = {};
-          if( programUsers[0].consentForPIIDataSharing && (data.consentForPIIDataSharing == true || data.consentForPIIDataSharing == false )) {
-            update['$push'] = { consentHistory: programUsers[0].consentForPIIDataSharing }
+          if( data.consentForPIIDataSharing == true || data.consentForPIIDataSharing == false ) {
+            update['$push'] = { consentHistory: programUsersData.consentForPIIDataSharing }
           }
           update['$set'] = programUsersData;
           joinProgram = await programUsersHelper.update(query, update, {new:true});
 
         } else {
+          if( data.consentForPIIDataSharing == true || data.consentForPIIDataSharing == false ) {
+            programUsersData.consentHistory =  programUsersData.consentForPIIDataSharing;
+          }
 
           joinProgram = 
           await programUsersHelper.create(
