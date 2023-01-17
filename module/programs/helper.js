@@ -449,7 +449,6 @@ module.exports = class ProgramsHelper {
         facetQuery["$facet"]["totalCount"] = [
           { "$count": "count" }
         ];
-
         facetQuery["$facet"]["data"] = [
           { $skip: pageSize * (pageNo - 1) },
           { $limit: pageSize }
@@ -515,7 +514,7 @@ module.exports = class ProgramsHelper {
           pageSize,
           searchText,
           queryData.data,
-          ["name", "externalId","components"]
+          ["name", "externalId","components","metaInformation"]
         );
              
         if ( targetedPrograms.success && targetedPrograms.data && targetedPrograms.data.data.length > 0) {
@@ -998,7 +997,7 @@ module.exports = class ProgramsHelper {
         let programData = await this.programDocuments({
           _id: programId,
           status: constants.common.ACTIVE
-        },["name"]);
+        },["name", "externalId"]);
         
         if ( !programData.length > 0 ) {
           throw ({
@@ -1083,7 +1082,7 @@ module.exports = class ProgramsHelper {
           }
         }
         joinProgram.programName = programData[0].name;
-
+        joinProgram.programExternalId = programData[0].externalId;
         //  push programUsers details to kafka
         await kafkaProducersHelper.pushProgramUsersToKafka(joinProgram);
 
