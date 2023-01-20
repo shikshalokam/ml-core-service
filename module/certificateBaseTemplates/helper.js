@@ -77,7 +77,7 @@ module.exports = class CertificateBaseTemplatesHelper {
           };
           let certificateBaseTemplateUpdated = 
           await database.models.certificateBaseTemplates.findOneAndUpdate(
-            baseTemplateId,
+            { _id : baseTemplateId },
             updateObject
           );
           if ( certificateBaseTemplateUpdated == null ) {
