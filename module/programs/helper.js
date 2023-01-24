@@ -1036,14 +1036,8 @@ module.exports = class ProgramsHelper {
           programUsersData['appInformation.appVersion'] = appVersion;
         }
 
-        //consentForPIIDataSharing is optional.
-        if( data.consentForPIIDataSharing == true || data.consentForPIIDataSharing == false ) {
-          programUsersData.consentForPIIDataSharing = {
-            agree: data.consentForPIIDataSharing,
-            date: new Date()
-          }
-          
-        }
+        //For internal calls add consent using sunbird api----------->
+        
 
         //create or update query
         const query = { 
@@ -1062,16 +1056,10 @@ module.exports = class ProgramsHelper {
         if( programUsers.length > 0 ) {
 
           let update = {};
-          if( data.consentForPIIDataSharing == true || data.consentForPIIDataSharing == false ) {
-            update['$push'] = { consentHistory: programUsersData.consentForPIIDataSharing }
-          }
           update['$set'] = programUsersData;
           joinProgram = await programUsersHelper.update(query, update, {new:true});
 
         } else {
-          if( data.consentForPIIDataSharing == true || data.consentForPIIDataSharing == false ) {
-            programUsersData.consentHistory =  programUsersData.consentForPIIDataSharing;
-          }
 
           joinProgram = 
           await programUsersHelper.create(

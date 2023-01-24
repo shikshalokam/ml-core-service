@@ -6,21 +6,14 @@ module.exports = {
         required: true,
         index: true
       },
-      consentForPIIDataSharing: {
-        agree: Boolean,
-        date: Date
-      },
-      consentHistory: {
-          type: Array,
-          default: []
-      },
       userId: {
         type: String,
         index: true
       },
       noOfResourcesStarted: {
         type:Number,
-        index: true
+        index: true,
+        default: 0
       },
       userProfile: Object,
       userRoleInformation: Object,
