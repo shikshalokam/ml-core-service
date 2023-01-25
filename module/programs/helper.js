@@ -11,6 +11,7 @@ const entityTypesHelper = require(MODULES_BASE_PATH + "/entityTypes/helper");
 const entitiesHelper = require(MODULES_BASE_PATH + "/entities/helper");
 const userRolesHelper = require(MODULES_BASE_PATH + "/user-roles/helper");
 const userService = require(ROOT_PATH + "/generics/services/users");
+const consentService = require(ROOT_PATH + "/generics/services/consent");
 const kafkaProducersHelper = require(ROOT_PATH + "/generics/kafka/producers");
 const programUsersHelper = require(MODULES_BASE_PATH + "/programUsers/helper");
 
@@ -990,7 +991,7 @@ module.exports = class ProgramsHelper {
   * @returns {Object} - Details of the program join.
   */
 
-  static join( programId, data, userId, userToken, appName = "", appVersion = "" ) {
+  static join( programId, data, userId, userToken, appName = "", appVersion = "", internalAccessToken = "" ) {
     return new Promise(async (resolve, reject) => {
       try {
         //Using programId fetch program name. Also checking the program status in the query.
@@ -1009,25 +1010,25 @@ module.exports = class ProgramsHelper {
         let programUsersData = {};
         // Fetch user profile information by calling sunbird's user read api.
         // !Important check specific fields of userProfile.
-        let userProfile = await userService.profile(userToken, userId);
-        if (!userProfile.success || 
-            !userProfile.data ||
-            !userProfile.data.response ||
-            !userProfile.data.response.profileUserTypes ||
-            !userProfile.data.response.profileUserTypes.length > 0 ||
-            !userProfile.data.response.userLocations ||
-            !userProfile.data.response.userLocations.length > 0
-        ) {
-          throw ({
-            status: httpStatusCode.bad_request.status,
-            message: constants.apiResponses.PROGRAM_JOIN_FAILED
-          });      
-        } 
+        // let userProfile = await userService.profile(userToken, userId);
+        // if (!userProfile.success || 
+        //     !userProfile.data ||
+        //     !userProfile.data.response ||
+        //     !userProfile.data.response.profileUserTypes ||
+        //     !userProfile.data.response.profileUserTypes.length > 0 ||
+        //     !userProfile.data.response.userLocations ||
+        //     !userProfile.data.response.userLocations.length > 0
+        // ) {
+        //   throw ({
+        //     status: httpStatusCode.bad_request.status,
+        //     message: constants.apiResponses.PROGRAM_JOIN_FAILED
+        //   });      
+        // } 
         programUsersData = {
           programId: programId,
           userRoleInformation: data.userRoleInformation,
           userId: userId,
-          userProfile: userProfile.data.response
+          // userProfile: userProfile.data.response
         }
         if( appName != "" ) {
           programUsersData['appInformation.appName'] = appName;
@@ -1037,7 +1038,28 @@ module.exports = class ProgramsHelper {
         }
 
         //For internal calls add consent using sunbird api----------->
-        
+
+        if(internalAccessToken !== ""){
+          let consent = {
+            "request": {
+              "consent": {
+                // "status": constants.Consent.REVOKED,
+                // "userId": userProfile.data.response.id,
+                // "consumerId": userProfile.data.response.organisations.organisationId,
+                // "objectId":  programId,
+                // "objectType": constants.objectType.PROGRAM
+                "status": "ACTIVE",
+                "userId": "4d472816-49ba-4a57-872d-f887f7cbfec8",
+                "consumerId": "01269878797503692810",
+                "objectId": "63a948aef09e45000907597e",
+                "objectType": "Program"
+              }
+             }
+          }
+          let consentResponse = await consentService.consent(userToken, consent)
+          console.log(consentResponse)
+        }
+
 
         //create or update query
         const query = { 

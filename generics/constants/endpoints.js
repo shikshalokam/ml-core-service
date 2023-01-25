@@ -34,5 +34,6 @@ module.exports = {
     GET_LOCATION_DATA : "/v1/location/search",
     GET_FORM_DATA : "/plugin/v1/form/read",
     GET_SCHOOL_DATA : "/v1/org/search",
-    USER_READ_V5 : "/v5/user/read"
+    USER_READ_V5 : "/v5/user/read",
+    CONSENT_API: "/api/user/v1/consent/update"
 }
