@@ -1,8 +1,8 @@
 /**
- * name : users.js
- * author : Aman Jung Karki
- * Date : 11-Nov-2019
- * Description : All users related api call.
+ * name : consent.js
+ * author : Ankit Shahu
+ * Date : 24-jan-2023
+ * Description : Sunbird Consent API.
  */
 
 //dependencies

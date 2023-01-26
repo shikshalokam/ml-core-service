@@ -1,8 +1,0 @@
-// exports.Consent = {
-//     ACTIVE:"ACTIVE",
-//     REVOKED:"REVOKED"
-// }
-
-// exports.objectType = {
-//     PROGRAM:"Program"
-// }

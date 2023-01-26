@@ -840,7 +840,6 @@ module.exports = class SolutionsHelper {
             "certificateTemplateId"
           ]
         );
-        console.log(">>>>>>>>>>>>>>>>>>>",targetedSolutionDetails)
         if( !targetedSolutionDetails.length > 0 ) {
           throw {
             status : httpStatusCode["bad_request"].status,
