@@ -19,7 +19,6 @@ module.exports = function (app) {
   app.use(pagination);
 
   var router = async function (req, res, next) {
-    console.log("Request reched to route")
 
     if (!req.params.version) {
       next();

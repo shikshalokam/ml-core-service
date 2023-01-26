@@ -21,9 +21,10 @@ const consent = function ( token,consentData ) {
                     "x-authenticated-user-token" : token,
                     "Authorization" : process.env.SUNBIRD_SERVICE_AUTHERIZATION
                 },
-                json: consentData 
+                body: JSON.stringify(consentData) 
             };
-
+            console.log(url)
+            console.log(JSON.stringify(options))
             request.post(url,options,kendraCallback);
 
             function kendraCallback(err, data) {
@@ -35,18 +36,16 @@ const consent = function ( token,consentData ) {
                 if (err) {
                     result.success = false;
                 } else {
-
+                    
                     let response = JSON.parse(data.body);
-                    console.log("consentData>>>>>>>>>>>",response)
-                    if( response.status === httpStatusCode['ok'].status ) {
-                        result["data"] = response.result.response;
+                    if( response.responseCode === httpStatusCode['http_responsecode_ok'].message ) {
+                        result["data"] = response;
                     } else {
-                        result["message"] = response.message;
+                        result["message"] = response;
                         result.success = false;
                     }
 
                 }
-
                 return resolve(result);
             }
 

@@ -316,7 +316,6 @@ module.exports = class Solutions extends Abstract {
   async detailsBasedOnRoleAndLocation(req) {
     return new Promise(async (resolve, reject) => {
       try {
-        console.log("request Reched to this location")
 
         let solutionDetails = 
         await solutionsHelper.detailsBasedOnRoleAndLocation(
@@ -325,7 +324,6 @@ module.exports = class Solutions extends Abstract {
         );
           
         solutionDetails.result = solutionDetails.data;
-        console.log(solutionDetails)
         return resolve(solutionDetails);
 
       } catch (error) {

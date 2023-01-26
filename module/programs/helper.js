@@ -1010,25 +1010,25 @@ module.exports = class ProgramsHelper {
         let programUsersData = {};
         // Fetch user profile information by calling sunbird's user read api.
         // !Important check specific fields of userProfile.
-        // let userProfile = await userService.profile(userToken, userId);
-        // if (!userProfile.success || 
-        //     !userProfile.data ||
-        //     !userProfile.data.response ||
-        //     !userProfile.data.response.profileUserTypes ||
-        //     !userProfile.data.response.profileUserTypes.length > 0 ||
-        //     !userProfile.data.response.userLocations ||
-        //     !userProfile.data.response.userLocations.length > 0
-        // ) {
-        //   throw ({
-        //     status: httpStatusCode.bad_request.status,
-        //     message: constants.apiResponses.PROGRAM_JOIN_FAILED
-        //   });      
-        // } 
+        let userProfile = await userService.profile(userToken, userId);
+        if (!userProfile.success || 
+            !userProfile.data ||
+            !userProfile.data.response ||
+            !userProfile.data.response.profileUserTypes ||
+            !userProfile.data.response.profileUserTypes.length > 0 ||
+            !userProfile.data.response.userLocations ||
+            !userProfile.data.response.userLocations.length > 0
+        ) {
+          throw ({
+            status: httpStatusCode.bad_request.status,
+            message: constants.apiResponses.PROGRAM_JOIN_FAILED
+          });      
+        } 
         programUsersData = {
           programId: programId,
           userRoleInformation: data.userRoleInformation,
           userId: userId,
-          // userProfile: userProfile.data.response
+          userProfile: userProfile.data.response
         }
         if( appName != "" ) {
           programUsersData['appInformation.appName'] = appName;
@@ -1043,21 +1043,21 @@ module.exports = class ProgramsHelper {
           let consent = {
             "request": {
               "consent": {
-                // "status": constants.Consent.REVOKED,
-                // "userId": userProfile.data.response.id,
-                // "consumerId": userProfile.data.response.organisations.organisationId,
-                // "objectId":  programId,
-                // "objectType": constants.objectType.PROGRAM
-                "status": "ACTIVE",
-                "userId": "4d472816-49ba-4a57-872d-f887f7cbfec8",
-                "consumerId": "01269878797503692810",
-                "objectId": "63a948aef09e45000907597e",
-                "objectType": "Program"
+                "status": constants.Consent.REVOKED,
+                "userId": userProfile.data.response.id,
+                "consumerId": userProfile.data.response.organisations.organisationId,
+                "objectId":  programId,
+                "objectType": constants.objectType.PROGRAM
               }
              }
           }
           let consentResponse = await consentService.consent(userToken, consent)
-          console.log(consentResponse)
+          if(!consentResponse.success){
+            throw {
+              message: constants.apiResponses.PROGRAM_JOIN_FAILED,
+              status: httpStatusCode.bad_request.status
+            }
+          }
         }
 
 
