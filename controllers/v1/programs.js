@@ -529,7 +529,10 @@ module.exports = class Programs extends Abstract {
           req.headers.appname ? req.headers.appname : "",
           req.headers["x-app-ver"] ? 
           req.headers["x-app-ver"] : 
-          req.headers.appversion ? req.headers.appversion : ""
+          req.headers.appversion ? req.headers.appversion : "",
+          req.headers["internal-access-token"] ? 
+          req.headers["internal-access-token"] : 
+          req.headers.internalAccessToken ? req.headers.internalAccessToken : ""
         );    
         programJoin["result"] = programJoin.data;
         return resolve(programJoin);

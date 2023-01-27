@@ -11,6 +11,7 @@ const entityTypesHelper = require(MODULES_BASE_PATH + "/entityTypes/helper");
 const entitiesHelper = require(MODULES_BASE_PATH + "/entities/helper");
 const userRolesHelper = require(MODULES_BASE_PATH + "/user-roles/helper");
 const userService = require(ROOT_PATH + "/generics/services/users");
+const consentService = require(ROOT_PATH + "/generics/services/consent");
 const kafkaProducersHelper = require(ROOT_PATH + "/generics/kafka/producers");
 const programUsersHelper = require(MODULES_BASE_PATH + "/programUsers/helper");
 
@@ -990,7 +991,7 @@ module.exports = class ProgramsHelper {
   * @returns {Object} - Details of the program join.
   */
 
-  static join( programId, data, userId, userToken, appName = "", appVersion = "" ) {
+  static join( programId, data, userId, userToken, appName = "", appVersion = "", internalAccessToken = "" ) {
     return new Promise(async (resolve, reject) => {
       try {
         //Using programId fetch program name. Also checking the program status in the query.
@@ -1037,7 +1038,28 @@ module.exports = class ProgramsHelper {
         }
 
         //For internal calls add consent using sunbird api----------->
-        
+
+        if(internalAccessToken !== ""){
+          let consent = {
+            "request": {
+              "consent": {
+                "status": constants.Consent.REVOKED,
+                "userId": userProfile.data.response.id,
+                "consumerId": userProfile.data.response.organisations.organisationId,
+                "objectId":  programId,
+                "objectType": constants.objectType.PROGRAM
+              }
+             }
+          }
+          let consentResponse = await consentService.consent(userToken, consent)
+          if(!consentResponse.success){
+            throw {
+              message: constants.apiResponses.PROGRAM_JOIN_FAILED,
+              status: httpStatusCode.bad_request.status
+            }
+          }
+        }
+
 
         //create or update query
         const query = { 
