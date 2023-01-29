@@ -11,7 +11,6 @@ const entityTypesHelper = require(MODULES_BASE_PATH + "/entityTypes/helper");
 const entitiesHelper = require(MODULES_BASE_PATH + "/entities/helper");
 const userRolesHelper = require(MODULES_BASE_PATH + "/user-roles/helper");
 const userService = require(ROOT_PATH + "/generics/services/users");
-const consentService = require(ROOT_PATH + "/generics/services/consent");
 const kafkaProducersHelper = require(ROOT_PATH + "/generics/kafka/producers");
 const programUsersHelper = require(MODULES_BASE_PATH + "/programUsers/helper");
 
@@ -1037,21 +1036,20 @@ module.exports = class ProgramsHelper {
           programUsersData['appInformation.appVersion'] = appVersion;
         }
 
-        //For internal calls add consent using sunbird api----------->
-
+        //For internal calls add consent using sunbird api
         if(internalAccessToken !== ""){
           let consent = {
             "request": {
               "consent": {
-                "status": constants.Consent.REVOKED,
+                "status": constants.common.REVOKED,
                 "userId": userProfile.data.response.id,
                 "consumerId": userProfile.data.response.organisations.organisationId,
                 "objectId":  programId,
-                "objectType": constants.objectType.PROGRAM
+                "objectType": constants.common.PROGRAM
               }
              }
           }
-          let consentResponse = await consentService.consent(userToken, consent)
+          let consentResponse = await userService.consent(userToken, consent)
           if(!consentResponse.success){
             throw {
               message: constants.apiResponses.PROGRAM_JOIN_FAILED,
@@ -1059,7 +1057,6 @@ module.exports = class ProgramsHelper {
             }
           }
         }
-
 
         //create or update query
         const query = { 
@@ -1076,13 +1073,19 @@ module.exports = class ProgramsHelper {
         // Data already present in programUsers collection, Require updation, else create new entry.
         let joinProgram;
         if( programUsers.length > 0 ) {
-
+          //Update the collection
           let update = {};
           update['$set'] = programUsersData;
+          if ( data.isResource ) {
+            update['$inc'] = { noOfResourcesStarted : 1 }
+          }
           joinProgram = await programUsersHelper.update(query, update, {new:true});
 
         } else {
-
+          //Create new entry to collection
+          if ( data.isResource ) {
+            programUsersData.noOfResourcesStarted = 1;
+          }
           joinProgram = 
           await programUsersHelper.create(
             programUsersData
