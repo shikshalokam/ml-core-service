@@ -51,7 +51,8 @@ module.exports = {
       requestForPIIConsent: {
         type: Boolean,
         default: false
-      }
+      },
+      metaInformation: Object
     }
   };
   

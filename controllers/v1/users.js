@@ -366,7 +366,8 @@ module.exports = class Users extends Abstract {
                   req.body,
                   req.pageNo,
                   req.pageSize,
-                  req.searchText
+                  req.searchText,
+                  req.userDetails.userId
               );
 
               programs.result = programs.data;

@@ -16,6 +16,7 @@ const formService = require(ROOT_PATH + '/generics/services/form');
 const programUsersHelper = require(MODULES_BASE_PATH + "/programUsers/helper");
 
 
+
 /**
     * UsersHelper
     * @class
@@ -553,12 +554,12 @@ module.exports = class UsersHelper {
             programId: programId,
             userId: userId
           },
-          ["consentForPIIDataSharing"]
+          ["_id"]
         );
        
-        //if consentForPIIDataSharing is present append with response
-        if( programUsersData.length > 0 && programUsersData[0].consentForPIIDataSharing ) {
-          result.consentForPIIDataSharing = programUsersData[0].consentForPIIDataSharing;
+        //if already joined the program
+        if( programUsersData.length > 0 ) {
+          result.programJoined = true;
         }
         
         return resolve({
@@ -590,29 +591,75 @@ module.exports = class UsersHelper {
    * @returns {Array} - Get user targeted programs.
    */
 
-  static programs(bodyData, pageNo, pageSize, searchText) {
+  static programs(bodyData, pageNo, pageSize, searchText, userId) {
     return new Promise(async (resolve, reject) => {
       try {
-        let targetedProgrms = await programsHelper.forUserRoleAndLocation(
+        
+        let targetedPrograms = await programsHelper.forUserRoleAndLocation(
           bodyData,
           pageSize,
           pageNo,
           searchText
         );
 
-        if (!targetedProgrms.success) {
+        if (!targetedPrograms.success) {
           throw {
             message: constants.apiResponses.PROGRAM_NOT_FOUND,
           };
         }
-
-        targetedProgrms.data["description"] =
+        targetedPrograms.data["description"] =
           constants.apiResponses.PROGRAM_DESCRIPTION;
-
+  
+        let nontargetedJoinedPrograms  = await this.getNonTargetedJoinedProgram(
+          bodyData,
+          1,
+          targetedPrograms.data.count,
+          searchText,
+          userId          
+        );
+        let targetedProgramCount = (targetedPrograms.data.count) ? targetedPrograms.data.count : 0
+        targetedPrograms.data.count = targetedPrograms.data.count + nontargetedJoinedPrograms.count;
+        
+        if ( !nontargetedJoinedPrograms.count > 0 || (pageSize*pageNo) <=  targetedProgramCount ) {
+          return resolve({
+            success: true,
+            message: constants.apiResponses.USER_TARGETED_PROGRAMS_FETCHED,
+            data: targetedPrograms.data
+          });
+        } else {
+          let maxLimit = 0;
+          let minLimit = 0;
+          if ( targetedPrograms.data.data.length == 0 ) {
+            maxLimit = (pageNo*pageSize)-targetedProgramCount;
+            minLimit = maxLimit-pageSize;
+          } else if ( targetedPrograms.data.data.length < pageSize ) {
+            maxLimit = pageSize-targetedPrograms.data.data.length;
+          }
+          
+          let maxIndex = (maxLimit <= nontargetedJoinedPrograms.data.length) ? maxLimit : nontargetedJoinedPrograms.data.length;
+          if ( minLimit <= nontargetedJoinedPrograms.data.length ) { 
+            for( let index = minLimit; index < maxIndex; index++ ) {
+              //fetch resourse started details
+              let programUsersData = await programUsersHelper.find(
+                {
+                  userId: userId,
+                  programId: nontargetedJoinedPrograms.data[index]._id
+                },
+                ["noOfResourcesStarted"]
+              );
+              if ( programUsersData.length > 0  ) {
+                nontargetedJoinedPrograms.data[index].solutions = programUsersData[0].noOfResourcesStarted;
+              }
+              
+              targetedPrograms.data.data.push(nontargetedJoinedPrograms.data[index]);
+            }
+          }
+        }
+        
         return resolve({
           success: true,
           message: constants.apiResponses.USER_TARGETED_PROGRAMS_FETCHED,
-          data: targetedProgrms.data
+          data: targetedPrograms.data
         });
       } catch (error) {
         return resolve({
@@ -893,6 +940,89 @@ module.exports = class UsersHelper {
   }
 
 
+  /**
+   * Find non-targeted joined program.
+   * @method
+   * @name getNonTargetedJoinedProgram
+   * @param {Object} requestedData - requested data
+   * @returns {Object} - non-targeted joined program details.
+   */
+
+  static getNonTargetedJoinedProgram( bodyData, pageNo, pageSize, searchText, userId ) {
+    return new Promise(async (resolve, reject) => {
+      try {
+        let queryData = await programsHelper.queryBasedOnRoleAndLocation(
+          bodyData
+        );
+        
+        if( !queryData.success ) {
+          return resolve(queryData);
+        }
+
+        // get all targeted program ids
+        let allTargetedPrograms = await programsHelper.list(
+          pageNo,
+          pageSize,
+          "",
+          queryData.data,
+          ["_id"]
+        );
+        let targettedProgramIds = [];
+        let programUsersIds = [];
+        if ( allTargetedPrograms.success && allTargetedPrograms.data && allTargetedPrograms.data.data.length > 0) {
+          targettedProgramIds = allTargetedPrograms.data.data.map(function (obj) {
+            return obj._id;
+          });
+        }
+
+        //find programs joined by the user
+        let programUsersData = await programUsersHelper.find(
+          {
+            userId: userId
+          },
+          ["programId"]
+        );
+        
+        if ( programUsersData.length > 0 ) {
+          programUsersIds = programUsersData.map(function (obj) {
+            return obj.programId;
+          });
+        }
+
+        let nonTargettedPrograms = _.differenceWith(programUsersIds, targettedProgramIds,_.isEqual)
+        let nonTargettedProgramDetails = [];
+        if ( nonTargettedPrograms.length > 0 ) {
+
+          let findQuery = {
+              "_id": { "$in" : nonTargettedPrograms }
+          }
+          //get non-targeted program details
+          nonTargettedProgramDetails = await programsHelper.list(
+            1,
+            nonTargettedPrograms.length,
+            searchText,
+            findQuery,
+            ["name", "externalId","metaInformation"]
+          );
+        }
+        
+        return resolve({
+          success: true,
+          data: nonTargettedProgramDetails.data.data,
+          count: nonTargettedProgramDetails.data.data.length
+        });
+      } catch (error) {
+        return resolve({
+          success: false,
+          status: error.status
+            ? error.status
+            : httpStatusCode['internal_server_error'].status,
+          message: error.message
+        });
+      }
+    });
+  }
+
   
 };
 
@@ -952,4 +1082,6 @@ function _createSolutionData(name = "", externalId = "", isAPrivateProgram = "",
     return solutionData;
 
 }
+
+
 
