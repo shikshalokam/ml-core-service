@@ -7,7 +7,7 @@
 
 // Dependencies
 const userExtensionHelper = require(ROOT_PATH+"/module/user-extension/helper");
-
+const userExtensionsHelperV2 = require(ROOT_PATH+"/module/user-extension/helperv2");
 /**
     * UserExtension
     * @class
@@ -262,6 +262,73 @@ module.exports = class UserExtension extends Abstract {
 
 
     })
+  }
+
+
+
+   /**
+  * @api {get} /kendra/api/v1/user-extension/read
+  * @apiVersion 1.0.0
+  * @apiName user Extension List
+  * @apiGroup User Extension
+  * @apiHeader {String} X-authenticated-user-token Authenticity token
+  * @apiSampleRequest /kendra/api/v1/user-extension/read
+  * @apiUse successBody
+  * @apiUse errorBody
+  * @apiParamExample {json} Response:
+  * {
+   "status":200,
+   "message":"User extension fetched successfully",
+   "success":true,
+   "result":{
+      "_id":"60a777528b5424712b5faec3",
+      "platformRoles":[
+         {
+            "programs":[
+               "5f34ec17585244939f89f90c",
+               "5f34e44681871d939950bca6"
+            ]
+         },
+         {
+            "programs":[
+               "5f34ec17585244939f89f90c",
+               "5f75b90454670074deacf087"
+            ]
+         },
+         {
+            "programs":[
+               "5f34ec17585244939f89f90c",
+               "5f75b90454670074deacf087"
+            ]
+         }
+      ]
+   }
+}
+**/
+  read(req){
+    return new Promise(async (resolve, reject) => {
+      let userInformation = await userExtensionsHelperV2.userExtensionDocument({
+        userId: req.userDetails.userId,
+        // userId: "fca2925f-1eee-4654-9177-fece3fd6afc9",
+        "platformRoles.code" : { $in : ["PROGRAM_MANAGER","PROGRAM_DESIGNER"]},
+        status: constants.common.ACTIVE,
+        isDeleted: false
+      }, { _id: 1, "platformRoles.programs" :1});
+
+      if ( !userInformation ) {
+          return resolve({
+              status: httpStatusCode.bad_request.status,
+              message: constants.apiResponses.NOT_AUTHORIZED_TO_ACCESS
+          })
+      }else {
+        return resolve({
+          status: httpStatusCode.ok.status,
+          message: constants.apiResponses.USER_EXTENSION_FTECHED,
+          success: true,
+          result: userInformation
+        })
+      }
+    });
   }
 
 };

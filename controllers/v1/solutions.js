@@ -1033,25 +1033,25 @@ module.exports = class Solutions extends Abstract {
    * @returns {JSON}
    */
 
-  async read(req) {
-    return new Promise(async (resolve, reject) => {
-      try {
+  // async read(req) {
+  //   return new Promise(async (resolve, reject) => {
+  //     try {
 
-        let solutionData = await solutionsHelper.read(
-          req.params._id, 
-          req.userDetails.userId
-        );
+  //       let solutionData = await solutionsHelper.read(
+  //         req.params._id, 
+  //         req.userDetails.userId
+  //       );
 
-        return resolve(solutionData);
-      }
-      catch (error) {
-        reject({
-          status: error.status || httpStatusCode.internal_server_error.status,
-          message: error.message || httpStatusCode.internal_server_error.message,
-          errorObject: error
-        })
-      }
-    })
-  } 
+  //       return resolve(solutionData);
+  //     }
+  //     catch (error) {
+  //       reject({
+  //         status: error.status || httpStatusCode.internal_server_error.status,
+  //         message: error.message || httpStatusCode.internal_server_error.message,
+  //         errorObject: error
+  //       })
+  //     }
+  //   })
+  // } 
 
 }
