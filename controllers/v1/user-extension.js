@@ -309,7 +309,6 @@ module.exports = class UserExtension extends Abstract {
     return new Promise(async (resolve, reject) => {
       let userInformation = await userExtensionsHelperV2.userExtensionDocument({
         userId: req.userDetails.userId,
-        // userId: "fca2925f-1eee-4654-9177-fece3fd6afc9",
         "platformRoles.code" : { $in : ["PROGRAM_MANAGER","PROGRAM_DESIGNER"]},
         status: constants.common.ACTIVE,
         isDeleted: false
