@@ -993,6 +993,7 @@ module.exports = class ProgramsHelper {
   static join( programId, data, userId, userToken, appName = "", appVersion = "", internalAccessToken = "" ) {
     return new Promise(async (resolve, reject) => {
       try {
+        
         //Using programId fetch program name. Also checking the program status in the query.
         let programData = await this.programDocuments({
           _id: programId,
@@ -1025,7 +1026,7 @@ module.exports = class ProgramsHelper {
         } 
         programUsersData = {
           programId: programId,
-          userRoleInformation: data.userRoleInformation,
+          userRoleInformation: data.userRoleInformation ? data.userRoleInformation : {},
           userId: userId,
           userProfile: userProfile.data.response
         }

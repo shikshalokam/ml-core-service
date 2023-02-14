@@ -35,7 +35,9 @@ module.exports = (req) => {
         join : function () {
             req.checkParams("_id").exists().withMessage("required program id");
             req.checkParams("_id").isMongoId().withMessage("invalid Mongo Id");
-            req.checkBody("userRoleInformation").exists().withMessage("required userRoleInformation to be added");
+            if ( !req.headers["internal-access-token"] || req.headers["internal-access-token"]=== "" ) {
+                req.checkBody("userRoleInformation").exists().withMessage("required userRoleInformation to be added");
+            }
         },
     }
 
