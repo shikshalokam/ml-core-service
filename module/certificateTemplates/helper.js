@@ -251,6 +251,12 @@ module.exports = class CertificateTemplatesHelper {
 
             if ( textData[textKeys[textKeysIndex]] ) {
               let updateText = textData[textKeys[textKeysIndex]];
+              if(textKeys[textKeysIndex] != "stateTitle"){
+                let nameAndDesignation = updateText.split(",")
+                let name = nameAndDesignation.shift();
+                let designation = nameAndDesignation.reduce((acc,cuu) => acc + "," + cuu)
+                updateText = name +"\n"+ designation
+              }
               const element = $('#' + textKeys[textKeysIndex]);
               element.text(updateText);
             }
