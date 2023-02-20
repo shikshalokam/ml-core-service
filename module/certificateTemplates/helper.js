@@ -213,7 +213,7 @@ module.exports = class CertificateTemplatesHelper {
           let baseTemplateData = await database.models.certificateBaseTemplates.find({
             _id: baseTemplateId
           },["url"]).lean();
-          
+
           if ( !baseTemplateData.length > 0 || !baseTemplateData[0].url || baseTemplateData[0].url == "" ) {
             throw {
               message: constants.apiResponses.BASE_CERTIFICATE_TEMPLATE_NOT_FOUND
@@ -232,7 +232,7 @@ module.exports = class CertificateTemplatesHelper {
           const $ = cheerio.load(baseTemplate.result);
           let htmltags = ["<html>","</html>","<head>","</head>","<body>","</body>"];
           let imageNames = ["stateLogo1","stateLogo2","signatureImg1","signatureImg2"];
-          let textKeys = ["stateTitle","signatureTitle1a","signatureTitle2a"];
+          let textKeys = ["stateTitle","signatureTitleName1","signatureTitleDesignation1","signatureTitleName2","signatureTitleDesignation2"];
 
           // edit image elements
           for ( let imageNamesIndex = 0; imageNamesIndex < imageNames.length; imageNamesIndex++ ) {
@@ -251,11 +251,10 @@ module.exports = class CertificateTemplatesHelper {
 
             if ( textData[textKeys[textKeysIndex]] ) {
               let updateText = textData[textKeys[textKeysIndex]];
-              if(textKeys[textKeysIndex] != "stateTitle"){
-                let nameAndDesignation = updateText.split(",")
-                let name = nameAndDesignation.shift();
-                let designation = nameAndDesignation.reduce((acc,cuu) => acc + "," + cuu)
-                updateText = name +"\n"+ designation
+              if(updateText.length > 28){
+                throw {
+                  message: constants.apiResponses.BASE_CERTIFICATE_TEMPLATE_NAME_AND_DESIGNATION_ERROR
+                }
               }
               const element = $('#' + textKeys[textKeysIndex]);
               element.text(updateText);

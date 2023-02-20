@@ -193,4 +193,5 @@ module.exports = {
   "BASE_CERTIFICATE_TEMPLATE_NOT_FOUND" : "Base certificate template not found",
   "CERTIFICATE_BASE_TEMPLATE_UPDATED" : "Base template updated successfully",
   "CERTIFICATE_BASE_TEMPLATE_NOT_UPDATED" : "Base template updation failed",
+  "BASE_CERTIFICATE_TEMPLATE_NAME_AND_DESIGNATION_ERROR":"Name or Designation character are above limit. Please keep till 28 characters."
 };
