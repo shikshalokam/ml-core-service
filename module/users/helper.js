@@ -5,6 +5,7 @@
  * Description : All User related information including sys_admin.
  */
 
+
 // Dependencies
 const programsHelper = require(MODULES_BASE_PATH + "/programs/helper");
 const solutionsHelper = require(MODULES_BASE_PATH + "/solutions/helper");
@@ -14,6 +15,7 @@ const improvementProjectService = require(ROOT_PATH + "/generics/services/improv
 const userService = require(ROOT_PATH + "/generics/services/users");
 const formService = require(ROOT_PATH + '/generics/services/form');
 const programUsersHelper = require(MODULES_BASE_PATH + "/programUsers/helper");
+const surveyService = require(ROOT_PATH + '/generics/services/survey');
 
 
 
@@ -539,6 +541,31 @@ module.exports = class UsersHelper {
           mergedData = mergedData.slice(startIndex, endIndex);
         }
 
+        // find submission for survey submission
+        for ( let solutionPointer = 0; solutionPointer < mergedData.length; solutionPointer++ ) {
+          if ( mergedData[solutionPointer].type && mergedData[solutionPointer].type === constants.common.SURVEY ) {
+              let userSurveySubmission = 
+              await surveyService.assignedSurveys(
+                token,
+                "",
+                "",
+                false,
+                mergedData[solutionPointer]._id
+            );
+
+            // If survey solution has any submission by user add it's id to response 
+            if ( userSurveySubmission.success &&
+                 userSurveySubmission.data &&
+                 userSurveySubmission.data.data &&
+                 userSurveySubmission.data.data.length > 0 &&
+                 userSurveySubmission.data.data[0].submissionId &&
+                 userSurveySubmission.data.data[0].submissionId !== ""
+            ) {
+              mergedData[solutionPointer].submissionId = userSurveySubmission.data.data[0].submissionId;
+            }
+          }
+        }
+        
         let result = {
           programName: programData[0].name,
           programId: programId,

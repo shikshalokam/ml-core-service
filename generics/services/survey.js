@@ -77,10 +77,11 @@ var assignedObservations = function ( token,search = "",filter = "" ) {
   * @param {String} token - logged in user token.
   * @param {String} [search = ""] - search data.
   * @param {String} [filter = ""] - filter key.
+  * @param {String} solutionId - survey solution Id.
   * @returns {Promise} returns a promise.
 */
 
-var assignedSurveys = function ( token,search = "",filter = "", surveyReportPage = "" ) {
+var assignedSurveys = function ( token,search = "",filter = "", surveyReportPage = "",solutionId = "" ) {
 
     let userAssignedUrl = 
     process.env.ML_SURVEY_SERVICE_URL +
@@ -93,6 +94,10 @@ var assignedSurveys = function ( token,search = "",filter = "", surveyReportPage
     if( surveyReportPage !== "" ) {
         userAssignedUrl = userAssignedUrl + "&surveyReportPage=" + surveyReportPage;
     } 
+
+    if( solutionId !== "" ) {
+        userAssignedUrl = userAssignedUrl + "&solutionId=" + solutionId;
+    }
     
     return new Promise(async (resolve, reject) => {
         try {
