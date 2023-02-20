@@ -195,8 +195,13 @@ let enviromentVariables = {
     "optional" : false
   },
   "KAFKA_URL" : {
-    "message" : "Required",
-    "optional" : false
+    "message" : "Required Kafka Url",
+    "optional" : true,
+    "requiredIf" : {
+      "key": "KAFKA_COMMUNICATIONS_ON_OFF",
+      "operator": "EQUALS",
+      "value" : "ON"
+    }
   },
 }
 

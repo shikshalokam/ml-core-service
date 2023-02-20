@@ -7,7 +7,7 @@
 
 // Dependencies
 const kafkaCommunicationsOnOff = (!process.env.KAFKA_COMMUNICATIONS_ON_OFF || process.env.KAFKA_COMMUNICATIONS_ON_OFF != "OFF") ? "ON" : "OFF";
-const programUsersSubmissionTopic = (process.env.PROGRAM_USERS_SUBMISSION_TOPIC && process.env.PROGRAM_USERS_SUBMISSION_TOPIC != "OFF") ? process.env.PROGRAM_USERS_SUBMISSION_TOPIC : "sl-improvement-project-submission-dev";
+const programUsersSubmissionTopic = (process.env.PROGRAM_USERS_JOINED_TOPIC && process.env.PROGRAM_USERS_JOINED_TOPIC != "OFF") ? process.env.PROGRAM_USERS_JOINED_TOPIC : "sl-improvement-project-submission-dev";
 
 /**
   * Push program users to kafka.

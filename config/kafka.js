@@ -8,7 +8,7 @@
 
 //dependencies
 const kafka = require('kafka-node');
-const PROGRAM_USERS_SUBMISSION_TOPIC = process.env.PROGRAM_USERS_SUBMISSION_TOPIC;
+const PROGRAM_USERS_JOINED_TOPIC = process.env.PROGRAM_USERS_JOINED_TOPIC;
 
 /**
   * Kafka configurations.
@@ -40,7 +40,7 @@ const connect = function() {
     })
 
     _sendToKafkaConsumers(
-      PROGRAM_USERS_SUBMISSION_TOPIC,
+      PROGRAM_USERS_JOINED_TOPIC,
       process.env.KAFKA_URL
     );
 
@@ -79,14 +79,14 @@ var _sendToKafkaConsumers = function (topic,host) {
       console.log("-------Kafka consumer log ends here------------------");
   
 
-      if (message && message.topic === PROGRAM_USERS_SUBMISSION_TOPIC) {
+      if (message && message.topic === PROGRAM_USERS_JOINED_TOPIC) {
         submissionsConsumer.messageReceived(message);
       }
     });
 
     consumer.on('error', async function (error) {
 
-      if(error.topics && error.topics[0] === PROGRAM_USERS_SUBMISSION_TOPIC) {
+      if(error.topics && error.topics[0] === PROGRAM_USERS_JOINED_TOPIC) {
         submissionsConsumer.errorTriggered(error);
       }
 

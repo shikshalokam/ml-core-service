@@ -549,10 +549,10 @@ module.exports = class UsersHelper {
         };
 
         //check programUsers collection for consentForPIIDataSharing
-        let programUsersData = await programUsersHelper.find(
+        let programUsersData = await programUsersHelper.programUsersDocuments(
           {
-            programId: programId,
-            userId: userId
+            userId: userId,
+            programId: programId
           },
           ["_id"]
         );
@@ -594,7 +594,7 @@ module.exports = class UsersHelper {
   static programs(bodyData, pageNo, pageSize, searchText, userId) {
     return new Promise(async (resolve, reject) => {
       try {
-        
+        // Here program details matching the user profile is retrieved.
         let targetedPrograms = await programsHelper.forUserRoleAndLocation(
           bodyData,
           pageSize,
@@ -607,10 +607,10 @@ module.exports = class UsersHelper {
             message: constants.apiResponses.PROGRAM_NOT_FOUND,
           };
         }
-        targetedPrograms.data["description"] =
-          constants.apiResponses.PROGRAM_DESCRIPTION;
-  
-        let nontargetedJoinedPrograms  = await this.getNonTargetedJoinedProgram(
+        targetedPrograms.data["description"] = constants.apiResponses.PROGRAM_DESCRIPTION;
+
+        // In case user changed profile after joined a program, we need to find the such program details. (programs not targeted to user profile anymore)
+        let nontargetedJoinedPrograms  = await this.getUserJoinedProgramDetailsWithPreviousProfiles(
           bodyData,
           1,
           targetedPrograms.data.count,
@@ -618,8 +618,10 @@ module.exports = class UsersHelper {
           userId          
         );
         let targetedProgramCount = (targetedPrograms.data.count) ? targetedPrograms.data.count : 0
+        // need to update count. 
         targetedPrograms.data.count = targetedPrograms.data.count + nontargetedJoinedPrograms.count;
         
+        // if user hasn't changed profile or request pagination doesn't exceed total targeted programs
         if ( !nontargetedJoinedPrograms.count > 0 || (pageSize*pageNo) <=  targetedProgramCount ) {
           return resolve({
             success: true,
@@ -629,10 +631,11 @@ module.exports = class UsersHelper {
         } else {
           let maxLimit = 0;
           let minLimit = 0;
-          if ( targetedPrograms.data.data.length == 0 ) {
+          // if no targeted program for user 
+          if ( targetedPrograms.data.data.length === 0 ) {
             maxLimit = (pageNo*pageSize)-targetedProgramCount;
             minLimit = maxLimit-pageSize;
-          } else if ( targetedPrograms.data.data.length < pageSize ) {
+          } else if ( targetedPrograms.data.data.length < pageSize ) { 
             maxLimit = pageSize-targetedPrograms.data.data.length;
           }
           
@@ -640,7 +643,7 @@ module.exports = class UsersHelper {
           if ( minLimit <= nontargetedJoinedPrograms.data.length ) { 
             for( let index = minLimit; index < maxIndex; index++ ) {
               //fetch resourse started details
-              let programUsersData = await programUsersHelper.find(
+              let programUsersData = await programUsersHelper.programUsersDocuments(
                 {
                   userId: userId,
                   programId: nontargetedJoinedPrograms.data[index]._id
@@ -943,14 +946,15 @@ module.exports = class UsersHelper {
   /**
    * Find non-targeted joined program.
    * @method
-   * @name getNonTargetedJoinedProgram
+   * @name getUserJoinedProgramDetailsWithPreviousProfiles
    * @param {Object} requestedData - requested data
    * @returns {Object} - non-targeted joined program details.
    */
 
-  static getNonTargetedJoinedProgram( bodyData, pageNo, pageSize, searchText, userId ) {
+  static getUserJoinedProgramDetailsWithPreviousProfiles( bodyData, pageNo, pageSize, searchText, userId ) {
     return new Promise(async (resolve, reject) => {
       try {
+        // step 1 -> get all targeted program's Id, to the user profile.
         let queryData = await programsHelper.queryBasedOnRoleAndLocation(
           bodyData
         );
@@ -959,7 +963,8 @@ module.exports = class UsersHelper {
           return resolve(queryData);
         }
 
-        // get all targeted program ids
+        // get all targeted program ids.
+        // we have to recall this function here because we need to get all program details. ie) pageNo := 1 && pageSize:= toatal targeted program count.
         let allTargetedPrograms = await programsHelper.list(
           pageNo,
           pageSize,
@@ -969,14 +974,16 @@ module.exports = class UsersHelper {
         );
         let targettedProgramIds = [];
         let programUsersIds = [];
+      
         if ( allTargetedPrograms.success && allTargetedPrograms.data && allTargetedPrograms.data.data.length > 0) {
           targettedProgramIds = allTargetedPrograms.data.data.map(function (obj) {
             return obj._id;
           });
         }
 
-        //find programs joined by the user
-        let programUsersData = await programUsersHelper.find(
+        // find all programs joined by the user
+        // programUsersData will contain list of programs joined by user from all the profiles. This can be considered as the super set of user programs
+        let programUsersData = await programUsersHelper.programUsersDocuments(
           {
             userId: userId
           },
@@ -988,18 +995,18 @@ module.exports = class UsersHelper {
             return obj.programId;
           });
         }
-
-        let nonTargettedPrograms = _.differenceWith(programUsersIds, targettedProgramIds,_.isEqual)
+        // if we find the difference between programUsersData and targettedProgramIds we will get program details joined by user other than the current profile
+        let previousProfilesJoinedProgramIds = _.differenceWith(programUsersIds, targettedProgramIds,_.isEqual)
         let nonTargettedProgramDetails = [];
-        if ( nonTargettedPrograms.length > 0 ) {
-
+        if ( previousProfilesJoinedProgramIds.length > 0 ) {
+          // We only have prograIds of user joined from old profiles. Need to get program details using these Ids
           let findQuery = {
-              "_id": { "$in" : nonTargettedPrograms }
+              "_id": { "$in" : previousProfilesJoinedProgramIds }
           }
           //get non-targeted program details
           nonTargettedProgramDetails = await programsHelper.list(
             1,
-            nonTargettedPrograms.length,
+            previousProfilesJoinedProgramIds.length,
             searchText,
             findQuery,
             ["name", "externalId","metaInformation"]

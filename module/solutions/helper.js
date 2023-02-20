@@ -584,7 +584,7 @@ module.exports = class SolutionsHelper {
             facetQuery,
             projection2
           ]);
-
+          
           return resolve({
             success : true,
             message : constants.apiResponses.SOLUTIONS_LIST,

@@ -52,7 +52,11 @@ module.exports = {
         type: Boolean,
         default: false
       },
-      metaInformation: Object
+      metaInformation: Object,
+      programAuthorOrgId: {
+        type: String,
+        required: true
+      }
     }
   };
   

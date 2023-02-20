@@ -982,23 +982,25 @@ module.exports = class ProgramsHelper {
   * @method
   * @name join
   * @param {String} programId - Program Id.
-  * @param {Object} data - body data.
+  * @param {Object} data - body data (can include isResourse flag && userRoleInformation).
   * @param {String} userId - Logged in user id.
   * @param {String} userToken - User token.
   * @param {String} [appName = ""] - App Name.
   * @param {String} [appVersion = ""] - App Version.
+  * @param {Boolean} callConsetAPIOnBehalfOfUser - required to call consent api or not
   * @returns {Object} - Details of the program join.
   */
 
-  static join( programId, data, userId, userToken, appName = "", appVersion = "", internalAccessToken = "" ) {
+  static join( programId, data, userId, userToken, appName = "", appVersion = "", callConsetAPIOnBehalfOfUser = false ) {
     return new Promise(async (resolve, reject) => {
       try {
         
         //Using programId fetch program name. Also checking the program status in the query.
         let programData = await this.programDocuments({
           _id: programId,
-          status: constants.common.ACTIVE
-        },["name", "externalId"]);
+          status: constants.common.ACTIVE,
+          deleted: false
+        },["name", "externalId","programAuthorOrgId"]);
         
         if ( !programData.length > 0 ) {
           throw ({
@@ -1026,9 +1028,9 @@ module.exports = class ProgramsHelper {
         } 
         programUsersData = {
           programId: programId,
-          userRoleInformation: data.userRoleInformation ? data.userRoleInformation : {},
+          userRoleInformation: data.userRoleInformation,
           userId: userId,
-          userProfile: userProfile.data.response
+          // userProfile: userProfile.data.response
         }
         if( appName != "" ) {
           programUsersData['appInformation.appName'] = appName;
@@ -1038,19 +1040,25 @@ module.exports = class ProgramsHelper {
         }
 
         //For internal calls add consent using sunbird api
-        if(internalAccessToken !== ""){
-          let consent = {
+        if(callConsetAPIOnBehalfOfUser){
+          if( !programData[0].programAuthorOrgId || programData[0].programAuthorOrgId == "" ) {
+            throw {
+              message: constants.apiResponses.PROGRAM_JOIN_FAILED,
+              status: httpStatusCode.bad_request.status
+            }
+          }
+          let userConsentRequestBody = {
             "request": {
               "consent": {
                 "status": constants.common.REVOKED,
                 "userId": userProfile.data.response.id,
-                "consumerId": userProfile.data.response.organisations.organisationId,
+                "consumerId": programData[0].programAuthorOrgId,
                 "objectId":  programId,
                 "objectType": constants.common.PROGRAM
               }
              }
           }
-          let consentResponse = await userService.consent(userToken, consent)
+          let consentResponse = await userService.setUserConsent(userToken, userConsentRequestBody)
           if(!consentResponse.success){
             throw {
               message: constants.apiResponses.PROGRAM_JOIN_FAILED,
@@ -1064,35 +1072,15 @@ module.exports = class ProgramsHelper {
           programId: programId,
           userId: userId
         };
-
-        //Check data already present in db.
-        const programUsers = await programUsersHelper.find(
-          query,
-          ["_id"]
-        );
-        
-        // Data already present in programUsers collection, Require updation, else create new entry.
         let joinProgram;
-        if( programUsers.length > 0 ) {
-          //Update the collection
-          let update = {};
-          update['$set'] = programUsersData;
-          if ( data.isResource ) {
-            update['$inc'] = { noOfResourcesStarted : 1 }
-          }
-          joinProgram = await programUsersHelper.update(query, update, {new:true});
-
-        } else {
-          //Create new entry to collection
-          if ( data.isResource ) {
-            programUsersData.noOfResourcesStarted = 1;
-          }
-          joinProgram = 
-          await programUsersHelper.create(
-            programUsersData
-          );
-
+        let update = {};
+        update['$set'] = programUsersData;
+        if ( data.isResource ) {
+          update['$inc'] = { noOfResourcesStarted : 1 }
         }
+        // add record to programUsers collection
+        joinProgram = await programUsersHelper.update(query, update, { new:true, upsert:true });
+        
         if (!joinProgram._id) {
           throw {
               message: constants.apiResponses.PROGRAM_JOIN_FAILED,

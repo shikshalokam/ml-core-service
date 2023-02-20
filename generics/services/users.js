@@ -349,29 +349,28 @@ async function getParentEntities( entityId, iteration = 0, parentEntities ) {
 /**
   * update user consent for sharing the PII.
   * @method
-  * @name consent
+  * @name setUserConsent
   * @param {String} token - user token
   * @returns {Object} consentData - consent data.
 */
 
-const consent = function ( token, consentData ) {
+const setUserConsent = function ( token, consentData ) {
     return new Promise(async (resolve, reject) => {
         try {
             
-            let url = userServiceUrl + constants.endpoints.CONSENT_API;
+            let url = userServiceUrl + constants.endpoints.USER_CONSENT_API;
 
             const options = {
                 headers : {
                     "content-type": "application/json",
-                    "x-authenticated-user-token" : token,
-                    "Authorization" : process.env.SUNBIRD_SERVICE_AUTHERIZATION
+                    "x-authenticated-user-token" : token
                 },
                 body: JSON.stringify(consentData) 
             };
             
-            request.post(url,options,kendraCallback);
+            request.post(url,options,requestCallback);
 
-            function kendraCallback(err, data) {
+            function requestCallback(err, data) {
 
                 let result = {
                     success : true
@@ -410,5 +409,5 @@ module.exports = {
     orgSchoolSearch :orgSchoolSearch,
     getSubEntitiesBasedOnEntityType : getSubEntitiesBasedOnEntityType,
     getParentEntities : getParentEntities,
-    consent : consent
+    setUserConsent : setUserConsent
 }
