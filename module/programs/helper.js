@@ -1030,7 +1030,7 @@ module.exports = class ProgramsHelper {
           programId: programId,
           userRoleInformation: data.userRoleInformation,
           userId: userId,
-          // userProfile: userProfile.data.response
+          userProfile: userProfile.data.response
         }
         if( appName != "" ) {
           programUsersData['appInformation.appName'] = appName;
