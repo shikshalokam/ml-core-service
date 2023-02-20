@@ -999,7 +999,7 @@ module.exports = class ProgramsHelper {
         let programData = await this.programDocuments({
           _id: programId,
           status: constants.common.ACTIVE,
-          deleted: false
+          isDeleted: false
         },["name", "externalId","programAuthorOrgId"]);
         
         if ( !programData.length > 0 ) {
