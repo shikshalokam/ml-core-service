@@ -251,11 +251,6 @@ module.exports = class CertificateTemplatesHelper {
 
             if ( textData[textKeys[textKeysIndex]] ) {
               let updateText = textData[textKeys[textKeysIndex]];
-              if(updateText.length > 28){
-                throw {
-                  message: constants.apiResponses.BASE_CERTIFICATE_TEMPLATE_NAME_AND_DESIGNATION_ERROR
-                }
-              }
               const element = $('#' + textKeys[textKeysIndex]);
               element.text(updateText);
             }
