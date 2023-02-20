@@ -472,7 +472,6 @@ module.exports = class UsersHelper {
             
         let totalCount = 0;
         let mergedData = [];
-
         let projectSolutionIdIndexMap = {}
 
         if (
@@ -536,30 +535,41 @@ module.exports = class UsersHelper {
           let endIndex = startIndex + pageSize;
           mergedData = mergedData.slice(startIndex, endIndex);
         }
-
-        // find submission for survey submission
-        for ( let solutionPointer = 0; solutionPointer < mergedData.length; solutionPointer++ ) {
-          if ( mergedData[solutionPointer].type && mergedData[solutionPointer].type === constants.common.SURVEY ) {
-              let userSurveySubmission = 
+        
+        // get all solutionIds of type survey
+        let surveySolutionIds = [];
+        mergedData.forEach( element => {
+          if( element.type === constants.common.SURVEY ) {
+            surveySolutionIds.push(element._id)
+          }
+        });
+        
+        
+        if ( surveySolutionIds.length > 0 ) {
+          let userSurveySubmission = 
               await surveyService.assignedSurveys(
                 token,
                 "",
                 "",
                 false,
-                mergedData[solutionPointer]._id
+                surveySolutionIds
             );
-
-            // If survey solution has any submission by user add it's id to response 
+        
             if ( userSurveySubmission.success &&
-                 userSurveySubmission.data &&
-                 userSurveySubmission.data.data &&
-                 userSurveySubmission.data.data.length > 0 &&
-                 userSurveySubmission.data.data[0].submissionId &&
-                 userSurveySubmission.data.data[0].submissionId !== ""
+                  userSurveySubmission.data &&
+                  userSurveySubmission.data.data &&
+                  userSurveySubmission.data.data.length > 0        
             ) {
-              mergedData[solutionPointer].submissionId = userSurveySubmission.data.data[0].submissionId;
+              for ( let surveySubmissionPointer = 0; surveySubmissionPointer < userSurveySubmission.data.data.length; surveySubmissionPointer++ ) {
+                for ( let mergedDataPointer = 0; mergedDataPointer < mergedData.length; mergedDataPointer++ ) {
+                  if ( mergedData[mergedDataPointer].type == constants.common.SURVEY && userSurveySubmission.data.data[surveySubmissionPointer].solutionId == mergedData[mergedDataPointer]._id ) {
+                    mergedData[mergedDataPointer].submissionId = userSurveySubmission.data.data[surveySubmissionPointer].submissionId;
+                    break;
+                  }
+                
+                }
+              }
             }
-          }
         }
         
         let result = {
