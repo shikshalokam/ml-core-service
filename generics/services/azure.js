@@ -10,25 +10,25 @@ let blobServiceClient;
 let containerClient;
 
 (async () => {
+  if( process.env.CLOUD_STORAGE === "AZURE" ) {
+    const sharedKeyCredential = new StorageSharedKeyCredential(AZURE_ACCOUNT_NAME, AZURE_ACCOUNT_KEY);
 
-  const sharedKeyCredential = new StorageSharedKeyCredential(AZURE_ACCOUNT_NAME, AZURE_ACCOUNT_KEY);
+    // Create the BlobServiceClient object which will be used to create a container client
+    blobServiceClient = new BlobServiceClient(
+      `https://${AZURE_ACCOUNT_NAME}.blob.core.windows.net`,
+      sharedKeyCredential
+    );
 
-  // Create the BlobServiceClient object which will be used to create a container client
-  blobServiceClient = new BlobServiceClient(
-    `https://${AZURE_ACCOUNT_NAME}.blob.core.windows.net`,
-    sharedKeyCredential
-  );
+    // Get a reference to a container
+    containerClient = await blobServiceClient.getContainerClient(AZURE_STORAGE_CONTAINER);
 
-  // Get a reference to a container
-  containerClient = await blobServiceClient.getContainerClient(AZURE_STORAGE_CONTAINER);
+    const checkIfContainerExists = await containerClient.exists();
 
-  const checkIfContainerExists = await containerClient.exists();
-
-  if (!checkIfContainerExists) {
-    // Create the container
-    const createContainerResponse = await containerClient.create();
+    if (!checkIfContainerExists) {
+      // Create the container
+      const createContainerResponse = await containerClient.create();
+    }
   }
-
 })();
 
 /**
