@@ -53,10 +53,8 @@ module.exports = {
         default: false
       },
       metaInformation: Object,
-      programAuthorOrgId: {
-        type: String,
-        required: true
-      }
+      rootOrganisations : Array,
+      createdFor : Array
     }
   };
   

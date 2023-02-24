@@ -453,7 +453,7 @@ module.exports = class UsersHelper {
           {
             _id: programId
           },
-          ["name","requestForPIIConsent"]
+          ["name","requestForPIIConsent","rootOrganisations"]
         );
         
         if (!programData.length > 0) {
@@ -570,6 +570,7 @@ module.exports = class UsersHelper {
           programName: programData[0].name,
           programId: programId,
           description: constants.common.TARGETED_SOLUTION_TEXT,
+          rootOrganisations: programData[0].rootOrganisations,
           requestForPIIConsent: programData[0].requestForPIIConsent ? programData[0].requestForPIIConsent : false,
           data: mergedData,
           count: totalCount

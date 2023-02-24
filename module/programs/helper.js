@@ -1000,7 +1000,7 @@ module.exports = class ProgramsHelper {
           _id: programId,
           status: constants.common.ACTIVE,
           isDeleted: false
-        },["name", "externalId","programAuthorOrgId"]);
+        },["name", "externalId","rootOrganisations"]);
         
         if ( !programData.length > 0 ) {
           throw ({
@@ -1038,10 +1038,10 @@ module.exports = class ProgramsHelper {
         if( appVersion != "" ) {
           programUsersData['appInformation.appVersion'] = appVersion;
         }
-
+        
         //For internal calls add consent using sunbird api
         if(callConsetAPIOnBehalfOfUser){
-          if( !programData[0].programAuthorOrgId || programData[0].programAuthorOrgId == "" ) {
+          if( !programData[0].rootOrganisations || !programData[0].rootOrganisations.length > 0 ) {
             throw {
               message: constants.apiResponses.PROGRAM_JOIN_FAILED,
               status: httpStatusCode.bad_request.status
@@ -1052,7 +1052,7 @@ module.exports = class ProgramsHelper {
               "consent": {
                 "status": constants.common.REVOKED,
                 "userId": userProfile.data.response.id,
-                "consumerId": programData[0].programAuthorOrgId,
+                "consumerId": programData[0].rootOrganisations[0],
                 "objectId":  programId,
                 "objectType": constants.common.PROGRAM
               }
