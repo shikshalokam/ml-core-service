@@ -1010,8 +1010,8 @@ module.exports = class ProgramsHelper {
         }
         
         let programUsersData = {};
-        Fetch user profile information by calling sunbird's user read api.
-        !Important check specific fields of userProfile.
+        // Fetch user profile information by calling sunbird's user read api.
+        // !Important check specific fields of userProfile.
         let userProfile = await userService.profile(userToken, userId);
         if (!userProfile.success || 
             !userProfile.data ||
