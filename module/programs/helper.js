@@ -1000,7 +1000,7 @@ module.exports = class ProgramsHelper {
           _id: programId,
           status: constants.common.ACTIVE,
           isDeleted: false
-        },["name", "externalId","rootOrganisations"]);
+        },["name", "externalId","requestForPIIConsent","rootOrganisations"]);
         
         if ( !programData.length > 0 ) {
           throw ({
@@ -1010,8 +1010,8 @@ module.exports = class ProgramsHelper {
         }
         
         let programUsersData = {};
-        // Fetch user profile information by calling sunbird's user read api.
-        // !Important check specific fields of userProfile.
+        Fetch user profile information by calling sunbird's user read api.
+        !Important check specific fields of userProfile.
         let userProfile = await userService.profile(userToken, userId);
         if (!userProfile.success || 
             !userProfile.data ||
@@ -1030,7 +1030,7 @@ module.exports = class ProgramsHelper {
           programId: programId,
           userRoleInformation: data.userRoleInformation,
           userId: userId,
-          userProfile: userProfile.data.response
+          userProfile:userProfile.data.response
         }
         if( appName != "" ) {
           programUsersData['appInformation.appName'] = appName;
@@ -1089,6 +1089,7 @@ module.exports = class ProgramsHelper {
         }
         joinProgram.programName = programData[0].name;
         joinProgram.programExternalId = programData[0].externalId;
+        joinProgram.requestForPIIConsent =programData[0].requestForPIIConsent
         //  push programUsers details to kafka
         await kafkaProducersHelper.pushProgramUsersToKafka(joinProgram);
 
