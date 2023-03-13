@@ -661,13 +661,33 @@ module.exports = class UsersHelper {
           let minLimit = 0;
           // if no targeted program for user 
           if ( targetedPrograms.data.data.length === 0 ) {
-            maxLimit = (pageNo*pageSize)-targetedProgramCount;
+            /**
+             * {case: 1}
+             * if targeted programs is 0 and nontargetedJoinedPrograms := 3
+             * example : pageNo := 1
+             * pageSize : 5
+             * maxLimit = 5
+             * minLimit = 0
+             */
+            maxLimit = (pageNo*pageSize)-targetedProgramCount;  
             minLimit = maxLimit-pageSize;
           } else if ( targetedPrograms.data.data.length < pageSize ) { 
+            /**
+             * {case: 2}
+             * targetedPrograms: 3
+             * example : pageNo := 4
+             * pageSize : 5
+             * and profile has nontargetedJoinedPrograms:= 3
+             * maxLimit := 2
+             */
             maxLimit = pageSize-targetedPrograms.data.data.length;
           }
           
           let maxIndex = (maxLimit <= nontargetedJoinedPrograms.data.length) ? maxLimit : nontargetedJoinedPrograms.data.length;
+          /**
+           * {case 1: maxIndex : 3}
+           * {case 2: maxIndex : 2}
+           */
           if ( minLimit <= nontargetedJoinedPrograms.data.length ) { 
             for( let index = minLimit; index < maxIndex; index++ ) {
               //fetch resourse started details
