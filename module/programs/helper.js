@@ -1002,41 +1002,54 @@ module.exports = class ProgramsHelper {
           isDeleted: false
         },["name", "externalId","requestForPIIConsent","rootOrganisations"]);
         
-        if ( !programData.length > 0 ) {
+        if ( !programData.length > 0 || !programData[0].requestForPIIConsent || programData[0].requestForPIIConsent == false ) {
           throw ({
             status: httpStatusCode.bad_request.status,
             message: constants.apiResponses.PROGRAM_NOT_FOUND
           });
         }
-        
         let programUsersData = {};
-        // Fetch user profile information by calling sunbird's user read api.
-        // !Important check specific fields of userProfile.
-        let userProfile = await userService.profile(userToken, userId);
-        if (!userProfile.success || 
-            !userProfile.data ||
-            !userProfile.data.response ||
-            !userProfile.data.response.profileUserTypes ||
-            !userProfile.data.response.profileUserTypes.length > 0 ||
-            !userProfile.data.response.userLocations ||
-            !userProfile.data.response.userLocations.length > 0
-        ) {
-          throw ({
-            status: httpStatusCode.bad_request.status,
-            message: constants.apiResponses.PROGRAM_JOIN_FAILED
-          });      
-        } 
-        programUsersData = {
-          programId: programId,
-          userRoleInformation: data.userRoleInformation,
-          userId: userId,
-          userProfile:userProfile.data.response
-        }
-        if( appName != "" ) {
-          programUsersData['appInformation.appName'] = appName;
-        }
-        if( appVersion != "" ) {
-          programUsersData['appInformation.appVersion'] = appVersion;
+        let update = {};
+        
+        // check if user already joined for program or not
+        const programUsersDetails = await programUsersHelper.programUsersDocuments(
+          {
+            userId: userId,
+            programId: programId
+          },
+          ["_id"]
+        );
+        // if user not joined for program 
+        if ( !programUsersDetails.length > 0 ) {
+          // Fetch user profile information by calling sunbird's user read api.
+          // !Important check specific fields of userProfile.
+          let userProfile = await userService.profile(userToken, userId);
+          if (!userProfile.success || 
+              !userProfile.data ||
+              !userProfile.data.response ||
+              !userProfile.data.response.profileUserTypes ||
+              !userProfile.data.response.profileUserTypes.length > 0 ||
+              !userProfile.data.response.userLocations ||
+              !userProfile.data.response.userLocations.length > 0
+          ) {
+            throw ({
+              status: httpStatusCode.bad_request.status,
+              message: constants.apiResponses.PROGRAM_JOIN_FAILED
+            });      
+          } 
+          programUsersData = {
+            programId: programId,
+            userRoleInformation: data.userRoleInformation,
+            userId: userId,
+            userProfile:userProfile.data.response
+          }
+          if( appName != "" ) {
+            programUsersData['appInformation.appName'] = appName;
+          }
+          if( appVersion != "" ) {
+            programUsersData['appInformation.appVersion'] = appVersion;
+          }
+          update['$set'] = programUsersData;
         }
         
         //For internal calls add consent using sunbird api
@@ -1073,8 +1086,6 @@ module.exports = class ProgramsHelper {
           userId: userId
         };
         let joinProgram;
-        let update = {};
-        update['$set'] = programUsersData;
         if ( data.isResource ) {
           update['$inc'] = { noOfResourcesStarted : 1 }
         }
@@ -1089,7 +1100,7 @@ module.exports = class ProgramsHelper {
         }
         joinProgram.programName = programData[0].name;
         joinProgram.programExternalId = programData[0].externalId;
-        joinProgram.requestForPIIConsent =programData[0].requestForPIIConsent
+        joinProgram.requestForPIIConsent = programData[0].requestForPIIConsent
         //  push programUsers details to kafka
         await kafkaProducersHelper.pushProgramUsersToKafka(joinProgram);
 
