@@ -1013,6 +1013,7 @@ module.exports = class UsersHelper {
 
         // get all targeted program ids.
         // we have to recall this function here because we need to get all program details. ie) pageNo := 1 && pageSize:= toatal targeted program count.
+        // allTargetedPrograms.data contain query based on user location and role.
         let allTargetedPrograms = await programsHelper.list(
           pageNo,
           pageSize,
@@ -1022,7 +1023,7 @@ module.exports = class UsersHelper {
         );
         let targettedProgramIds = [];
         let programUsersIds = [];
-      
+        // allTargetedPrograms.data contain all programIds targeted to current user profile.
         if ( allTargetedPrograms.success && allTargetedPrograms.data && allTargetedPrograms.data.data.length > 0) {
           targettedProgramIds = allTargetedPrograms.data.data.map(function (obj) {
             return obj._id;
@@ -1047,7 +1048,7 @@ module.exports = class UsersHelper {
         let previousProfilesJoinedProgramIds = _.differenceWith(programUsersIds, targettedProgramIds,_.isEqual)
         let nonTargettedProgramDetails = [];
         if ( previousProfilesJoinedProgramIds.length > 0 ) {
-          // We only have prograIds of user joined from old profiles. Need to get program details using these Ids
+          // We only have programIds of user joined from old profiles. Need to get program details using these Ids
           let findQuery = {
               "_id": { "$in" : previousProfilesJoinedProgramIds }
           }
