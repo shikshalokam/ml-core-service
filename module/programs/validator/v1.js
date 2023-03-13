@@ -34,7 +34,7 @@ module.exports = (req) => {
         },
         join : function () {
             req.checkParams("_id").exists().withMessage("required program id");
-            req.checkParams("_id").isMongoId().withMessage("invalid Mongo Id");
+            req.checkParams("_id").isMongoId().withMessage("Invalid program ID");
             req.checkBody("userRoleInformation").exists().withMessage("required userRoleInformation to be added");
         },
     }
