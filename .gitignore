@@ -72,3 +72,7 @@ public/*
 *.DS_Store
 
 package-lock.json
+
+keycloak-public-keys/*
+
+script/.env
