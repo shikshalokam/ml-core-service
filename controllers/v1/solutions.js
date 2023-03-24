@@ -862,6 +862,66 @@ module.exports = class Solutions extends Abstract {
     })
   }
 
+
+
+   /**
+  * @api {post} /kendra/api/v1/solutions/verifySolution/:Id
+  * @apiVersion 1.0.0
+  * @apiName verify Solutions targeted
+  * @apiGroup Solutions
+  * @apiSampleRequest /kendra/api/v1/solutions/verifySolution/5f6853f293734140ccce90cf
+  * @apiHeader {String} X-authenticated-user-token Authenticity token  
+  * @apiUse successBody
+  * @apiUse errorBody
+  * @apiParamExample {json} Request:
+  * {
+  *   "role" : "HM,DEO",
+      "state" : "236f5cff-c9af-4366-b0b6-253a1789766a",
+      "district" : "1dcbc362-ec4c-4559-9081-e0c2864c2931",
+      "school" : "c5726207-4f9f-4f45-91f1-3e9e8e84d824"
+    }
+  * @apiParamExample {json} Response:
+  * {
+      "message": "Solution Link verified successfully",
+      "status": 200,
+      "result": {
+          isATargetedSolution : true/false,
+          _id : “5f6853f293734140ccce90cf”,
+      }
+    }
+  */
+
+   /**
+   * verify Solution
+   * @method
+   * @name verifySolution
+   * @param {Object} req - requested data.
+   * @param {String} req.params._id - solution id
+   * @returns {Array}
+   */
+
+    async verfiySolution(req) {
+      return new Promise(async (resolve, reject) => {
+        try {
+          
+          let solutionData = await solutionsHelper.verifySolution(
+            req.params._id,
+            req.body,
+          );
+  
+          return resolve(solutionData);
+  
+        }
+        catch (error) {
+          return reject({
+            status: error.status || httpStatusCode.internal_server_error.status,
+            message: error.message || httpStatusCode.internal_server_error.message,
+            errorObject: error
+          })
+        }
+      })
+    }
+  
   /**
   * @api {post} /kendra/api/v1/solutions/details/:solutionId
   * @apiVersion 1.0.0

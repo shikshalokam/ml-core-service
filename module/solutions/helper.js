@@ -1693,6 +1693,72 @@ module.exports = class SolutionsHelper {
     });
   }
 
+
+  /**
+   * Verify solution id
+   * @method
+   * @name verifySolution
+   * @param {String} solutionId - solution Id.
+   * @param {String} userId - user Id.
+   * @param {String} userToken - user token.
+   * @param {Boolean} createProject - create project.
+   * @param {Object} bodyData - Req Body.
+   * @returns {Object} - Details of the solution.
+   */
+
+   static verifySolution(solutionId = "", bodyData = {}) {
+    return new Promise(async (resolve, reject) => {
+      try {
+       
+        let response = {
+          isATargetedSolution: false,
+          _id: solutionId,
+        };
+
+        let queryData = await this.queryBasedOnRoleAndLocation(bodyData);
+        if ( !queryData.success ) {
+          return resolve(queryData);
+        }
+
+        queryData.data["_id"] = solutionId;
+        let matchQuery = queryData.data;
+        console.log(JSON.stringify(matchQuery));
+        let solutionData = await this.solutionDocuments(matchQuery, [
+          "_id",
+          "type",
+          "programId",
+          "name",
+        ]);
+
+        if ( !Array.isArray(solutionData) || solutionData.length < 1 ) {
+          
+          
+          return resolve({
+            success: true,
+            message:
+              constants.apiResponses.SOLUTION_NOT_FOUND_OR_NOT_A_TARGETED,
+            result: response
+          });
+        }
+
+        response.isATargetedSolution = true;
+        return resolve({
+          success: true,
+          message: constants.apiResponses.SOLUTION_DETAILS_VERIFIED,
+          result: response,
+        });
+      } catch (error) {
+        return resolve({
+          success: false,
+          status: error.status
+            ? error.status
+            : httpStatusCode['internal_server_error'].status,
+          message: error.message
+        });
+      }
+    });
+  }
+
   /**
    * Verify Solution details.
    * @method
