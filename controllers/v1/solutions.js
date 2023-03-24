@@ -900,11 +900,11 @@ module.exports = class Solutions extends Abstract {
    * @returns {Array}
    */
 
-    async verfiySolution(req) {
+    async isTargetedBasedOnUserProfile(req) {
       return new Promise(async (resolve, reject) => {
         try {
           
-          let solutionData = await solutionsHelper.verifySolution(
+          let solutionData = await solutionsHelper.isTargetedBasedOnUserProfile(
             req.params._id,
             req.body,
           );

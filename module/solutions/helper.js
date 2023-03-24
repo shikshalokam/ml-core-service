@@ -1704,9 +1704,18 @@ module.exports = class SolutionsHelper {
    * @param {Boolean} createProject - create project.
    * @param {Object} bodyData - Req Body.
    * @returns {Object} - Details of the solution.
+   * Takes SolutionId and userRoleInformation as parameters.
+   * @return {Object} - {
+    "message": "Solution is not targeted to the role",
+    "status": 200,
+    "result": {
+        "isATargetedSolution": false/true,
+        "_id": "63987b5d26a3620009a1142d"
+    }
+  }
    */
 
-   static verifySolution(solutionId = "", bodyData = {}) {
+   static isTargetedBasedOnUserProfile(solutionId = "", bodyData = {}) {
     return new Promise(async (resolve, reject) => {
       try {
        
@@ -1722,7 +1731,6 @@ module.exports = class SolutionsHelper {
 
         queryData.data["_id"] = solutionId;
         let matchQuery = queryData.data;
-        console.log(JSON.stringify(matchQuery));
         let solutionData = await this.solutionDocuments(matchQuery, [
           "_id",
           "type",
