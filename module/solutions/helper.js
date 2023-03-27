@@ -1956,6 +1956,8 @@ module.exports = class SolutionsHelper {
           "type",
           "projectTemplateId",
         ]);
+
+        console.log(solutionData);
         
         if ( !Array.isArray(solutionData) || solutionData.length < 1 ) {
           return resolve({
@@ -1966,6 +1968,8 @@ module.exports = class SolutionsHelper {
         
         solutionData = solutionData[0];
         let templateOrQuestionDetails;
+        //this will get wether user is targeted to the solution or not based on user Role Information
+        const isSolutionTargeted = await this.isTargetedBasedOnUserProfile(solutionId, bodyData)
 
         if ( solutionData.type === constants.common.IMPROVEMENT_PROJECT ) {
           if ( !solutionData.projectTemplateId ) {
@@ -1977,7 +1981,8 @@ module.exports = class SolutionsHelper {
           templateOrQuestionDetails =
             await improvementProjectService.getTemplateDetail(
               solutionData.projectTemplateId,
-              userToken
+              userToken,
+              isSolutionTargeted.result.isATargetedSolution ? false : true
             );
             
         } else if ( solutionData.type === constants.common.OBSERVATION ) {
