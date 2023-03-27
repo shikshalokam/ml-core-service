@@ -1,5 +1,9 @@
 # ml-core-service
 Centralised Service to support other Services.
-It is used by ml-survey and ml-project
+<<<<<<< HEAD
+It is used by ml-survey, ml-project
+=======
+It is used by ml-survey, ml-project
 
 
+>>>>>>> refs/remotes/origin/master
