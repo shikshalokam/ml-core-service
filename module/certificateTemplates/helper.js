@@ -249,7 +249,6 @@ module.exports = class CertificateTemplatesHelper {
           // edit text elements
           for ( let textKeysIndex = 0; textKeysIndex < textKeys.length; textKeysIndex++ ) {
             if ( textData[textKeys[textKeysIndex]] ) {
-              console.log(textData[textKeys[textKeysIndex]])
               let updateText = textData[textKeys[textKeysIndex]];
               const element = $('#' + textKeys[textKeysIndex]);
               element.text(updateText);
