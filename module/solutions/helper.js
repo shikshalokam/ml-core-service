@@ -1957,7 +1957,6 @@ module.exports = class SolutionsHelper {
           "projectTemplateId",
         ]);
 
-        console.log(solutionData);
         
         if ( !Array.isArray(solutionData) || solutionData.length < 1 ) {
           return resolve({
