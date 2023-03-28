@@ -1693,6 +1693,80 @@ module.exports = class SolutionsHelper {
     });
   }
 
+
+  /**
+   * Verify solution id
+   * @method
+   * @name verifySolution
+   * @param {String} solutionId - solution Id.
+   * @param {String} userId - user Id.
+   * @param {String} userToken - user token.
+   * @param {Boolean} createProject - create project.
+   * @param {Object} bodyData - Req Body.
+   * @returns {Object} - Details of the solution.
+   * Takes SolutionId and userRoleInformation as parameters.
+   * @return {Object} - {
+    "message": "Solution is not targeted to the role",
+    "status": 200,
+    "result": {
+        "isATargetedSolution": false/true,
+        "_id": "63987b5d26a3620009a1142d"
+    }
+  }
+   */
+
+   static isTargetedBasedOnUserProfile(solutionId = "", bodyData = {}) {
+    return new Promise(async (resolve, reject) => {
+      try {
+       
+        let response = {
+          isATargetedSolution: false,
+          _id: solutionId,
+        };
+
+        let queryData = await this.queryBasedOnRoleAndLocation(bodyData);
+        if ( !queryData.success ) {
+          return resolve(queryData);
+        }
+
+        queryData.data["_id"] = solutionId;
+        let matchQuery = queryData.data;
+        let solutionData = await this.solutionDocuments(matchQuery, [
+          "_id",
+          "type",
+          "programId",
+          "name",
+        ]);
+
+        if ( !Array.isArray(solutionData) || solutionData.length < 1 ) {
+          
+          
+          return resolve({
+            success: true,
+            message:
+              constants.apiResponses.SOLUTION_NOT_FOUND_OR_NOT_A_TARGETED,
+            result: response
+          });
+        }
+
+        response.isATargetedSolution = true;
+        return resolve({
+          success: true,
+          message: constants.apiResponses.SOLUTION_DETAILS_VERIFIED,
+          result: response,
+        });
+      } catch (error) {
+        return resolve({
+          success: false,
+          status: error.status
+            ? error.status
+            : httpStatusCode['internal_server_error'].status,
+          message: error.message
+        });
+      }
+    });
+  }
+
   /**
    * Verify Solution details.
    * @method
@@ -1882,6 +1956,7 @@ module.exports = class SolutionsHelper {
           "type",
           "projectTemplateId",
         ]);
+
         
         if ( !Array.isArray(solutionData) || solutionData.length < 1 ) {
           return resolve({
@@ -1892,6 +1967,8 @@ module.exports = class SolutionsHelper {
         
         solutionData = solutionData[0];
         let templateOrQuestionDetails;
+        //this will get wether user is targeted to the solution or not based on user Role Information
+        const isSolutionTargeted = await this.isTargetedBasedOnUserProfile(solutionId, bodyData)
 
         if ( solutionData.type === constants.common.IMPROVEMENT_PROJECT ) {
           if ( !solutionData.projectTemplateId ) {
@@ -1903,7 +1980,8 @@ module.exports = class SolutionsHelper {
           templateOrQuestionDetails =
             await improvementProjectService.getTemplateDetail(
               solutionData.projectTemplateId,
-              userToken
+              userToken,
+              isSolutionTargeted.result.isATargetedSolution ? false : true
             );
             
         } else if ( solutionData.type === constants.common.OBSERVATION ) {

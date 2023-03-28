@@ -209,11 +209,11 @@ var getProjectDetail = function ( solutionId, token, bodyData = {} ) {
   * @returns {Promise} returns a promise.
 */
 
-var getTemplateDetail = function ( templateId, token ) {
+var getTemplateDetail = function ( templateId, token , isAPrivateProgram ) {
 
     let url = 
     process.env.ML_PROJECT_SERVICE_URL + 
-    constants.endpoints.GET_TEMPLATE_DETAILS + "/" + templateId;
+    constants.endpoints.GET_TEMPLATE_DETAILS + "/" + templateId+"?isAPrivateProgram="+isAPrivateProgram;
     
     return new Promise(async (resolve, reject) => {
         try {
