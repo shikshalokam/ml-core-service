@@ -995,14 +995,20 @@ module.exports = class ProgramsHelper {
     return new Promise(async (resolve, reject) => {
       try {
         
-        //Using programId fetch program name. Also checking the program status in the query.
+        //Using programId fetch program details. Also checking the program status in the query.
         let programData = await this.programDocuments({
           _id: programId,
           status: constants.common.ACTIVE,
           isDeleted: false
-        },["name", "externalId","requestForPIIConsent","rootOrganisations"]);
+        },[
+            "name", 
+            "externalId",
+            "requestForPIIConsent",
+            "rootOrganisations"
+          ]
+        );
         
-        if ( !programData.length > 0 || !programData[0].requestForPIIConsent || programData[0].requestForPIIConsent == false ) {
+        if ( !programData.length > 0 ) {
           throw ({
             status: httpStatusCode.bad_request.status,
             message: constants.apiResponses.PROGRAM_NOT_FOUND
@@ -1036,7 +1042,7 @@ module.exports = class ProgramsHelper {
               status: httpStatusCode.bad_request.status,
               message: constants.apiResponses.PROGRAM_JOIN_FAILED
             });      
-          } 
+          }     
           programUsersData = {
             programId: programId,
             userRoleInformation: data.userRoleInformation,
@@ -1053,7 +1059,7 @@ module.exports = class ProgramsHelper {
         }
         
         //For internal calls add consent using sunbird api
-        if(callConsetAPIOnBehalfOfUser){
+        if( callConsetAPIOnBehalfOfUser && !programUsersDetails.length > 0 && !programData[0].requestForPIIConsent && programData[0].requestForPIIConsent == true ){
           if( !programData[0].rootOrganisations || !programData[0].rootOrganisations.length > 0 ) {
             throw {
               message: constants.apiResponses.PROGRAM_JOIN_FAILED,
@@ -1069,7 +1075,7 @@ module.exports = class ProgramsHelper {
                 "objectId":  programId,
                 "objectType": constants.common.PROGRAM
               }
-             }
+            }
           }
           let consentResponse = await userService.setUserConsent(userToken, userConsentRequestBody)
           if(!consentResponse.success){
@@ -1100,7 +1106,8 @@ module.exports = class ProgramsHelper {
         }
         joinProgram.programName = programData[0].name;
         joinProgram.programExternalId = programData[0].externalId;
-        joinProgram.requestForPIIConsent = programData[0].requestForPIIConsent
+        joinProgram.requestForPIIConsent = (programData[0].requestForPIIConsent && programData[0].requestForPIIConsent == true) ?  true : false;
+
         //  push programUsers details to kafka
         await kafkaProducersHelper.pushProgramUsersToKafka(joinProgram);
 
