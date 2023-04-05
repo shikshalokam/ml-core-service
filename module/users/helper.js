@@ -699,7 +699,7 @@ module.exports = class UsersHelper {
                 ["noOfResourcesStarted"]
               );
               if ( programUsersData.length > 0  ) {
-                nontargetedJoinedPrograms.data[index].solutions = programUsersData[0].noOfResourcesStarted;
+                nontargetedJoinedPrograms.data[index].solutions = (programUsersData[0].noOfResourcesStarted) ? programUsersData[0].noOfResourcesStarted : 0;
               }
               
               targetedPrograms.data.data.push(nontargetedJoinedPrograms.data[index]);
