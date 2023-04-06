@@ -14,6 +14,7 @@ const improvementProjectService = require(ROOT_PATH + '/generics/services/improv
 const appsPortalBaseUrl = process.env.APP_PORTAL_BASE_URL + "/" ;
 const userExtensionsHelperV2 = require(MODULES_BASE_PATH + "/user-extension/helperv2");
 const userService = require(ROOT_PATH + "/generics/services/users");
+const programUsersHelper = require(MODULES_BASE_PATH + "/programUsers/helper");
 
 /**
     * SolutionsHelper
@@ -1881,6 +1882,7 @@ module.exports = class SolutionsHelper {
         let solutionData = await this.solutionDocuments({ _id: solutionId }, [
           "type",
           "projectTemplateId",
+          "programId"
         ]);
         
         if ( !Array.isArray(solutionData) || solutionData.length < 1 ) {
@@ -1922,7 +1924,25 @@ module.exports = class SolutionsHelper {
           }
 
         }
+        // add ["rootOrganisations","requestForPIIConsent","programJoined"] values to response. Based on these values front end calls PII consent
+        let programData = await programsHelper.programDocuments({
+          _id : solutionData.programId
+        },["rootOrganisations","requestForPIIConsent"]);
+        
+        if ( programData.length > 0 ) {
+          templateOrQuestionDetails.result.rootOrganisations = (programData[0].rootOrganisations) ? programData[0].rootOrganisations : [];
+          templateOrQuestionDetails.result.requestForPIIConsent = (programData[0].requestForPIIConsent) ? programData[0].requestForPIIConsent : false;
+        }
 
+        let programUsersData = await programUsersHelper.programUsersDocuments(
+          {
+            userId: userId,
+            programId: solutionData.programId
+          },
+          ["_id"]
+        );
+        templateOrQuestionDetails.result.programJoined = ( programUsersData.length > 0 ) ? true : false;
+        
         return resolve(templateOrQuestionDetails);
         
       } catch (error) {

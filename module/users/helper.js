@@ -588,6 +588,8 @@ module.exports = class UsersHelper {
         //if already joined the program
         if( programUsersData.length > 0 ) {
           result.programJoined = true;
+        } else {
+          result.programJoined = false;
         }
         
         return resolve({
