@@ -17,6 +17,15 @@ module.exports = {
         type : String,
         index : true
       },
+      startDate:{
+        type: Date, 
+        index: true,
+        require:true
+      },
+      endDate: {
+        type : Date,
+        index : true
+      },
       resourceType: [String],
       language: [String],
       keywords: [String],
