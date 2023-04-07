@@ -1059,7 +1059,7 @@ module.exports = class ProgramsHelper {
         }
         
         //For internal calls add consent using sunbird api
-        if( callConsetAPIOnBehalfOfUser && !programUsersDetails.length > 0 && !programData[0].requestForPIIConsent && programData[0].requestForPIIConsent == true ){
+        if( callConsetAPIOnBehalfOfUser && !programUsersDetails.length > 0 && programData[0].hasOwnProperty('requestForPIIConsent') && programData[0].requestForPIIConsent === true ){
           if( !programData[0].rootOrganisations || !programData[0].rootOrganisations.length > 0 ) {
             throw {
               message: constants.apiResponses.PROGRAM_JOIN_FAILED,
