@@ -453,7 +453,7 @@ module.exports = class UsersHelper {
           {
             _id: programId
           },
-          ["name","requestForPIIConsent","rootOrganisations"]
+          ["name","requestForPIIConsent","rootOrganisations","endDate"]
         );
         
         if (!programData.length > 0) {
@@ -569,6 +569,7 @@ module.exports = class UsersHelper {
         let result = {
           programName: programData[0].name,
           programId: programId,
+          programEndDate : programData[0].endDate ? programData[0].endDate : "",
           description: constants.common.TARGETED_SOLUTION_TEXT,
           rootOrganisations : ( programData[0].rootOrganisations && programData[0].rootOrganisations.length > 0 ) ? programData[0].rootOrganisations : [],
           requestForPIIConsent: programData[0].requestForPIIConsent ? programData[0].requestForPIIConsent : false,
