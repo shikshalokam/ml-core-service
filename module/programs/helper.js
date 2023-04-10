@@ -11,7 +11,6 @@ const entityTypesHelper = require(MODULES_BASE_PATH + "/entityTypes/helper");
 const entitiesHelper = require(MODULES_BASE_PATH + "/entities/helper");
 const userRolesHelper = require(MODULES_BASE_PATH + "/user-roles/helper");
 const userService = require(ROOT_PATH + "/generics/services/users");
-const moment = require('moment');
 
 /**
     * ProgramsHelper
@@ -114,7 +113,6 @@ module.exports = class ProgramsHelper {
           "isAPrivateProgram" : data.isAPrivateProgram ? data.isAPrivateProgram : false  
         }
 
-        console.log(programData)
         
         let program = await database.models.programs.create(
           programData
@@ -324,7 +322,6 @@ module.exports = class ProgramsHelper {
         });
 
       } catch (error) {
-        console.error(error);
           return reject(error);
       }
 
@@ -988,31 +985,6 @@ module.exports = class ProgramsHelper {
     });
   } 
 
-  static verifyProgram(programId){
-    return new Promise(async (resolve, reject) => {
-      try{
-        let programData = 
-        await this.programDocuments({ 
-          _id : programId,
-          startDate:{$lte: new Date()},
-          endDate:{$gte: new Date()}
-        },["_id"]);
-        if(programData.length > 0){
-          resolve({success: true})
-        }else{
-          resolve({success: false})
-        }
-      }catch(error){
-        return resolve({
-          success: false,
-          status: error.status
-            ? error.status
-            : httpStatusCode['internal_server_error'].status,
-          message: error.message
-        });
-      }
-    });
-  }
 };
 
 

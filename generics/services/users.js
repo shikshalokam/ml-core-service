@@ -97,12 +97,9 @@ const locationSearch = function ( filterData, pageSize = "", pageNo = "", search
           const options = {
               headers : {
                 "content-type": "application/json",  
-                "Authorization":"Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJSbTBGOTlnMnd4SmZKelJwa2YzTnRlaE5CYlJnZXRCaCJ9.CjDN6GufxylpAM5J_6j9fD0wq7S2qr1F6FOzAZtQ6XU",     
                },
               json : bodyData
           };
-          console.log( JSON.stringify(options) );
-          console.log(url)
           request.post(url,options,requestCallback);
   
           let result = {
@@ -111,7 +108,6 @@ const locationSearch = function ( filterData, pageSize = "", pageNo = "", search
   
           function requestCallback(err, data) {
               if (err) {
-                  console.log(err);
                   result.success = false;
               } else {
                   let response = data.body;
