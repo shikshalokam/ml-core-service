@@ -203,6 +203,10 @@ let enviromentVariables = {
       "value" : "ON"
     }
   },
+  "PROGRAM_USERS_JOINED_TOPIC" : {
+    "message" : "OFF/TOPIC_NAME",
+    "optional" : false
+  }
 }
 
 let success = true;

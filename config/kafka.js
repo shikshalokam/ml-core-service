@@ -8,7 +8,6 @@
 
 //dependencies
 const kafka = require('kafka-node');
-const PROGRAM_USERS_JOINED_TOPIC = process.env.PROGRAM_USERS_JOINED_TOPIC;
 
 /**
   * Kafka configurations.
