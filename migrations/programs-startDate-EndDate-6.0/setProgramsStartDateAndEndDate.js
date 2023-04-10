@@ -14,10 +14,11 @@ let url = mongoUrl.split(dbName)[0];
         let collectionDocs = await db.collection("programs").find({ 
             status: "active",   
             createdAt: {"$exists": true},
+            isAPrivateProgram: false // removing private program from the set.
         }).project({_id:1,createdAt:1}).toArray();
         
         //reduce array to small chunks
-        let chunkOfprogramsDetails = _.chunk(collectionDocs, 5);
+        let chunkOfprogramsDetails = _.chunk(collectionDocs, 50);
         
         //loop each chunk
         for ( let chunkPointer = 0; chunkPointer < chunkOfprogramsDetails.length; chunkPointer++ ) {
