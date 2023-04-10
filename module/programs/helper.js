@@ -80,8 +80,10 @@ module.exports = class ProgramsHelper {
 
       try {
 
-      
-        
+        if(!data.hasOwnProperty('endDate')){
+          data.startDate = new Date(data.startDate)
+          data.endDate = data.startDate.setFullYear( data.startDate.getFullYear(), data.startDate.getMonth() + 12 );
+        }
         
         let programData = {
           "externalId" : data.externalId,
@@ -516,7 +518,8 @@ module.exports = class ProgramsHelper {
         if( !queryData.success ) {
           return resolve(queryData);
         }
-
+        queryData.data.startDate ={"$lte": new Date()}
+        queryData.data.endDate ={"$gte": new Date()}
         let targetedPrograms = await this.list(
           pageNo,
           pageSize,
@@ -985,6 +988,33 @@ module.exports = class ProgramsHelper {
     });
   } 
 
+  static verifyProgram(programId){
+    return new Promise(async (resolve, reject) => {
+      try{
+        let programData = 
+        await this.programDocuments({ 
+          _id : programId,
+          startDate:{$lte: new Date()},
+          endDate:{$gte: new Date()}
+        },["_id"]);
+        if(programData.length > 0){
+          resolve({success: true})
+        }else{
+          resolve({success: false})
+        }
+      }catch(error){
+        return resolve({
+          success: false,
+          status: error.status
+            ? error.status
+            : httpStatusCode['internal_server_error'].status,
+          message: error.message
+        });
+      }
+    });
+  }
 };
+
+
 
 const solutionsHelper = require(MODULES_BASE_PATH + "/solutions/helper");

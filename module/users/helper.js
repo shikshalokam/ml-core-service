@@ -449,7 +449,7 @@ module.exports = class UsersHelper {
           {
             _id: programId
           },
-          ["name"]
+          ["name","endDate"]
         );
         
         if (!programData.length > 0) {
@@ -580,6 +580,9 @@ module.exports = class UsersHelper {
           count: totalCount
         };
 
+        if(programData[0].hasOwnProperty("endDate")){
+          result.programEndDate = programData[0].endDate;
+        }
         return resolve({
           message: constants.apiResponses.PROGRAM_SOLUTIONS_FETCHED,
           success: true,
