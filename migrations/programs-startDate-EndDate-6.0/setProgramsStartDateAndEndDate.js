@@ -13,8 +13,7 @@ let url = mongoUrl.split(dbName)[0];
         // get all active programs with createdAt value
         let collectionDocs = await db.collection("programs").find({ 
             status: "active",   
-            createdAt: {"$exists": true},
-            isAPrivateProgram: false // removing private program from the set.
+            createdAt: {"$exists": true}
         }).project({_id:1,createdAt:1}).toArray();
         
         //reduce array to small chunks
