@@ -96,7 +96,7 @@ const locationSearch = function ( filterData, pageSize = "", pageNo = "", search
           userServiceUrl + constants.endpoints.GET_LOCATION_DATA;
           const options = {
               headers : {
-                "content-type": "application/json",  
+                "content-type": "application/json",     
                },
               json : bodyData
           };
@@ -111,6 +111,7 @@ const locationSearch = function ( filterData, pageSize = "", pageNo = "", search
                   result.success = false;
               } else {
                   let response = data.body;
+                  
                   if( response.responseCode === constants.common.OK &&
                       response.result &&
                       response.result.response &&
