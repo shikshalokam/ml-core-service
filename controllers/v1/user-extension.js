@@ -307,13 +307,14 @@ module.exports = class UserExtension extends Abstract {
 **/
   read(req){
     return new Promise(async (resolve, reject) => {
-      let userInformation = await userExtensionsHelperV2.userExtensionDocument({
+      let body = {
         userId: req.userDetails.userId,
-        "platformRoles.code" : { $in : ["PROGRAM_MANAGER","PROGRAM_DESIGNER"]},
         status: constants.common.ACTIVE,
         isDeleted: false
-      }, { _id: 1, "platformRoles.programs" :1});
-
+      }
+      console.log(JSON.stringify(body))
+      let userInformation = await userExtensionsHelperV2.userExtensionDocument(body, { _id: 1, "platformRoles.programs" :1,"platformRoles.code":1});
+      console.log(JSON.stringify(userInformation))
       if ( !userInformation ) {
           return resolve({
               status: httpStatusCode.bad_request.status,

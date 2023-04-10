@@ -1033,6 +1033,9 @@ module.exports = class Solutions extends Abstract {
    * @returns {JSON}
    */
 
+   // End Point is Deprecated This API is moved to Reports Services.
+
+
   // async read(req) {
   //   return new Promise(async (resolve, reject) => {
   //     try {
