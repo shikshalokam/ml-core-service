@@ -8,7 +8,7 @@
   },
   "scripts": {
     "test": "mocha --timeout 10000",
-    "start": "app.js",
+    "start": "node app.js",
     "dev": "nodemon app.js",
     "coverage": " nyc --reporter=lcov mocha --timeout 10000 test --exit"
   },
