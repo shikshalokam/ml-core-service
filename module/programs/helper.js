@@ -1025,7 +1025,7 @@ module.exports = class ProgramsHelper {
           },
           ["_id"]
         );
-        // if user not joined for program 
+        // if user not joined for program. we have add more key values to programUsersData
         if ( !programUsersDetails.length > 0 ) {
           // Fetch user profile information by calling sunbird's user read api.
           // !Important check specific fields of userProfile.
@@ -1056,36 +1056,36 @@ module.exports = class ProgramsHelper {
             programUsersData['appInformation.appVersion'] = appVersion;
           }
           update['$set'] = programUsersData;
-        }
-        
-        //For internal calls add consent using sunbird api
-        if( callConsetAPIOnBehalfOfUser && !programUsersDetails.length > 0 && programData[0].hasOwnProperty('requestForPIIConsent') && programData[0].requestForPIIConsent === true ){
-          if( !programData[0].rootOrganisations || !programData[0].rootOrganisations.length > 0 ) {
-            throw {
-              message: constants.apiResponses.PROGRAM_JOIN_FAILED,
-              status: httpStatusCode.bad_request.status
+
+          //For internal calls add consent using sunbird api
+          if( callConsetAPIOnBehalfOfUser && programData[0].hasOwnProperty('requestForPIIConsent') && programData[0].requestForPIIConsent === true ){
+            if( !programData[0].rootOrganisations || !programData[0].rootOrganisations.length > 0 ) {
+              throw {
+                message: constants.apiResponses.PROGRAM_JOIN_FAILED,
+                status: httpStatusCode.bad_request.status
+              }
             }
-          }
-          let userConsentRequestBody = {
-            "request": {
-              "consent": {
-                "status": constants.common.REVOKED,
-                "userId": userProfile.data.response.id,
-                "consumerId": programData[0].rootOrganisations[0],
-                "objectId":  programId,
-                "objectType": constants.common.PROGRAM
+            let userConsentRequestBody = {
+              "request": {
+                "consent": {
+                  "status": constants.common.REVOKED,
+                  "userId": userProfile.data.response.id,
+                  "consumerId": programData[0].rootOrganisations[0],
+                  "objectId":  programId,
+                  "objectType": constants.common.PROGRAM
+                }
+              }
+            }
+            let consentResponse = await userService.setUserConsent(userToken, userConsentRequestBody)
+            if(!consentResponse.success){
+              throw {
+                message: constants.apiResponses.PROGRAM_JOIN_FAILED,
+                status: httpStatusCode.bad_request.status
               }
             }
           }
-          let consentResponse = await userService.setUserConsent(userToken, userConsentRequestBody)
-          if(!consentResponse.success){
-            throw {
-              message: constants.apiResponses.PROGRAM_JOIN_FAILED,
-              status: httpStatusCode.bad_request.status
-            }
-          }
         }
-
+        
         //create or update query
         const query = { 
           programId: programId,

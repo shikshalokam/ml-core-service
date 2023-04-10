@@ -619,6 +619,7 @@ module.exports = class UsersHelper {
    * @param {String} pageNo - Page number.
    * @param {String} pageSize - Page size.
    * @param {String} searchText - Search text.
+   * @param {String} userId - User Id.
    * @returns {Array} - Get user targeted programs.
    */
 
