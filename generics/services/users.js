@@ -111,7 +111,7 @@ const locationSearch = function ( filterData, pageSize = "", pageNo = "", search
                   result.success = false;
               } else {
                   let response = data.body;
-
+                
                   if( response.responseCode === constants.common.OK &&
                       response.result &&
                       response.result.response &&
