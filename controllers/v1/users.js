@@ -255,7 +255,8 @@ module.exports = class Users extends Abstract {
         "count": 3,
         "programName": "TEST_SCOPE_PROGRAM",
         "programId": "5ff438b04698083dbfab7284",
-        "description": "View and participate in educational programs active in your location and designed for your role."
+        "description": "View and participate in educational programs active in your location and designed for your role.",
+        "programEndDate": "2023-04-06T09:35:00.000Z"
     }}
   **/
 

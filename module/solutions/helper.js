@@ -12,7 +12,6 @@ const userRolesHelper = require(MODULES_BASE_PATH + "/user-roles/helper");
 const surveyService = require(ROOT_PATH + '/generics/services/survey');
 const improvementProjectService = require(ROOT_PATH + '/generics/services/improvement-project');
 const appsPortalBaseUrl = process.env.APP_PORTAL_BASE_URL + "/" ;
-const userExtensionsHelperV2 = require(MODULES_BASE_PATH + "/user-extension/helperv2");
 const userService = require(ROOT_PATH + "/generics/services/users");
 const programUsersHelper = require(MODULES_BASE_PATH + "/programUsers/helper");
 
@@ -1694,6 +1693,80 @@ module.exports = class SolutionsHelper {
     });
   }
 
+
+  /**
+   * Verify solution id
+   * @method
+   * @name verifySolution
+   * @param {String} solutionId - solution Id.
+   * @param {String} userId - user Id.
+   * @param {String} userToken - user token.
+   * @param {Boolean} createProject - create project.
+   * @param {Object} bodyData - Req Body.
+   * @returns {Object} - Details of the solution.
+   * Takes SolutionId and userRoleInformation as parameters.
+   * @return {Object} - {
+    "message": "Solution is not targeted to the role",
+    "status": 200,
+    "result": {
+        "isATargetedSolution": false/true,
+        "_id": "63987b5d26a3620009a1142d"
+    }
+  }
+   */
+
+   static isTargetedBasedOnUserProfile(solutionId = "", bodyData = {}) {
+    return new Promise(async (resolve, reject) => {
+      try {
+       
+        let response = {
+          isATargetedSolution: false,
+          _id: solutionId,
+        };
+
+        let queryData = await this.queryBasedOnRoleAndLocation(bodyData);
+        if ( !queryData.success ) {
+          return resolve(queryData);
+        }
+
+        queryData.data["_id"] = solutionId;
+        let matchQuery = queryData.data;
+        let solutionData = await this.solutionDocuments(matchQuery, [
+          "_id",
+          "type",
+          "programId",
+          "name",
+        ]);
+
+        if ( !Array.isArray(solutionData) || solutionData.length < 1 ) {
+          
+          
+          return resolve({
+            success: true,
+            message:
+              constants.apiResponses.SOLUTION_NOT_FOUND_OR_NOT_A_TARGETED,
+            result: response
+          });
+        }
+
+        response.isATargetedSolution = true;
+        return resolve({
+          success: true,
+          message: constants.apiResponses.SOLUTION_DETAILS_VERIFIED,
+          result: response,
+        });
+      } catch (error) {
+        return resolve({
+          success: false,
+          status: error.status
+            ? error.status
+            : httpStatusCode['internal_server_error'].status,
+          message: error.message
+        });
+      }
+    });
+  }
+
   /**
    * Verify Solution details.
    * @method
@@ -1884,6 +1957,7 @@ module.exports = class SolutionsHelper {
           "projectTemplateId",
           "programId"
         ]);
+
         
         if ( !Array.isArray(solutionData) || solutionData.length < 1 ) {
           return resolve({
@@ -1894,6 +1968,8 @@ module.exports = class SolutionsHelper {
         
         solutionData = solutionData[0];
         let templateOrQuestionDetails;
+        //this will get wether user is targeted to the solution or not based on user Role Information
+        const isSolutionTargeted = await this.isTargetedBasedOnUserProfile(solutionId, bodyData)
 
         if ( solutionData.type === constants.common.IMPROVEMENT_PROJECT ) {
           if ( !solutionData.projectTemplateId ) {
@@ -1905,7 +1981,8 @@ module.exports = class SolutionsHelper {
           templateOrQuestionDetails =
             await improvementProjectService.getTemplateDetail(
               solutionData.projectTemplateId,
-              userToken
+              userToken,
+              isSolutionTargeted.result.isATargetedSolution ? false : true
             );
             
         } else if ( solutionData.type === constants.common.OBSERVATION ) {
@@ -1966,79 +2043,79 @@ module.exports = class SolutionsHelper {
    * @returns {Object} - Report Information of the solution.
    */
 
-  static read(solutionId, userId) {
-    return new Promise(async (resolve, reject) => {
-      try {
+  // static read(solutionId, userId) {
+  //   return new Promise(async (resolve, reject) => {
+  //     try {
 
-        let userInformation = await userExtensionsHelperV2.userExtensionDocument({
-            userId: userId,
-            "platformRoles.code" : { $in : ["PROGRAM_MANAGER","PROGRAM_DESIGNER"]},
-            status: constants.common.ACTIVE,
-            isDeleted: false
-        }, { _id: 1, "platformRoles.programs" :1});
+  //       let userInformation = await userExtensionsHelperV2.userExtensionDocument({
+  //           userId: userId,
+  //           "platformRoles.code" : { $in : ["PROGRAM_MANAGER","PROGRAM_DESIGNER"]},
+  //           status: constants.common.ACTIVE,
+  //           isDeleted: false
+  //       }, { _id: 1, "platformRoles.programs" :1});
 
-        if ( !userInformation ) {
-            return resolve({
-                status: httpStatusCode.bad_request.status,
-                message: constants.apiResponses.NOT_AUTHORIZED_TO_ACCESS
-            })
-        }
+  //       if ( !userInformation ) {
+  //           return resolve({
+  //               status: httpStatusCode.bad_request.status,
+  //               message: constants.apiResponses.NOT_AUTHORIZED_TO_ACCESS
+  //           })
+  //       }
 
-        let userPrograms = userInformation.platformRoles ? userInformation.platformRoles : [];
-        let programs = [];
+  //       let userPrograms = userInformation.platformRoles ? userInformation.platformRoles : [];
+  //       let programs = [];
 
-        if ( !userPrograms.length > 0 ) {
-            return resolve({
-                status: httpStatusCode.bad_request.status,
-                message: constants.apiResponses.NOT_AUTHORIZED_TO_ACCESS
-            })
-        }
+  //       if ( !userPrograms.length > 0 ) {
+  //           return resolve({
+  //               status: httpStatusCode.bad_request.status,
+  //               message: constants.apiResponses.NOT_AUTHORIZED_TO_ACCESS
+  //           })
+  //       }
 
-        userPrograms.map(eachProgram => {
-          if ( eachProgram["programs"] && eachProgram["programs"].length > 0 ) {
-              programs.push(...eachProgram["programs"]);
-          }
-        });
+  //       userPrograms.map(eachProgram => {
+  //         if ( eachProgram["programs"] && eachProgram["programs"].length > 0 ) {
+  //             programs.push(...eachProgram["programs"]);
+  //         }
+  //       });
 
-        if ( !programs.length > 0 ) {
-            return resolve({
-                status: httpStatusCode.bad_request.status,
-                message: constants.apiResponses.NOT_AUTHORIZED_TO_ACCESS
-            })
-        }
+  //       if ( !programs.length > 0 ) {
+  //           return resolve({
+  //               status: httpStatusCode.bad_request.status,
+  //               message: constants.apiResponses.NOT_AUTHORIZED_TO_ACCESS
+  //           })
+  //       }
 
-        let solutionData = await this.solutionDocuments({
-          _id: solutionId,
-          isDeleted: false,
-          programId : { $in : programs }
-        },["reportInformation"]);
+  //       let solutionData = await this.solutionDocuments({
+  //         _id: solutionId,
+  //         isDeleted: false,
+  //         programId : { $in : programs }
+  //       },["reportInformation"]);
 
-        if ( !Array.isArray(solutionData) || solutionData.length < 1 ) {
-          return resolve({
-            message: constants.apiResponses.SOLUTION_NOT_FOUND,
-            result: {},
-          });
-        }
+  //       if ( !Array.isArray(solutionData) || solutionData.length < 1 ) {
+  //         return resolve({
+  //           message: constants.apiResponses.SOLUTION_NOT_FOUND,
+  //           result: {},
+  //         });
+  //       }
 
-        solutionData = solutionData[0];
+  //       solutionData = solutionData[0];
   
-        return resolve({
-          message: constants.apiResponses.SOLUTION_DETAILS_FETCHED,
-          success: true,
-          result: solutionData.reportInformation ? solutionData.reportInformation : {},
-        });
+  //       return resolve({
+  //         message: constants.apiResponses.SOLUTION_DETAILS_FETCHED,
+  //         success: true,
+  //         result: solutionData.reportInformation ? solutionData.reportInformation : {},
+  //       });
 
-      } catch (error) {
-        return resolve({
-          success: false,
-          status: error.status
-            ? error.status
-            : httpStatusCode['internal_server_error'].status,
-          message: error.message,
-        });
-      }
-    });
-  }
+  //     } catch (error) {
+  //       return resolve({
+  //         success: false,
+  //         status: error.status
+  //           ? error.status
+  //           : httpStatusCode['internal_server_error'].status,
+  //         message: error.message,
+  //       });
+  //     }
+  //   });
+  // }
 
 };
 
