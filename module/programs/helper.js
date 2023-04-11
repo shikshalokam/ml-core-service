@@ -78,34 +78,19 @@ module.exports = class ProgramsHelper {
     return new Promise(async (resolve, reject) => {
 
       try {
-        
         let programData = {
-          "externalId" : data.externalId,
-          "name" : data.name,
-          "description" : data.description ,
-          "owner" : data.userId,
-          "createdBy" : data.userId,
-          "updatedBy" : data.userId,
           "isDeleted" : false,
           "status" : "active",
-          "resourceType" : [ 
-              "Program"
-          ],
-          "language" : [ 
-              "English"
-          ],
-          "keywords" : [
-            "keywords 1",
-            "keywords 2"
-          ],
-          "concepts" : [],
-          "imageCompression" : {
-              "quality" : 10
-          },
           "components" : [],
-          "isAPrivateProgram" : data.isAPrivateProgram ? data.isAPrivateProgram : false  
+          "isAPrivateProgram" : data.isAPrivateProgram ? data.isAPrivateProgram : false,
+          "owner" : data.userId,
+          "createdBy" : data.userId,
+          "updatedBy" : data.userId, 
         }
-        
+        _.assign(programData, {
+          ...data
+        });
+        programData = _.omit(programData,['scope','userId'])
         let program = await database.models.programs.create(
           programData
         );
@@ -507,7 +492,8 @@ module.exports = class ProgramsHelper {
         if( !queryData.success ) {
           return resolve(queryData);
         }
-
+        queryData.data.startDate ={"$lte": new Date()}
+        queryData.data.endDate ={"$gte": new Date()}
         let targetedPrograms = await this.list(
           pageNo,
           pageSize,
@@ -977,5 +963,7 @@ module.exports = class ProgramsHelper {
   } 
 
 };
+
+
 
 const solutionsHelper = require(MODULES_BASE_PATH + "/solutions/helper");

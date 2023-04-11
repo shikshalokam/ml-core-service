@@ -113,6 +113,8 @@ module.exports = class UsersHelper {
               constants.common.ACTIVE,
               duplicateProgram.description,
               userId,
+              duplicateProgram.startDate,
+              duplicateProgram.endDate,
               userId
             );
 
@@ -135,7 +137,9 @@ module.exports = class UsersHelper {
             data.programDescription
               ? data.programDescription
               : data.programName,
-            userId
+            userId,
+            duplicateProgram.startDate,
+            duplicateProgram.endDate
           );
           
           userPrivateProgram = await programsHelper.create(programData);
@@ -449,7 +453,7 @@ module.exports = class UsersHelper {
           {
             _id: programId
           },
-          ["name"]
+          ["name","endDate"]
         );
         
         if (!programData.length > 0) {
@@ -577,9 +581,9 @@ module.exports = class UsersHelper {
           programId: programId,
           description: constants.common.TARGETED_SOLUTION_TEXT,
           data: mergedData,
-          count: totalCount
+          count: totalCount,
+          programEndDate: programData[0].endDate
         };
-
         return resolve({
           message: constants.apiResponses.PROGRAM_SOLUTIONS_FETCHED,
           success: true,
@@ -922,7 +926,7 @@ module.exports = class UsersHelper {
    * @returns {Object} - program creation data
    */
 
-function _createProgramData(name, externalId, isAPrivateProgram, status, description, userId, createdBy = "") {
+function _createProgramData(name, externalId, isAPrivateProgram, status, description, userId, startDate, endDate, createdBy = "") {
 
     let programData = {};
     programData.name = name;
@@ -932,6 +936,8 @@ function _createProgramData(name, externalId, isAPrivateProgram, status, descrip
     programData.description = description;
     programData.userId = userId;
     programData.createdBy = createdBy;
+    programData.startDate = startDate;
+    programData.endDate = endDate;
     return programData;
 
 }

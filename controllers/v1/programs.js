@@ -112,6 +112,8 @@ module.exports = class Programs extends Abstract {
           "entities" : ["5d6609ef81a57a6173a79e78"],
           "roles" : ["HM"]
       }
+      "startDate" : "2023-04-06T09:35:00.000Z",
+      "endDate" : ""2024-04-06T09:35:00.000Z" // optional
     }
   * @apiParamExample {json} Response:
    {
@@ -192,6 +194,8 @@ module.exports = class Programs extends Abstract {
           "entities" : ["5d6609ef81a57a6173a79e78"],
           "roles" : ["HM"]
       }
+      "startDate" : "2023-04-06T09:35:00.000Z",
+      "endDate" : ""2024-04-06T09:35:00.000Z" // optional
     }
   * @apiParamExample {json} Response:
   {
