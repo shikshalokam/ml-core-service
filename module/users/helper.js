@@ -582,7 +582,7 @@ module.exports = class UsersHelper {
           description: constants.common.TARGETED_SOLUTION_TEXT,
           data: mergedData,
           count: totalCount,
-          programEndDate = programData[0].endDate
+          programEndDate: programData[0].endDate
         };
         return resolve({
           message: constants.apiResponses.PROGRAM_SOLUTIONS_FETCHED,

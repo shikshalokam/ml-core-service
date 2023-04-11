@@ -193,4 +193,5 @@ module.exports = {
   "BASE_CERTIFICATE_TEMPLATE_NOT_FOUND" : "Base certificate template not found",
   "CERTIFICATE_BASE_TEMPLATE_UPDATED" : "Base template updated successfully",
   "CERTIFICATE_BASE_TEMPLATE_NOT_UPDATED" : "Base template updation failed",
+  "USER_EXTENSION_FTECHED":"User extension fetched successfully",
 };

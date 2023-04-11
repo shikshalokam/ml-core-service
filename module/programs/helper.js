@@ -11,7 +11,7 @@ const entityTypesHelper = require(MODULES_BASE_PATH + "/entityTypes/helper");
 const entitiesHelper = require(MODULES_BASE_PATH + "/entities/helper");
 const userRolesHelper = require(MODULES_BASE_PATH + "/user-roles/helper");
 const userService = require(ROOT_PATH + "/generics/services/users");
-let _ = require("lodash");
+
 /**
     * ProgramsHelper
     * @class
@@ -78,45 +78,19 @@ module.exports = class ProgramsHelper {
     return new Promise(async (resolve, reject) => {
 
       try {
-
-        if(!data.hasOwnProperty('endDate')){
-          data.startDate = new Date(data.startDate)
-          data.endDate = data.startDate.setFullYear( data.startDate.getFullYear(), data.startDate.getMonth() + 12 );
-        }
-
-
-        
         let programData = {
           "isDeleted" : false,
           "status" : "active",
-          "resourceType" : [ 
-              "Program"
-          ],
-          "language" : [ 
-              "English"
-          ],
-          "keywords" : [
-            "keywords 1",
-            "keywords 2"
-          ],
-          "concepts" : [],
-          "imageCompression" : {
-              "quality" : 10
-          },
           "components" : [],
-          
-        }
-        _.assign(programData, {
-          "externalId" : data.externalId,
-          "name" : data.name,
-          "description" : data.description ,
+          "isAPrivateProgram" : data.isAPrivateProgram ? data.isAPrivateProgram : false,
           "owner" : data.userId,
           "createdBy" : data.userId,
-          "updatedBy" : data.userId,
-          "startDate" : data.startDate,
-          "endDate" : data.endDate,
-          "isAPrivateProgram" : data.isAPrivateProgram ? data.isAPrivateProgram : false 
+          "updatedBy" : data.userId, 
+        }
+        _.assign(programData, {
+          ...data
         });
+        programData = _.omit(programData,['scope','userId'])
         let program = await database.models.programs.create(
           programData
         );
