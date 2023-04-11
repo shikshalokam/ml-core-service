@@ -4,12 +4,15 @@ let MongoClient = require("mongodb").MongoClient;
 let mongoUrl = process.env.MONGODB_URL;
 let dbName = mongoUrl.split("/").pop();
 let url = mongoUrl.split(dbName)[0];
+var fs = require('fs');
 
 (async () => {
     
     let connection = await MongoClient.connect(url, { useNewUrlParser: true });
     let db = connection.db(dbName);
+    let updatedProgramIds = [];
     try {
+        console.log("-----------------------Started----------------------");
         // get all active programs with createdAt value
         let collectionDocs = await db.collection("programs").find({ 
             status: "active",   
@@ -37,11 +40,25 @@ let url = mongoUrl.split(dbName)[0];
                     { '_id': id }, 
                     { $set: { startDate: startDate, endDate : endDate} }
                 );
+                console.log("program Updated : ",id)
+                updatedProgramIds.push(id)
             }
         }
-        console.log("-----------------------Finished----------------------")
-        console.log(" finished programs updation of startDate and endDate")
-        console.log("-----------------------------------------------------")
+        //write updated program ids to file
+        fs.writeFile(
+            'updatedProgramIds.json',
+
+            JSON.stringify(updatedProgramIds),
+
+            function (err) {
+                if (err) {
+                    console.error('Crap happens');
+                }
+            }
+        );
+        console.log("-----------------------Finished----------------------");
+        console.log(" finished programs updation of startDate and endDate");
+        console.log("-----------------------------------------------------");
         connection.close();
     }
     catch (error) {
