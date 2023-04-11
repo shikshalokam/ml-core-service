@@ -203,6 +203,10 @@ let enviromentVariables = {
       "value" : "ON"
     }
   },
+  "KAFKA_GROUP_ID" : {
+    "message" : "Required kafka group id",
+    "optional" : false
+  },
   "PROGRAM_USERS_JOINED_TOPIC" : {
     "message" : "OFF/TOPIC_NAME",
     "optional" : false

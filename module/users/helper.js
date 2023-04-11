@@ -576,23 +576,9 @@ module.exports = class UsersHelper {
           data: mergedData,
           count: totalCount
         };
-
-        //check programUsers collection for consentForPIIDataSharing
-        let programUsersData = await programUsersHelper.programUsersDocuments(
-          {
-            userId: userId,
-            programId: programId
-          },
-          ["_id"]
-        );
-       
-        //if already joined the program
-        if( programUsersData.length > 0 ) {
-          result.programJoined = true;
-        } else {
-          result.programJoined = false;
-        }
-        
+        //Check data present in programUsers collection.
+        //checkForUserJoinedProgram will check for data and if its present return true else false.
+        result.programJoined = await programUsersHelper.checkForUserJoinedProgram(programId,userId);
         return resolve({
           message: constants.apiResponses.PROGRAM_SOLUTIONS_FETCHED,
           success: true,
