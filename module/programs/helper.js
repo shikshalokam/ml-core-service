@@ -994,7 +994,7 @@ module.exports = class ProgramsHelper {
   static join( programId, data, userId, userToken, appName = "", appVersion = "", callConsetAPIOnBehalfOfUser = false ) {
     return new Promise(async (resolve, reject) => {
       try {
-        
+        let pushProgramUsersDetailsToKafka = false;
         //Using programId fetch program details. Also checking the program status in the query.
         let programData = await this.programDocuments({
           _id: programId,
@@ -1047,7 +1047,8 @@ module.exports = class ProgramsHelper {
             programId: programId,
             userRoleInformation: data.userRoleInformation,
             userId: userId,
-            userProfile:userProfile.data.response
+            userProfile:userProfile.data.response,
+            resourcesStarted : false  
           }
           if( appName != "" ) {
             programUsersData['appInformation.appName'] = appName;
@@ -1056,6 +1057,7 @@ module.exports = class ProgramsHelper {
             programUsersData['appInformation.appVersion'] = appVersion;
           }
           update['$set'] = programUsersData;
+          
 
           //For internal calls add consent using sunbird api
           if( callConsetAPIOnBehalfOfUser && programData[0].hasOwnProperty('requestForPIIConsent') && programData[0].requestForPIIConsent === true ){
@@ -1084,6 +1086,7 @@ module.exports = class ProgramsHelper {
               }
             }
           }
+          pushProgramUsersDetailsToKafka = true; 
         }
         
         //create or update query
@@ -1091,12 +1094,12 @@ module.exports = class ProgramsHelper {
           programId: programId,
           userId: userId
         };
-        let joinProgram;
         if ( data.isResource ) {
-          update['$inc'] = { noOfResourcesStarted : 1 }
+          update['$set'] = { resourcesStarted : true }
         }
+        
         // add record to programUsers collection
-        joinProgram = await programUsersHelper.update(query, update, { new:true, upsert:true });
+        let joinProgram = await programUsersHelper.update(query, update, { new:true, upsert:true });
         
         if (!joinProgram._id) {
           throw {
@@ -1104,12 +1107,14 @@ module.exports = class ProgramsHelper {
               status: httpStatusCode.bad_request.status
           }
         }
-        joinProgram.programName = programData[0].name;
-        joinProgram.programExternalId = programData[0].externalId;
-        joinProgram.requestForPIIConsent = (programData[0].requestForPIIConsent && programData[0].requestForPIIConsent == true) ?  true : false;
+        if ( pushProgramUsersDetailsToKafka ) {
+          joinProgram.programName = programData[0].name;
+          joinProgram.programExternalId = programData[0].externalId;
+          joinProgram.requestForPIIConsent = (programData[0].requestForPIIConsent && programData[0].requestForPIIConsent == true) ?  true : false;
 
-        //  push programUsers details to kafka
-        await kafkaProducersHelper.pushProgramUsersToKafka(joinProgram);
+          //  push programUsers details to kafka
+          await kafkaProducersHelper.pushProgramUsersToKafka(joinProgram);
+        }
 
         return resolve({
           message: constants.apiResponses.JOINED_PROGRAM,

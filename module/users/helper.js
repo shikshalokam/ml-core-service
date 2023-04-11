@@ -686,10 +686,11 @@ module.exports = class UsersHelper {
                   userId: userId,
                   programId: nontargetedJoinedPrograms.data[index]._id
                 },
-                ["noOfResourcesStarted"]
+                ["resourcesStarted"]
               );
+              // need to pass resourcesStarted with nontargetedJoinedPrograms data
               if ( programUsersData.length > 0  ) {
-                nontargetedJoinedPrograms.data[index].solutions = (programUsersData[0].noOfResourcesStarted) ? programUsersData[0].noOfResourcesStarted : 0;
+                nontargetedJoinedPrograms.data[index].resourcesStarted = (programUsersData[0].resourcesStarted) ? programUsersData[0].resourcesStarted : false;
               }
               
               targetedPrograms.data.data.push(nontargetedJoinedPrograms.data[index]);
