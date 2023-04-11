@@ -12,7 +12,6 @@ const userRolesHelper = require(MODULES_BASE_PATH + "/user-roles/helper");
 const surveyService = require(ROOT_PATH + '/generics/services/survey');
 const improvementProjectService = require(ROOT_PATH + '/generics/services/improvement-project');
 const appsPortalBaseUrl = process.env.APP_PORTAL_BASE_URL + "/" ;
-const userExtensionsHelperV2 = require(MODULES_BASE_PATH + "/user-extension/helperv2");
 const userService = require(ROOT_PATH + "/generics/services/users");
 
 /**

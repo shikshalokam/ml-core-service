@@ -7,7 +7,6 @@
 
 // Dependencies
 const userExtensionHelper = require(ROOT_PATH+"/module/user-extension/helper");
-const userExtensionsHelperV2 = require(ROOT_PATH+"/module/user-extension/helperv2");
 /**
     * UserExtension
     * @class
@@ -307,7 +306,7 @@ module.exports = class UserExtension extends Abstract {
 **/
   read(req){
     return new Promise(async (resolve, reject) => {
-      let userInformation = await userExtensionsHelperV2.userExtensionDocument( {
+      let userInformation = await userExtensionHelper.userExtensionDocument( {
         userId: req.userDetails.userId,
         status: constants.common.ACTIVE,
         isDeleted: false
