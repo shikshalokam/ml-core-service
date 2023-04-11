@@ -24,7 +24,8 @@ module.exports = {
       },
       endDate: {
         type : Date,
-        index : true
+        index : true,
+        require: true
       },
       resourceType: [String],
       language: [String],

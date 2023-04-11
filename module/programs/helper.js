@@ -11,7 +11,7 @@ const entityTypesHelper = require(MODULES_BASE_PATH + "/entityTypes/helper");
 const entitiesHelper = require(MODULES_BASE_PATH + "/entities/helper");
 const userRolesHelper = require(MODULES_BASE_PATH + "/user-roles/helper");
 const userService = require(ROOT_PATH + "/generics/services/users");
-
+let _ = require("lodash");
 /**
     * ProgramsHelper
     * @class
@@ -83,16 +83,10 @@ module.exports = class ProgramsHelper {
           data.startDate = new Date(data.startDate)
           data.endDate = data.startDate.setFullYear( data.startDate.getFullYear(), data.startDate.getMonth() + 12 );
         }
+
+
         
         let programData = {
-          "externalId" : data.externalId,
-          "name" : data.name,
-          "description" : data.description ,
-          "owner" : data.userId,
-          "createdBy" : data.userId,
-          "updatedBy" : data.userId,
-          "startDate" : data.startDate,
-          "endDate" : data.endDate,
           "isDeleted" : false,
           "status" : "active",
           "resourceType" : [ 
@@ -110,10 +104,19 @@ module.exports = class ProgramsHelper {
               "quality" : 10
           },
           "components" : [],
-          "isAPrivateProgram" : data.isAPrivateProgram ? data.isAPrivateProgram : false  
+          
         }
-
-        
+        _.assign(programData, {
+          "externalId" : data.externalId,
+          "name" : data.name,
+          "description" : data.description ,
+          "owner" : data.userId,
+          "createdBy" : data.userId,
+          "updatedBy" : data.userId,
+          "startDate" : data.startDate,
+          "endDate" : data.endDate,
+          "isAPrivateProgram" : data.isAPrivateProgram ? data.isAPrivateProgram : false 
+        });
         let program = await database.models.programs.create(
           programData
         );
