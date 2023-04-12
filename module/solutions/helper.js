@@ -1933,16 +1933,10 @@ module.exports = class SolutionsHelper {
           templateOrQuestionDetails.result.rootOrganisations = (programData[0].rootOrganisations) ? programData[0].rootOrganisations : [];
           templateOrQuestionDetails.result.requestForPIIConsent = (programData[0].requestForPIIConsent) ? programData[0].requestForPIIConsent : false;
         }
+        //Check data present in programUsers collection.
+        //checkForUserJoinedProgram will check for data and if its present return true else false.
+        templateOrQuestionDetails.result.programJoined = await programUsersHelper.checkForUserJoinedProgram(solutionData.programId,userId);
 
-        let programUsersData = await programUsersHelper.programUsersDocuments(
-          {
-            userId: userId,
-            programId: solutionData.programId
-          },
-          ["_id"]
-        );
-        templateOrQuestionDetails.result.programJoined = ( programUsersData.length > 0 ) ? true : false;
-        
         return resolve(templateOrQuestionDetails);
         
       } catch (error) {
