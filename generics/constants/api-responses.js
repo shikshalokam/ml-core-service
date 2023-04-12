@@ -197,5 +197,6 @@ module.exports = {
   "JOINED_PROGRAM" : "You have joined this program successfully",
   "PROGRAM_NOT_CREATED" : "Program not created",
   "PROGRAM_USERS_NOT_CREATED" : "Program users not created",
-  "PROGRAM_USERS_NOT_UPDATED" : "Program users not updated"
+  "PROGRAM_USERS_NOT_UPDATED" : "Program users not updated",
+  "USER_EXTENSION_FTECHED":"User extension fetched successfully"
 };

@@ -115,6 +115,8 @@ module.exports = class UsersHelper {
               constants.common.ACTIVE,
               duplicateProgram.description,
               userId,
+              duplicateProgram.startDate,
+              duplicateProgram.endDate,
               userId
             );
 
@@ -137,7 +139,9 @@ module.exports = class UsersHelper {
             data.programDescription
               ? data.programDescription
               : data.programName,
-            userId
+            userId,
+            duplicateProgram.startDate,
+            duplicateProgram.endDate
           );
           
           userPrivateProgram = await programsHelper.create(programData);
@@ -476,7 +480,6 @@ module.exports = class UsersHelper {
             
         let totalCount = 0;
         let mergedData = [];
-
         let projectSolutionIdIndexMap = {}
 
         if (
@@ -540,30 +543,41 @@ module.exports = class UsersHelper {
           let endIndex = startIndex + pageSize;
           mergedData = mergedData.slice(startIndex, endIndex);
         }
-
-        // find submission for survey submission
-        for ( let solutionPointer = 0; solutionPointer < mergedData.length; solutionPointer++ ) {
-          if ( mergedData[solutionPointer].type && mergedData[solutionPointer].type === constants.common.SURVEY ) {
-              let userSurveySubmission = 
+        
+        // get all solutionIds of type survey
+        let surveySolutionIds = [];
+        mergedData.forEach( element => {
+          if( element.type === constants.common.SURVEY ) {
+            surveySolutionIds.push(element._id)
+          }
+        });
+        
+        
+        if ( surveySolutionIds.length > 0 ) {
+          let userSurveySubmission = 
               await surveyService.assignedSurveys(
                 token,
                 "",
                 "",
                 false,
-                mergedData[solutionPointer]._id
+                surveySolutionIds
             );
-
-            // If survey solution has any submission by user add it's id to response 
+        
             if ( userSurveySubmission.success &&
-                 userSurveySubmission.data &&
-                 userSurveySubmission.data.data &&
-                 userSurveySubmission.data.data.length > 0 &&
-                 userSurveySubmission.data.data[0].submissionId &&
-                 userSurveySubmission.data.data[0].submissionId !== ""
+                  userSurveySubmission.data &&
+                  userSurveySubmission.data.data &&
+                  userSurveySubmission.data.data.length > 0        
             ) {
-              mergedData[solutionPointer].submissionId = userSurveySubmission.data.data[0].submissionId;
+              for ( let surveySubmissionPointer = 0; surveySubmissionPointer < userSurveySubmission.data.data.length; surveySubmissionPointer++ ) {
+                for ( let mergedDataPointer = 0; mergedDataPointer < mergedData.length; mergedDataPointer++ ) {
+                  if ( mergedData[mergedDataPointer].type == constants.common.SURVEY && userSurveySubmission.data.data[surveySubmissionPointer].solutionId == mergedData[mergedDataPointer]._id ) {
+                    mergedData[mergedDataPointer].submissionId = userSurveySubmission.data.data[surveySubmissionPointer].submissionId;
+                    break;
+                  }
+                
+                }
+              }
             }
-          }
         }
         
         let result = {
@@ -574,11 +588,14 @@ module.exports = class UsersHelper {
           rootOrganisations : ( programData[0].rootOrganisations && programData[0].rootOrganisations.length > 0 ) ? programData[0].rootOrganisations : [],
           requestForPIIConsent: programData[0].requestForPIIConsent ? programData[0].requestForPIIConsent : false,
           data: mergedData,
-          count: totalCount
+          count: totalCount,
+          programEndDate: programData[0].endDate
         };
+        
         //Check data present in programUsers collection.
         //checkForUserJoinedProgram will check for data and if its present return true else false.
         result.programJoined = await programUsersHelper.checkForUserJoinedProgram(programId,userId);
+
         return resolve({
           message: constants.apiResponses.PROGRAM_SOLUTIONS_FETCHED,
           success: true,
@@ -1080,7 +1097,7 @@ module.exports = class UsersHelper {
    * @returns {Object} - program creation data
    */
 
-function _createProgramData(name, externalId, isAPrivateProgram, status, description, userId, createdBy = "") {
+function _createProgramData(name, externalId, isAPrivateProgram, status, description, userId, startDate, endDate, createdBy = "") {
 
     let programData = {};
     programData.name = name;
@@ -1090,6 +1107,8 @@ function _createProgramData(name, externalId, isAPrivateProgram, status, descrip
     programData.description = description;
     programData.userId = userId;
     programData.createdBy = createdBy;
+    programData.startDate = startDate;
+    programData.endDate = endDate;
     return programData;
 
 }
