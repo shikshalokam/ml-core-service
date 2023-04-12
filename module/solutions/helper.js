@@ -2011,14 +2011,9 @@ module.exports = class SolutionsHelper {
           templateOrQuestionDetails.result.requestForPIIConsent = (programData[0].requestForPIIConsent) ? programData[0].requestForPIIConsent : false;
         }
 
-        let programUsersData = await programUsersHelper.programUsersDocuments(
-          {
-            userId: userId,
-            programId: solutionData.programId
-          },
-          ["_id"]
-        );
-        templateOrQuestionDetails.result.programJoined = ( programUsersData.length > 0 ) ? true : false;
+        //Check data present in programUsers collection.
+        //checkForUserJoinedProgram will check for data and if its present return true else false.
+        templateOrQuestionDetails.result.programJoined = await programUsersHelper.checkForUserJoinedProgram(solutionData.programId,userId);
         
         return resolve(templateOrQuestionDetails);
         
