@@ -2001,15 +2001,19 @@ module.exports = class SolutionsHelper {
           }
 
         }
-        // add ["rootOrganisations","requestForPIIConsent","programJoined"] values to response. Based on these values front end calls PII consent
-        let programData = await programsHelper.programDocuments({
-          _id : solutionData.programId
-        },["rootOrganisations","requestForPIIConsent"]);
         
-        if ( programData.length > 0 ) {
-          templateOrQuestionDetails.result.rootOrganisations = (programData[0].rootOrganisations) ? programData[0].rootOrganisations : [];
-          templateOrQuestionDetails.result.requestForPIIConsent = (programData[0].requestForPIIConsent) ? programData[0].requestForPIIConsent : false;
+        if ( solutionData.programId ) {
+          // add ["rootOrganisations","requestForPIIConsent","programJoined"] values to response. Based on these values front end calls PII consent
+          let programData = await programsHelper.programDocuments({
+            _id : solutionData.programId
+          },["rootOrganisations","requestForPIIConsent"]);
+          
+          if ( programData.length > 0 ) {
+            templateOrQuestionDetails.result.rootOrganisations = (programData[0].rootOrganisations) ? programData[0].rootOrganisations : [];
+            templateOrQuestionDetails.result.requestForPIIConsent = (programData[0].requestForPIIConsent) ? programData[0].requestForPIIConsent : false;
+          }
         }
+        
         //Check data present in programUsers collection.
         //checkForUserJoinedProgram will check for data and if its present return true else false.
         templateOrQuestionDetails.result.programJoined = await programUsersHelper.checkForUserJoinedProgram(solutionData.programId,userId);
