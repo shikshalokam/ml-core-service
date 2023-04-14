@@ -375,17 +375,18 @@ module.exports = class ProgramsHelper {
    * @method
    * @name list
    * @param {Number} pageNo - page no.
-   * @param {Nmber} pageSize - page size. 
+   * @param {Number} pageSize - page size. 
    * @param {String} searchText - text to search.
+   *  @param {Object} filter - filter.
+   *  @param {Array} projection - projection.
    * @returns {Object} - Programs list. 
    */
 
-  static list(pageNo,pageSize,searchText,filter = {},projection) {
+  static list(pageNo="",pageSize="",searchText,filter = {},projection) {
 
     return new Promise( async (resolve, reject) => {
 
       try {
-
         let programDocument = [];
 
         let matchQuery = { status : constants.common.ACTIVE };
@@ -434,10 +435,17 @@ module.exports = class ProgramsHelper {
         facetQuery["$facet"]["totalCount"] = [
           { "$count": "count" }
         ];
-        facetQuery["$facet"]["data"] = [
-          { $skip: pageSize * (pageNo - 1) },
-          { $limit: pageSize }
-        ];
+          
+        if ( pageSize === "" && pageNo === "" ) {
+          facetQuery["$facet"]["data"] = [
+            { $skip: 0 }
+          ];
+        } else {
+          facetQuery["$facet"]["data"] = [
+            { $skip: pageSize * (pageNo - 1) },
+            { $limit: pageSize }
+          ];
+        }
 
         let projection2 = {};
         projection2["$project"] = {
@@ -451,7 +459,6 @@ module.exports = class ProgramsHelper {
        
         let programDocuments = 
         await database.models.programs.aggregate(programDocument);
-        
         return resolve({
           success : true,
           message : constants.apiResponses.PROGRAM_LIST,
@@ -469,7 +476,7 @@ module.exports = class ProgramsHelper {
     })
   }
 
-    /**
+  /**
    * List of programs based on role and location.
    * @method
    * @name forUserRoleAndLocation
@@ -480,7 +487,7 @@ module.exports = class ProgramsHelper {
    * @returns {JSON} - List of programs based on role and location.
    */
 
-  static forUserRoleAndLocation( bodyData, pageSize, pageNo,searchText = "" ) {
+  static forUserRoleAndLocation( bodyData, pageSize, pageNo, searchText = "", projection ) {
 
     return new Promise(async (resolve, reject) => {
 
@@ -495,21 +502,72 @@ module.exports = class ProgramsHelper {
         }
         queryData.data.startDate ={"$lte": new Date()}
         queryData.data.endDate ={"$gte": new Date()}
+        
         let targetedPrograms = await this.list(
           pageNo,
           pageSize,
           searchText,
           queryData.data,
-          ["name", "externalId","components","metaInformation"]
+          projection
         );
-             
-        if ( targetedPrograms.success && targetedPrograms.data && targetedPrograms.data.data.length > 0) {
+        
+        return resolve({
+          success: true,
+          message: constants.apiResponses.TARGETED_PROGRAMS_FETCHED,
+          data: targetedPrograms.data
+        });
+
+      } catch (error) {
+
+        return resolve({
+          success : false,
+          message : error.message,
+          data : {}
+        });
+
+      }
+
+    })
+  }
+
+  /**
+   * List of programs related to a user.
+   * @method
+   * @name userRelatedProgramsDetails
+   * @param {Array} programIds - program Ids.
+   * @param {String} pageSize - Page size.
+   * @param {String} pageNo - Page no.
+   * @param {String} searchText - search text.
+   * @param {Array} projection - projection.
+   *  @param {String} userId - userId.
+   * @returns {JSON} - List of programs related to the user.
+   */
+
+  static userRelatedProgramsDetails( programIds, pageNo, pageSize, searchText = "", projection, userId ) {
+    return new Promise(async (resolve, reject) => {
+      try {
+        let findQuery = {
+          "_id": { "$in" : programIds },
+        }
+        
+        let userRelatedProgramsDetails = await this.list(
+          pageNo,
+          pageSize,
+          searchText,
+          findQuery,
+          projection
+        );
+
+        // add solutions and resourcesStarted
+        if ( userRelatedProgramsDetails.success && userRelatedProgramsDetails.data && userRelatedProgramsDetails.data.data.length > 0 ) {
 
           let componentsIds = [];
-          targetedPrograms.data.data.forEach(targetedProgram => {
-            if( targetedProgram.components.length > 0 ) {
-              componentsIds = componentsIds.concat(targetedProgram.components);
+          let userRelatedProgramIds = [];
+          userRelatedProgramsDetails.data.data.forEach(program => {
+            if( program.components.length > 0 ) {
+              componentsIds = componentsIds.concat(program.components);
             }
+            userRelatedProgramIds.push(program._id);
           });
 
           let solutions = await solutionsHelper.solutionDocuments({
@@ -521,26 +579,48 @@ module.exports = class ProgramsHelper {
           const solutionsIds = []
           solutions.forEach(solution => solutionsIds.push(solution._id.toString()));
 
-          targetedPrograms.data.data.forEach(targetedProgram => {
+          userRelatedProgramsDetails.data.data.forEach(program => {
 
-          if( targetedProgram.components.length > 0 ) {
+          if( program.components.length > 0 ) {
 
             let countSolutions = 0;
-            targetedProgram.components.forEach(component => {
+            program.components.forEach(component => {
               if (solutionsIds.includes(component.toString())) {
                 countSolutions++;
               }
             });
-            targetedProgram.solutions = countSolutions;
-            delete targetedProgram.components;
+            program.solutions = countSolutions;
+            delete program.components;
           }
           });
+          
+          const programUsersDetails = await programUsersHelper.programUsersDocuments(
+            {
+              userId: userId,
+              programId: { "$in" : userRelatedProgramIds }
+            },
+            ["programId","resourcesStarted"]
+          );
+          
+          // add resourcesStarted key to response if its available
+          if( programUsersDetails.length > 0 ) {
+            for ( let programUsersIndex = 0; programUsersIndex < programUsersDetails.length; programUsersIndex++ ) {
+              if (programUsersDetails[programUsersIndex].hasOwnProperty("resourcesStarted")) {
+                for ( let programIndex = 0; programIndex < userRelatedProgramsDetails.data.data.length; programIndex++ ) {
+                  if( programUsersDetails[programUsersIndex].programId == (userRelatedProgramsDetails.data.data[programIndex]._id).toString() ) {
+                    userRelatedProgramsDetails.data.data[programIndex].resourcesStarted = programUsersDetails[programUsersIndex].resourcesStarted;
+                  }
+                }
+              }
+              
+            }
+          }
         }
 
         return resolve({
           success: true,
-          message: constants.apiResponses.TARGETED_PROGRAMS_FETCHED,
-          data: targetedPrograms.data
+          message: constants.apiResponses.PROGRAMS_FETCHED, 
+          data: userRelatedProgramsDetails.data
         });
 
       } catch (error) {
