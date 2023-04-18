@@ -630,15 +630,16 @@ module.exports = class UsersHelper {
     return new Promise(async (resolve, reject) => {
       try {
        
+        let programDetails = {};
         let targetedProgramIds = [];
         let nonTargetedProgramIds = []
-        let programCount;
+        let programCount= 0;
 
         // getting all program details matching the user profile. not passing pageSize and pageNo to get all data.
          let targetedPrograms = await programsHelper.forUserRoleAndLocation(
           bodyData,
-          "", 
-          "",
+          "", // not passing page size
+          "", // not passing page number
           searchText,
           ["_id"]
         );
@@ -646,7 +647,7 @@ module.exports = class UsersHelper {
         // targetedPrograms.data contain all programIds targeted to current user profile.
         if ( targetedPrograms.success && targetedPrograms.data && targetedPrograms.data.data.length > 0) {
           targetedProgramIds = gen.utils.arrayOfObjectToArrayOfObjectId(targetedPrograms.data.data);
-          programCount = targetedPrograms.count;
+          programCount = targetedPrograms.data.count;
         }
 
         // In case user changed profile after joined a program, we need to find the such program details. (programs not targeted to user profile anymore)
@@ -670,29 +671,26 @@ module.exports = class UsersHelper {
           };
         }
 
-        // get program details. also applying pagination here
-        let userRelatedProgramsData = await programsHelper.userRelatedProgramsDetails(
-          userRelatedPrograms,
-          pageNo, 
-          pageSize,
-          "",
-          ["name", "externalId","components","metaInformation"],
-          userId
+        let userRelatedProgramsData = await programsHelper.programDocuments(
+          {_id : {$in:userRelatedPrograms}},
+          ["name", "externalId","metaInformation"],
+          "none", //not passing skip fields
+          {skip: pageSize * (pageNo - 1),limit: pageSize}
         );
         
-        if (!userRelatedProgramsData.success) {
+        if (!userRelatedProgramsData.length > 0) {
           throw {
             message: constants.apiResponses.PROGRAM_NOT_FOUND,
           };
         }
-
-        targetedPrograms.data["description"] = constants.apiResponses.PROGRAM_DESCRIPTION;
-        userRelatedProgramsData.data.data.count = programCount;
-            
+        programDetails.data = userRelatedProgramsData;
+        programDetails.count = programCount;
+        programDetails.description = constants.apiResponses.PROGRAM_DESCRIPTION;
+        
         return resolve({
           success: true,
           message: constants.apiResponses.PROGRAMS_FETCHED,
-          data: userRelatedProgramsData.data
+          data: programDetails
         });
       } catch (error) {
         return resolve({
@@ -1015,8 +1013,8 @@ module.exports = class UsersHelper {
 
           //call program details to check if the program is active or not
           let programDetails = await programsHelper.list(
-            "",
-            "",
+            "", // not passing page number
+            "", // not passing page size
             searchText,
             findQuery,
             ["_id"]

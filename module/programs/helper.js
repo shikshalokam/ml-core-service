@@ -26,14 +26,16 @@ module.exports = class ProgramsHelper {
    * @name programDocuments
    * @param {Array} [filterQuery = "all"] - solution ids.
    * @param {Array} [fieldsArray = "all"] - projected fields.
-   * @param {Array} [skipFields = "none"] - field not to include
+   * @param {Array} [skipFields = "none"] - field not to include.
+   * @param {Object} pagination - pagination object.
    * @returns {Array} List of programs. 
    */
   
   static programDocuments(
     filterQuery = "all", 
     fieldsArray = "all",
-    skipFields = "none"
+    skipFields = "none",
+    pagination = {}
   ) {
     return new Promise(async (resolve, reject) => {
         try {
@@ -56,7 +58,8 @@ module.exports = class ProgramsHelper {
             
             let programData = await database.models.programs.find(
               queryObject, 
-              projection
+              projection,
+              pagination
             ).lean();
             
             return resolve(programData);
@@ -513,112 +516,6 @@ module.exports = class ProgramsHelper {
           success: true,
           message: constants.apiResponses.TARGETED_PROGRAMS_FETCHED,
           data: targetedPrograms.data
-        });
-
-      } catch (error) {
-
-        return resolve({
-          success : false,
-          message : error.message,
-          data : {}
-        });
-
-      }
-
-    })
-  }
-
-  /**
-   * List of programs related to a user.
-   * @method
-   * @name userRelatedProgramsDetails
-   * @param {Array} programIds - program Ids.
-   * @param {String} pageSize - Page size.
-   * @param {String} pageNo - Page no.
-   * @param {String} searchText - search text.
-   * @param {Array} projection - projection.
-   *  @param {String} userId - userId.
-   * @returns {JSON} - List of programs related to the user.
-   */
-
-  static userRelatedProgramsDetails( programIds, pageNo, pageSize, searchText = "", projection, userId ) {
-    return new Promise(async (resolve, reject) => {
-      try {
-        let findQuery = {
-          "_id": { "$in" : programIds },
-        }
-        
-        let userRelatedProgramsDetails = await this.list(
-          pageNo,
-          pageSize,
-          searchText,
-          findQuery,
-          projection
-        );
-
-        // add solutions and resourcesStarted
-        if ( userRelatedProgramsDetails.success && userRelatedProgramsDetails.data && userRelatedProgramsDetails.data.data.length > 0 ) {
-
-          let componentsIds = [];
-          let userRelatedProgramIds = [];
-          userRelatedProgramsDetails.data.data.forEach(program => {
-            if( program.components.length > 0 ) {
-              componentsIds = componentsIds.concat(program.components);
-            }
-            userRelatedProgramIds.push(program._id);
-          });
-
-          let solutions = await solutionsHelper.solutionDocuments({
-            _id : { $in : componentsIds },
-            isDeleted : false,
-            status : constants.common.ACTIVE
-          },["_id"]); 
-
-          const solutionsIds = []
-          solutions.forEach(solution => solutionsIds.push(solution._id.toString()));
-
-          userRelatedProgramsDetails.data.data.forEach(program => {
-
-          if( program.components.length > 0 ) {
-
-            let countSolutions = 0;
-            program.components.forEach(component => {
-              if (solutionsIds.includes(component.toString())) {
-                countSolutions++;
-              }
-            });
-            program.solutions = countSolutions;
-            delete program.components;
-          }
-          });
-          
-          const programUsersDetails = await programUsersHelper.programUsersDocuments(
-            {
-              userId: userId,
-              programId: { "$in" : userRelatedProgramIds }
-            },
-            ["programId","resourcesStarted"]
-          );
-          
-          // add resourcesStarted key to response if its available
-          if( programUsersDetails.length > 0 ) {
-            for ( let programUsersIndex = 0; programUsersIndex < programUsersDetails.length; programUsersIndex++ ) {
-              if (programUsersDetails[programUsersIndex].hasOwnProperty("resourcesStarted")) {
-                for ( let programIndex = 0; programIndex < userRelatedProgramsDetails.data.data.length; programIndex++ ) {
-                  if( programUsersDetails[programUsersIndex].programId == (userRelatedProgramsDetails.data.data[programIndex]._id).toString() ) {
-                    userRelatedProgramsDetails.data.data[programIndex].resourcesStarted = programUsersDetails[programUsersIndex].resourcesStarted;
-                  }
-                }
-              }
-              
-            }
-          }
-        }
-
-        return resolve({
-          success: true,
-          message: constants.apiResponses.PROGRAMS_FETCHED, 
-          data: userRelatedProgramsDetails.data
         });
 
       } catch (error) {
