@@ -435,11 +435,9 @@ module.exports = class ProgramsHelper {
         facetQuery["$facet"]["totalCount"] = [
           { "$count": "count" }
         ];
-          
+        
         if ( pageSize === "" && pageNo === "" ) {
-          facetQuery["$facet"]["data"] = [
-            { $skip: 0 }
-          ];
+          facetQuery["$facet"]["data"] = [];
         } else {
           facetQuery["$facet"]["data"] = [
             { $skip: pageSize * (pageNo - 1) },
