@@ -675,7 +675,8 @@ module.exports = class UsersHelper {
           {_id : {$in:userRelatedPrograms}},
           ["name", "externalId","metaInformation"],
           "none", //not passing skip fields
-          {skip: pageSize * (pageNo - 1),limit: pageSize}
+          pageNo,
+          pageSize
         );
         
         if (!userRelatedProgramsData.length > 0) {

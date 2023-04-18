@@ -27,7 +27,8 @@ module.exports = class ProgramsHelper {
    * @param {Array} [filterQuery = "all"] - solution ids.
    * @param {Array} [fieldsArray = "all"] - projected fields.
    * @param {Array} [skipFields = "none"] - field not to include.
-   * @param {Object} pagination - pagination object.
+   * @param {Number} pageNo - page no.
+   * @param {Number} pageSize - page size.
    * @returns {Array} List of programs. 
    */
   
@@ -35,7 +36,8 @@ module.exports = class ProgramsHelper {
     filterQuery = "all", 
     fieldsArray = "all",
     skipFields = "none",
-    pagination = {}
+    pageNo = "",
+    pageSize = ""
   ) {
     return new Promise(async (resolve, reject) => {
         try {
@@ -43,7 +45,7 @@ module.exports = class ProgramsHelper {
             let queryObject = (filterQuery != "all") ? filterQuery : {};
     
             let projection = {}
-    
+            let pagination = {};
             if (fieldsArray != "all") {
                 fieldsArray.forEach(field => {
                     projection[field] = 1;
@@ -54,6 +56,12 @@ module.exports = class ProgramsHelper {
               skipFields.forEach(field=>{
                 projection[field] = 0;
               })
+            }
+            if( pageNo !== "" && pageSize !== "" ) {
+              pagination = {
+                skip: pageSize * (pageNo - 1),
+                limit: pageSize
+              }
             }
             
             let programData = await database.models.programs.find(
