@@ -11,6 +11,8 @@ const entityTypesHelper = require(MODULES_BASE_PATH + "/entityTypes/helper");
 const entitiesHelper = require(MODULES_BASE_PATH + "/entities/helper");
 const userRolesHelper = require(MODULES_BASE_PATH + "/user-roles/helper");
 const userService = require(ROOT_PATH + "/generics/services/users");
+const kafkaProducersHelper = require(ROOT_PATH + "/generics/kafka/producers");
+const programUsersHelper = require(MODULES_BASE_PATH + "/programUsers/helper");
 
 /**
     * ProgramsHelper
@@ -24,14 +26,18 @@ module.exports = class ProgramsHelper {
    * @name programDocuments
    * @param {Array} [filterQuery = "all"] - solution ids.
    * @param {Array} [fieldsArray = "all"] - projected fields.
-   * @param {Array} [skipFields = "none"] - field not to include
+   * @param {Array} [skipFields = "none"] - field not to include.
+   * @param {Number} pageNo - page no.
+   * @param {Number} pageSize - page size.
    * @returns {Array} List of programs. 
    */
   
   static programDocuments(
     filterQuery = "all", 
     fieldsArray = "all",
-    skipFields = "none"
+    skipFields = "none",
+    pageNo = "",
+    pageSize = ""
   ) {
     return new Promise(async (resolve, reject) => {
         try {
@@ -39,7 +45,7 @@ module.exports = class ProgramsHelper {
             let queryObject = (filterQuery != "all") ? filterQuery : {};
     
             let projection = {}
-    
+            let pagination = {};
             if (fieldsArray != "all") {
                 fieldsArray.forEach(field => {
                     projection[field] = 1;
@@ -51,10 +57,17 @@ module.exports = class ProgramsHelper {
                 projection[field] = 0;
               })
             }
+            if( pageNo !== "" && pageSize !== "" ) {
+              pagination = {
+                skip: pageSize * (pageNo - 1),
+                limit: pageSize
+              }
+            }
             
             let programData = await database.models.programs.find(
               queryObject, 
-              projection
+              projection,
+              pagination
             ).lean();
             
             return resolve(programData);
@@ -65,13 +78,13 @@ module.exports = class ProgramsHelper {
     });
   }
 
-     /**
-   * Create program
-   * @method
-   * @name create
-   * @param {Array} data 
-   * @returns {JSON} - create program.
-   */
+  /**
+ * Create program
+ * @method
+ * @name create
+ * @param {Array} data 
+ * @returns {JSON} - create program.
+ */
 
   static create(data) {
 
@@ -373,17 +386,18 @@ module.exports = class ProgramsHelper {
    * @method
    * @name list
    * @param {Number} pageNo - page no.
-   * @param {Nmber} pageSize - page size. 
+   * @param {Number} pageSize - page size. 
    * @param {String} searchText - text to search.
+   *  @param {Object} filter - filter.
+   *  @param {Array} projection - projection.
    * @returns {Object} - Programs list. 
    */
 
-  static list(pageNo,pageSize,searchText,filter = {},projection) {
+  static list(pageNo="",pageSize="",searchText,filter = {},projection) {
 
     return new Promise( async (resolve, reject) => {
 
       try {
-
         let programDocument = [];
 
         let matchQuery = { status : constants.common.ACTIVE };
@@ -432,11 +446,15 @@ module.exports = class ProgramsHelper {
         facetQuery["$facet"]["totalCount"] = [
           { "$count": "count" }
         ];
-
-        facetQuery["$facet"]["data"] = [
-          { $skip: pageSize * (pageNo - 1) },
-          { $limit: pageSize }
-        ];
+        
+        if ( pageSize === "" && pageNo === "" ) {
+          facetQuery["$facet"]["data"] = [];
+        } else {
+          facetQuery["$facet"]["data"] = [
+            { $skip: pageSize * (pageNo - 1) },
+            { $limit: pageSize }
+          ];
+        }
 
         let projection2 = {};
         projection2["$project"] = {
@@ -450,7 +468,6 @@ module.exports = class ProgramsHelper {
        
         let programDocuments = 
         await database.models.programs.aggregate(programDocument);
-
         return resolve({
           success : true,
           message : constants.apiResponses.PROGRAM_LIST,
@@ -468,7 +485,7 @@ module.exports = class ProgramsHelper {
     })
   }
 
-    /**
+  /**
    * List of programs based on role and location.
    * @method
    * @name forUserRoleAndLocation
@@ -479,7 +496,7 @@ module.exports = class ProgramsHelper {
    * @returns {JSON} - List of programs based on role and location.
    */
 
-  static forUserRoleAndLocation( bodyData, pageSize, pageNo,searchText = "" ) {
+  static forUserRoleAndLocation( bodyData, pageSize, pageNo, searchText = "", projection ) {
 
     return new Promise(async (resolve, reject) => {
 
@@ -494,48 +511,15 @@ module.exports = class ProgramsHelper {
         }
         queryData.data.startDate ={"$lte": new Date()}
         queryData.data.endDate ={"$gte": new Date()}
+        
         let targetedPrograms = await this.list(
           pageNo,
           pageSize,
           searchText,
           queryData.data,
-          ["name", "externalId","components"]
+          projection
         );
-             
-        if ( targetedPrograms.success && targetedPrograms.data && targetedPrograms.data.data.length > 0) {
-
-          let componentsIds = [];
-          targetedPrograms.data.data.forEach(targetedProgram => {
-            if( targetedProgram.components.length > 0 ) {
-              componentsIds = componentsIds.concat(targetedProgram.components);
-            }
-          });
-
-          let solutions = await solutionsHelper.solutionDocuments({
-            _id : { $in : componentsIds },
-            isDeleted : false,
-            status : constants.common.ACTIVE
-          },["_id"]); 
-
-          const solutionsIds = []
-          solutions.forEach(solution => solutionsIds.push(solution._id.toString()));
-
-          targetedPrograms.data.data.forEach(targetedProgram => {
-
-          if( targetedProgram.components.length > 0 ) {
-
-            let countSolutions = 0;
-            targetedProgram.components.forEach(component => {
-              if (solutionsIds.includes(component.toString())) {
-                countSolutions++;
-              }
-            });
-            targetedProgram.solutions = countSolutions;
-            delete targetedProgram.components;
-          }
-          });
-        }
-
+        
         return resolve({
           success: true,
           message: constants.apiResponses.TARGETED_PROGRAMS_FETCHED,
@@ -948,6 +932,165 @@ module.exports = class ProgramsHelper {
           message: constants.apiResponses.PROGRAMS_FETCHED,
           success: true,
           data: programData[0]
+        });
+
+      } catch (error) {
+        return resolve({
+          success: false,
+          status: error.status
+            ? error.status
+            : httpStatusCode['internal_server_error'].status,
+          message: error.message
+        });
+      }
+    });
+  } 
+
+  /**
+  * Program join.
+  * @method
+  * @name join
+  * @param {String} programId - Program Id.
+  * @param {Object} data - body data (can include isResourse flag && userRoleInformation).
+  * @param {String} userId - Logged in user id.
+  * @param {String} userToken - User token.
+  * @param {String} [appName = ""] - App Name.
+  * @param {String} [appVersion = ""] - App Version.
+  * @param {Boolean} callConsetAPIOnBehalfOfUser - required to call consent api or not
+  * @returns {Object} - Details of the program join.
+  */
+
+  static join( programId, data, userId, userToken, appName = "", appVersion = "", callConsetAPIOnBehalfOfUser = false ) {
+    return new Promise(async (resolve, reject) => {
+      try {
+        let pushProgramUsersDetailsToKafka = false;
+        //Using programId fetch program details. Also checking the program status in the query.
+        let programData = await this.programDocuments({
+          _id: programId,
+          status: constants.common.ACTIVE,
+          isDeleted: false
+        },[
+            "name", 
+            "externalId",
+            "requestForPIIConsent",
+            "rootOrganisations"
+          ]
+        );
+        
+        if ( !programData.length > 0 ) {
+          throw ({
+            status: httpStatusCode.bad_request.status,
+            message: constants.apiResponses.PROGRAM_NOT_FOUND
+          });
+        }
+        let programUsersData = {};
+        let update = {};
+        
+        // check if user already joined for program or not
+        const programUsersDetails = await programUsersHelper.programUsersDocuments(
+          {
+            userId: userId,
+            programId: programId
+          },
+          ["_id"]
+        );
+        // if user not joined for program. we have add more key values to programUsersData
+        if ( !programUsersDetails.length > 0 ) {
+          // Fetch user profile information by calling sunbird's user read api.
+          // !Important check specific fields of userProfile.
+          let userProfile = await userService.profile(userToken, userId);
+          if (!userProfile.success || 
+              !userProfile.data ||
+              !userProfile.data.response ||
+              !userProfile.data.response.profileUserTypes ||
+              !userProfile.data.response.profileUserTypes.length > 0 ||
+              !userProfile.data.response.userLocations ||
+              !userProfile.data.response.userLocations.length > 0
+          ) {
+            throw ({
+              status: httpStatusCode.bad_request.status,
+              message: constants.apiResponses.PROGRAM_JOIN_FAILED
+            });      
+          }     
+          programUsersData = {
+            programId: programId,
+            userRoleInformation: data.userRoleInformation,
+            userId: userId,
+            userProfile:userProfile.data.response,
+            resourcesStarted : false  
+          }
+          if( appName != "" ) {
+            programUsersData['appInformation.appName'] = appName;
+          }
+          if( appVersion != "" ) {
+            programUsersData['appInformation.appVersion'] = appVersion;
+          }
+          update['$set'] = programUsersData;
+          
+
+          //For internal calls add consent using sunbird api
+          if( callConsetAPIOnBehalfOfUser && programData[0].hasOwnProperty('requestForPIIConsent') && programData[0].requestForPIIConsent === true ){
+            if( !programData[0].rootOrganisations || !programData[0].rootOrganisations.length > 0 ) {
+              throw {
+                message: constants.apiResponses.PROGRAM_JOIN_FAILED,
+                status: httpStatusCode.bad_request.status
+              }
+            }
+            let userConsentRequestBody = {
+              "request": {
+                "consent": {
+                  "status": constants.common.REVOKED,
+                  "userId": userProfile.data.response.id,
+                  "consumerId": programData[0].rootOrganisations[0],
+                  "objectId":  programId,
+                  "objectType": constants.common.PROGRAM
+                }
+              }
+            }
+            let consentResponse = await userService.setUserConsent(userToken, userConsentRequestBody)
+            if(!consentResponse.success){
+              throw {
+                message: constants.apiResponses.PROGRAM_JOIN_FAILED,
+                status: httpStatusCode.bad_request.status
+              }
+            }
+          }
+          pushProgramUsersDetailsToKafka = true; 
+        }
+        
+        //create or update query
+        const query = { 
+          programId: programId,
+          userId: userId
+        };
+        if ( data.isResource ) {
+          update['$set'] = { resourcesStarted : true }
+        }
+        
+        // add record to programUsers collection
+        let joinProgram = await programUsersHelper.update(query, update, { new:true, upsert:true });
+        
+        if (!joinProgram._id) {
+          throw {
+              message: constants.apiResponses.PROGRAM_JOIN_FAILED,
+              status: httpStatusCode.bad_request.status
+          }
+        }
+        if ( pushProgramUsersDetailsToKafka ) {
+          joinProgram.programName = programData[0].name;
+          joinProgram.programExternalId = programData[0].externalId;
+          joinProgram.requestForPIIConsent = (programData[0].requestForPIIConsent && programData[0].requestForPIIConsent == true) ?  true : false;
+
+          //  push programUsers details to kafka
+          await kafkaProducersHelper.pushProgramUsersToKafka(joinProgram);
+        }
+
+        return resolve({
+          message: constants.apiResponses.JOINED_PROGRAM,
+          success: true,
+          data: {
+            _id : joinProgram._id
+          }
         });
 
       } catch (error) {

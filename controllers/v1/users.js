@@ -278,7 +278,8 @@ module.exports = class Users extends Abstract {
             req.pageSize,
             req.pageNo,
             req.searchText,
-            req.userDetails.userToken
+            req.userDetails.userToken,
+            req.userDetails.userId
         );
 
         targetedSolutions["result"] = targetedSolutions.data;
@@ -366,7 +367,8 @@ module.exports = class Users extends Abstract {
                   req.body,
                   req.pageNo,
                   req.pageSize,
-                  req.searchText
+                  req.searchText,
+                  req.userDetails.userId
               );
 
               programs.result = programs.data;

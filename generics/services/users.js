@@ -12,11 +12,11 @@ const userServiceUrl = process.env.USER_SERVICE_URL;
 const profile = function ( token,userId = "" ) {
     return new Promise(async (resolve, reject) => {
         try {
-
-            let url = userServiceUrl + constants.endpoints.USER_READ;
+            
+            let url = userServiceUrl + constants.endpoints.USER_READ_V5;
 
             if( userId !== "" ) {
-                url = url + "/" + userId;
+                url = url + "/" + userId + "?"  + "fields=organisations,roles,locations,declarations,externalIds"
             }
 
             const options = {
@@ -345,11 +345,69 @@ async function getParentEntities( entityId, iteration = 0, parentEntities ) {
     return parentEntities;
 
 }
+
+/**
+  * update user consent for sharing the PII.
+  * @method
+  * @name setUserConsent
+  * @param {String} token - user token
+  * @returns {Object} consentData - consent data.
+*/
+
+const setUserConsent = function ( token, consentData ) {
+    return new Promise(async (resolve, reject) => {
+        try {
+            
+            let url = userServiceUrl + constants.endpoints.USER_CONSENT_API;
+
+            const options = {
+                headers : {
+                    "content-type": "application/json",
+                    "x-authenticated-user-token" : token
+                },
+                body: JSON.stringify(consentData) 
+            };
+            
+            request.post(url,options,requestCallback);
+
+            function requestCallback(err, data) {
+
+                let result = {
+                    success : true
+                };
+
+                if (err) {
+                    result.success = false;
+                } else {
+                    
+                    let response = JSON.parse(data.body);
+                    if( response.responseCode === httpStatusCode['http_responsecode_ok'].message ) {
+                        result["data"] = response;
+                    } else {
+                        result["message"] = response;
+                        result.success = false;
+                    }
+
+                }
+                return resolve(result);
+            }
+            setTimeout(function () {
+                return resolve (result = {
+                    success : false
+                });
+            }, constants.common.SERVER_TIME_OUT);
+
+        } catch (error) {
+            return reject(error);
+        }
+    })
+}
   
 module.exports = {
     profile : profile,
     locationSearch : locationSearch,
     orgSchoolSearch :orgSchoolSearch,
     getSubEntitiesBasedOnEntityType : getSubEntitiesBasedOnEntityType,
-    getParentEntities : getParentEntities
+    getParentEntities : getParentEntities,
+    setUserConsent : setUserConsent
 }

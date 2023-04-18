@@ -273,6 +273,17 @@ function checkIfStringIsNumber(str) {
   return /^[0-9]+$/.test(str);
 }
 
+/**
+  * array of object to array objectId
+  * @function
+  * @name arrayOfObjectToArrayOfObjectId
+  * @returns {Boolean} returns a Boolean value true/false
+*/
+
+function arrayOfObjectToArrayOfObjectId(ids) {
+  return ids.map(obj => obj._id);
+}
+
 module.exports = {
   camelCaseToTitleCase : camelCaseToTitleCase,
   lowerCase : lowerCase,
@@ -290,5 +301,6 @@ module.exports = {
   md5Hash : md5Hash,
   filterLocationIdandCode : filterLocationIdandCode,
   arrayIdsTobjectIds : arrayIdsTobjectIds,
-  checkIfStringIsNumber : checkIfStringIsNumber
+  checkIfStringIsNumber : checkIfStringIsNumber,
+  arrayOfObjectToArrayOfObjectId : arrayOfObjectToArrayOfObjectId
 };
