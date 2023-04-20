@@ -31,5 +31,6 @@ Please choose appropriate options.
 - [ ]  Use only let and const. Do not use var.
 - [ ]  Make common functions for repetitive code blocks.
 - [ ]  Avoid uploading sensitive information such as secret tokens or passwords in pull requests to ensure data security.
+- [ ]  Maintain consistent indentation and spacing throughout the code.
 
 
