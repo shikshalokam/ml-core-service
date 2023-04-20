@@ -13,6 +13,7 @@ const surveyService = require(ROOT_PATH + '/generics/services/survey');
 const improvementProjectService = require(ROOT_PATH + '/generics/services/improvement-project');
 const appsPortalBaseUrl = process.env.APP_PORTAL_BASE_URL + "/" ;
 const userService = require(ROOT_PATH + "/generics/services/users");
+const programUsersHelper = require(MODULES_BASE_PATH + "/programUsers/helper");
 
 /**
     * SolutionsHelper
@@ -583,7 +584,7 @@ module.exports = class SolutionsHelper {
             facetQuery,
             projection2
           ]);
-
+          
           return resolve({
             success : true,
             message : constants.apiResponses.SOLUTIONS_LIST,
@@ -1954,6 +1955,7 @@ module.exports = class SolutionsHelper {
         let solutionData = await this.solutionDocuments({ _id: solutionId }, [
           "type",
           "projectTemplateId",
+          "programId"
         ]);
 
         
@@ -2000,6 +2002,20 @@ module.exports = class SolutionsHelper {
 
         }
 
+        if ( solutionData.programId ) {
+          // add ["rootOrganisations","requestForPIIConsent","programJoined"] values to response. Based on these values front end calls PII consent
+          let programData = await programsHelper.programDocuments({
+            _id : solutionData.programId
+          },["rootOrganisations","requestForPIIConsent"]);
+          
+          templateOrQuestionDetails.result.rootOrganisations = (programData[0].rootOrganisations) ? programData[0].rootOrganisations : [];
+          templateOrQuestionDetails.result.requestForPIIConsent = (programData[0].requestForPIIConsent) ? programData[0].requestForPIIConsent : false;
+        }
+        
+        //Check data present in programUsers collection.
+        //checkForUserJoinedProgram will check for data and if its present return true else false.
+        templateOrQuestionDetails.result.programJoined = await programUsersHelper.checkForUserJoinedProgram(solutionData.programId,userId);
+        
         return resolve(templateOrQuestionDetails);
         
       } catch (error) {

@@ -27,6 +27,16 @@ let db_connect = function () {
 //   global.elasticsearch = require("./db/elastic-search")();
 // };
 
+/**
+  * Kafka connection.
+  * @function
+  * @name kafka_connect
+*/
+
+const kafka_connect = function() {
+  global.kafkaClient = require("./kafka")();
+};
+
 const configuration = {
   root: require("path").normalize(__dirname + "/.."),
   app: {
@@ -35,6 +45,7 @@ const configuration = {
 };
 
 db_connect();
+kafka_connect();
 // elasticsearch_connect();
 
 module.exports = configuration;
