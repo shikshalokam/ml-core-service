@@ -15,7 +15,7 @@ Please choose appropriate options.
 ## Checklist 
 
 - [ ]  It's critical to avoid making needless file modifications in contributions, such as adding new lines, console logs, or additional spaces, to guarantee cleaner and more efficient code. Furthermore, eliminating unnecessary imports from a file might enhance code readability and efficiency.
-- [ ]  Ensure that the pull request is assigned to the right branch and that the branch name contains the JIRA Task Id. Furthermore, each commit message should include the JIRA Task Id in the manner "ED-100: message".
+- [ ]  Ensure that the pull request is assigned to the right base branch and that the development branch name contains the JIRA Task Id. Furthermore, each commit message should include the JIRA Task Id in the manner "ED-100: message".
 - [ ]  Only update packages if it is mentioned and authorized in the design document, and make sure that you have the required permissions.
 - [ ]  Avoid making API and database queries inside a loop as it can lead to performance issues and slow down the system.
 - [ ]  When calling another function inside a given function, add comments explaining the purpose and meaning of the passed arguments and expected return values.
