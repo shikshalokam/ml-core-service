@@ -112,6 +112,8 @@ module.exports = class Programs extends Abstract {
           "entities" : ["5d6609ef81a57a6173a79e78"],
           "roles" : ["HM"]
       }
+      "startDate" : "2023-04-06T09:35:00.000Z",
+      "endDate" : ""2024-04-06T09:35:00.000Z" // optional
     }
   * @apiParamExample {json} Response:
    {
@@ -192,6 +194,8 @@ module.exports = class Programs extends Abstract {
           "entities" : ["5d6609ef81a57a6173a79e78"],
           "roles" : ["HM"]
       }
+      "startDate" : "2023-04-06T09:35:00.000Z",
+      "endDate" : ""2024-04-06T09:35:00.000Z" // optional
     }
   * @apiParamExample {json} Response:
   {
@@ -492,4 +496,60 @@ module.exports = class Programs extends Abstract {
     });
   }
 
+  /**
+    * @api {get} /assessment/api/v1/programs/join/:programId 
+    * @apiVersion 1.0.0
+    * @apiName Program Join
+    * @apiGroup Programs
+    * @apiHeader {String} X-authenticated-user-token Authenticity token
+    * @apiHeader {String} X-App-Ver Appversion
+    * @apiSampleRequest /assessment/api/v1/programs/join/5ffbf8909259097d48017bbf
+    * @apiUse successBody
+    * @apiUse errorBody
+    * @apiParamExample {json} Response:
+    * 
+    */
+
+     /**
+   * join program
+   * @method
+   * @name join
+   * @param {Object} req - requested data.
+   * @param {String} req.params._id - program id.
+   * @returns {Object} Program join status.
+  */
+
+  async join(req) {
+    return new Promise(async (resolve, reject) => {
+      try {
+
+        let programJoin = await programsHelper.join(
+          req.params._id,
+          req.body,
+          req.userDetails.userId,
+          req.userDetails.userToken,
+          req.headers["x-app-id"]  ? 
+          req.headers["x-app-id"]  : 
+          req.headers.appname ? req.headers.appname : "",
+          req.headers["x-app-ver"] ? 
+          req.headers["x-app-ver"] : 
+          req.headers.appversion ? req.headers.appversion : "",
+          req.headers["internal-access-token"] ? 
+          true : 
+          req.headers.internalAccessToken ? true : false
+        );    
+        programJoin["result"] = programJoin.data;
+        return resolve(programJoin);
+        
+      } catch (error) {
+        return reject({
+          status: error.status || httpStatusCode.internal_server_error.status,
+          message: error.message || httpStatusCode.internal_server_error.message,
+          errorObject: error
+        });
+      }
+    });
+  }
+
 }
+

@@ -187,5 +187,8 @@ module.exports = {
   'insufficient_storage': {
     status: 507,
     message: "Insufficient Storage"
+  },
+  'http_responsecode_ok':{
+    message:"OK"
   }
 };

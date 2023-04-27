@@ -190,6 +190,27 @@ let enviromentVariables = {
       "value" : "OCI"
     }
   }, 
+  "KAFKA_COMMUNICATIONS_ON_OFF" : {
+    "message" : "Enable/Disable kafka communications",
+    "optional" : false
+  },
+  "KAFKA_URL" : {
+    "message" : "Required Kafka Url",
+    "optional" : true,
+    "requiredIf" : {
+      "key": "KAFKA_COMMUNICATIONS_ON_OFF",
+      "operator": "EQUALS",
+      "value" : "ON"
+    }
+  },
+  "KAFKA_GROUP_ID" : {
+    "message" : "Required kafka group id",
+    "optional" : false
+  },
+  "PROGRAM_USERS_JOINED_TOPIC" : {
+    "message" : "OFF/TOPIC_NAME",
+    "optional" : false
+  }
 }
 
 let success = true;

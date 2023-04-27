@@ -14,7 +14,9 @@ const entitiesHelper = require(MODULES_BASE_PATH + "/entities/helper");
 const improvementProjectService = require(ROOT_PATH + "/generics/services/improvement-project");
 const userService = require(ROOT_PATH + "/generics/services/users");
 const formService = require(ROOT_PATH + '/generics/services/form');
+const programUsersHelper = require(MODULES_BASE_PATH + "/programUsers/helper");
 const surveyService = require(ROOT_PATH + '/generics/services/survey');
+
 
 
 /**
@@ -113,6 +115,8 @@ module.exports = class UsersHelper {
               constants.common.ACTIVE,
               duplicateProgram.description,
               userId,
+              duplicateProgram.startDate,
+              duplicateProgram.endDate,
               userId
             );
 
@@ -135,7 +139,9 @@ module.exports = class UsersHelper {
             data.programDescription
               ? data.programDescription
               : data.programName,
-            userId
+            userId,
+            duplicateProgram.startDate,
+            duplicateProgram.endDate
           );
           
           userPrivateProgram = await programsHelper.create(programData);
@@ -438,10 +444,12 @@ module.exports = class UsersHelper {
    * @param {String} pageSize page size.
    * @param {String} pageNo page no.
    * @param {String} search search text.
+   * @param {String} token user token.
+   * @param {String} userId user userId.
    * @returns {Object} targeted user solutions.
    */
 
-  static solutions(programId, requestedData, pageSize, pageNo, search, token) {
+  static solutions(programId, requestedData, pageSize, pageNo, search, token, userId) {
     return new Promise(async (resolve, reject) => {
       
       try {
@@ -449,7 +457,7 @@ module.exports = class UsersHelper {
           {
             _id: programId
           },
-          ["name"]
+          ["name","requestForPIIConsent","rootOrganisations","endDate"]
         );
         
         if (!programData.length > 0) {
@@ -575,10 +583,18 @@ module.exports = class UsersHelper {
         let result = {
           programName: programData[0].name,
           programId: programId,
+          programEndDate : programData[0].endDate,
           description: constants.common.TARGETED_SOLUTION_TEXT,
+          rootOrganisations : ( programData[0].rootOrganisations && programData[0].rootOrganisations.length > 0 ) ? programData[0].rootOrganisations : [],
+          requestForPIIConsent: programData[0].requestForPIIConsent ? programData[0].requestForPIIConsent : false,
           data: mergedData,
-          count: totalCount
+          count: totalCount,
+          programEndDate: programData[0].endDate
         };
+        
+        //Check data present in programUsers collection.
+        //checkForUserJoinedProgram will check for data and if its present return true else false.
+        result.programJoined = await programUsersHelper.checkForUserJoinedProgram(programId,userId);
 
         return resolve({
           message: constants.apiResponses.PROGRAM_SOLUTIONS_FETCHED,
@@ -606,32 +622,76 @@ module.exports = class UsersHelper {
    * @param {String} pageNo - Page number.
    * @param {String} pageSize - Page size.
    * @param {String} searchText - Search text.
+   * @param {String} userId - User Id.
    * @returns {Array} - Get user targeted programs.
    */
 
-  static programs(bodyData, pageNo, pageSize, searchText) {
+  static programs(bodyData, pageNo, pageSize, searchText, userId) {
     return new Promise(async (resolve, reject) => {
       try {
-        let targetedProgrms = await programsHelper.forUserRoleAndLocation(
+       
+        let programDetails = {};
+        let targetedProgramIds = [];
+        let nonTargetedProgramIds = []
+        let programCount= 0;
+
+        // getting all program details matching the user profile. not passing pageSize and pageNo to get all data.
+         let targetedPrograms = await programsHelper.forUserRoleAndLocation(
           bodyData,
-          pageSize,
-          pageNo,
-          searchText
+          "", // not passing page size
+          "", // not passing page number
+          searchText,
+          ["_id"]
         );
 
-        if (!targetedProgrms.success) {
+        // targetedPrograms.data contain all programIds targeted to current user profile.
+        if ( targetedPrograms.success && targetedPrograms.data && targetedPrograms.data.data.length > 0) {
+          targetedProgramIds = gen.utils.arrayOfObjectToArrayOfObjectId(targetedPrograms.data.data);
+          programCount = targetedPrograms.data.count;
+        }
+
+        // In case user changed profile after joined a program, we need to find the such program details. (programs not targeted to user profile anymore)
+        let nontargetedJoinedPrograms  = await this.getUserJoinedProgramDetailsWithPreviousProfiles(
+          targetedProgramIds,
+          searchText,
+          userId          
+        );
+        
+        if ( nontargetedJoinedPrograms.success && nontargetedJoinedPrograms.data ) {
+          nonTargetedProgramIds = nontargetedJoinedPrograms.data;
+          programCount = programCount + nontargetedJoinedPrograms.count; // update program count
+        }
+
+        //find total number of programs related to user
+        let userRelatedPrograms = targetedProgramIds.concat(nonTargetedProgramIds);
+
+        if (!userRelatedPrograms.length > 0) {
           throw {
             message: constants.apiResponses.PROGRAM_NOT_FOUND,
           };
         }
 
-        targetedProgrms.data["description"] =
-          constants.apiResponses.PROGRAM_DESCRIPTION;
-
+        let userRelatedProgramsData = await programsHelper.programDocuments(
+          {_id : {$in:userRelatedPrograms}},
+          ["name", "externalId","metaInformation"],
+          "none", //not passing skip fields
+          pageNo,
+          pageSize
+        );
+        
+        if (!userRelatedProgramsData.length > 0) {
+          throw {
+            message: constants.apiResponses.PROGRAM_NOT_FOUND,
+          };
+        }
+        programDetails.data = userRelatedProgramsData;
+        programDetails.count = programCount;
+        programDetails.description = constants.apiResponses.PROGRAM_DESCRIPTION;
+        
         return resolve({
           success: true,
-          message: constants.apiResponses.USER_TARGETED_PROGRAMS_FETCHED,
-          data: targetedProgrms.data
+          message: constants.apiResponses.PROGRAMS_FETCHED,
+          data: programDetails
         });
       } catch (error) {
         return resolve({
@@ -912,6 +972,78 @@ module.exports = class UsersHelper {
   }
 
 
+  /**
+   * Find non-targeted joined program.
+   * @method
+   * @name getUserJoinedProgramDetailsWithPreviousProfiles
+   * @param {Array} targetedProgramIds - programIds
+   * @param {String} searchText - search text
+   * @param {String} userId - userId
+   * @returns {Object} - non-targeted joined program details.
+   */
+  static getUserJoinedProgramDetailsWithPreviousProfiles( targetedProgramIds, searchText = "", userId ) {
+    return new Promise(async (resolve, reject) => {
+      try {
+        let programUsersIds = [];
+        let nonTargettedProgramDetails = [];
+
+        // find all programs joined by the user
+        // programUsersData will contain list of programs joined by user from all the profiles. This can be considered as the super set of user programs
+        let programUsersData = await programUsersHelper.programUsersDocuments(
+          {
+            userId: userId
+          },
+          ["programId"]
+        );
+        
+        if ( programUsersData.length > 0 ) {
+          programUsersIds = programUsersData.map(function (obj) {
+            return obj.programId;
+          });
+        }
+
+        // if we find the difference between programUsersData and targettedProgramIds we will get program details joined by user other than the current profile
+        let previousProfilesJoinedProgramIds = _.differenceWith(programUsersIds, targetedProgramIds,_.isEqual);
+        
+        if ( previousProfilesJoinedProgramIds.length > 0 ) {
+          let findQuery = {
+            "_id": { "$in" : previousProfilesJoinedProgramIds },
+            "startDate": {"$lte": new Date()},
+            "endDate": {"$gte": new Date()}
+          }
+
+          //call program details to check if the program is active or not
+          let programDetails = await programsHelper.list(
+            "", // not passing page number
+            "", // not passing page size
+            searchText,
+            findQuery,
+            ["_id"]
+          );
+          
+          // get _ids to array
+          if ( programDetails.success > 0 &&  programDetails.data && programDetails.data.data && programDetails.data.data.length > 0 ) {
+            nonTargettedProgramDetails = gen.utils.arrayOfObjectToArrayOfObjectId(programDetails.data.data);
+          }
+        }
+        
+        return resolve({
+          success: true,
+          data: nonTargettedProgramDetails,
+          count: nonTargettedProgramDetails.length
+        });
+      } catch (error) {
+        return resolve({
+          success: false,
+          status: error.status
+            ? error.status
+            : httpStatusCode['internal_server_error'].status,
+          message: error.message
+        });
+      }
+    });
+  }
+
   
 };
 
@@ -922,7 +1054,7 @@ module.exports = class UsersHelper {
    * @returns {Object} - program creation data
    */
 
-function _createProgramData(name, externalId, isAPrivateProgram, status, description, userId, createdBy = "") {
+function _createProgramData(name, externalId, isAPrivateProgram, status, description, userId, startDate, endDate, createdBy = "") {
 
     let programData = {};
     programData.name = name;
@@ -932,6 +1064,8 @@ function _createProgramData(name, externalId, isAPrivateProgram, status, descrip
     programData.description = description;
     programData.userId = userId;
     programData.createdBy = createdBy;
+    programData.startDate = startDate;
+    programData.endDate = endDate;
     return programData;
 
 }
@@ -971,4 +1105,6 @@ function _createSolutionData(name = "", externalId = "", isAPrivateProgram = "",
     return solutionData;
 
 }
+
+
 
