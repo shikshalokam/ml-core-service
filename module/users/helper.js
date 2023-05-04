@@ -643,9 +643,9 @@ module.exports = class UsersHelper {
           searchText,
           ["_id"]
         );
-
+        
         // targetedPrograms.data contain all programIds targeted to current user profile.
-        if ( targetedPrograms.success && targetedPrograms.data && targetedPrograms.data.data.length > 0) {
+        if ( targetedPrograms.success && targetedPrograms.data && targetedPrograms.data.data && targetedPrograms.data.data.length > 0) {
           targetedProgramIds = gen.utils.arrayOfObjectToArrayOfObjectId(targetedPrograms.data.data);
           programCount = targetedPrograms.data.count;
         }
@@ -694,6 +694,7 @@ module.exports = class UsersHelper {
           data: programDetails
         });
       } catch (error) {
+        console.log("Error :",error)
         return resolve({
           success: false,
           message: error.message,
