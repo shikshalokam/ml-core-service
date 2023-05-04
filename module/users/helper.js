@@ -1034,6 +1034,7 @@ module.exports = class UsersHelper {
           count: nonTargettedProgramDetails.length
         });
       } catch (error) {
+        console.log("error :",error)
         return resolve({
           success: false,
           status: error.status

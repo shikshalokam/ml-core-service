@@ -475,6 +475,7 @@ module.exports = class ProgramsHelper {
         });
 
       } catch (error) {
+        console.log("error :",error)
           return resolve({
             success : false,
             message : error.message,
@@ -528,7 +529,7 @@ module.exports = class ProgramsHelper {
         });
 
       } catch (error) {
-
+        console.log("error :",error)
         return resolve({
           success : false,
           message : error.message,
