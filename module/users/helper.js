@@ -643,11 +643,11 @@ module.exports = class UsersHelper {
           searchText,
           ["_id"]
         );
-
+        
         // targetedPrograms.data contain all programIds targeted to current user profile.
-        if ( targetedPrograms.success && targetedPrograms.data && targetedPrograms.data.data.length > 0) {
-          targetedProgramIds = gen.utils.arrayOfObjectToArrayOfObjectId(targetedPrograms.data.data);
-          programCount = targetedPrograms.data.count;
+        if ( targetedPrograms.success && targetedPrograms.data && targetedPrograms.data.length > 0) {
+          targetedProgramIds = gen.utils.arrayOfObjectToArrayOfObjectId(targetedPrograms.data);
+          programCount = targetedPrograms.count;
         }
 
         // In case user changed profile after joined a program, we need to find the such program details. (programs not targeted to user profile anymore)
@@ -694,6 +694,7 @@ module.exports = class UsersHelper {
           data: programDetails
         });
       } catch (error) {
+        console.log("Error :",error)
         return resolve({
           success: false,
           message: error.message,
@@ -1033,6 +1034,7 @@ module.exports = class UsersHelper {
           count: nonTargettedProgramDetails.length
         });
       } catch (error) {
+        console.log("error :",error)
         return resolve({
           success: false,
           status: error.status

@@ -475,6 +475,7 @@ module.exports = class ProgramsHelper {
         });
 
       } catch (error) {
+        console.log("error :",error)
           return resolve({
             success : false,
             message : error.message,
@@ -523,11 +524,12 @@ module.exports = class ProgramsHelper {
         return resolve({
           success: true,
           message: constants.apiResponses.TARGETED_PROGRAMS_FETCHED,
-          data: targetedPrograms.data
+          data: targetedPrograms.data.data,
+          count: targetedPrograms.data.count
         });
 
       } catch (error) {
-
+        console.log("error :",error)
         return resolve({
           success : false,
           message : error.message,
@@ -1046,7 +1048,7 @@ module.exports = class ProgramsHelper {
             }
             let consentResponse = await userService.setUserConsent(userToken, userConsentRequestBody)
             console.log("consentResponse ",consentResponse)
-            
+
             if(!consentResponse.success){
               throw {
                 message: constants.apiResponses.PROGRAM_JOIN_FAILED,
