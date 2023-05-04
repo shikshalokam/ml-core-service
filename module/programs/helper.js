@@ -1076,6 +1076,7 @@ module.exports = class ProgramsHelper {
               status: httpStatusCode.bad_request.status
           }
         }
+        console.log("kafka push status :",pushProgramUsersDetailsToKafka)
         if ( pushProgramUsersDetailsToKafka ) {
           joinProgram.programName = programData[0].name;
           joinProgram.programExternalId = programData[0].externalId;

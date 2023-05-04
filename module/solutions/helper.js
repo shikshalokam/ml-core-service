@@ -2008,7 +2008,7 @@ module.exports = class SolutionsHelper {
             _id : solutionData.programId
           },["rootOrganisations","requestForPIIConsent"]);
           
-          templateOrQuestionDetails.result.rootOrganisations = (programData[0].rootOrganisations) ? programData[0].rootOrganisations : [];
+          templateOrQuestionDetails.result.rootOrganisations = (programData[0].rootOrganisations) ? programData[0].rootOrganisations[0] : "";
           templateOrQuestionDetails.result.requestForPIIConsent = (programData[0].requestForPIIConsent) ? programData[0].requestForPIIConsent : false;
         }
         

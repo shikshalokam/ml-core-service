@@ -585,7 +585,7 @@ module.exports = class UsersHelper {
           programId: programId,
           programEndDate : programData[0].endDate,
           description: constants.common.TARGETED_SOLUTION_TEXT,
-          rootOrganisations : ( programData[0].rootOrganisations && programData[0].rootOrganisations.length > 0 ) ? programData[0].rootOrganisations : [],
+          rootOrganisations : ( programData[0].rootOrganisations && programData[0].rootOrganisations.length > 0 ) ? programData[0].rootOrganisations[0] : "",
           requestForPIIConsent: programData[0].requestForPIIConsent ? programData[0].requestForPIIConsent : false,
           data: mergedData,
           count: totalCount,
