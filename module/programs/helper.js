@@ -1015,7 +1015,7 @@ module.exports = class ProgramsHelper {
             programId: programId,
             userRoleInformation: data.userRoleInformation,
             userId: userId,
-            userProfile:userProfile.data.response,
+            userProfile:userProfile.data,
             resourcesStarted : false  
           }
           if( appName != "" ) {
@@ -1024,8 +1024,6 @@ module.exports = class ProgramsHelper {
           if( appVersion != "" ) {
             programUsersData['appInformation.appVersion'] = appVersion;
           }
-          update['$set'] = programUsersData;
-          
 
           //For internal calls add consent using sunbird api
           if( callConsetAPIOnBehalfOfUser && programData[0].hasOwnProperty('requestForPIIConsent') && programData[0].requestForPIIConsent === true ){
@@ -1039,7 +1037,7 @@ module.exports = class ProgramsHelper {
               "request": {
                 "consent": {
                   "status": constants.common.REVOKED,
-                  "userId": userProfile.data.response.id,
+                  "userId": userProfile.data.id,
                   "consumerId": programData[0].rootOrganisations[0],
                   "objectId":  programId,
                   "objectType": constants.common.PROGRAM
@@ -1048,6 +1046,7 @@ module.exports = class ProgramsHelper {
             }
             let consentResponse = await userService.setUserConsent(userToken, userConsentRequestBody)
             console.log("consentResponse ",consentResponse)
+            
             if(!consentResponse.success){
               throw {
                 message: constants.apiResponses.PROGRAM_JOIN_FAILED,
@@ -1063,10 +1062,12 @@ module.exports = class ProgramsHelper {
           programId: programId,
           userId: userId
         };
-        if ( data.isResource ) {
-          update['$set'] = { resourcesStarted : true }
-        }
         
+        if ( data.isResource ) {
+          programUsersData.resourcesStarted = true;
+        }
+        update['$set'] = programUsersData;
+
         // add record to programUsers collection
         let joinProgram = await programUsersHelper.update(query, update, { new:true, upsert:true });
         
