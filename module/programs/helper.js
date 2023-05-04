@@ -1001,11 +1001,10 @@ module.exports = class ProgramsHelper {
           let userProfile = await userService.profile(userToken, userId);
           if (!userProfile.success || 
               !userProfile.data ||
-              !userProfile.data.response ||
-              !userProfile.data.response.profileUserTypes ||
-              !userProfile.data.response.profileUserTypes.length > 0 ||
-              !userProfile.data.response.userLocations ||
-              !userProfile.data.response.userLocations.length > 0
+              !userProfile.data.profileUserTypes ||
+              !userProfile.data.profileUserTypes.length > 0 ||
+              !userProfile.data.userLocations ||
+              !userProfile.data.userLocations.length > 0
           ) {
             throw ({
               status: httpStatusCode.bad_request.status,
@@ -1048,6 +1047,7 @@ module.exports = class ProgramsHelper {
               }
             }
             let consentResponse = await userService.setUserConsent(userToken, userConsentRequestBody)
+            console.log("consentResponse ",consentResponse)
             if(!consentResponse.success){
               throw {
                 message: constants.apiResponses.PROGRAM_JOIN_FAILED,

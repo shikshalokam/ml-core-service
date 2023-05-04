@@ -41,10 +41,10 @@ const profile = function ( token,userId = "" ) {
 
                     let response = JSON.parse(data.body);
                     console.log("response from userRead api call :",response)
-                    if( response.status === httpStatusCode['ok'].status ) {
+                    if( response.responseCode === httpStatusCode['http_responsecode_ok'].message ) {
                         result["data"] = response.result.response;
                     } else {
-                        result["message"] = response.message;
+                        result["message"] = response.params.status;
                         result.success = false;
                     }
 
