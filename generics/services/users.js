@@ -26,7 +26,7 @@ const profile = function ( token,userId = "" ) {
                 }
             };
 
-            request.post(url,options,kendraCallback);
+            request.get(url,options,kendraCallback);
 
             function kendraCallback(err, data) {
 
@@ -36,9 +36,11 @@ const profile = function ( token,userId = "" ) {
 
                 if (err) {
                     result.success = false;
+                    console.log("error occured user read api call :",err)
                 } else {
 
                     let response = JSON.parse(data.body);
+                    console.log("response from userRead api call :",response)
                     if( response.status === httpStatusCode['ok'].status ) {
                         result["data"] = response.result.response;
                     } else {
