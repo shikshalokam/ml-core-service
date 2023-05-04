@@ -645,9 +645,9 @@ module.exports = class UsersHelper {
         );
         
         // targetedPrograms.data contain all programIds targeted to current user profile.
-        if ( targetedPrograms.success && targetedPrograms.data && targetedPrograms.data.data && targetedPrograms.data.data.length > 0) {
-          targetedProgramIds = gen.utils.arrayOfObjectToArrayOfObjectId(targetedPrograms.data.data);
-          programCount = targetedPrograms.data.count;
+        if ( targetedPrograms.success && targetedPrograms.data && targetedPrograms.data.length > 0) {
+          targetedProgramIds = gen.utils.arrayOfObjectToArrayOfObjectId(targetedPrograms.data);
+          programCount = targetedPrograms.count;
         }
 
         // In case user changed profile after joined a program, we need to find the such program details. (programs not targeted to user profile anymore)
