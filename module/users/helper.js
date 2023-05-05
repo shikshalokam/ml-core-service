@@ -449,7 +449,7 @@ module.exports = class UsersHelper {
    * @returns {Object} targeted user solutions.
    */
 
-  static solutions(programId, requestedData, pageSize, pageNo, search, token, userId) {
+  static solutions(programId, requestedData, pageSize, pageNo, search, token, userId, type) {
     return new Promise(async (resolve, reject) => {
       
       try {
@@ -470,7 +470,7 @@ module.exports = class UsersHelper {
         let autoTargetedSolutions =
           await solutionsHelper.forUserRoleAndLocation(
             requestedData,
-            "",
+            type,
             "",
             programId,
             constants.common.DEFAULT_PAGE_SIZE,
