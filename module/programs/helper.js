@@ -448,7 +448,9 @@ module.exports = class ProgramsHelper {
         ];
         
         if ( pageSize === "" && pageNo === "" ) {
-          facetQuery["$facet"]["data"] = [];
+          facetQuery["$facet"]["data"] = [
+            { $skip: 0}
+          ];
         } else {
           facetQuery["$facet"]["data"] = [
             { $skip: pageSize * (pageNo - 1) },

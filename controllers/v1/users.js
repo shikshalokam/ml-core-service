@@ -279,7 +279,8 @@ module.exports = class Users extends Abstract {
             req.pageNo,
             req.searchText,
             req.userDetails.userToken,
-            req.userDetails.userId
+            req.userDetails.userId,
+            req.query.type = req.query.type ? req.query.type : ""
         );
 
         targetedSolutions["result"] = targetedSolutions.data;
