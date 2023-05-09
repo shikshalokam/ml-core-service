@@ -12,6 +12,7 @@ module.exports = (req) => {
         create : function () {
             req.checkBody('externalId').exists().withMessage("required program externalId");
             req.checkBody('name').exists().withMessage("required program name");
+            req.checkBody('requestForPIIConsent').exists().withMessage("required requestForPIIConsent value of program");
         },
         update : function () {
             req.checkParams("_id").exists().withMessage("required program id");

@@ -586,12 +586,13 @@ module.exports = class UsersHelper {
           programEndDate : programData[0].endDate,
           description: constants.common.TARGETED_SOLUTION_TEXT,
           rootOrganisations : ( programData[0].rootOrganisations && programData[0].rootOrganisations.length > 0 ) ? programData[0].rootOrganisations[0] : "",
-          requestForPIIConsent: programData[0].requestForPIIConsent ? programData[0].requestForPIIConsent : false,
           data: mergedData,
           count: totalCount,
           programEndDate: programData[0].endDate
         };
-        
+        if( programData[0].hasOwnProperty('requestForPIIConsent') ) {
+          result.requestForPIIConsent = programData[0].requestForPIIConsent;
+        }
         //Check data present in programUsers collection.
         //checkForUserJoinedProgram will check for data and if its present return true else false.
         result.programJoined = await programUsersHelper.checkForUserJoinedProgram(programId,userId);
