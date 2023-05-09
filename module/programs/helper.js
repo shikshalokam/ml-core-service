@@ -1085,7 +1085,7 @@ module.exports = class ProgramsHelper {
         if ( pushProgramUsersDetailsToKafka ) {
           joinProgram.programName = programData[0].name;
           joinProgram.programExternalId = programData[0].externalId;
-          joinProgram.requestForPIIConsent = (programData[0].requestForPIIConsent && programData[0].requestForPIIConsent == true) ?  true : false;
+          joinProgram.requestForPIIConsent = programData[0].requestForPIIConsent;
 
           //  push programUsers details to kafka
           await kafkaProducersHelper.pushProgramUsersToKafka(joinProgram);
