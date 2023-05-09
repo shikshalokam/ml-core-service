@@ -2009,7 +2009,9 @@ module.exports = class SolutionsHelper {
           },["rootOrganisations","requestForPIIConsent"]);
           
           templateOrQuestionDetails.result.rootOrganisations = (programData[0].rootOrganisations) ? programData[0].rootOrganisations[0] : "";
-          templateOrQuestionDetails.result.requestForPIIConsent = (programData[0].requestForPIIConsent) ? programData[0].requestForPIIConsent : false;
+          if( programData[0].hasOwnProperty('requestForPIIConsent') ) {
+            templateOrQuestionDetails.result.requestForPIIConsent = programData[0].requestForPIIConsent;
+          }
         }
         
         //Check data present in programUsers collection.

@@ -58,12 +58,12 @@ module.exports = {
         type : Boolean,
         index : true
       },
-      requestForPIIConsent: {
-        type: Boolean,
-        default: false
-      },
+      requestForPIIConsent: Boolean,
       metaInformation: Object,
-      rootOrganisations : Array,
+      rootOrganisations : {
+        type : Array,
+        require : true
+      },
       createdFor : Array
     }
   };
