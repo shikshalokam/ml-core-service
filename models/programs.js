@@ -60,7 +60,10 @@ module.exports = {
       },
       requestForPIIConsent: Boolean,
       metaInformation: Object,
-      rootOrganisations : Array,
+      rootOrganisations : {
+        type : Array,
+        require: true
+      },
       createdFor : Array
     }
   };
