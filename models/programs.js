@@ -62,7 +62,7 @@ module.exports = {
       metaInformation: Object,
       rootOrganisations : {
         type : Array,
-        require: true
+        require : true
       },
       createdFor : Array
     }
