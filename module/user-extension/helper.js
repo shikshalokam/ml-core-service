@@ -544,7 +544,7 @@ module.exports = class UserExtensionHelper {
                 }
                 
                 const userInformation = await this.userExtensionDocument(findQuery,projection);
-       
+               
                 if (!userInformation) {
                    return resolve({
                        status: httpStatusCode.bad_request.status,
@@ -586,7 +586,7 @@ module.exports = class UserExtensionHelper {
                     const programData = await programsHelper.programDocuments({
                         _id: {$in: programIds},
                         status: constants.common.ACTIVE 
-                     },["externalId","name","description"]);
+                     },["externalId","name","description","requestForPIIConsent"]);
 
                      if (programData.length > 0) {
                          programsDocuments = programData.map(program => {
