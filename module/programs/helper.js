@@ -1082,13 +1082,15 @@ module.exports = class ProgramsHelper {
           }
         }
         console.log("kafka push status :",pushProgramUsersDetailsToKafka)
+        let joinProgramDetails = joinProgram.toObject();
+  
         if ( pushProgramUsersDetailsToKafka ) {
-          joinProgram.programName = programData[0].name;
-          joinProgram.programExternalId = programData[0].externalId;
-          joinProgram.requestForPIIConsent = programData[0].requestForPIIConsent;
-
+          joinProgramDetails.programName = programData[0].name;
+          joinProgramDetails.programExternalId = programData[0].externalId;
+          joinProgramDetails.requestForPIIConsent = programData[0].requestForPIIConsent;
+          
           //  push programUsers details to kafka
-          await kafkaProducersHelper.pushProgramUsersToKafka(joinProgram);
+          await kafkaProducersHelper.pushProgramUsersToKafka(joinProgramDetails);
         }
 
         return resolve({
