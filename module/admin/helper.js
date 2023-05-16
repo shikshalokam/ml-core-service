@@ -176,38 +176,38 @@ module.exports = class adminHelper {
     //     })
     // }
 
-    // /**
-    //   * Update the data in any model
-    //   * @method
-    //   * @name dbUpdate
-    //   * @param {Object} reqBody - request body
-    //   * @returns {Object}  - collection details.
-    //  */
+    /**
+      * Update the data in any model
+      * @method
+      * @name dbUpdate
+      * @param {Object} reqBody - request body
+      * @returns {Object}  - collection details.
+     */
 
-    // static dbUpdate( collection, reqBody ) {
-    //     return new Promise(async (resolve, reject) => {
-    //         try {
+    static dbUpdate( collection, reqBody ) {
+        return new Promise(async (resolve, reject) => {
+            try {
 
-    //             if ( reqBody.mongoIdKeys ) {
-    //                 reqBody.query = await this.convertStringToObjectIdInQuery(reqBody.findQuery, reqBody.mongoIdKeys);
-    //             }
+                if ( reqBody.mongoIdKeys ) {
+                    reqBody.query = await this.convertStringToObjectIdInQuery(reqBody.findQuery, reqBody.mongoIdKeys);
+                }
 
-    //             let updateData = await database.getCollection(collection).updateMany(reqBody.findQuery, reqBody.updateQuery);      
+                let updateData = await database.getCollection(collection).updateMany(reqBody.findQuery, reqBody.updateQuery);      
                 
-    //             return resolve({
-    //               message : constants.apiResponses.DATA_UPDATED_SUCCESSFULLY,
-    //               success : true
-    //             });
+                return resolve({
+                  message : constants.apiResponses.DATA_UPDATED_SUCCESSFULLY,
+                  success : true
+                });
 
-    //         } catch (error) {
-    //             return resolve({
-    //                 success: false,
-    //                 message: error.message,
-    //                 data: false
-    //             });
-    //         }
-    //     })
-    // }
+            } catch (error) {
+                return resolve({
+                    success: false,
+                    message: error.message,
+                    data: false
+                });
+            }
+        })
+    }
 
     /**
       * Create a new mongodb record
