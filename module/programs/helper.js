@@ -980,7 +980,7 @@ module.exports = class ProgramsHelper {
             "rootOrganisations"
           ]
         );
-        
+       
         if ( !programData.length > 0 ) {
           throw ({
             status: httpStatusCode.bad_request.status,
@@ -996,7 +996,7 @@ module.exports = class ProgramsHelper {
             userId: userId,
             programId: programId
           },
-          ["_id"]
+          ["_id","consentShared"]
         );
         // if user not joined for program. we have add more key values to programUsersData
         if ( !programUsersDetails.length > 0 ) {
@@ -1019,7 +1019,7 @@ module.exports = class ProgramsHelper {
             programId: programId,
             userRoleInformation: data.userRoleInformation,
             userId: userId,
-            userProfile:userProfile.data,
+            userProfile: userProfile.data,
             resourcesStarted : false  
           }
           if( appName != "" ) {
@@ -1057,8 +1057,16 @@ module.exports = class ProgramsHelper {
                 status: httpStatusCode.bad_request.status
               }
             }
+            
           }
-          pushProgramUsersDetailsToKafka = true; 
+          
+        }
+
+        // if requestForPIIConsent Is false and user not joined program till now then set pushProgramUsersDetailsToKafka = true; 
+        // if requestForPIIConsent == true and data.consentShared value is true which means user interacted with the consent popup set pushProgramUsersDetailsToKafka = true;
+        if((programData[0].hasOwnProperty('requestForPIIConsent') && programData[0].requestForPIIConsent === false && !programUsersDetails.length > 0) ||
+          ((programData[0].hasOwnProperty('requestForPIIConsent') && programData[0].requestForPIIConsent === true) && (data.hasOwnProperty('consentShared') && data.consentShared == true) ) ){
+            pushProgramUsersDetailsToKafka = true; 
         }
         
         //create or update query
@@ -1066,9 +1074,13 @@ module.exports = class ProgramsHelper {
           programId: programId,
           userId: userId
         };
-        
+        //if a resource is started
         if ( data.isResource ) {
           programUsersData.resourcesStarted = true;
+        }
+        //if user interacted with the consent-popup
+        if ( data.consentShared ) {
+          programUsersData.consentShared = true;
         }
         update['$set'] = programUsersData;
 
@@ -1081,14 +1093,17 @@ module.exports = class ProgramsHelper {
               status: httpStatusCode.bad_request.status
           }
         }
-        console.log("kafka push status :",pushProgramUsersDetailsToKafka)
+        
         let joinProgramDetails = joinProgram.toObject();
-  
+        // if programUsersDetails[0].consentShared === true which means the data is already pushed to Kafka once, So revert pushProgramUsersDetailsToKafka to false
+        if (programUsersDetails.length > 0 && programUsersDetails[0].hasOwnProperty('consentShared') && programUsersDetails[0].consentShared === true) {
+          pushProgramUsersDetailsToKafka = false;
+        }
+        console.log("kafka push status :",pushProgramUsersDetailsToKafka)
         if ( pushProgramUsersDetailsToKafka ) {
           joinProgramDetails.programName = programData[0].name;
           joinProgramDetails.programExternalId = programData[0].externalId;
           joinProgramDetails.requestForPIIConsent = programData[0].requestForPIIConsent;
-          
           //  push programUsers details to kafka
           await kafkaProducersHelper.pushProgramUsersToKafka(joinProgramDetails);
         }
