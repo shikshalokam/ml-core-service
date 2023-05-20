@@ -477,7 +477,6 @@ module.exports = class ProgramsHelper {
         });
 
       } catch (error) {
-        console.log("error :",error)
           return resolve({
             success : false,
             message : error.message,
@@ -531,7 +530,6 @@ module.exports = class ProgramsHelper {
         });
 
       } catch (error) {
-        console.log("error :",error)
         return resolve({
           success : false,
           message : error.message,
@@ -1049,7 +1047,6 @@ module.exports = class ProgramsHelper {
               }
             }
             let consentResponse = await userService.setUserConsent(userToken, userConsentRequestBody)
-            console.log("consentResponse ",consentResponse)
 
             if(!consentResponse.success){
               throw {
@@ -1099,7 +1096,7 @@ module.exports = class ProgramsHelper {
         if (programUsersDetails.length > 0 && programUsersDetails[0].hasOwnProperty('consentShared') && programUsersDetails[0].consentShared === true) {
           pushProgramUsersDetailsToKafka = false;
         }
-        console.log("kafka push status :",pushProgramUsersDetailsToKafka)
+        
         if ( pushProgramUsersDetailsToKafka ) {
           joinProgramDetails.programName = programData[0].name;
           joinProgramDetails.programExternalId = programData[0].externalId;
