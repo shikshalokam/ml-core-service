@@ -2015,8 +2015,10 @@ module.exports = class SolutionsHelper {
         }
         
         //Check data present in programUsers collection.
-        //checkForUserJoinedProgram will check for data and if its present return true else false.
-        templateOrQuestionDetails.result.programJoined = await programUsersHelper.checkForUserJoinedProgram(solutionData.programId,userId);
+        //checkForUserJoinedProgramAndConsentShared will returns an object which contain joinProgram and consentShared status
+        let programJoinStatus = await programUsersHelper.checkForUserJoinedProgramAndConsentShared(solutionData.programId,userId);
+        templateOrQuestionDetails.result.programJoined = programJoinStatus.joinProgram;
+        templateOrQuestionDetails.result.consentShared = programJoinStatus.consentShared;
         
         return resolve(templateOrQuestionDetails);
         
