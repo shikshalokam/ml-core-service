@@ -1063,7 +1063,13 @@ module.exports = class ProgramsHelper {
         // if requestForPIIConsent == true and data.consentShared value is true which means user interacted with the consent popup set pushProgramUsersDetailsToKafka = true;
         if((programData[0].hasOwnProperty('requestForPIIConsent') && programData[0].requestForPIIConsent === false && !programUsersDetails.length > 0) ||
           ((programData[0].hasOwnProperty('requestForPIIConsent') && programData[0].requestForPIIConsent === true) && (data.hasOwnProperty('consentShared') && data.consentShared == true) ) ){
+            
             pushProgramUsersDetailsToKafka = true; 
+            
+            // if programUsersDetails[0].consentShared === true which means the data is already pushed to Kafka once, So revert pushProgramUsersDetailsToKafka to false
+            if (programUsersDetails.length > 0 && programUsersDetails[0].hasOwnProperty('consentShared') && programUsersDetails[0].consentShared === true) {
+              pushProgramUsersDetailsToKafka = false;
+            }
         }
         
         //create or update query
@@ -1092,11 +1098,7 @@ module.exports = class ProgramsHelper {
         }
         
         let joinProgramDetails = joinProgram.toObject();
-        // if programUsersDetails[0].consentShared === true which means the data is already pushed to Kafka once, So revert pushProgramUsersDetailsToKafka to false
-        if (programUsersDetails.length > 0 && programUsersDetails[0].hasOwnProperty('consentShared') && programUsersDetails[0].consentShared === true) {
-          pushProgramUsersDetailsToKafka = false;
-        }
-        
+      
         if ( pushProgramUsersDetailsToKafka ) {
           joinProgramDetails.programName = programData[0].name;
           joinProgramDetails.programExternalId = programData[0].externalId;
