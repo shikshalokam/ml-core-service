@@ -594,8 +594,10 @@ module.exports = class UsersHelper {
           result.requestForPIIConsent = programData[0].requestForPIIConsent;
         }
         //Check data present in programUsers collection.
-        //checkForUserJoinedProgram will check for data and if its present return true else false.
-        result.programJoined = await programUsersHelper.checkForUserJoinedProgram(programId,userId);
+        //checkForUserJoinedProgramAndConsentShared will returns an object which contain joinProgram and consentShared status.
+        let programJoinStatus = await programUsersHelper.checkForUserJoinedProgramAndConsentShared(programId,userId);
+        result.programJoined = programJoinStatus.joinProgram;
+        result.consentShared = programJoinStatus.consentShared;
 
         return resolve({
           message: constants.apiResponses.PROGRAM_SOLUTIONS_FETCHED,
