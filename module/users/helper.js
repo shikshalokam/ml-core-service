@@ -132,7 +132,7 @@ module.exports = class UsersHelper {
           // Current date
           let startDate = new Date();
           // Add one year to the current date
-          var endDate = new Date();
+          let endDate = new Date();
           endDate.setFullYear(endDate.getFullYear() + 1);
           let programData = await _createProgramData(
             data.programName,
