@@ -1881,7 +1881,8 @@ module.exports = class SolutionsHelper {
           "_id",
           "programId",
           "name",
-          "projectTemplateId"
+          "projectTemplateId",
+          "programName"
         ]);
 
         let queryData = await this.queryBasedOnRoleAndLocation(bodyData);
@@ -1907,6 +1908,8 @@ module.exports = class SolutionsHelper {
           response.type = solutionDetails[0].type;
           response.name = solutionDetails[0].name;
           response.programId = solutionDetails[0].programId;
+          response.programName = solutionDetails[0].programName;
+
 
           return resolve({
             success: true,
@@ -1920,6 +1923,7 @@ module.exports = class SolutionsHelper {
         Object.assign(response, solutionData[0]);
         response.solutionId = solutionData[0]._id;
         response.projectTemplateId = solutionDetails[0].projectTemplateId ? solutionDetails[0].projectTemplateId : "";
+        response.programName = solutionDetails[0].programName;
         delete response._id;
 
         return resolve({
