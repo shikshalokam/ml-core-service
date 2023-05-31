@@ -263,18 +263,80 @@ var getObservationDetail = function ( solutionId, token ) {
 }
 
 /**
-  * Get survey and observation documents.
+  * Get survey documents.
   * @function
-  * @name getImportedSurveysAndObservations
+  * @name getImportedSurveys
   * @param {String} token - logged in user token.
   * @param {String} programId - program Id
   * @returns {Promise} returns a promise.
 */
 
-const getImportedSurveysAndObservations = function(token, programId) {
+const getImportedSurveys = function(token, programId) {
     let url = 
     process.env.ML_SURVEY_SERVICE_URL + 
-    constants.endpoints.GET_IMPORTED_SURVEY_AND_OBSERVATION
+    constants.endpoints.GET_IMPORTED_SURVEY
+
+    if( programId !== "" ) {
+        url += "/" + programId;
+    }
+    
+    return new Promise(async (resolve, reject) => {
+        try {
+
+            function assessmentCallback(err, data) {
+
+                let result = {
+                    success : true,
+                    message: "",
+                    status:""
+                };
+
+                if (err) {
+                    result.success = false;
+                } else {
+                    
+                    let response = JSON.parse(data.body);
+                    if( response.status === httpStatusCode['ok'].status ) {
+                        result["result"] = response.result;
+                    } else {
+                        result.success = false;
+                    }
+
+                    result.message = response.message;
+                    result.status = response.status;
+                }
+
+                return resolve(result);
+            }
+
+            const options = {
+                headers : {
+                    "content-type": "application/json",
+                    "x-authenticated-user-token" : token
+                }
+            };
+
+            request.get(url,options,assessmentCallback)
+
+        } catch (error) {
+            return reject(error);
+        }
+    })
+}
+
+
+/**
+  * Get observation documents.
+  * @function
+  * @name getImportedObservations
+  * @param {String} token - logged in user token.
+  * @param {String} programId - program Id
+  * @returns {Promise} returns a promise.
+*/
+const getImportedObservations = function(token, programId) {
+    let url = 
+    process.env.ML_SURVEY_SERVICE_URL + 
+    constants.endpoints.GET_IMPORTED_OBSERVATION
 
     if( programId !== "" ) {
         url += "/" + programId;
@@ -329,5 +391,6 @@ module.exports = {
     assignedSurveys : assignedSurveys,
     getQuestions : getQuestions,
     getObservationDetail : getObservationDetail,
-    getImportedSurveysAndObservations : getImportedSurveysAndObservations,
+    getImportedSurveys : getImportedSurveys,
+    getImportedObservations: getImportedObservations
 };

@@ -482,21 +482,23 @@ module.exports = class UsersHelper {
         // check current program is targeted or not
         if(!targetedProgramIds.includes(programId)){
           let solutionIds = []
-          let importedSurveysAndObservations = await surveyService.getImportedSurveysAndObservations(token,programId)
-          importedSurveysAndObservations = importedSurveysAndObservations.result
+          let importedSurveys = await surveyService.getImportedSurveys(token,programId)
+          importedSurveys = importedSurveys.result
+          let importedObservations = await surveyService.getImportedObservations(token,programId)
+          importedObservations = importedObservations.result
           let importedProjects = await improvementProjectService.importedProjects(token,programId); 
           
-          if(importedProjects.data.length> 0){
+          if(importedProjects.data.length> 0 && (type ==="" || type === constants.common.IMPROVEMENT_PROJECT)){
           importedProjects.data.forEach((importedProject) => {
               solutionIds.push(importedProject.solutionInformation._id)
           });}
           
-          if(importedSurveysAndObservations.survey.length> 0){
-          importedSurveysAndObservations.survey.forEach((surveys)=>{
+          if(importedSurveys.length> 0 && (type ==="" || type === constants.common.SURVEY)){
+            importedSurveys.forEach((surveys)=>{
             solutionIds.push(surveys.solutionId)
           })}
-          if(importedSurveysAndObservations.observation.length> 0){
-          importedSurveysAndObservations.observation.forEach((observation)=>{
+          if(importedObservations.length> 0 && (type ==="" || type === constants.common.OBSERVATION)){
+            importedObservations.forEach((observation)=>{
             solutionIds.push(observation.solutionId)
           })
         }
