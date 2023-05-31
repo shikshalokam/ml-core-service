@@ -265,13 +265,13 @@ var getObservationDetail = function ( solutionId, token ) {
 /**
   * Get survey documents.
   * @function
-  * @name getImportedSurveys
+  * @name getStartedSurveys
   * @param {String} token - logged in user token.
   * @param {String} programId - program Id
   * @returns {Promise} returns a promise.
 */
 
-const getImportedSurveys = function(token, programId) {
+const getStartedSurveys = function(token, programId) {
     let url = 
     process.env.ML_SURVEY_SERVICE_URL + 
     constants.endpoints.GET_IMPORTED_SURVEY
@@ -328,12 +328,12 @@ const getImportedSurveys = function(token, programId) {
 /**
   * Get observation documents.
   * @function
-  * @name getImportedObservations
+  * @name getStartedObservations
   * @param {String} token - logged in user token.
   * @param {String} programId - program Id
   * @returns {Promise} returns a promise.
 */
-const getImportedObservations = function(token, programId) {
+const getStartedObservations = function(token, programId) {
     let url = 
     process.env.ML_SURVEY_SERVICE_URL + 
     constants.endpoints.GET_IMPORTED_OBSERVATION
@@ -391,6 +391,6 @@ module.exports = {
     assignedSurveys : assignedSurveys,
     getQuestions : getQuestions,
     getObservationDetail : getObservationDetail,
-    getImportedSurveys : getImportedSurveys,
-    getImportedObservations: getImportedObservations
+    getStartedSurveys : getStartedSurveys,
+    getStartedObservations: getStartedObservations
 };

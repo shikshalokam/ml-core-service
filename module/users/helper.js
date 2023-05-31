@@ -482,9 +482,9 @@ module.exports = class UsersHelper {
         // check current program is targeted or not
         if(!targetedProgramIds.includes(programId)){
           let solutionIds = []
-          let importedSurveys = await surveyService.getImportedSurveys(token,programId)
+          let importedSurveys = await surveyService.getStartedSurveys(token,programId)
           importedSurveys = importedSurveys.result
-          let importedObservations = await surveyService.getImportedObservations(token,programId)
+          let importedObservations = await surveyService.getStartedObservations(token,programId)
           importedObservations = importedObservations.result
           let importedProjects = await improvementProjectService.importedProjects(token,programId); 
           
