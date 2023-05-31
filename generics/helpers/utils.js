@@ -284,6 +284,17 @@ function arrayOfObjectToArrayOfObjectId(ids) {
   return ids.map(obj => obj._id);
 }
 
+/**
+  * array of object to array objectId
+  * @function
+  * @name arrayOfObjectToArrayOfObjectId
+  * @returns {Boolean} returns a array of objectIds in string format
+*/
+
+function arrayOfObjectToArrayOfObjectIdInString(ids) {
+  return ids.map(obj => obj._id.toString());
+}
+
 module.exports = {
   camelCaseToTitleCase : camelCaseToTitleCase,
   lowerCase : lowerCase,
@@ -302,5 +313,6 @@ module.exports = {
   filterLocationIdandCode : filterLocationIdandCode,
   arrayIdsTobjectIds : arrayIdsTobjectIds,
   checkIfStringIsNumber : checkIfStringIsNumber,
-  arrayOfObjectToArrayOfObjectId : arrayOfObjectToArrayOfObjectId
+  arrayOfObjectToArrayOfObjectId : arrayOfObjectToArrayOfObjectId,
+  arrayOfObjectToArrayOfObjectIdInString:arrayOfObjectToArrayOfObjectIdInString
 };

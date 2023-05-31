@@ -475,12 +475,13 @@ module.exports = class UsersHelper {
           "", // not passing page size
           "", // not passing page number
           "",
-          ["_id"]
+          ["_id"],
+          programId
         );
-        let targetedProgramIds = gen.utils.arrayOfObjectToArrayOfObjectId(targetedPrograms.data);
+        let targetedProgramIds = gen.utils.arrayOfObjectToArrayOfObjectIdInString(targetedPrograms.data);
 
         // check current program is targeted or not
-        if(!targetedProgramIds.includes(programId)){
+        if(targetedProgramIds.length === 0){
           let solutionIds = []
           let importedSurveys = await surveyService.getStartedSurveys(token,programId)
           importedSurveys = importedSurveys.result
