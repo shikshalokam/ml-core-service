@@ -285,13 +285,15 @@ function arrayOfObjectToArrayOfObjectId(ids) {
 }
 
 /**
-  * array of object to array objectId
+  * Returns array of objects in string format and accepts array of objectId
   * @function
-  * @name arrayOfObjectToArrayOfObjectId
+  * @name convertArrayObjectIdtoStringOfObjectId
   * @returns {Boolean} returns a array of objectIds in string format
+  * Input = [ObjectId(6319a4d53c40dd000978dacb), ObjectId(6319a4d53c40dd000978dacb)] This array will contain buffer of objectId
+  * Output = ["6319a4d53c40dd000978dacb","6319a4d53c40dd000978dacb"] This is the output in format of string
 */
 
-function arrayOfObjectToArrayOfObjectIdInString(ids) {
+function convertArrayObjectIdtoStringOfObjectId(ids) {
   return ids.map(obj => obj._id.toString());
 }
 
@@ -314,5 +316,5 @@ module.exports = {
   arrayIdsTobjectIds : arrayIdsTobjectIds,
   checkIfStringIsNumber : checkIfStringIsNumber,
   arrayOfObjectToArrayOfObjectId : arrayOfObjectToArrayOfObjectId,
-  arrayOfObjectToArrayOfObjectIdInString:arrayOfObjectToArrayOfObjectIdInString
+  convertArrayObjectIdtoStringOfObjectId:convertArrayObjectIdtoStringOfObjectId
 };

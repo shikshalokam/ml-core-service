@@ -478,31 +478,33 @@ module.exports = class UsersHelper {
           ["_id"],
           programId
         );
-        let targetedProgramIds = gen.utils.arrayOfObjectToArrayOfObjectIdInString(targetedPrograms.data);
+        let targetedProgramIds = gen.utils.convertArrayObjectIdtoStringOfObjectId(targetedPrograms.data);
 
         // check current program is targeted or not
         if(targetedProgramIds.length === 0){
           let solutionIds = []
-          let importedSurveys = await surveyService.getStartedSurveys(token,programId)
+          let importedSurveys = await surveyService.userSurveys(token,programId)
           importedSurveys = importedSurveys.result
-          let importedObservations = await surveyService.getStartedObservations(token,programId)
+          let importedObservations = await surveyService.userObservations(token,programId)
           importedObservations = importedObservations.result
           let importedProjects = await improvementProjectService.importedProjects(token,programId); 
           
           if(importedProjects.data.length> 0 && (type ==="" || type === constants.common.IMPROVEMENT_PROJECT)){
-          importedProjects.data.forEach((importedProject) => {
+            importedProjects.data.forEach((importedProject) => {
               solutionIds.push(importedProject.solutionInformation._id)
-          });}
+            })
+          }
           
           if(importedSurveys.length> 0 && (type ==="" || type === constants.common.SURVEY)){
             importedSurveys.forEach((surveys)=>{
-            solutionIds.push(surveys.solutionId)
-          })}
+              solutionIds.push(surveys.solutionId)
+            })
+          }
           if(importedObservations.length> 0 && (type ==="" || type === constants.common.OBSERVATION)){
             importedObservations.forEach((observation)=>{
-            solutionIds.push(observation.solutionId)
-          })
-        }
+              solutionIds.push(observation.solutionId)
+            })
+          }
 
           mergedData = await solutionsHelper.solutionDocuments({_id:{$in:solutionIds}},[ 
             "name", 

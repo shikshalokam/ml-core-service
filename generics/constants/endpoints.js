@@ -36,6 +36,6 @@ module.exports = {
     GET_SCHOOL_DATA : "/v1/org/search",
     USER_READ_V5 : "/v5/user/read",
     USER_CONSENT_API: "/user/v1/consent/update",
-    GET_IMPORTED_SURVEY : "/v1/surveys/getStartedSurveys",
-    GET_IMPORTED_OBSERVATION : "/v1/observations/getStartedObservations"
+    GET_USER_SURVEY : "/v1/users/surveys",
+    GET_USER_OBSERVATION : "/v1/users/observations"
 }

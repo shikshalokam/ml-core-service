@@ -263,18 +263,18 @@ var getObservationDetail = function ( solutionId, token ) {
 }
 
 /**
-  * Get survey documents.
+  * Get survey documents started by user.
   * @function
-  * @name getStartedSurveys
+  * @name userSurveys
   * @param {String} token - logged in user token.
   * @param {String} programId - program Id
   * @returns {Promise} returns a promise.
 */
 
-const getStartedSurveys = function(token, programId) {
+const userSurveys = function(token, programId) {
     let url = 
     process.env.ML_SURVEY_SERVICE_URL + 
-    constants.endpoints.GET_IMPORTED_SURVEY
+    constants.endpoints.GET_USER_SURVEY
 
     if( programId !== "" ) {
         url += "/" + programId;
@@ -326,17 +326,17 @@ const getStartedSurveys = function(token, programId) {
 
 
 /**
-  * Get observation documents.
+  * Get observation documents started by user.
   * @function
-  * @name getStartedObservations
+  * @name userObservations
   * @param {String} token - logged in user token.
   * @param {String} programId - program Id
   * @returns {Promise} returns a promise.
 */
-const getStartedObservations = function(token, programId) {
+const userObservations = function(token, programId) {
     let url = 
     process.env.ML_SURVEY_SERVICE_URL + 
-    constants.endpoints.GET_IMPORTED_OBSERVATION
+    constants.endpoints.GET_USER_OBSERVATION
 
     if( programId !== "" ) {
         url += "/" + programId;
@@ -391,6 +391,6 @@ module.exports = {
     assignedSurveys : assignedSurveys,
     getQuestions : getQuestions,
     getObservationDetail : getObservationDetail,
-    getStartedSurveys : getStartedSurveys,
-    getStartedObservations: getStartedObservations
+    userSurveys : userSurveys,
+    userObservations: userObservations
 };
