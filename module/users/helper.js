@@ -501,8 +501,6 @@ module.exports = class UsersHelper {
           })
         }
 
-
-
           mergedData = await solutionsHelper.solutionDocuments({_id:{$in:solutionIds}},[ 
             "name", 
             "description", 
@@ -606,7 +604,7 @@ module.exports = class UsersHelper {
           }
         });
         
-        
+
         if ( surveySolutionIds.length > 0 ) {
           let userSurveySubmission = 
               await surveyService.assignedSurveys(

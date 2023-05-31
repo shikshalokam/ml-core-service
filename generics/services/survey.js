@@ -262,6 +262,15 @@ var getObservationDetail = function ( solutionId, token ) {
 
 }
 
+/**
+  * Get survey and observation documents.
+  * @function
+  * @name getImportedSurveysAndObservations
+  * @param {String} token - logged in user token.
+  * @param {String} programId - program Id
+  * @returns {Promise} returns a promise.
+*/
+
 const getImportedSurveysAndObservations = function(token, programId) {
     let url = 
     process.env.ML_SURVEY_SERVICE_URL + 
