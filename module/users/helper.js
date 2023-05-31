@@ -457,7 +457,7 @@ module.exports = class UsersHelper {
           {
             _id: programId
           },
-          ["name","requestForPIIConsent","rootOrganisations","endDate"]
+          ["name","requestForPIIConsent","rootOrganisations","endDate","description"]
         );
         
         if (!programData.length > 0) {
@@ -638,7 +638,7 @@ module.exports = class UsersHelper {
           programName: programData[0].name,
           programId: programId,
           programEndDate : programData[0].endDate,
-          description: constants.common.TARGETED_SOLUTION_TEXT,
+          description: programData[0].description ? programData[0].description : constants.common.TARGETED_SOLUTION_TEXT,
           rootOrganisations : ( programData[0].rootOrganisations && programData[0].rootOrganisations.length > 0 ) ? programData[0].rootOrganisations[0] : "",
           data: mergedData,
           count: totalCount,
