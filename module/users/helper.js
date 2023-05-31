@@ -467,6 +467,62 @@ module.exports = class UsersHelper {
           });
         }
 
+        let totalCount = 0;
+        let mergedData = [];
+        //fetch all targeted programs to users
+        let targetedPrograms = await programsHelper.forUserRoleAndLocation(
+          requestedData,
+          "", // not passing page size
+          "", // not passing page number
+          "",
+          ["_id"]
+        );
+        let targetedProgramIds = gen.utils.arrayOfObjectToArrayOfObjectId(targetedPrograms.data);
+
+        // check current program is targeted or not
+        if(!targetedProgramIds.includes(programId)){
+          let solutionIds = []
+          let importedSurveysAndObservations = await surveyService.getImportedSurveysAndObservations(token,programId)
+          importedSurveysAndObservations = importedSurveysAndObservations.result
+          let importedProjects = await improvementProjectService.importedProjects(token,programId); 
+          
+          if(importedProjects.data.length> 0){
+          importedProjects.data.forEach((importedProject) => {
+              solutionIds.push(importedProject.solutionInformation._id)
+          });}
+          
+          if(importedSurveysAndObservations.survey.length> 0){
+          importedSurveysAndObservations.survey.forEach((surveys)=>{
+            solutionIds.push(surveys.solutionId)
+          })}
+          if(importedSurveysAndObservations.observation.length> 0){
+          importedSurveysAndObservations.observation.forEach((observation)=>{
+            solutionIds.push(observation.solutionId)
+          })
+        }
+
+
+
+          mergedData = await solutionsHelper.solutionDocuments({_id:{$in:solutionIds}},[ 
+            "name", 
+            "description", 
+            "programName",
+            "programId",
+            "externalId",
+            "projectTemplateId",
+            "type",
+            "language",
+            "creator",
+            "endDate",
+            "link",
+            "referenceFrom",
+            "entityType",
+            "certificateTemplateId"
+          ])
+          totalCount = mergedData.length
+
+        }else{
+
         let autoTargetedSolutions =
           await solutionsHelper.forUserRoleAndLocation(
             requestedData,
@@ -478,8 +534,6 @@ module.exports = class UsersHelper {
             search
           );
             
-        let totalCount = 0;
-        let mergedData = [];
         let projectSolutionIdIndexMap = {}
 
         if (
@@ -574,7 +628,7 @@ module.exports = class UsersHelper {
                     mergedData[mergedDataPointer].submissionId = userSurveySubmission.data.data[surveySubmissionPointer].submissionId;
                     break;
                   }
-                
+                }
                 }
               }
             }

@@ -35,5 +35,6 @@ module.exports = {
     GET_FORM_DATA : "/plugin/v1/form/read",
     GET_SCHOOL_DATA : "/v1/org/search",
     USER_READ_V5 : "/v5/user/read",
-    USER_CONSENT_API: "/user/v1/consent/update"
+    USER_CONSENT_API: "/user/v1/consent/update",
+    GET_IMPORTED_SURVEY_AND_OBSERVATION : "/v1/surveys/getImportedSurveysAndObservations"
 }
