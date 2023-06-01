@@ -469,19 +469,39 @@ module.exports = class UsersHelper {
 
         let totalCount = 0;
         let mergedData = [];
-        //fetch all targeted programs to users
+        /**
+         * This @forUserRoleAndLocation check that particular program in belongs to user or not it belongs to user then it will return same program ID
+         * @param requestedData {
+         *  "district": "2f76dcf5-e43b-4f71-a3f2-c8f19e1fce03",
+            "block": "966c3be4-c125-467d-aaff-1eb1cd525923",
+            "state": "bc75cc99-9205-463e-a722-5326857838f8",
+            "school": "28226200404",
+            "role": "HM"
+         * }
+            @param programId :- programId passed in request
+            @returns : {
+            "success":true,
+            "message":"Targeted programs fetched successfully",
+            "data":[
+                {
+                  "_id":"63a42786c0b15a0009f0505e"
+                }
+            ],
+            "count":1
+          }
+         */
         let targetedPrograms = await programsHelper.forUserRoleAndLocation(
           requestedData,
           "", // not passing page size
           "", // not passing page number
-          "",
+          "", // not passing search text
           ["_id"],
-          programId
+          programId // program Id we have to that will be validated
         );
-        let targetedProgramIds = gen.utils.convertArrayObjectIdtoStringOfObjectId(targetedPrograms.data);
+        console.log(JSON.stringify(targetedPrograms))
 
         // check current program is targeted or not
-        if(targetedProgramIds.length === 0){
+        if(targetedPrograms.data.length === 0){
           let solutionIds = []
           let importedSurveys = await surveyService.userSurveys(token,programId)
           importedSurveys = importedSurveys.result
