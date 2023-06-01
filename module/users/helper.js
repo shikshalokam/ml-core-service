@@ -498,34 +498,63 @@ module.exports = class UsersHelper {
           ["_id"],
           programId // program Id we have to that will be validated
         );
-        console.log(JSON.stringify(targetedPrograms))
 
         // check current program is targeted or not
         if(targetedPrograms.data.length === 0){
-          let solutionIds = []
-          let importedSurveys = await surveyService.userSurveys(token,programId)
-          importedSurveys = importedSurveys.result
-          let importedObservations = await surveyService.userObservations(token,programId)
-          importedObservations = importedObservations.result
-          let importedProjects = await improvementProjectService.importedProjects(token,programId); 
-          
-          if(importedProjects.data.length> 0 && (type ==="" || type === constants.common.IMPROVEMENT_PROJECT)){
-            importedProjects.data.forEach((importedProject) => {
-              solutionIds.push(importedProject.solutionInformation._id)
-            })
-          }
-          
-          if(importedSurveys.length> 0 && (type ==="" || type === constants.common.SURVEY)){
-            importedSurveys.forEach((surveys)=>{
-              solutionIds.push(surveys.solutionId)
-            })
-          }
-          if(importedObservations.length> 0 && (type ==="" || type === constants.common.OBSERVATION)){
-            importedObservations.forEach((observation)=>{
-              solutionIds.push(observation.solutionId)
-            })
-          }
+          const solutionIds = []
+          const getAllResources = []
 
+          /**
+           * @function importedProjects
+           * @function userSurveys
+           * @function userObservations
+           * 
+           * @param token string: userToken
+           * @param programId string: programId
+           * 
+           * @returns {Promise} 
+           * 
+           */
+          // Creates an array of promises based on users Input
+          switch(type){
+            case constants.common.IMPROVEMENT_PROJECT:
+              getAllResources.push(improvementProjectService.importedProjects(token,programId));
+              break;
+            case constants.common.SURVEY:
+              getAllResources.push(surveyService.userSurveys(token,programId));
+              break;
+            case constants.common.OBSERVATION: 
+              getAllResources.push(surveyService.userObservations(token,programId));
+              break;
+            default:
+              getAllResources.push(improvementProjectService.importedProjects(token,programId));
+              getAllResources.push(surveyService.userSurveys(token,programId));
+              getAllResources.push(surveyService.userObservations(token,programId));
+          }
+          //here will wait till all promises are resolved
+          const allResources = await Promise.all(getAllResources)
+
+          //Will find all solutionId from response
+          allResources.forEach(resources => {
+            // this condition is required because it returns response in different object structure
+            if(resources.type === constants.common.IMPROVEMENT_PROJECT && resources.success === true){
+              resources.data.forEach(importedProject => {
+                solutionIds.push(importedProject.solutionInformation._id)
+              });
+            }else if(resources.success === true) {
+              resources.result.forEach(resource => {
+                solutionIds.push(resource.solutionId)
+              });
+            }
+          });
+
+          /**
+           * @function solutionDocuments 
+           * @param {Object} of solutionIds 
+           * @project [Array] of projections
+           * 
+           * @return [{Objects}] array of solutions documents
+           */
           mergedData = await solutionsHelper.solutionDocuments({_id:{$in:solutionIds}},[ 
             "name", 
             "description", 
@@ -774,7 +803,6 @@ module.exports = class UsersHelper {
           data: programDetails
         });
       } catch (error) {
-        console.log("Error :",error)
         return resolve({
           success: false,
           message: error.message,
@@ -1114,7 +1142,6 @@ module.exports = class UsersHelper {
           count: nonTargettedProgramDetails.length
         });
       } catch (error) {
-        console.log("error :",error)
         return resolve({
           success: false,
           status: error.status
