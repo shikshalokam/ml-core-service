@@ -461,7 +461,7 @@ module.exports = class UsersHelper {
           {
             _id: programId
           },
-          ["name","requestForPIIConsent","rootOrganisations","endDate"]
+          ["name","requestForPIIConsent","rootOrganisations","endDate","description"]
         );
         
         if (!programData.length > 0) {
@@ -470,6 +470,85 @@ module.exports = class UsersHelper {
             message: constants.apiResponses.PROGRAM_NOT_FOUND
           });
         }
+
+        let totalCount = 0;
+        let mergedData = [];
+        /**
+         * This @forUserRoleAndLocation check that particular program in belongs to user or not it belongs to user then it will return same program ID
+         * @param requestedData {
+         *  "district": "2f76dcf5-e43b-4f71-a3f2-c8f19e1fce03",
+            "block": "966c3be4-c125-467d-aaff-1eb1cd525923",
+            "state": "bc75cc99-9205-463e-a722-5326857838f8",
+            "school": "28226200404",
+            "role": "HM"
+         * }
+            @param programId :- programId passed in request
+            @returns : {
+            "success":true,
+            "message":"Targeted programs fetched successfully",
+            "data":[
+                {
+                  "_id":"63a42786c0b15a0009f0505e"
+                }
+            ],
+            "count":1
+          }
+         */
+        let targetedPrograms = await programsHelper.forUserRoleAndLocation(
+          requestedData,
+          "", // not passing page size
+          "", // not passing page number
+          "", // not passing search text
+          ["_id"],
+          programId // program Id we have to that will be validated
+        );
+        console.log(JSON.stringify(targetedPrograms))
+
+        // check current program is targeted or not
+        if(targetedPrograms.data.length === 0){
+          let solutionIds = []
+          let importedSurveys = await surveyService.userSurveys(token,programId)
+          importedSurveys = importedSurveys.result
+          let importedObservations = await surveyService.userObservations(token,programId)
+          importedObservations = importedObservations.result
+          let importedProjects = await improvementProjectService.importedProjects(token,programId); 
+          
+          if(importedProjects.data.length> 0 && (type ==="" || type === constants.common.IMPROVEMENT_PROJECT)){
+            importedProjects.data.forEach((importedProject) => {
+              solutionIds.push(importedProject.solutionInformation._id)
+            })
+          }
+          
+          if(importedSurveys.length> 0 && (type ==="" || type === constants.common.SURVEY)){
+            importedSurveys.forEach((surveys)=>{
+              solutionIds.push(surveys.solutionId)
+            })
+          }
+          if(importedObservations.length> 0 && (type ==="" || type === constants.common.OBSERVATION)){
+            importedObservations.forEach((observation)=>{
+              solutionIds.push(observation.solutionId)
+            })
+          }
+
+          mergedData = await solutionsHelper.solutionDocuments({_id:{$in:solutionIds}},[ 
+            "name", 
+            "description", 
+            "programName",
+            "programId",
+            "externalId",
+            "projectTemplateId",
+            "type",
+            "language",
+            "creator",
+            "endDate",
+            "link",
+            "referenceFrom",
+            "entityType",
+            "certificateTemplateId"
+          ])
+          totalCount = mergedData.length
+
+        }else{
 
         let autoTargetedSolutions =
           await solutionsHelper.forUserRoleAndLocation(
@@ -482,8 +561,6 @@ module.exports = class UsersHelper {
             search
           );
             
-        let totalCount = 0;
-        let mergedData = [];
         let projectSolutionIdIndexMap = {}
 
         if (
@@ -556,7 +633,7 @@ module.exports = class UsersHelper {
           }
         });
         
-        
+
         if ( surveySolutionIds.length > 0 ) {
           let userSurveySubmission = 
               await surveyService.assignedSurveys(
@@ -578,7 +655,7 @@ module.exports = class UsersHelper {
                     mergedData[mergedDataPointer].submissionId = userSurveySubmission.data.data[surveySubmissionPointer].submissionId;
                     break;
                   }
-                
+                }
                 }
               }
             }
@@ -588,7 +665,7 @@ module.exports = class UsersHelper {
           programName: programData[0].name,
           programId: programId,
           programEndDate : programData[0].endDate,
-          description: constants.common.TARGETED_SOLUTION_TEXT,
+          description: programData[0].description ? programData[0].description : constants.common.TARGETED_SOLUTION_TEXT,
           rootOrganisations : ( programData[0].rootOrganisations && programData[0].rootOrganisations.length > 0 ) ? programData[0].rootOrganisations[0] : "",
           data: mergedData,
           count: totalCount,
