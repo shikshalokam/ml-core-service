@@ -284,6 +284,19 @@ function arrayOfObjectToArrayOfObjectId(ids) {
   return ids.map(obj => obj._id);
 }
 
+/**
+  * Returns array of objects in string format and accepts array of objectId
+  * @function
+  * @name convertArrayObjectIdtoStringOfObjectId
+  * @returns {Boolean} returns a array of objectIds in string format
+  * Input = [ObjectId(6319a4d53c40dd000978dacb), ObjectId(6319a4d53c40dd000978dacb)] This array will contain buffer of objectId
+  * Output = ["6319a4d53c40dd000978dacb","6319a4d53c40dd000978dacb"] This is the output in format of string
+*/
+
+function convertArrayObjectIdtoStringOfObjectId(ids) {
+  return ids.map(obj => obj._id.toString());
+}
+
 module.exports = {
   camelCaseToTitleCase : camelCaseToTitleCase,
   lowerCase : lowerCase,
@@ -302,5 +315,6 @@ module.exports = {
   filterLocationIdandCode : filterLocationIdandCode,
   arrayIdsTobjectIds : arrayIdsTobjectIds,
   checkIfStringIsNumber : checkIfStringIsNumber,
-  arrayOfObjectToArrayOfObjectId : arrayOfObjectToArrayOfObjectId
+  arrayOfObjectToArrayOfObjectId : arrayOfObjectToArrayOfObjectId,
+  convertArrayObjectIdtoStringOfObjectId:convertArrayObjectIdtoStringOfObjectId
 };

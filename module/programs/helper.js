@@ -503,7 +503,7 @@ module.exports = class ProgramsHelper {
    * @returns {JSON} - List of programs based on role and location.
    */
 
-  static forUserRoleAndLocation( bodyData, pageSize, pageNo, searchText = "", projection ) {
+  static forUserRoleAndLocation( bodyData, pageSize, pageNo, searchText = "", projection, programId = "" ) {
 
     return new Promise(async (resolve, reject) => {
 
@@ -515,6 +515,9 @@ module.exports = class ProgramsHelper {
         
         if( !queryData.success ) {
           return resolve(queryData);
+        }
+        if(programId !== ""){
+          queryData.data._id = gen.utils.convertStringToObjectId(programId);
         }
         queryData.data.startDate ={"$lte": new Date()}
         queryData.data.endDate ={"$gte": new Date()}

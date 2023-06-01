@@ -262,9 +262,135 @@ var getObservationDetail = function ( solutionId, token ) {
 
 }
 
+/**
+  * Get survey documents started by user.
+  * @function
+  * @name userSurveys
+  * @param {String} token - logged in user token.
+  * @param {String} programId - program Id
+  * @returns {Promise} returns a promise.
+*/
+
+const userSurveys = function(token, programId) {
+    let url = 
+    process.env.ML_SURVEY_SERVICE_URL + 
+    constants.endpoints.GET_USER_SURVEY
+
+    if( programId !== "" ) {
+        url += "/" + programId;
+    }
+    
+    return new Promise(async (resolve, reject) => {
+        try {
+
+            function assessmentCallback(err, data) {
+
+                let result = {
+                    success : true,
+                    message: "",
+                    status:""
+                };
+
+                if (err) {
+                    result.success = false;
+                } else {
+                    
+                    let response = JSON.parse(data.body);
+                    if( response.status === httpStatusCode['ok'].status ) {
+                        result["result"] = response.result;
+                    } else {
+                        result.success = false;
+                    }
+
+                    result.message = response.message;
+                    result.status = response.status;
+                }
+
+                return resolve(result);
+            }
+
+            const options = {
+                headers : {
+                    "content-type": "application/json",
+                    "x-authenticated-user-token" : token
+                }
+            };
+
+            request.get(url,options,assessmentCallback)
+
+        } catch (error) {
+            return reject(error);
+        }
+    })
+}
+
+
+/**
+  * Get observation documents started by user.
+  * @function
+  * @name userObservations
+  * @param {String} token - logged in user token.
+  * @param {String} programId - program Id
+  * @returns {Promise} returns a promise.
+*/
+const userObservations = function(token, programId) {
+    let url = 
+    process.env.ML_SURVEY_SERVICE_URL + 
+    constants.endpoints.GET_USER_OBSERVATION
+
+    if( programId !== "" ) {
+        url += "/" + programId;
+    }
+    
+    return new Promise(async (resolve, reject) => {
+        try {
+
+            function assessmentCallback(err, data) {
+
+                let result = {
+                    success : true,
+                    message: "",
+                    status:""
+                };
+
+                if (err) {
+                    result.success = false;
+                } else {
+                    
+                    let response = JSON.parse(data.body);
+                    if( response.status === httpStatusCode['ok'].status ) {
+                        result["result"] = response.result;
+                    } else {
+                        result.success = false;
+                    }
+
+                    result.message = response.message;
+                    result.status = response.status;
+                }
+
+                return resolve(result);
+            }
+
+            const options = {
+                headers : {
+                    "content-type": "application/json",
+                    "x-authenticated-user-token" : token
+                }
+            };
+
+            request.get(url,options,assessmentCallback)
+
+        } catch (error) {
+            return reject(error);
+        }
+    })
+}
+
 module.exports = {
     assignedObservations : assignedObservations,
     assignedSurveys : assignedSurveys,
     getQuestions : getQuestions,
-    getObservationDetail : getObservationDetail
+    getObservationDetail : getObservationDetail,
+    userSurveys : userSurveys,
+    userObservations: userObservations
 };
