@@ -119,6 +119,13 @@ module.exports = class UsersHelper {
             userPrivateProgram = checkforProgramExist[0];
           }
         } else {
+          /* If the programId is not passed from the front end, we will enter this else block. 
+          In this block, we need to provide the necessary basic details to create a new program, Including startDate and endDate.*/
+          // Current date
+          let startDate = new Date();
+          // Add one year to the current date
+          let endDate = new Date();
+          endDate.setFullYear(endDate.getFullYear() + 1);
           let programData = await _createProgramData(
             data.programName,
             data.programExternalId
@@ -130,8 +137,8 @@ module.exports = class UsersHelper {
               ? data.programDescription
               : data.programName,
             userId,
-            duplicateProgram.startDate,
-            duplicateProgram.endDate
+            startDate,
+            endDate
           );
 
           userPrivateProgram = await programsHelper.create(programData);

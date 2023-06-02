@@ -14,6 +14,7 @@ const userService = require(ROOT_PATH + "/generics/services/users");
 const kafkaProducersHelper = require(ROOT_PATH + "/generics/kafka/producers");
 const programUsersHelper = require(MODULES_BASE_PATH + "/programUsers/helper");
 
+
 /**
     * ProgramsHelper
     * @class
@@ -336,7 +337,11 @@ module.exports = class ProgramsHelper {
 
         data.updatedBy = userId;
         data.updatedAt = new Date();
-
+        //convert components to objectedIds
+        if (data.components && data.components.length > 0) {
+          data.components = data.components.map(component => gen.utils.convertStringToObjectId(component));
+        }
+       
         let program = await database.models.programs.findOneAndUpdate({
           _id : programId
         },{ $set : _.omit(data,["scope"]) }, { new: true });
