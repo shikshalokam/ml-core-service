@@ -100,7 +100,8 @@ var importedProjects = function ( token,programId = "" ) {
             function improvementProjectCallback(err, data) {
 
                 let result = {
-                    success : true
+                    success : true,
+                    type: constants.common.IMPROVEMENT_PROJECT
                 };
 
                 if (err) {
