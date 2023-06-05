@@ -288,7 +288,8 @@ const userSurveys = function(token, programId) {
                 let result = {
                     success : true,
                     message: "",
-                    status:""
+                    status:"",
+                    type: constants.common.SURVEY
                 };
 
                 if (err) {
@@ -350,7 +351,8 @@ const userObservations = function(token, programId) {
                 let result = {
                     success : true,
                     message: "",
-                    status:""
+                    status:"",
+                    type: constants.common.OBSERVATION
                 };
 
                 if (err) {
