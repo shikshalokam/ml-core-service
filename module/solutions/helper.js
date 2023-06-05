@@ -1989,13 +1989,14 @@ module.exports = class SolutionsHelper {
               isSolutionTargeted.result.isATargetedSolution ? false : true
             );
             
-        } else if ( solutionData.type === constants.common.OBSERVATION ) {
+        } else if ( solutionData.type === constants.common.OBSERVATION || solutionData.type === constants.common.SURVEY ) {
 
             templateOrQuestionDetails =
               await surveyService.getQuestions(
               solutionData._id,
               userToken
             );
+            
         } else {
 
           templateOrQuestionDetails = {
