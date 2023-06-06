@@ -2011,12 +2011,17 @@ module.exports = class SolutionsHelper {
           // add ["rootOrganisations","requestForPIIConsent","programJoined"] values to response. Based on these values front end calls PII consent
           let programData = await programsHelper.programDocuments({
             _id : solutionData.programId
-          },["rootOrganisations","requestForPIIConsent"]);
+          },["rootOrganisations","requestForPIIConsent","name"]);
           
           templateOrQuestionDetails.result.rootOrganisations = (programData[0].rootOrganisations) ? programData[0].rootOrganisations[0] : "";
           if( programData[0].hasOwnProperty('requestForPIIConsent') ) {
             templateOrQuestionDetails.result.requestForPIIConsent = programData[0].requestForPIIConsent;
           }
+          // We are passing programId and programName with the response because front end require these values to show program join pop-up in case of survey link flow
+          // In 6.0.0 release these values only used for solutions of  type survey in front-end side. But Backend is not adding any restrictions based on solution type. 
+          // If solution have programId then we will pass below values with the response, irrespective of solution type
+          templateOrQuestionDetails.result.programId = solutionData.programId;
+          templateOrQuestionDetails.result.programName = programData[0].name;
         }
         
         //Check data present in programUsers collection.
