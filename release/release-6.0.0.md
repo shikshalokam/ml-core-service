@@ -32,6 +32,8 @@ The DevOps repository has already been updated with the new Kafka topic that we 
 
 We added new environment keys to the DevOps repository to accommodate the new features and functionality. For configuration and access to outside services or resources, these keys will be utilised.
 
+Please note you don't need to deploy the DevOps repo. Once the PR is merged, deploy your service, env variable will automatically add from the DevOps branch.
+
 ### Created New APIs and Running the Kong File
 
 We have created new APIs as part of this version to provide the system more capability. The Kong file must be run in order to guarantee seamless integration and effective routing of these APIs. This will make it possible to manage and map API endpoints properly.
