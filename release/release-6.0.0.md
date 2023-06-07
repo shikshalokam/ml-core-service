@@ -22,6 +22,12 @@ Run the script which will add startDate and endDate to programs.
 
 The DevOps repository has already been updated with the new Kafka topic that we recently introduced. This subject will make it easier for system components to communicate and exchange data.
 
+    Login To the Jenkins
+    Go to Dashboard -> Deploy -> dev {Environment} ->Kubernatives, then click on KafkaSetup
+    Click on Build with parameters -> build
+    After the KafkaSetup job is finished, From Kubernatives, click on KafkaSetup
+    Then Click on Build with parameters -> build
+
 ### New Environment Keys Added
 
 We added new environment keys to the DevOps repository to accommodate the new features and functionality. For configuration and access to outside services or resources, these keys will be utilised.
@@ -29,3 +35,23 @@ We added new environment keys to the DevOps repository to accommodate the new fe
 ### Created New APIs and Running the Kong File
 
 We have created new APIs as part of this version to provide the system more capability. The Kong file must be run in order to guarantee seamless integration and effective routing of these APIs. This will make it possible to manage and map API endpoints properly.
+
+#### For Public APIs
+
+There is no automatic deployment in the DevOps repo. We need to deploy it manually. To deploy the kong file changes please follow the below steps
+
+    Login To the Jenkins
+    Go to Dashboard -> Deploy -> dev {Environment} ->Kubernatives, then click on OnboardAPIs
+    Click on Build with parameters -> build
+    After the OnboardAPIs job is finished, From Kubernatives, click on OnboardConsumers
+    Then Click on Build with parameters -> build
+
+### Deploy ml-core-services
+
+there is no automatic deployment in ml-core-services repo. We need to deploy it manually. To deploy the kong file changes please follow below steps
+
+    Login to jenkins
+    Go to Dashboard -> Build -> managed-learn -> ml-core-service
+    Click on Build with parameter and add release-6.0.0 -> Build
+    After Job is finished Go to Dashboard -> deploy -> dev {Environment it will change} -> managed-learn -> ml-core-service
+    After 10 min check this job is excuted or not automatically if not then click on Build with parameter and deploy manually
