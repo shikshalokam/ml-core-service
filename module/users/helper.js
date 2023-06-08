@@ -762,37 +762,39 @@ module.exports = class UsersHelper {
         // 2. Previous profile programs should always come last.
         let startIndex = pageSize * (pageNo - 1);
         let endIndex = startIndex + pageSize;
-        userRelatedPrograms = userRelatedPrograms.slice(startIndex,endIndex) 
-        
-        let userRelatedProgramsData = await programsHelper.programDocuments(
-          {_id : {$in:userRelatedPrograms}},
-          ["name", "externalId","metaInformation"],
-          "none", //not passing skip fields
-          "", // not passing pageSize
-          "" // not passing pageNo
-        );
-        
-        if (!userRelatedProgramsData.length > 0) {
-          throw {
-            message: constants.apiResponses.PROGRAM_NOT_FOUND,
-          };
-        }
-        let programsResult = [];
-        // programDocuments function will not return result in the order which ids are passed. This code block will ensure that the response is rearranged in correct order
-        // We can't implement sort login in programDocuments function because userRelatedPrograms can contain prev profile programs also 
-        for ( let userRelatedProgramsIndex = 0; userRelatedProgramsIndex < userRelatedPrograms.length; userRelatedProgramsIndex++ ) {
-          // current id from userRelatedPrograms
-          let currentProgramId = userRelatedPrograms[userRelatedProgramsIndex];
-          for ( let programDataIndex = 0; programDataIndex < userRelatedProgramsData.length; programDataIndex++ ) {
-            // current id from userRelatedProgramsData returned by programDocuments function
-            let programIdFromProgramData = userRelatedProgramsData[programDataIndex]._id
-            if ( currentProgramId == programIdFromProgramData.toString() ) {
-              programsResult.push(userRelatedProgramsData[programDataIndex]);
-              break;
+        userRelatedPrograms = userRelatedPrograms.slice(startIndex,endIndex);
+        let programsResult = []; 
+        if ( userRelatedPrograms.length > 0 ) {
+          let userRelatedProgramsData = await programsHelper.programDocuments(
+            {_id : {$in:userRelatedPrograms}},
+            ["name", "externalId","metaInformation"],
+            "none", //not passing skip fields
+            "", // not passing pageSize
+            "" // not passing pageNo
+          );
+          
+          if (!userRelatedProgramsData.length > 0) {
+            throw {
+              message: constants.apiResponses.PROGRAM_NOT_FOUND,
+            };
+          }
+         
+          // programDocuments function will not return result in the order which ids are passed. This code block will ensure that the response is rearranged in correct order
+          // We can't implement sort login in programDocuments function because userRelatedPrograms can contain prev profile programs also 
+          for ( let userRelatedProgramsIndex = 0; userRelatedProgramsIndex < userRelatedPrograms.length; userRelatedProgramsIndex++ ) {
+            // current id from userRelatedPrograms
+            let currentProgramId = userRelatedPrograms[userRelatedProgramsIndex];
+            for ( let programDataIndex = 0; programDataIndex < userRelatedProgramsData.length; programDataIndex++ ) {
+              // current id from userRelatedProgramsData returned by programDocuments function
+              let programIdFromProgramData = userRelatedProgramsData[programDataIndex]._id
+              if ( currentProgramId == programIdFromProgramData.toString() ) {
+                programsResult.push(userRelatedProgramsData[programDataIndex]);
+                break;
+              }
             }
           }
         }
-       
+
         programDetails.data = programsResult;
         programDetails.count = programCount;
         programDetails.description = constants.apiResponses.PROGRAM_DESCRIPTION;
