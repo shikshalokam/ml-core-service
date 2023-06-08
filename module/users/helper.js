@@ -870,7 +870,7 @@ module.exports = class UsersHelper {
         }
         let programsResult = [];
         // programDocuments function will not return result in the order which ids are passed. This code block will ensure that the response is rearranged in correct order
-        // We can't implement sort login in programDocuments function because userRelatedPrograms can contain prev profile programs also 
+        // We can't implement sort logic in programDocuments function because userRelatedPrograms can contain prev profile programs also 
         for ( let userRelatedProgramsIndex = 0; userRelatedProgramsIndex < userRelatedPrograms.length; userRelatedProgramsIndex++ ) {
           // current id from userRelatedPrograms
           let currentProgramId = userRelatedPrograms[userRelatedProgramsIndex];
