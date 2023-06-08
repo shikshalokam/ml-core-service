@@ -837,22 +837,30 @@ module.exports = class UsersHelper {
         }
 
         //find total number of programs related to user
-        let userRelatedPrograms = targetedProgramIds.concat(
-          nonTargetedProgramIds
-        );
-
+        let userRelatedPrograms = targetedProgramIds.concat(nonTargetedProgramIds);
+        
         if (!userRelatedPrograms.length > 0) {
           throw {
             message: constants.apiResponses.PROGRAM_NOT_FOUND,
           };
         }
-
+        
+        // Splitting the userRelatedPrograms array based on the page number and size.
+        // The returned data is not coming in the order of userRelatedPrograms elements when all the IDs are passed.
+        // We can't add a sort to the programDocuments function because it will also sort programs joined from the previous profile, which should come at the end of the list for us.
+        // We have two requirements:
+        // 1. Current profile programs should come in the order of their creation.
+        // 2. Previous profile programs should always come last.
+        let startIndex = pageSize * (pageNo - 1);
+        let endIndex = startIndex + pageSize;
+        userRelatedPrograms = userRelatedPrograms.slice(startIndex,endIndex) 
+        
         let userRelatedProgramsData = await programsHelper.programDocuments(
           { _id: { $in: userRelatedPrograms } },
           ["name", "externalId", "metaInformation"],
           "none", //not passing skip fields
-          pageNo,
-          pageSize
+          "", // not passing pageSize
+          "" // not passing pageNo
         );
 
         if (!userRelatedProgramsData.length > 0) {
@@ -860,7 +868,14 @@ module.exports = class UsersHelper {
             message: constants.apiResponses.PROGRAM_NOT_FOUND,
           };
         }
-        programDetails.data = userRelatedProgramsData;
+        
+        // programDocuments function will not return result in the order which ids are passed. This code block will ensure that the response is rearranged in correct order
+        // We can't implement sort logic in programDocuments function because userRelatedPrograms can contain prev profile programs also 
+        let programsResult = userRelatedPrograms.map(id => {
+          return userRelatedProgramsData.find(data => data._id.toString() === id.toString());
+        });
+       
+        programDetails.data = programsResult;
         programDetails.count = programCount;
         programDetails.description = constants.apiResponses.PROGRAM_DESCRIPTION;
 
