@@ -381,9 +381,9 @@ const setUserConsent = function ( token, consentData ) {
                 if (err) {
                     result.success = false;
                 } else {
-                    
+                    console.log("Line 386, response :",data.body)
                     let response = JSON.parse(data.body);
-                    console.log("Line 386, response :",response)
+                    
                     if( response.responseCode === httpStatusCode['http_responsecode_ok'].message ) {
                         result["data"] = response;
                     } else {
@@ -392,6 +392,7 @@ const setUserConsent = function ( token, consentData ) {
                     }
 
                 }
+                console.log("result :",result)
                 return resolve(result);
             }
             setTimeout(function () {
