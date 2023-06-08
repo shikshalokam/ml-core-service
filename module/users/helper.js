@@ -868,21 +868,12 @@ module.exports = class UsersHelper {
             message: constants.apiResponses.PROGRAM_NOT_FOUND,
           };
         }
-        let programsResult = [];
+        
         // programDocuments function will not return result in the order which ids are passed. This code block will ensure that the response is rearranged in correct order
         // We can't implement sort logic in programDocuments function because userRelatedPrograms can contain prev profile programs also 
-        for ( let userRelatedProgramsIndex = 0; userRelatedProgramsIndex < userRelatedPrograms.length; userRelatedProgramsIndex++ ) {
-          // current id from userRelatedPrograms
-          let currentProgramId = userRelatedPrograms[userRelatedProgramsIndex];
-          for ( let programDataIndex = 0; programDataIndex < userRelatedProgramsData.length; programDataIndex++ ) {
-            // current id from userRelatedProgramsData returned by programDocuments function
-            let programIdFromProgramData = userRelatedProgramsData[programDataIndex]._id
-            if ( currentProgramId == programIdFromProgramData.toString() ) {
-              programsResult.push(userRelatedProgramsData[programDataIndex]);
-              break;
-            }
-          }
-        }
+        let programsResult = userRelatedPrograms.map(id => {
+          return userRelatedProgramsData.find(data => data._id.toString() === id.toString());
+        });
        
         programDetails.data = programsResult;
         programDetails.count = programCount;
