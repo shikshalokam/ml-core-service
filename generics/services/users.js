@@ -361,7 +361,7 @@ const setUserConsent = function ( token, consentData ) {
         try {
             
             let url = userServiceUrl + constants.endpoints.USER_CONSENT_API;
-            console.log("Line 364, url :",url)
+            
             const options = {
                 headers : {
                     "content-type": "application/json",
@@ -369,7 +369,7 @@ const setUserConsent = function ( token, consentData ) {
                 },
                 body: JSON.stringify(consentData) 
             };
-            console.log("Line 372,options :",options)
+            
             request.post(url,options,requestCallback);
 
             function requestCallback(err, data) {
@@ -381,7 +381,7 @@ const setUserConsent = function ( token, consentData ) {
                 if (err) {
                     result.success = false;
                 } else {
-                    console.log("Line 386, response :",data.body)
+                   
                     let response = JSON.parse(data.body);
                     
                     if( response.responseCode === httpStatusCode['http_responsecode_ok'].message ) {
@@ -392,7 +392,6 @@ const setUserConsent = function ( token, consentData ) {
                     }
 
                 }
-                console.log("result :",result)
                 return resolve(result);
             }
             setTimeout(function () {
@@ -402,7 +401,6 @@ const setUserConsent = function ( token, consentData ) {
             }, constants.common.SERVER_TIME_OUT);
 
         } catch (error) {
-            console.log("error :",error)
             return reject(error);
         }
     })
