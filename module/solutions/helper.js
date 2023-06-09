@@ -1603,6 +1603,15 @@ module.exports = class SolutionsHelper {
 
           }
 
+        } else if ( solutionData.type === constants.common.SURVEY ) {
+          // Get survey submissions of user
+          let surveySubmissionDetails = await surveyService.userSurveySubmissions(
+            userToken
+          );
+          let surveySubmissionData = surveySubmissionDetails.result;
+          // check presents of submission for solutionData.solutionId
+          surveySubmissionData = surveySubmissionData.filter(item => item.solutionId.toString() === solutionData.solutionId.toString());
+          checkForTargetedSolution.result.submissionId = ( surveySubmissionData.length > 0 && surveySubmissionData[0].submissionId ) ? surveySubmissionData[0].submissionId : "";
         } else if ( solutionData.type === constants.common.IMPROVEMENT_PROJECT ) {
           // Targeted solution
           if( checkForTargetedSolution.result.isATargetedSolution && createProject ) {
