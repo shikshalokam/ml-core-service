@@ -1,6 +1,6 @@
 # ml-core-service
 
-This is ml-core-services, the managed-learn component responsible for developing programs and solutions within the managed learn services. It also includes user extensions for enhanced functionality.
+This is ml-core-services, the managed-learn component responsible for creating programs and solutions within the managed learn services. It also includes user extensions for enhanced functionality.
 
 # Setup Guide
 
