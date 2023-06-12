@@ -1612,6 +1612,7 @@ module.exports = class SolutionsHelper {
           // check presents of submission for solutionData.solutionId
           surveySubmissionData = surveySubmissionData.filter(item => item.solutionId.toString() === solutionData.solutionId.toString());
           checkForTargetedSolution.result.submissionId = ( surveySubmissionData.length > 0 && surveySubmissionData[0].submissionId ) ? surveySubmissionData[0].submissionId : "";
+          checkForTargetedSolution.result.surveyId = ( surveySubmissionData.length > 0 && surveySubmissionData[0].surveyId ) ? surveySubmissionData[0].surveyId : "";
         } else if ( solutionData.type === constants.common.IMPROVEMENT_PROJECT ) {
           // Targeted solution
           if( checkForTargetedSolution.result.isATargetedSolution && createProject ) {
