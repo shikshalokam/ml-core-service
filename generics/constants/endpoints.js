@@ -38,5 +38,5 @@ module.exports = {
     USER_CONSENT_API: "/v1/user/consent/update",
     GET_USER_SURVEY : "/v1/users/surveys",
     GET_USER_OBSERVATION : "/v1/users/observations",
-    LIST_SURVEY_SUBMISSIONS : "/v1/surveySubmissions/list"
+    LIST_SURVEY_SUBMISSIONS : "/v1/users/surveySubmissions",
 }

@@ -1608,39 +1608,32 @@ module.exports = class SolutionsHelper {
           /**
            * function userServeySubmission 
            * Request:
+           * @query :SolutionId -> solutionId
            * @param {userToken} for UserId
            * @response Array of survey submissions
            * example: {
-              "success":true,
-              "message":"survey list fetched successfully",
-              "status":200,
-              "result":[
-                  {
-                    "solutionId":"5fcf34503e9df47967eedb03",
-                    "surveyId":"5fcf56d9eff083796933d808",
-                    "status":"active",
-                    "submissionId":"5fcf56d9eff083796933d809",
-                    "name":"Diksha test survey "
-                  },
-                  {
-                    "solutionId":"5fa29df49e65d8758624e96e",
-                    "surveyId":"5fa2ab8a2dbd4b755b88e681",
-                    "status":"active",
-                    "submissionId":"609a1ef15ce8b031e0e37ea5",
-                    "name":"Diksha test survey "
-                  }
-              ]
-            }
-           *  
-           *           
+            "success":true,
+            "message":"Survey submission fetched successfully",
+            "data":[
+                {
+                    "_id":"62e228eedd8c6d0009da5084",
+                    "solutionId":"627dfc6509446e00072ccf78",
+                    "surveyId":"62e228eedd8c6d0009da507d",
+                    "status":"completed",
+                    "surveyInformation":{
+                        "name":"Create a Survey (To check collated reports) for 4.9 regression -- FD 380",
+                        "description":"Create a Survey (To check collated reports) for 4.9 regression -- FD 380"
+                    }
+                }
+            ]
+          }       
            */
           let surveySubmissionDetails = await surveyService.userSurveySubmissions(
-            userToken
+            userToken,
+            solutionData.solutionId
           );
           let surveySubmissionData = surveySubmissionDetails.result;
-          // check presents of submission for solutionData.solutionId
-          surveySubmissionData = surveySubmissionData.filter(item => item.solutionId.toString() === solutionData.solutionId.toString());
-          checkForTargetedSolution.result.submissionId = ( surveySubmissionData.length > 0 && surveySubmissionData[0].submissionId ) ? surveySubmissionData[0].submissionId : "";
+          checkForTargetedSolution.result.submissionId = ( surveySubmissionData.length > 0 && surveySubmissionData[0]._id ) ? surveySubmissionData[0]._id : "";
           checkForTargetedSolution.result.surveyId = ( surveySubmissionData.length > 0 && surveySubmissionData[0].surveyId ) ? surveySubmissionData[0].surveyId : "";
         } else if ( solutionData.type === constants.common.IMPROVEMENT_PROJECT ) {
           // Targeted solution

@@ -396,10 +396,10 @@ const userObservations = function(token, programId) {
   * @param {String} token - logged in user token.
   * @returns {Promise} returns a promise.
 */
-const userSurveySubmissions = function( token ) {
+const userSurveySubmissions = function( token, solutionId ) {
     let url = 
     process.env.ML_SURVEY_SERVICE_URL + 
-    constants.endpoints.LIST_SURVEY_SUBMISSIONS
+    constants.endpoints.LIST_SURVEY_SUBMISSIONS+"/"+solutionId;
 
     return new Promise(async (resolve, reject) => {
         try {
