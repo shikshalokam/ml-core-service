@@ -854,6 +854,8 @@ module.exports = class UsersHelper {
         let startIndex = pageSize * (pageNo - 1);
         let endIndex = startIndex + pageSize;
         userRelatedPrograms = userRelatedPrograms.slice(startIndex,endIndex) 
+
+        userRelatedPrograms.push("5f35044f19377eecddb06921")
         
         let userRelatedProgramsData = await programsHelper.programDocuments(
           { _id: { $in: userRelatedPrograms }, isAPrivateProgram: false },
@@ -878,7 +880,7 @@ module.exports = class UsersHelper {
         programsResult = programsResult.filter(element => {return element !== null && element !== undefined})
        
         programDetails.data = programsResult;
-        programDetails.count = programCount;
+        programDetails.count = programsResult.length;
         programDetails.description = constants.apiResponses.PROGRAM_DESCRIPTION;
 
         return resolve({
