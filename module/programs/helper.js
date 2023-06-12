@@ -101,6 +101,14 @@ module.exports = class ProgramsHelper {
           "createdBy" : data.userId,
           "updatedBy" : data.userId, 
         }
+
+        if(data.hasOwnProperty("endDate")){
+          let endDate = data.endDate.split(" ");
+          if(endDate[1] === "" || endDate[1] === undefined){
+            data.endDate = endDate[0]+" 23:59:59";
+          }
+        }
+        
         _.assign(programData, {
           ...data
         });
