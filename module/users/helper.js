@@ -854,8 +854,6 @@ module.exports = class UsersHelper {
         let startIndex = pageSize * (pageNo - 1);
         let endIndex = startIndex + pageSize;
         userRelatedPrograms = userRelatedPrograms.slice(startIndex,endIndex) 
-
-        userRelatedPrograms.push("5f35044f19377eecddb06921")
         
         let userRelatedProgramsData = await programsHelper.programDocuments(
           { _id: { $in: userRelatedPrograms }, isAPrivateProgram: false },
