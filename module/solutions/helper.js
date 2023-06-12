@@ -1605,6 +1605,35 @@ module.exports = class SolutionsHelper {
 
         } else if ( solutionData.type === constants.common.SURVEY ) {
           // Get survey submissions of user
+          /**
+           * function userServeySubmission 
+           * Request:
+           * @param {userToken} for UserId
+           * @response Array of survey submissions
+           * example: {
+              "success":true,
+              "message":"survey list fetched successfully",
+              "status":200,
+              "result":[
+                  {
+                    "solutionId":"5fcf34503e9df47967eedb03",
+                    "surveyId":"5fcf56d9eff083796933d808",
+                    "status":"active",
+                    "submissionId":"5fcf56d9eff083796933d809",
+                    "name":"Diksha test survey "
+                  },
+                  {
+                    "solutionId":"5fa29df49e65d8758624e96e",
+                    "surveyId":"5fa2ab8a2dbd4b755b88e681",
+                    "status":"active",
+                    "submissionId":"609a1ef15ce8b031e0e37ea5",
+                    "name":"Diksha test survey "
+                  }
+              ]
+            }
+           *  
+           *           
+           */
           let surveySubmissionDetails = await surveyService.userSurveySubmissions(
             userToken
           );
