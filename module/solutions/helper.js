@@ -1603,6 +1603,38 @@ module.exports = class SolutionsHelper {
 
           }
 
+        } else if ( solutionData.type === constants.common.SURVEY ) {
+          // Get survey submissions of user
+          /**
+           * function userServeySubmission 
+           * Request:
+           * @query :SolutionId -> solutionId
+           * @param {userToken} for UserId
+           * @response Array of survey submissions
+           * example: {
+            "success":true,
+            "message":"Survey submission fetched successfully",
+            "data":[
+                {
+                    "_id":"62e228eedd8c6d0009da5084",
+                    "solutionId":"627dfc6509446e00072ccf78",
+                    "surveyId":"62e228eedd8c6d0009da507d",
+                    "status":"completed",
+                    "surveyInformation":{
+                        "name":"Create a Survey (To check collated reports) for 4.9 regression -- FD 380",
+                        "description":"Create a Survey (To check collated reports) for 4.9 regression -- FD 380"
+                    }
+                }
+            ]
+          }       
+           */
+          let surveySubmissionDetails = await surveyService.userSurveySubmissions(
+            userToken,
+            solutionData.solutionId
+          );
+          let surveySubmissionData = surveySubmissionDetails.result;
+          checkForTargetedSolution.result.submissionId = ( surveySubmissionData.length > 0 && surveySubmissionData[0]._id ) ? surveySubmissionData[0]._id : "";
+          checkForTargetedSolution.result.surveyId = ( surveySubmissionData.length > 0 && surveySubmissionData[0].surveyId ) ? surveySubmissionData[0].surveyId : "";
         } else if ( solutionData.type === constants.common.IMPROVEMENT_PROJECT ) {
           // Targeted solution
           if( checkForTargetedSolution.result.isATargetedSolution && createProject ) {
