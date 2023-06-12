@@ -856,7 +856,7 @@ module.exports = class UsersHelper {
         userRelatedPrograms = userRelatedPrograms.slice(startIndex,endIndex) 
         
         let userRelatedProgramsData = await programsHelper.programDocuments(
-          { _id: { $in: userRelatedPrograms } },
+          { _id: { $in: userRelatedPrograms }, isAPrivateProgram: false },
           ["name", "externalId", "metaInformation"],
           "none", //not passing skip fields
           "", // not passing pageSize
@@ -874,6 +874,8 @@ module.exports = class UsersHelper {
         let programsResult = userRelatedPrograms.map(id => {
           return userRelatedProgramsData.find(data => data._id.toString() === id.toString());
         });
+        // to remove null values  from program result as private programs will be not listed
+        programsResult = programsResult.filter(element => {return element !== null && element !== undefined})
        
         programDetails.data = programsResult;
         programDetails.count = programCount;
