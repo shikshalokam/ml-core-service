@@ -1219,6 +1219,7 @@ module.exports = class UsersHelper {
             _id: { $in: previousProfilesJoinedProgramIds },
             startDate: { $lte: new Date() },
             endDate: { $gte: new Date() },
+            isAPrivateProgram: false
           };
 
           //call program details to check if the program is active or not
