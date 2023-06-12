@@ -856,7 +856,7 @@ module.exports = class UsersHelper {
         userRelatedPrograms = userRelatedPrograms.slice(startIndex,endIndex) 
         
         let userRelatedProgramsData = await programsHelper.programDocuments(
-          { _id: { $in: userRelatedPrograms }, isAPrivateProgram: false },
+          { _id: { $in: userRelatedPrograms } },
           ["name", "externalId", "metaInformation"],
           "none", //not passing skip fields
           "", // not passing pageSize
@@ -874,11 +874,9 @@ module.exports = class UsersHelper {
         let programsResult = userRelatedPrograms.map(id => {
           return userRelatedProgramsData.find(data => data._id.toString() === id.toString());
         });
-        // to remove null values  from program result as private programs will be not listed
-        programsResult = programsResult.filter(element => {return element !== null && element !== undefined})
        
         programDetails.data = programsResult;
-        programDetails.count = programsResult.length;
+        programDetails.count = programCount;
         programDetails.description = constants.apiResponses.PROGRAM_DESCRIPTION;
 
         return resolve({
@@ -1221,6 +1219,7 @@ module.exports = class UsersHelper {
             _id: { $in: previousProfilesJoinedProgramIds },
             startDate: { $lte: new Date() },
             endDate: { $gte: new Date() },
+            isAPrivateProgram: false
           };
 
           //call program details to check if the program is active or not
