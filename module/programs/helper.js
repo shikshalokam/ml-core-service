@@ -350,6 +350,14 @@ module.exports = class ProgramsHelper {
           data.components = data.components.map(component => gen.utils.convertStringToObjectId(component));
         }
        
+
+        if(data.hasOwnProperty("endDate")){
+          let endDate = data.endDate.split(" ");
+          if(endDate[1] === "" || endDate[1] === undefined){
+            data.endDate = endDate[0]+" 23:59:59";
+          }
+        }
+        
         let program = await database.models.programs.findOneAndUpdate({
           _id : programId
         },{ $set : _.omit(data,["scope"]) }, { new: true });
