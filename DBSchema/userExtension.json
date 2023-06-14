@@ -1,0 +1,78 @@
+{
+    "_id" : "5f32a668a7bb541d8322374f",
+    "roles" : [
+        {
+            "entities" : [
+                "5f33caebb451f58478b36999"
+            ],
+            "roleId" : "5f32d8238e0dc831240405a0",
+            "code" : "HM"
+        }
+    ],
+    "programRoles" : [
+        {
+            "programs" : [
+                "5f33caebb451f58478b36999"
+            ],
+            "roleId" : "5f32d8238e0dc831240405a0",
+            "code" : "PM"
+        }
+    ],
+    "status" : "active",
+    "isDeleted" : false,
+    "devices" : [
+        {
+            "deviceId" : "eVfNcRIlQew:APA91bEKpTxpvnLXkuYEC8BBKd3bbhl-gHg9VwWnVA5ED3neHrIwud_W0kgasMVmrqyYj63ccwPMVfW1kbBGlBeMEygIhulzLHEuHOCH9YCJy6e455Tkbxw7EgJ1lDOAAjpKaBn4q7gf",
+            "os" : "android",
+            "app" : "diksha survey",
+            "appType" : "assessment",
+            "status" : "active",
+            "activatedAt" : "2020-08-11T14:08:40.233+0000"
+        },
+        {
+            "deviceId" : "fphpTpHcLG0:APA91bES3cPB5k3HL_4UfVHKaKsRGLr_1k2ZuqeF9WFFRmP-lFqb-LUJozZNU66rNoQO4Cgsx236eVTbTdnj0cGyJ-IP7tTra5lGD1W-7QK_EutiPRJv4q7tq1RmjFVzy9BV4jxHqBDs",
+            "os" : "android",
+            "app" : "diksha survey",
+            "appType" : "assessment",
+            "status" : "active",
+            "activatedAt" : "2020-08-12T09:59:56.577+0000"
+        },
+        {
+            "deviceId" : "eZPYAJ_thEA:APA91bHniRt_Tfax3KIi0yCqykT-w50-KFyhjgBE9derqXRcFuyu2boa8EVcYn1Yt2lan1eoSNlp2hA5h_oRT7W8YAyYKoQAiT6IuYZ9shJKhDNLnCUR2x1cebrJ3JoMwdIoO5H2Oo7T",
+            "os" : "android",
+            "app" : "diksha survey",
+            "appType" : "assessment",
+            "status" : "active",
+            "activatedAt" : "2020-08-12T10:05:18.698+0000"
+        },
+        {
+            "deviceId" : "dCXMdKl5CdI:APA91bF8T29-09lXfE5JaxCcfQy818uaaiRnlqQLYLxJIurUgWQBkjfjPnWuFeE-7jr4ZZurIJWa5leXkdvlxi07P-vSBTV7go9g2BAQ7CHceeUB0Hd2KdqGa4NgtI44nhikZLjWO7Ou",
+            "os" : "android",
+            "app" : "dikshasurvey",
+            "appType" : "assessment",
+            "status" : "active",
+            "activatedAt" : "2020-09-16T09:41:23.190+0000"
+        },
+        {
+            "deviceId" : "d9j9Upc-9o4:APA91bEw-xalS9TQyTNMbTvzDFnCYu4EgfCdsdehOSA69QN0yZ6Rhue7yMgmw_cwI79N_DSjeMphcFiljj_CQ4ZEzW4_H181SGYwOdD-OVVN20x-khOD6aCYErmOhAFzpfkoB4FunmV4",
+            "os" : "android",
+            "app" : "dikshasurvey",
+            "appType" : "assessment",
+            "status" : "active",
+            "activatedAt" : "2020-10-12T03:05:06.273+0000"
+        }
+    ],
+    "userProfileScreenVisitedTrack" : null,
+    "deleted" : false,
+    "userId" : "2b655fd1-201d-4d2a-a1b7-9048a25c0afa",
+    "externalId" : "ba***",
+    "createdBy" : "SYSTEM",
+    "updatedBy" : "2b655fd1-201d-4d2a-a1b7-9048a25c0afa",
+    "updatedAt" : "2020-10-12T03:05:42.736+0000",
+    "createdAt" : "2020-08-11T14:08:40.249+0000",
+    "__v" : 0,
+    "state" : {
+        "_id" : "5f33c3d85f637784791cd830",
+        "name" : "Maharashtra"
+    }
+}
