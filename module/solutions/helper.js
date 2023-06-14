@@ -672,7 +672,10 @@ module.exports = class SolutionsHelper {
           if ( programId !== "" ) {
             matchQuery["programId"] = ObjectId(programId);
           }
-          
+
+          matchQuery["startDate"]={"$lte": new Date()}
+          matchQuery["endDate"] ={"$gte": new Date()}
+
           let targetedSolutions = await this.list(
             type,
             subType,
@@ -1597,6 +1600,13 @@ module.exports = class SolutionsHelper {
               userToken
             );
 
+            if( observationDetailFromLink.result.length < 1 && solutionData.status === "inactive"){
+              return resolve({ 
+                message: constants.apiResponses.LINK_IS_EXPIRED,
+                result: []
+              });
+          }
+
             checkForTargetedSolution.result["observationId"] = (observationDetailFromLink.result && observationDetailFromLink.result._id != "")
                 ? observationDetailFromLink.result._id
                 : "";
@@ -1632,6 +1642,13 @@ module.exports = class SolutionsHelper {
             userToken,
             solutionData.solutionId
           );
+          if( surveySubmissionDetails.result.length < 1 && solutionData.status === "inactive"){
+            return resolve({ 
+              message: constants.apiResponses.LINK_IS_EXPIRED,
+              result: []
+            });
+        }
+
           let surveySubmissionData = surveySubmissionDetails.result;
           checkForTargetedSolution.result.submissionId = ( surveySubmissionData.length > 0 && surveySubmissionData[0]._id ) ? surveySubmissionData[0]._id : "";
           checkForTargetedSolution.result.surveyId = ( surveySubmissionData.length > 0 && surveySubmissionData[0].surveyId ) ? surveySubmissionData[0].surveyId : "";
@@ -1648,6 +1665,12 @@ module.exports = class SolutionsHelper {
 
             if ( !projectDetailFromLink || !projectDetailFromLink.data ) {
               return resolve(projectDetailFromLink);
+            }
+            if( projectDetailFromLink.data.length < 1 && solutionData.status === "inactive"){
+              return resolve({ 
+                message: constants.apiResponses.LINK_IS_EXPIRED,
+                result: []
+              });
             }
 
               checkForTargetedSolution.result['projectId'] = projectDetailFromLink.data._id
@@ -1680,6 +1703,11 @@ module.exports = class SolutionsHelper {
               ) {
                 checkForTargetedSolution.result['projectId'] =
                   checkTargetedProjectExist.data[0]._id;
+              }else if( solutionData.status === "inactive"){
+                  return resolve({ 
+                    message: constants.apiResponses.LINK_IS_EXPIRED,
+                    result: []
+                  });
               }
 
           } else {
@@ -1914,7 +1942,8 @@ module.exports = class SolutionsHelper {
           "programId",
           "name",
           "projectTemplateId",
-          "programName"
+          "programName",
+          "status"
         ]);
 
         let queryData = await this.queryBasedOnRoleAndLocation(bodyData);
@@ -1931,8 +1960,7 @@ module.exports = class SolutionsHelper {
           "type",
           "programId",
           "name",
-          "projectTemplateId",
-          "endDate"
+          "projectTemplateId"
         ]);
 
         if ( !Array.isArray(solutionData) || solutionData.length < 1 ) {
@@ -1942,6 +1970,7 @@ module.exports = class SolutionsHelper {
           response.name = solutionDetails[0].name;
           response.programId = solutionDetails[0].programId;
           response.programName = solutionDetails[0].programName;
+          response.status = solutionDetails[0].status;
 
 
           return resolve({
