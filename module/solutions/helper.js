@@ -1738,6 +1738,7 @@ module.exports = class SolutionsHelper {
           }
 
         }
+        delete checkForTargetedSolution.result["status"]
 
         return resolve(checkForTargetedSolution);
 
