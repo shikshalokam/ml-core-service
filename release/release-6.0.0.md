@@ -54,6 +54,6 @@ there is no automatic deployment in ml-core-services repo. We need to deploy it 
 
     Login to jenkins
     Go to Dashboard -> Build -> managed-learn -> ml-core-service
-    Click on Build with parameter and add release-6.0.0 -> Build
+    Click on Build with parameter and add release-6.0.0 -> Build (This is for Dev environments only it will change based on environment)
     After Job is finished Go to Dashboard -> deploy -> dev {Environment it will change} -> managed-learn -> ml-core-service
     After 10 min check this job is excuted or not automatically if not then click on Build with parameter and deploy manually
