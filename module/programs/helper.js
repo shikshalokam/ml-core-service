@@ -108,6 +108,12 @@ module.exports = class ProgramsHelper {
             data.endDate = endDate[0]+" 23:59:59";
           }
         }
+        if (data.hasOwnProperty("startDate")) {
+          let startDate = data.startDate.split(" ");
+          if (startDate[1] === "" || startDate[1] === undefined) {
+            data.startDate = startDate[0] + " 00:00:00";
+          }
+        }
         
         _.assign(programData, {
           ...data
@@ -355,6 +361,12 @@ module.exports = class ProgramsHelper {
           let endDate = data.endDate.split(" ");
           if(endDate[1] === "" || endDate[1] === undefined){
             data.endDate = endDate[0]+" 23:59:59";
+          }
+        }
+        if (data.hasOwnProperty("startDate")) {
+          let startDate = data.startDate.split(" ");
+          if (startDate[1] === "" || startDate[1] === undefined) {
+            data.startDate = startDate[0] + " 00:00:00";
           }
         }
         
