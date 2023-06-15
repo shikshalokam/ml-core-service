@@ -488,7 +488,6 @@ module.exports = class SolutionsHelper {
         );
 
         updateObject["$set"]["updatedBy"] = userId;
-        console.log(updateObject);
         let solutionUpdatedData = await database.models.solutions
           .findOneAndUpdate(
             {
