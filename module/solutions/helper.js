@@ -1647,7 +1647,7 @@ module.exports = class SolutionsHelper {
 
         let solutionData = checkForTargetedSolution.result;
 
-        let solutionStatus =
+        let isSolutionActive =
           solutionData.status === constants.common.INACTIVE ? false : true;
         if (solutionData.type == constants.common.OBSERVATION) {
           // Targeted solution
@@ -1663,7 +1663,7 @@ module.exports = class SolutionsHelper {
                 observationDetailFromLink.result._id != ""
                   ? observationDetailFromLink.result._id
                   : "";
-            } else if (!solutionStatus) {
+            } else if (!isSolutionActive) {
               throw new Error(constants.apiResponses.LINK_IS_EXPIRED);
             }
           }
@@ -1705,7 +1705,7 @@ module.exports = class SolutionsHelper {
               .surveyId
               ? surveySubmissionData[0].surveyId
               : "";
-          } else if (!solutionStatus) {
+          } else if (!isSolutionActive) {
             throw new Error(constants.apiResponses.LINK_IS_EXPIRED);
           }
         } else if (solutionData.type === constants.common.IMPROVEMENT_PROJECT) {
@@ -1726,7 +1726,7 @@ module.exports = class SolutionsHelper {
             if (!projectDetailFromLink || !projectDetailFromLink.data) {
               return resolve(projectDetailFromLink);
             }
-            if (projectDetailFromLink.data.length < 1 && !solutionStatus) {
+            if (projectDetailFromLink.data.length < 1 && !isSolutionActive) {
               throw new Error(constants.apiResponses.LINK_IS_EXPIRED);
             }
 
@@ -1763,7 +1763,7 @@ module.exports = class SolutionsHelper {
             ) {
               checkForTargetedSolution.result["projectId"] =
                 checkTargetedProjectExist.data[0]._id;
-            } else if (!solutionStatus) {
+            } else if (!isSolutionActive) {
               throw new Error(constants.apiResponses.LINK_IS_EXPIRED);
             }
           } else {
