@@ -84,10 +84,11 @@ module.exports = class ProgramsHelper {
  * @method
  * @name create
  * @param {Array} data 
+ * @param {Boolean} checkDate this is true for when its called via API calls
  * @returns {JSON} - create program.
  */
 
-  static create(data) {
+  static create(data, checkDate = false) {
 
     return new Promise(async (resolve, reject) => {
 
@@ -102,25 +103,13 @@ module.exports = class ProgramsHelper {
           "updatedBy" : data.userId, 
         }
 
-        if(data.hasOwnProperty("endDate")){
-          let endDate = data.endDate.split(" ");
-          if(endDate[1] === "" || endDate[1] === undefined){
-            data.endDate = endDate[0]+" 23:59:59";
+        if(checkDate){
+          if(data.hasOwnProperty("endDate")){
+            data.endDate = gen.utils.getEndDate(data.endDate);
           }
-          data.endDate = new Date(data.endDate)
-          console.log("endDate", data.endDate)
-          data.endDate = gen.utils.getTimeWith530HrDifference(data.endDate)
-          console.log("endDate after -530", data.endDate)
-        }
-        if(data.hasOwnProperty("startDate")){
-          let startDate = data.startDate.split(" ");
-          if(startDate[1] === "" || startDate[1] === undefined){
-            data.startDate = startDate[0]+" 00:00:00";
+          if(data.hasOwnProperty("startDate")){
+            data.startDate = gen.utils.getStartDate(data.startDate)
           }
-          data.startDate = new Date(data.startDate)
-          console.log("startDate", data.startDate)
-          data.startDate = gen.utils.getTimeWith530HrDifference(data.startDate)
-          console.log("startDate after -530", data.startDate)
         }
         
         _.assign(programData, {
@@ -348,10 +337,11 @@ module.exports = class ProgramsHelper {
    * @param {String} programId - program id.
    * @param {Array} data 
    * @param {String} userId
+   * @param {Boolean} checkDate this is true for when its called via API calls
    * @returns {JSON} - update program.
    */
 
-  static update(programId,data,userId) {
+  static update(programId,data,userId,checkDate = false) {
 
     return new Promise( async (resolve, reject) => {
 
@@ -364,26 +354,13 @@ module.exports = class ProgramsHelper {
           data.components = data.components.map(component => gen.utils.convertStringToObjectId(component));
         }
        
-
-        if(data.hasOwnProperty("endDate")){
-          let endDate = data.endDate.split(" ");
-          if(endDate[1] === "" || endDate[1] === undefined){
-            data.endDate = endDate[0]+" 23:59:59";
+        if(checkDate){
+          if(data.hasOwnProperty("endDate")){
+            data.endDate = gen.utils.getEndDate(data.endDate);
           }
-          data.endDate = new Date(data.endDate)
-          console.log("endDate", data.endDate)
-          data.endDate = gen.utils.getTimeWith530HrDifference(data.endDate)
-          console.log("endDate after -530", data.endDate)
-        }
-        if(data.hasOwnProperty("startDate")){
-          let startDate = data.startDate.split(" ");
-          if(startDate[1] === "" || startDate[1] === undefined){
-            data.startDate = startDate[0]+" 00:00:00";
+          if(data.hasOwnProperty("startDate")){
+            data.startDate = gen.utils.getStartDate(data.startDate)
           }
-          data.startDate = new Date(data.startDate)
-          console.log("startDate", data.startDate)
-          data.startDate = gen.utils.getTimeWith530HrDifference(data.startDate)
-          console.log("startDate after -530", data.startDate)
         }
         let program = await database.models.programs.findOneAndUpdate({
           _id : programId
