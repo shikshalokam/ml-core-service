@@ -1591,6 +1591,7 @@ module.exports = class SolutionsHelper {
         
         let solutionData = checkForTargetedSolution.result;
 
+        let solutionStatus = solutionData.status === "inactive" ? false : true
         if( solutionData.type == constants.common.OBSERVATION ) {
           // Targeted solution
           if(checkForTargetedSolution.result.isATargetedSolution) {
@@ -1600,17 +1601,11 @@ module.exports = class SolutionsHelper {
               userToken
             );
 
-            if( observationDetailFromLink.result.length < 1 && solutionData.status === "inactive"){
-              return resolve({ 
-                message: constants.apiResponses.LINK_IS_EXPIRED,
-                result: []
-              });
-          }
-
-            checkForTargetedSolution.result["observationId"] = (observationDetailFromLink.result && observationDetailFromLink.result._id != "")
-                ? observationDetailFromLink.result._id
-                : "";
-
+            if( observationDetailFromLink.result.length > 0 ){ 
+              checkForTargetedSolution.result["observationId"] = observationDetailFromLink.result._id != ""? observationDetailFromLink.result._id : "";
+            }else if(!solutionStatus){
+                throw new Error(constants.apiResponses.LINK_IS_EXPIRED);
+            }
           }
 
         } else if ( solutionData.type === constants.common.SURVEY ) {
@@ -1642,16 +1637,16 @@ module.exports = class SolutionsHelper {
             userToken,
             solutionData.solutionId
           );
-          if( surveySubmissionDetails.result.length < 1 && solutionData.status === "inactive"){
-            return resolve({ 
-              message: constants.apiResponses.LINK_IS_EXPIRED,
-              result: []
-            });
-        }
-
           let surveySubmissionData = surveySubmissionDetails.result;
-          checkForTargetedSolution.result.submissionId = ( surveySubmissionData.length > 0 && surveySubmissionData[0]._id ) ? surveySubmissionData[0]._id : "";
-          checkForTargetedSolution.result.surveyId = ( surveySubmissionData.length > 0 && surveySubmissionData[0].surveyId ) ? surveySubmissionData[0].surveyId : "";
+          if( surveySubmissionData.length > 0 ){ 
+            checkForTargetedSolution.result.submissionId = surveySubmissionData[0]._id ? surveySubmissionData[0]._id : "";
+            checkForTargetedSolution.result.surveyId = surveySubmissionData[0].surveyId ? surveySubmissionData[0].surveyId : "";
+          }else if(!solutionStatus){
+            throw new Error(constants.apiResponses.LINK_IS_EXPIRED);
+          }
+
+        
+          
         } else if ( solutionData.type === constants.common.IMPROVEMENT_PROJECT ) {
           // Targeted solution
           if( checkForTargetedSolution.result.isATargetedSolution && createProject ) {
@@ -1666,11 +1661,8 @@ module.exports = class SolutionsHelper {
             if ( !projectDetailFromLink || !projectDetailFromLink.data ) {
               return resolve(projectDetailFromLink);
             }
-            if( projectDetailFromLink.data.length < 1 && solutionData.status === "inactive"){
-              return resolve({ 
-                message: constants.apiResponses.LINK_IS_EXPIRED,
-                result: []
-              });
+            if( projectDetailFromLink.data.length < 1 && !solutionStatus){
+              throw new Error(constants.apiResponses.LINK_IS_EXPIRED);
             }
 
               checkForTargetedSolution.result['projectId'] = projectDetailFromLink.data._id
@@ -1703,11 +1695,8 @@ module.exports = class SolutionsHelper {
               ) {
                 checkForTargetedSolution.result['projectId'] =
                   checkTargetedProjectExist.data[0]._id;
-              }else if( solutionData.status === "inactive"){
-                  return resolve({ 
-                    message: constants.apiResponses.LINK_IS_EXPIRED,
-                    result: []
-                  });
+              }else if(!solutionStatus){
+                throw new Error(constants.apiResponses.LINK_IS_EXPIRED);
               }
 
           } else {
