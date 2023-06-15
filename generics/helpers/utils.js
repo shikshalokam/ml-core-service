@@ -303,6 +303,29 @@ function getTimeWith530HrDifference(time){
   return time
 }
 
+function getStartDate (date){
+  let startDate = date.split(" ");
+  if(startDate[1] === "" || startDate[1] === undefined){
+    date = date[0]+" 00:00:00";
+  }
+  date = new Date(date)
+  console.log("date", date)
+  date = getTimeWith530HrDifference(date)
+  console.log("date after -530", date)
+  return date
+}
+
+function getEndDate (date){
+  let endDate = date.split(" ");
+  if(endDate[1] === "" || endDate[1] === undefined){
+    date = endDate[0]+" 23:59:59";
+  }
+  date = new Date(date)
+  console.log("endDate", date)
+  date = getTimeWith530HrDifference(date)
+  console.log("endDate after -530", date)
+  return date
+}
 module.exports = {
   camelCaseToTitleCase : camelCaseToTitleCase,
   lowerCase : lowerCase,
@@ -323,5 +346,6 @@ module.exports = {
   checkIfStringIsNumber : checkIfStringIsNumber,
   arrayOfObjectToArrayOfObjectId : arrayOfObjectToArrayOfObjectId,
   convertArrayObjectIdtoStringOfObjectId:convertArrayObjectIdtoStringOfObjectId,
-  getTimeWith530HrDifference : getTimeWith530HrDifference,
+  getStartDate:getStartDate,
+  getEndDate: getEndDate
 };

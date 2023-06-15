@@ -141,7 +141,8 @@ module.exports = class Programs extends Abstract {
 
         req.body.userId = req.userDetails.userId;
         let programCreationData = await programsHelper.create(
-          req.body
+          req.body,
+          true
         );
         
         return resolve({
@@ -225,7 +226,8 @@ module.exports = class Programs extends Abstract {
         let programUpdationData = await programsHelper.update(
           req.params._id,
           req.body,
-          req.userDetails.userId
+          req.userDetails.userId,
+          true
         );
         
         programUpdationData.result = programUpdationData.data;
