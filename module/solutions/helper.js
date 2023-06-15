@@ -91,7 +91,7 @@ module.exports = class SolutionsHelper {
    * @returns {JSON} solution creation data.
    */
 
-  static createSolution(solutionData) {
+  static createSolution(solutionData, checkDate = false) {
     return new Promise(async (resolve, reject) => {
       try {
         let programData = await programsHelper.programDocuments(
@@ -175,25 +175,27 @@ module.exports = class SolutionsHelper {
 
         solutionData.status = constants.common.ACTIVE;
 
-        if(solutionData.hasOwnProperty("endDate")){
-          let endDate = solutionData.endDate.split(" ");
-          if(endDate[1] === "" || endDate[1] === undefined){
-            solutionData.endDate = endDate[0]+" 23:59:59";
+        if(checkDate){
+          if(solutionData.hasOwnProperty("endDate")){
+            let endDate = solutionData.endDate.split(" ");
+            if(endDate[1] === "" || endDate[1] === undefined){
+              solutionData.endDate = endDate[0]+" 23:59:59";
+            }
+            solutionData.endDate = new Date(solutionData.endDate)
+            console.log("endDate", solutionData.endDate)
+            solutionData.endDate = gen.utils.getTimeWith530HrDifference(solutionData.endDate)
+            console.log("endDate after -530", solutionData.endDate)
           }
-          solutionData.endDate = new Date(solutionData.endDate)
-          console.log("endDate", solutionData.endDate)
-          solutionData.endDate = gen.utils.getTimeWith530HrDifference(solutionData.endDate)
-          console.log("endDate after -530", solutionData.endDate)
-        }
-        if(solutionData.hasOwnProperty("startDate")){
-          let startDate = solutionData.startDate.split(" ");
-          if(startDate[1] === "" || startDate[1] === undefined){
-            solutionData.startDate = startDate[0]+" 00:00:00";
+          if(solutionData.hasOwnProperty("startDate")){
+            let startDate = solutionData.startDate.split(" ");
+            if(startDate[1] === "" || startDate[1] === undefined){
+              solutionData.startDate = startDate[0]+" 00:00:00";
+            }
+            solutionData.startDate = new Date(solutionData.startDate)
+            console.log("startDate", solutionData.startDate)
+            solutionData.startDate = gen.utils.getTimeWith530HrDifference(solutionData.startDate)
+            console.log("startDate after -530", solutionData.startDate)
           }
-          solutionData.startDate = new Date(solutionData.startDate)
-          console.log("startDate", solutionData.startDate)
-          solutionData.startDate = gen.utils.getTimeWith530HrDifference(solutionData.startDate)
-          console.log("startDate after -530", solutionData.startDate)
         }
 
         let solutionCreation = await database.models.solutions.create(
@@ -424,7 +426,7 @@ module.exports = class SolutionsHelper {
    * @returns {JSON} solution creation data.
    */
 
-  static update(solutionId, solutionData, userId) {
+  static update(solutionId, solutionData, userId, checkDate = false) {
     return new Promise(async (resolve, reject) => {
       try {
         let queryObject = {
@@ -441,26 +443,27 @@ module.exports = class SolutionsHelper {
             message: constants.apiResponses.SOLUTION_NOT_FOUND,
           });
         }
-
-        if(solutionData.hasOwnProperty("endDate")){
-          let endDate = solutionData.endDate.split(" ");
-          if(endDate[1] === "" || endDate[1] === undefined){
-            solutionData.endDate = endDate[0]+" 23:59:59";
+        if(checkDate){
+          if(solutionData.hasOwnProperty("endDate")){
+            let endDate = solutionData.endDate.split(" ");
+            if(endDate[1] === "" || endDate[1] === undefined){
+              solutionData.endDate = endDate[0]+" 23:59:59";
+            }
+            solutionData.endDate = new Date(solutionData.endDate)
+            console.log("endDate", solutionData.endDate)
+            solutionData.endDate = gen.utils.getTimeWith530HrDifference(solutionData.endDate)
+            console.log("endDate after -530", solutionData.endDate)
           }
-          solutionData.endDate = new Date(solutionData.endDate)
-          console.log("endDate", solutionData.endDate)
-          solutionData.endDate = gen.utils.getTimeWith530HrDifference(solutionData.endDate)
-          console.log("endDate after -530", solutionData.endDate)
-        }
-        if(solutionData.hasOwnProperty("startDate")){
-          let startDate = solutionData.startDate.split(" ");
-          if(startDate[1] === "" || startDate[1] === undefined){
-            solutionData.startDate = startDate[0]+" 00:00:00";
+          if(solutionData.hasOwnProperty("startDate")){
+            let startDate = solutionData.startDate.split(" ");
+            if(startDate[1] === "" || startDate[1] === undefined){
+              solutionData.startDate = startDate[0]+" 00:00:00";
+            }
+            solutionData.startDate = new Date(solutionData.startDate)
+            console.log("startDate", solutionData.startDate)
+            solutionData.startDate = gen.utils.getTimeWith530HrDifference(solutionData.startDate)
+            console.log("startDate after -530", solutionData.startDate)
           }
-          solutionData.startDate = new Date(solutionData.startDate)
-          console.log("startDate", solutionData.startDate)
-          solutionData.startDate = gen.utils.getTimeWith530HrDifference(solutionData.startDate)
-          console.log("startDate after -530", solutionData.startDate)
         }
 
         let updateObject = {
