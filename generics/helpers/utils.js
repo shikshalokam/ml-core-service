@@ -297,6 +297,12 @@ function convertArrayObjectIdtoStringOfObjectId(ids) {
   return ids.map(obj => obj._id.toString());
 }
 
+function getTimeWith530HrDifference(time){
+  time.setHours(time.getHours()-5);
+  time.setMinutes(time.getMinutes()-30);
+  return time
+}
+
 module.exports = {
   camelCaseToTitleCase : camelCaseToTitleCase,
   lowerCase : lowerCase,
@@ -316,5 +322,6 @@ module.exports = {
   arrayIdsTobjectIds : arrayIdsTobjectIds,
   checkIfStringIsNumber : checkIfStringIsNumber,
   arrayOfObjectToArrayOfObjectId : arrayOfObjectToArrayOfObjectId,
-  convertArrayObjectIdtoStringOfObjectId:convertArrayObjectIdtoStringOfObjectId
+  convertArrayObjectIdtoStringOfObjectId:convertArrayObjectIdtoStringOfObjectId,
+  getTimeWith530HrDifference : getTimeWith530HrDifference,
 };

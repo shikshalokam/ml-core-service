@@ -182,8 +182,7 @@ module.exports = class SolutionsHelper {
           }
           solutionData.endDate = new Date(solutionData.endDate)
           console.log("endDate", solutionData.endDate)
-          solutionData.endDate.setHours(solutionData.endDate.getHours()-5);
-          solutionData.endDate.setMinutes(solutionData.endDate.getMinutes()-30);
+          solutionData.endDate = gen.utils.getTimeWith530HrDifference(solutionData.endDate)
           console.log("endDate after -530", solutionData.endDate)
         }
         if(solutionData.hasOwnProperty("startDate")){
@@ -193,8 +192,7 @@ module.exports = class SolutionsHelper {
           }
           solutionData.startDate = new Date(solutionData.startDate)
           console.log("startDate", solutionData.startDate)
-          solutionData.startDate.setHours(solutionData.startDate.getHours()-5);
-          solutionData.startDate.setMinutes(solutionData.startDate.getMinutes()-30);
+          solutionData.startDate = gen.utils.getTimeWith530HrDifference(solutionData.startDate)
           console.log("startDate after -530", solutionData.startDate)
         }
 
@@ -451,8 +449,7 @@ module.exports = class SolutionsHelper {
           }
           solutionData.endDate = new Date(solutionData.endDate)
           console.log("endDate", solutionData.endDate)
-          solutionData.endDate.setHours(solutionData.endDate.getHours()-5);
-          solutionData.endDate.setMinutes(solutionData.endDate.getMinutes()-30);
+          solutionData.endDate = gen.utils.getTimeWith530HrDifference(solutionData.endDate)
           console.log("endDate after -530", solutionData.endDate)
         }
         if(solutionData.hasOwnProperty("startDate")){
@@ -462,8 +459,7 @@ module.exports = class SolutionsHelper {
           }
           solutionData.startDate = new Date(solutionData.startDate)
           console.log("startDate", solutionData.startDate)
-          solutionData.startDate.setHours(solutionData.startDate.getHours()-5);
-          solutionData.startDate.setMinutes(solutionData.startDate.getMinutes()-30);
+          solutionData.startDate = gen.utils.getTimeWith530HrDifference(solutionData.startDate)
           console.log("startDate after -530", solutionData.startDate)
         }
 
