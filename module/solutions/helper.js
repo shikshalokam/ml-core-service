@@ -1647,7 +1647,8 @@ module.exports = class SolutionsHelper {
 
         let solutionData = checkForTargetedSolution.result;
 
-        let solutionStatus = solutionData.status === "inactive" ? false : true;
+        let solutionStatus =
+          solutionData.status === constants.common.INACTIVE ? false : true;
         if (solutionData.type == constants.common.OBSERVATION) {
           // Targeted solution
           if (checkForTargetedSolution.result.isATargetedSolution) {
