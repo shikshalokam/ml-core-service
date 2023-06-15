@@ -372,8 +372,7 @@ module.exports = class ProgramsHelper {
           }
           data.endDate = new Date(data.endDate)
           console.log("endDate", data.endDate)
-          data.endDate.setHours(data.endDate.getHours()-5);
-          data.endDate.setMinutes(data.endDate.getMinutes()-30);
+          data.endDate = gen.utils.getTimeWith530HrDifference(data.endDate)
           console.log("endDate after -530", data.endDate)
         }
         if(data.hasOwnProperty("startDate")){
@@ -383,8 +382,7 @@ module.exports = class ProgramsHelper {
           }
           data.startDate = new Date(data.startDate)
           console.log("startDate", data.startDate)
-          data.startDate.setHours(data.startDate.getHours()-5);
-          data.startDate.setMinutes(data.startDate.getMinutes()-30);
+          data.startDate = gen.utils.getTimeWith530HrDifference(data.startDate)
           console.log("startDate after -530", data.startDate)
         }
         let program = await database.models.programs.findOneAndUpdate({
