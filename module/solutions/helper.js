@@ -6,8 +6,6 @@
  */
 // Dependencies
 const programsHelper = require(MODULES_BASE_PATH + "/programs/helper");
-const entityTypesHelper = require(MODULES_BASE_PATH + "/entityTypes/helper");
-const entitiesHelper = require(MODULES_BASE_PATH + "/entities/helper");
 const userRolesHelper = require(MODULES_BASE_PATH + "/user-roles/helper");
 const surveyService = require(ROOT_PATH + "/generics/services/survey");
 const improvementProjectService = require(ROOT_PATH +
