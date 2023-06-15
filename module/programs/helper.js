@@ -107,6 +107,20 @@ module.exports = class ProgramsHelper {
           if(endDate[1] === "" || endDate[1] === undefined){
             data.endDate = endDate[0]+" 23:59:59";
           }
+          data.endDate = new Date(data.endDate)
+          console.log("endDate", data.endDate)
+          data.endDate = gen.utils.getTimeWith530HrDifference(data.endDate)
+          console.log("endDate after -530", data.endDate)
+        }
+        if(data.hasOwnProperty("startDate")){
+          let startDate = data.startDate.split(" ");
+          if(startDate[1] === "" || startDate[1] === undefined){
+            data.startDate = startDate[0]+" 00:00:00";
+          }
+          data.startDate = new Date(data.startDate)
+          console.log("startDate", data.startDate)
+          data.startDate = gen.utils.getTimeWith530HrDifference(data.startDate)
+          console.log("startDate after -530", data.startDate)
         }
         
         _.assign(programData, {
@@ -356,8 +370,21 @@ module.exports = class ProgramsHelper {
           if(endDate[1] === "" || endDate[1] === undefined){
             data.endDate = endDate[0]+" 23:59:59";
           }
+          data.endDate = new Date(data.endDate)
+          console.log("endDate", data.endDate)
+          data.endDate = gen.utils.getTimeWith530HrDifference(data.endDate)
+          console.log("endDate after -530", data.endDate)
         }
-        
+        if(data.hasOwnProperty("startDate")){
+          let startDate = data.startDate.split(" ");
+          if(startDate[1] === "" || startDate[1] === undefined){
+            data.startDate = startDate[0]+" 00:00:00";
+          }
+          data.startDate = new Date(data.startDate)
+          console.log("startDate", data.startDate)
+          data.startDate = gen.utils.getTimeWith530HrDifference(data.startDate)
+          console.log("startDate after -530", data.startDate)
+        }
         let program = await database.models.programs.findOneAndUpdate({
           _id : programId
         },{ $set : _.omit(data,["scope"]) }, { new: true });
