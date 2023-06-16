@@ -320,7 +320,8 @@ module.exports = class Solutions extends Abstract {
         let solutionDetails = 
         await solutionsHelper.detailsBasedOnRoleAndLocation(
           req.params._id,
-          req.body
+          req.body,
+          req.query.isAPrivateSolution ? req.query.isAPrivateSolution : false
         );
           
         solutionDetails.result = solutionDetails.data;

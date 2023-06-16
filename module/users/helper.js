@@ -111,7 +111,15 @@ module.exports = class UsersHelper {
               duplicateProgram.endDate,
               userId
             );
-
+            // root organisation data of private program user. This function will return user organisation Id.
+            let rootOrganisationDetails = await this.getRootOrganisationOfUser(userToken,userId)
+            if ( !rootOrganisationDetails.success ) {
+              return resolve(rootOrganisationDetails );
+            }
+            duplicateProgram.rootOrganisations = rootOrganisationDetails.data;
+            if ( checkforProgramExist[0].hasOwnProperty('requestForPIIConsent') ) {
+              duplicateProgram.requestForPIIConsent = checkforProgramExist[0].requestForPIIConsent
+            }
             userPrivateProgram = await programsHelper.create(
               _.omit(duplicateProgram, ["_id", "components", "scope"])
             );
@@ -143,7 +151,7 @@ module.exports = class UsersHelper {
 
           userPrivateProgram = await programsHelper.create(programData);
         }
-
+        
         let solutionDataToBeUpdated = {
           programId: userPrivateProgram._id,
           programExternalId: userPrivateProgram.externalId,
@@ -225,6 +233,7 @@ module.exports = class UsersHelper {
               "externalId",
               "description",
               "certificateTemplateId",
+              "projectTemplateId"
             ]
           );
 
@@ -248,16 +257,20 @@ module.exports = class UsersHelper {
               duplicateSolution.description,
               userId,
               false,
-              duplicateSolution._id
+              duplicateSolution._id,
+              duplicateSolution.type,
+              duplicateSolution.subType,
+              userId,
+              duplicateSolution.projectTemplateId
+              
             );
-
+            
             _.merge(duplicateSolution, solutionCreationData);
             _.merge(duplicateSolution, solutionDataToBeUpdated);
 
             solution = await solutionsHelper.create(
               _.omit(duplicateSolution, ["_id", "link"])
             );
-
             parentSolutionInformation.solutionId = duplicateSolution._id;
             parentSolutionInformation.link = duplicateSolution.link;
           } else {
@@ -310,9 +323,7 @@ module.exports = class UsersHelper {
             data.subType ? data.subType : constants.common.INSTITUTIONAL,
             userId
           );
-
           _.merge(solutionDataToBeUpdated, createSolutionData);
-
           solution = await solutionsHelper.create(solutionDataToBeUpdated);
         }
 
@@ -328,6 +339,7 @@ module.exports = class UsersHelper {
         }
 
         return resolve({
+          success: true,
           message: constants.apiResponses.USER_PROGRAM_AND_SOLUTION_CREATED,
           result: {
             program: userPrivateProgram,
@@ -1261,7 +1273,56 @@ module.exports = class UsersHelper {
       }
     });
   }
+
+  /**
+   * Find getRootOrganisationOfUser.
+   * @method
+   * @name getRootOrganisationOfUser
+   * @param {String} userToken - user token
+   * @param {String} userId - userId
+   * @returns {Array} - user rootOrganisation data
+   */
+  static getRootOrganisationOfUser(
+    userToken,
+    userId
+  ) {
+    return new Promise(async (resolve, reject) => {
+      try {
+        let result = [];
+        // Fetch user profile
+        let userProfile = await userService.profile(userToken, userId);
+        
+        if (!userProfile.success || 
+            !userProfile.data ||
+            !userProfile.data.rootOrgId ||
+            userProfile.data.rootOrgId == "" 
+        ) {
+          throw ({
+            status: httpStatusCode.bad_request.status,
+            message: constants.apiResponses.USER_ROOT_ORG_NOT_FOUND
+          });      
+        }     
+        result.push(userProfile.data.rootOrgId);
+        return resolve({
+          success: true,
+          data: result
+        });
+      } catch (error) {
+        return resolve({
+          success: false,
+          status: error.status
+            ? error.status
+            : httpStatusCode["internal_server_error"].status,
+          message: error.message,
+        });
+      }
+    });
+  }
+
+  
 };
+
+
 
 /**
  * Generate program creation data.
@@ -1281,6 +1342,7 @@ function _createProgramData(
   endDate,
   createdBy = ""
 ) {
+
   let programData = {};
   programData.name = name;
   programData.externalId = externalId;
@@ -1312,7 +1374,8 @@ function _createSolutionData(
   parentSolutionId = "",
   type = "",
   subType = "",
-  updatedBy = ""
+  updatedBy = "",
+  projectTemplateId = ""
 ) {
   let solutionData = {};
   solutionData.name = name;
@@ -1320,7 +1383,7 @@ function _createSolutionData(
   solutionData.isAPrivateProgram = isAPrivateProgram;
   solutionData.status = status;
   solutionData.description = description;
-  solutionData.userId = userId;
+  solutionData.author = userId;
   if (parentSolutionId) {
     solutionData.parentSolutionId = parentSolutionId;
   }
@@ -1335,6 +1398,9 @@ function _createSolutionData(
   }
   if (isReusable) {
     solutionData.isReusable = isReusable;
+  }
+  if (projectTemplateId) {
+    solutionData.projectTemplateId = projectTemplateId;
   }
 
   return solutionData;

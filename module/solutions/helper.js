@@ -14,6 +14,7 @@ const appsPortalBaseUrl = process.env.APP_PORTAL_BASE_URL + "/";
 const userService = require(ROOT_PATH + "/generics/services/users");
 const programUsersHelper = require(MODULES_BASE_PATH + "/programUsers/helper");
 
+
 /**
  * SolutionsHelper
  * @class
@@ -821,17 +822,25 @@ module.exports = class SolutionsHelper {
    * @name detailsBasedOnRoleAndLocation
    * @param {String} solutionId - solution Id.
    * @param {Object} bodyData - Requested body data.
+   * @param {Boolean} isAPrivateSolution - true/false.
    * @returns {JSON} - Details of solution based on role and location.
    */
 
-  static detailsBasedOnRoleAndLocation(solutionId, bodyData) {
+  static detailsBasedOnRoleAndLocation(solutionId, bodyData, isAPrivateSolution) {
     return new Promise(async (resolve, reject) => {
       try {
-        let queryData = await this.queryBasedOnRoleAndLocation(bodyData);
-
-        if (!queryData.success) {
-          return resolve(queryData);
+        let queryData = {};
+        if (isAPrivateSolution) {
+          queryData = {
+            data: {}
+          };
+        } else {
+          queryData = await this.queryBasedOnRoleAndLocation(bodyData);
+          if (!queryData.success) {
+            return resolve(queryData);
+          }
         }
+        
         queryData.data["_id"] = solutionId;
         let targetedSolutionDetails = await this.solutionDocuments(
           queryData.data,
@@ -1638,6 +1647,7 @@ module.exports = class SolutionsHelper {
           userId,
           userToken
         );
+        
         if (
           !checkForTargetedSolution ||
           Object.keys(checkForTargetedSolution.result).length <= 0
@@ -1646,7 +1656,6 @@ module.exports = class SolutionsHelper {
         }
 
         let solutionData = checkForTargetedSolution.result;
-
         let isSolutionActive =
           solutionData.status === constants.common.INACTIVE ? false : true;
         if (solutionData.type == constants.common.OBSERVATION) {
@@ -1767,6 +1776,19 @@ module.exports = class SolutionsHelper {
               throw new Error(constants.apiResponses.LINK_IS_EXPIRED);
             }
           } else {
+            // user is not targeted, create private program and solution. 
+            let privateProgramAndSolutionDetails = await this.privateProgramAndSolutionDetails(solutionData,userId,userToken);
+            if ( !privateProgramAndSolutionDetails.success ) {
+              throw {
+                status: httpStatusCode.bad_request.status,
+                message: constants.apiResponses.SOLUTION_PROGRAMS_NOT_CREATED
+              };
+            }
+            // Adding privateSolutionId to response. We can't replace solutionId because it can cause issue in prev (Before 6.0) app flow.
+            if ( privateProgramAndSolutionDetails.result != "" ) {
+              checkForTargetedSolution.result["privateSolutionId"] = privateProgramAndSolutionDetails.result;
+            }
+            
             //non targeted project exist
             let checkIfUserProjectExistsQuery = {
               createdBy: userId,
@@ -1795,6 +1817,89 @@ module.exports = class SolutionsHelper {
         delete checkForTargetedSolution.result["status"];
 
         return resolve(checkForTargetedSolution);
+      } catch (error) {
+        return resolve({
+          success: false,
+          status: error.status
+            ? error.status
+            : httpStatusCode["internal_server_error"].status,
+          message: error.message,
+        });
+      }
+    });
+  }
+
+  /**
+   * privateProgramAndSolutionDetails
+   * @method
+   * @name PrivateProgramAndSolutionDetails
+   * @param {Object} solutionData - solution data.
+   * @param {String} userId - user Id.
+   * @param {String} userToken - user token.
+   * @returns {Object} - Details of the private solution.
+   */
+
+  static privateProgramAndSolutionDetails(
+    solutionData,
+    userId = "",
+    userToken = ""
+  ) {
+    return new Promise(async (resolve, reject) => {
+      try {
+        let result = {};
+        // Check if a private program and private solution already exist or not for this user.
+        let privateSolutionDetails = await this.solutionDocuments(
+          {
+            parentSolutionId: solutionData.solutionId,
+            author: userId,
+            type: solutionData.type,
+            isAPrivateProgram: true,
+          },
+          ["_id","programId", "programName"]
+        );
+        if ( !privateSolutionDetails.length > 0 ) {
+          // Data for program and solution creation
+          let programAndSolutionData = {
+            type: constants.common.IMPROVEMENT_PROJECT,
+            subType: constants.common.IMPROVEMENT_PROJECT,
+            isReusable: false,
+            solutionId: solutionData.solutionId,
+          };
+  
+          if (solutionData.programName && solutionData.programName !== "") {
+              programAndSolutionData["programName"] = solutionData.programName;
+          }
+  
+          if (solutionData.programId && solutionData.programId !== "") {
+              programAndSolutionData["programId"] = solutionData.programId;
+          }
+          // create private program and solution
+          let solutionAndProgramCreation = await usersHelper.createProgramAndSolution(
+              userId,
+              programAndSolutionData,
+              userToken,
+              "true" // create duplicate solution
+          );
+          if (!solutionAndProgramCreation.success) {
+              throw {
+                  status: httpStatusCode.bad_request.status,
+                  message: constants.apiResponses.SOLUTION_PROGRAMS_NOT_CREATED
+              };
+          }
+          result.privateSolutionId = solutionAndProgramCreation.result.solution._id;
+          return resolve({
+            success: true,
+            result: solutionAndProgramCreation.solution._id
+          })
+          
+        } else {
+          return resolve({
+            success: true,
+            result: privateSolutionDetails[0]._id
+          })
+        }
+        
+        
       } catch (error) {
         return resolve({
           success: false,
@@ -2297,3 +2402,4 @@ function _generateLink(appsPortalBaseUrl, prefix, solutionLink, solutionType) {
 
   return link;
 }
+const usersHelper = require(MODULES_BASE_PATH + "/users/helper");
