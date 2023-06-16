@@ -1674,7 +1674,7 @@ module.exports = class SolutionsHelper {
                 userToken
               );
 
-            if (observationDetailFromLink.result.length > 0) {
+            if (observationDetailFromLink.success) {
               checkForTargetedSolution.result["observationId"] =
                 observationDetailFromLink.result._id != ""
                   ? observationDetailFromLink.result._id
