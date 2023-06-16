@@ -1846,7 +1846,6 @@ module.exports = class SolutionsHelper {
   ) {
     return new Promise(async (resolve, reject) => {
       try {
-        let result = {};
         // Check if a private program and private solution already exist or not for this user.
         let privateSolutionDetails = await this.solutionDocuments(
           {
@@ -1866,12 +1865,9 @@ module.exports = class SolutionsHelper {
             solutionId: solutionData.solutionId,
           };
   
-          if (solutionData.programName && solutionData.programName !== "") {
-              programAndSolutionData["programName"] = solutionData.programName;
-          }
-  
           if (solutionData.programId && solutionData.programId !== "") {
               programAndSolutionData["programId"] = solutionData.programId;
+              programAndSolutionData["programName"] = solutionData.programName;
           }
           // create private program and solution
           let solutionAndProgramCreation = await usersHelper.createProgramAndSolution(
@@ -1886,7 +1882,6 @@ module.exports = class SolutionsHelper {
                   message: constants.apiResponses.SOLUTION_PROGRAMS_NOT_CREATED
               };
           }
-          result.privateSolutionId = solutionAndProgramCreation.result.solution._id;
           return resolve({
             success: true,
             result: solutionAndProgramCreation.solution._id
