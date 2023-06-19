@@ -114,7 +114,7 @@ module.exports = class UsersHelper {
             // root organisation data of private program user. This function will return user organisation Id.
             let rootOrganisationDetails = await this.getRootOrganisationOfUser(userToken,userId)
             if ( !rootOrganisationDetails.success ) {
-              return resolve(rootOrganisationDetails );
+              return resolve( rootOrganisationDetails );
             }
             duplicateProgram.rootOrganisations = rootOrganisationDetails.data;
             if ( checkforProgramExist[0].hasOwnProperty('requestForPIIConsent') ) {
@@ -149,6 +149,12 @@ module.exports = class UsersHelper {
             endDate
           );
 
+          // root organisation data of private program user. This function will return user organisation Id.
+          let rootOrganisationDetails = await this.getRootOrganisationOfUser(userToken,userId)
+          if ( !rootOrganisationDetails.success ) {
+            return resolve( rootOrganisationDetails );
+          }
+          programData.rootOrganisations = rootOrganisationDetails.data;
           userPrivateProgram = await programsHelper.create(programData);
         }
         
