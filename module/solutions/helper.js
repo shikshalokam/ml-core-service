@@ -1849,6 +1849,7 @@ module.exports = class SolutionsHelper {
           },
           ["_id","programId", "programName"]
         );
+        
         if ( !privateSolutionDetails.length > 0 ) {
           // Data for program and solution creation
           let programAndSolutionData = {
@@ -1863,12 +1864,13 @@ module.exports = class SolutionsHelper {
               programAndSolutionData["programName"] = solutionData.programName;
           }
           // create private program and solution
-          let solutionAndProgramCreation = await usersHelper.createProgramAndSolution(
+          let solutionAndProgramCreation = await this.createProgramAndSolution(
               userId,
               programAndSolutionData,
               userToken,
               "true" // create duplicate solution
           );
+          
           if (!solutionAndProgramCreation.success) {
               throw {
                   status: httpStatusCode.bad_request.status,
@@ -1877,7 +1879,7 @@ module.exports = class SolutionsHelper {
           }
           return resolve({
             success: true,
-            result: solutionAndProgramCreation.solution._id
+            result: solutionAndProgramCreation.result.solution._id
           })
           
         } else {
