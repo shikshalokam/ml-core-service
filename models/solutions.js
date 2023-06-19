@@ -103,6 +103,9 @@ module.exports = {
       certificateTemplateId : "ObjectId",
       rootOrganisations : Array,
       createdFor : Array,
-      projectTemplateId : "ObjectId"
+      projectTemplateId : {
+        type : "ObjectId",
+        index: true
+      }
     }
   };
