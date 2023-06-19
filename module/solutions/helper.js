@@ -98,7 +98,7 @@ module.exports = class SolutionsHelper {
           {
             externalId: solutionData.programExternalId,
           },
-          ["name", "description", "scope"]
+          ["name", "description", "scope", "endDate"]
         );
 
         if (!programData.length > 0) {
@@ -178,6 +178,9 @@ module.exports = class SolutionsHelper {
         if(checkDate){
           if(solutionData.hasOwnProperty("endDate")){
             solutionData.endDate = gen.utils.getStartDate(solutionData.endDate)
+            if(solutionData.endDate > programData[0].endDate){
+              solutionData.endDate = programData[0].endDate
+            }
           }
           if(solutionData.hasOwnProperty("startDate")){
             solutionData.startDate = gen.utils.getStartDate(solutionData.startDate)

@@ -298,9 +298,22 @@ function convertArrayObjectIdtoStringOfObjectId(ids) {
 }
 
 function getTimeWith530HrDifference(time){
-  time.setHours(time.getHours()-5);
-  time.setMinutes(time.getMinutes()-30);
-  return time
+  let localTimeZone = process.env.TIMEZONE_DIFFRENECE_BETWEEN_LOCAL_TIME_AND_UTC
+  let localTime = localTimeZone.split(":")
+  let localHourDifference = Number(localTime[0])
+  let getTimeDiffInMinutes = localHourDifference * 60 + ((localHourDifference/ Math.abs(localHourDifference))*Number(localTime[1]))
+  let timeDifference = new Date().getTimezoneOffset()
+  let differenceWithLocal = timeDifference + getTimeDiffInMinutes
+  if(differenceWithLocal === 0){
+    return time
+  }else{
+    let getMinutes = differenceWithLocal % 60
+    let getHours = (differenceWithLocal - getMinutes)/60
+    time.setHours(time.getHours()-getHours);
+    time.setMinutes(time.getMinutes()-getMinutes);
+    return time
+  }
+ 
 }
 
 function getStartDate (date){
@@ -309,9 +322,7 @@ function getStartDate (date){
     date = date[0]+" 00:00:00";
   }
   date = new Date(date)
-  console.log("date", date)
   date = getTimeWith530HrDifference(date)
-  console.log("date after -530", date)
   return date
 }
 
@@ -321,9 +332,7 @@ function getEndDate (date){
     date = endDate[0]+" 23:59:59";
   }
   date = new Date(date)
-  console.log("endDate", date)
   date = getTimeWith530HrDifference(date)
-  console.log("endDate after -530", date)
   return date
 }
 module.exports = {
