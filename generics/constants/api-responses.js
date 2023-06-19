@@ -197,5 +197,8 @@ module.exports = {
   "PROGRAM_NOT_CREATED" : "Program not created",
   "PROGRAM_USERS_NOT_CREATED" : "Program users not created",
   "PROGRAM_USERS_NOT_UPDATED" : "Program users not updated",
-  "USER_EXTENSION_FTECHED":"User extension fetched successfully"
+  "USER_EXTENSION_FTECHED":"User extension fetched successfully",
+  "USER_ROOT_ORG_NOT_FOUND": "User root organisation not found",
+  "USER_PROGRAM_AND_SOLUTION_CREATED": "User program and solution created successfully",
+  "SOLUTION_PROGRAMS_NOT_CREATED" : "Failed to create program and solution"
 };
