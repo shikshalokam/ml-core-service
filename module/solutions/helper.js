@@ -1786,9 +1786,9 @@ module.exports = class SolutionsHelper {
             let checkIfUserProjectExistsQuery = {
               createdBy: userId,
               referenceFrom: constants.common.LINK,
-              link: link,
+              solutionId: privateProgramAndSolutionDetails.result,
             };
-
+            
             let checkForProjectExist =
               await improvementProjectService.projectDocuments(
                 userToken,
