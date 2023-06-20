@@ -13,7 +13,8 @@ const improvementProjectService = require(ROOT_PATH +
 const appsPortalBaseUrl = process.env.APP_PORTAL_BASE_URL + "/";
 const userService = require(ROOT_PATH + "/generics/services/users");
 const programUsersHelper = require(MODULES_BASE_PATH + "/programUsers/helper");
-
+const timeZoneDifference =
+  process.env.TIMEZONE_DIFFRENECE_BETWEEN_LOCAL_TIME_AND_UTC;
 /**
  * SolutionsHelper
  * @class
@@ -177,14 +178,18 @@ module.exports = class SolutionsHelper {
 
         if (checkDate) {
           if (solutionData.hasOwnProperty("endDate")) {
-            solutionData.endDate = gen.utils.getEndDate(solutionData.endDate);
+            solutionData.endDate = gen.utils.getEndDate(
+              solutionData.endDate,
+              timeZoneDifference
+            );
             if (solutionData.endDate > programData[0].endDate) {
               solutionData.endDate = programData[0].endDate;
             }
           }
           if (solutionData.hasOwnProperty("startDate")) {
             solutionData.startDate = gen.utils.getStartDate(
-              solutionData.startDate
+              solutionData.startDate,
+              timeZoneDifference
             );
           }
         }
@@ -451,14 +456,18 @@ module.exports = class SolutionsHelper {
 
         if (checkDate) {
           if (solutionData.hasOwnProperty("endDate")) {
-            solutionData.endDate = gen.utils.getEndDate(solutionData.endDate);
+            solutionData.endDate = gen.utils.getEndDate(
+              solutionData.endDate,
+              timeZoneDifference
+            );
             if (solutionData.endDate > programData[0].endDate) {
               solutionData.endDate = programData[0].endDate;
             }
           }
           if (solutionData.hasOwnProperty("startDate")) {
             solutionData.startDate = gen.utils.getStartDate(
-              solutionData.startDate
+              solutionData.startDate,
+              timeZoneDifference
             );
           }
         }

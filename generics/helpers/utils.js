@@ -8,8 +8,7 @@
 // Dependencies
 const { validate: uuidValidate, v4: uuidV4 } = require("uuid");
 const md5 = require("md5");
-const timeZoneDifference =
-  process.env.TIMEZONE_DIFFRENECE_BETWEEN_LOCAL_TIME_AND_UTC;
+
 /**
  * convert string to camelCaseToTitleCase.
  * @function
@@ -307,11 +306,11 @@ function convertArrayObjectIdtoStringOfObjectId(ids) {
  * @name addOffsetToDateTime
  * @returns {date} returns date and time with offset
  * example:
- * input = Sun Jun 16 2024 23:59:59 GMT+0000 (Coordinated Universal Time)
+ * input = Sun Jun 16 2024 23:59:59 GMT+0000 (Coordinated Universal Time), +05:30
  * output = Sun Jun 16 2024 18:29:59 GMT+0000 (Coordinated Universal Time)
  */
 
-function addOffsetToDateTime(time) {
+function addOffsetToDateTime(time, timeZoneDifference) {
   console.log(time);
   //get the offset time from env with respect UTC
   let localTimeZone = timeZoneDifference;
@@ -346,17 +345,17 @@ function addOffsetToDateTime(time) {
  * @name getStartDate
  * @returns {date} returns date and time with offset
  * example:
- * input = 2022-06-01
+ * input = 2022-06-01, +05:30
  * output = Wed Jan 31 2001 18:30:00 GMT+0000 (Coordinated Universal Time)
  */
-function getStartDate(date) {
+function getStartDate(date, timeZoneDifference) {
   console.log(date);
   let startDate = date.split(" ");
   if (startDate[1] === "" || startDate[1] === undefined) {
     date = date[0] + " 00:00:00";
   }
   date = new Date(date);
-  date = addOffsetToDateTime(date);
+  date = addOffsetToDateTime(date, timeZoneDifference);
   console.log(date);
   return date;
 }
@@ -367,17 +366,17 @@ function getStartDate(date) {
  * @name getEndDate
  * @returns {date} returns date and time with offset
  * example:
- * input = 2024-06-16
+ * input = 2024-06-16, +05:30
  * output = Sun Jun 16 2024 18:29:59 GMT+0000 (Coordinated Universal Time)
  */
-function getEndDate(date) {
+function getEndDate(date, timeZoneDifference) {
   console.log(date);
   let endDate = date.split(" ");
   if (endDate[1] === "" || endDate[1] === undefined) {
     date = endDate[0] + " 23:59:59";
   }
   date = new Date(date);
-  date = addOffsetToDateTime(date);
+  date = addOffsetToDateTime(date, timeZoneDifference);
   console.log(date);
   return date;
 }
