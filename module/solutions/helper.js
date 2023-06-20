@@ -177,7 +177,7 @@ module.exports = class SolutionsHelper {
 
         if(checkDate){
           if(solutionData.hasOwnProperty("endDate")){
-            solutionData.endDate = gen.utils.getStartDate(solutionData.endDate)
+            solutionData.endDate = gen.utils.getEndDate(solutionData.endDate)
             if(solutionData.endDate > programData[0].endDate){
               solutionData.endDate = programData[0].endDate
             }
@@ -424,6 +424,7 @@ module.exports = class SolutionsHelper {
 
         let solutionDocument = await this.solutionDocuments(queryObject, [
           "_id",
+          "programId"
         ]);
 
         if (!solutionDocument.length > 0) {
@@ -432,9 +433,27 @@ module.exports = class SolutionsHelper {
             message: constants.apiResponses.SOLUTION_NOT_FOUND,
           });
         }
+
+        let programData = await programsHelper.programDocuments(
+          {
+            _id: solutionDocument[0].programId,
+          },
+          ["_id","endDate"]
+        );
+
+        if (!programData.length > 0) {
+          throw {
+            message: constants.apiResponses.PROGRAM_NOT_FOUND,
+          };
+        }
+
         if(checkDate){
           if(solutionData.hasOwnProperty("endDate")){
-            solutionData.endDate = gen.utils.getStartDate(solutionData.endDate)
+            solutionData.endDate = gen.utils.getEndDate(solutionData.endDate)
+            if(solutionData.endDate > programData[0].endDate){
+              solutionData.endDate = programData[0].endDate
+            }
+
           }
           if(solutionData.hasOwnProperty("startDate")){
             solutionData.startDate = gen.utils.getStartDate(solutionData.startDate)
