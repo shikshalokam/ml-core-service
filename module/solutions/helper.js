@@ -472,8 +472,6 @@ module.exports = class SolutionsHelper {
               solutionData.startDate,
               timeZoneDifference
             );
-            console.log(programData[0].startDate);
-            console.log(solutionData.startDate);
             if (solutionData.startDate < programData[0].startDate) {
               solutionData.startDate = programData[0].startDate;
             }
