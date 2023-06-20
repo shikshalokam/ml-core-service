@@ -99,7 +99,7 @@ module.exports = class SolutionsHelper {
           {
             externalId: solutionData.programExternalId,
           },
-          ["name", "description", "scope", "endDate"]
+          ["name", "description", "scope", "endDate", "startDate"]
         );
 
         if (!programData.length > 0) {
@@ -191,6 +191,9 @@ module.exports = class SolutionsHelper {
               solutionData.startDate,
               timeZoneDifference
             );
+            if (solutionData.startDate < programData[0].startDate) {
+              solutionData.startDate = programData[0].startDate;
+            }
           }
         }
 
@@ -445,7 +448,7 @@ module.exports = class SolutionsHelper {
           {
             _id: solutionDocument[0].programId,
           },
-          ["_id", "endDate"]
+          ["_id", "endDate", "startDate"]
         );
 
         if (!programData.length > 0) {
@@ -469,6 +472,11 @@ module.exports = class SolutionsHelper {
               solutionData.startDate,
               timeZoneDifference
             );
+            console.log(programData[0].startDate);
+            console.log(solutionData.startDate);
+            if (solutionData.startDate < programData[0].startDate) {
+              solutionData.startDate = programData[0].startDate;
+            }
           }
         }
 

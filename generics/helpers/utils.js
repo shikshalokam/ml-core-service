@@ -311,7 +311,6 @@ function convertArrayObjectIdtoStringOfObjectId(ids) {
  */
 
 function addOffsetToDateTime(time, timeZoneDifference) {
-  console.log(time);
   //get the offset time from env with respect UTC
   let localTimeZone = timeZoneDifference;
   //convert offset time to minutes
@@ -334,7 +333,6 @@ function addOffsetToDateTime(time, timeZoneDifference) {
     let getHours = (differenceWithLocal - getMinutes) / 60;
     time.setHours(time.getHours() - getHours);
     time.setMinutes(time.getMinutes() - getMinutes);
-    console.log(time);
     return time;
   }
 }
@@ -349,14 +347,12 @@ function addOffsetToDateTime(time, timeZoneDifference) {
  * output = Wed Jan 31 2001 18:30:00 GMT+0000 (Coordinated Universal Time)
  */
 function getStartDate(date, timeZoneDifference) {
-  console.log(date);
   let startDate = date.split(" ");
   if (startDate[1] === "" || startDate[1] === undefined) {
-    date = date[0] + " 00:00:00";
+    date = startDate[0] + " 00:00:00";
   }
   date = new Date(date);
   date = addOffsetToDateTime(date, timeZoneDifference);
-  console.log(date);
   return date;
 }
 
@@ -370,14 +366,12 @@ function getStartDate(date, timeZoneDifference) {
  * output = Sun Jun 16 2024 18:29:59 GMT+0000 (Coordinated Universal Time)
  */
 function getEndDate(date, timeZoneDifference) {
-  console.log(date);
   let endDate = date.split(" ");
   if (endDate[1] === "" || endDate[1] === undefined) {
     date = endDate[0] + " 23:59:59";
   }
   date = new Date(date);
   date = addOffsetToDateTime(date, timeZoneDifference);
-  console.log(date);
   return date;
 }
 module.exports = {
