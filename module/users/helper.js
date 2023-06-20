@@ -65,276 +65,14 @@ module.exports = class UsersHelper {
   ) {
     return new Promise(async (resolve, reject) => {
       try {
-        let userPrivateProgram = {};
-        let dateFormat = gen.utils.epochTime();
-        let parentSolutionInformation = {};
 
-        createADuplicateSolution = gen.utils.convertStringToBoolean(
+        let createProgramAndSolutionDetails = await solutionsHelper.createProgramAndSolution(
+          userId,
+          data,
+          userToken,
           createADuplicateSolution
         );
-        //program part
-        if (data.programId && data.programId !== "") {
-          let filterQuery = {
-            _id: data.programId,
-          };
-
-          if (createADuplicateSolution === false) {
-            filterQuery.createdBy = userId;
-          }
-
-          let checkforProgramExist = await programsHelper.programDocuments(
-            filterQuery,
-            "all",
-            ["__v"]
-          );
-
-          if (!checkforProgramExist.length > 0) {
-            return resolve({
-              status: httpStatusCode["bad_request"].status,
-              message: constants.apiResponses.PROGRAM_NOT_FOUND,
-              result: {},
-            });
-          }
-
-          if (createADuplicateSolution === true) {
-            let duplicateProgram = checkforProgramExist[0];
-            duplicateProgram = await _createProgramData(
-              duplicateProgram.name,
-              duplicateProgram.externalId
-                ? duplicateProgram.externalId + "-" + dateFormat
-                : duplicateProgram.name + "-" + dateFormat,
-              true,
-              constants.common.ACTIVE,
-              duplicateProgram.description,
-              userId,
-              duplicateProgram.startDate,
-              duplicateProgram.endDate,
-              userId
-            );
-
-            userPrivateProgram = await programsHelper.create(
-              _.omit(duplicateProgram, ["_id", "components", "scope"])
-            );
-          } else {
-            userPrivateProgram = checkforProgramExist[0];
-          }
-        } else {
-          /* If the programId is not passed from the front end, we will enter this else block. 
-          In this block, we need to provide the necessary basic details to create a new program, Including startDate and endDate.*/
-          // Current date
-          let startDate = new Date();
-          // Add one year to the current date
-          let endDate = new Date();
-          endDate.setFullYear(endDate.getFullYear() + 1);
-          let programData = await _createProgramData(
-            data.programName,
-            data.programExternalId
-              ? data.programExternalId
-              : data.programName + "-" + dateFormat,
-            true,
-            constants.common.ACTIVE,
-            data.programDescription
-              ? data.programDescription
-              : data.programName,
-            userId,
-            startDate,
-            endDate
-          );
-
-          userPrivateProgram = await programsHelper.create(programData);
-        }
-
-        let solutionDataToBeUpdated = {
-          programId: userPrivateProgram._id,
-          programExternalId: userPrivateProgram.externalId,
-          programName: userPrivateProgram.name,
-          programDescription: userPrivateProgram.description,
-          isAPrivateProgram: userPrivateProgram.isAPrivateProgram,
-        };
-
-        //entities
-        if (
-          Array.isArray(data.entities) &&
-          data.entities &&
-          data.entities.length > 0
-        ) {
-          let entitiesData = [];
-          let bodyData = {};
-
-          let locationData = gen.utils.filterLocationIdandCode(data.entities);
-
-          if (locationData.ids.length > 0) {
-            bodyData = {
-              id: locationData.ids,
-            };
-            let entityData = await userService.locationSearch(bodyData);
-
-            if (!entityData.success) {
-              return resolve({
-                status: httpStatusCode["bad_request"].status,
-                message: constants.apiResponses.ENTITY_NOT_FOUND,
-                result: {},
-              });
-            }
-
-            entityData.data.forEach((entity) => {
-              entitiesData.push(entity.id);
-            });
-
-            solutionDataToBeUpdated["entityType"] = entityData.data[0].type;
-          }
-
-          if (locationData.codes.length > 0) {
-            let filterData = {
-              code: locationData.codes,
-            };
-            let entityDetails = await userService.locationSearch(filterData);
-            let entityDocuments = entityDetails.data;
-            if (!entityDetails.success || !entityDocuments.length > 0) {
-              return resolve({
-                status: httpStatusCode["bad_request"].status,
-                message: constants.apiResponses.ENTITY_NOT_FOUND,
-                result: {},
-              });
-            }
-
-            entityDocuments.forEach((entity) => {
-              entitiesData.push(entity.id);
-            });
-
-            solutionDataToBeUpdated["entityType"] = constants.common.SCHOOL;
-          }
-
-          if (data.type && data.type !== constants.common.IMPROVEMENT_PROJECT) {
-            solutionDataToBeUpdated["entities"] = entitiesData;
-          }
-        }
-
-        //solution part
-        let solution = "";
-        if (data.solutionId && data.solutionId !== "") {
-          let solutionData = await solutionsHelper.solutionDocuments(
-            {
-              _id: data.solutionId,
-            },
-            [
-              "name",
-              "link",
-              "type",
-              "subType",
-              "externalId",
-              "description",
-              "certificateTemplateId",
-            ]
-          );
-
-          if (!solutionData.length > 0) {
-            return resolve({
-              status: httpStatusCode["bad_request"].status,
-              message: constants.apiResponses.SOLUTION_NOT_FOUND,
-              result: {},
-            });
-          }
-
-          if (createADuplicateSolution === true) {
-            let duplicateSolution = solutionData[0];
-            let solutionCreationData = await _createSolutionData(
-              duplicateSolution.name,
-              duplicateSolution.externalId
-                ? duplicateSolution.externalId + "-" + dateFormat
-                : duplicateSolution.name + "-" + dateFormat,
-              true,
-              constants.common.ACTIVE,
-              duplicateSolution.description,
-              userId,
-              false,
-              duplicateSolution._id
-            );
-
-            _.merge(duplicateSolution, solutionCreationData);
-            _.merge(duplicateSolution, solutionDataToBeUpdated);
-
-            solution = await solutionsHelper.create(
-              _.omit(duplicateSolution, ["_id", "link"])
-            );
-
-            parentSolutionInformation.solutionId = duplicateSolution._id;
-            parentSolutionInformation.link = duplicateSolution.link;
-          } else {
-            if (solutionData[0].isReusable === false) {
-              return resolve({
-                status: httpStatusCode["bad_request"].status,
-                message: constants.apiResponses.SOLUTION_NOT_FOUND,
-                result: {},
-              });
-            }
-
-            solution = await database.models.solutions.findOneAndUpdate(
-              {
-                _id: solutionData[0]._id,
-              },
-              {
-                $set: solutionDataToBeUpdated,
-              },
-              {
-                new: true,
-              }
-            );
-          }
-        } else {
-          let externalId, description;
-          if (data.solutionName) {
-            externalId = data.solutionExternalId
-              ? data.solutionExternalId
-              : data.solutionName + "-" + dateFormat;
-            description = data.solutionDescription
-              ? data.solutionDescription
-              : data.solutionName;
-          } else {
-            externalId = userId + "-" + dateFormat;
-            description = userPrivateProgram.programDescription;
-          }
-
-          let createSolutionData = await _createSolutionData(
-            data.solutionName
-              ? data.solutionName
-              : userPrivateProgram.programName,
-            externalId,
-            userPrivateProgram.isAPrivateProgram,
-            constants.common.ACTIVE,
-            description,
-            "",
-            false,
-            "",
-            data.type ? data.type : constants.common.ASSESSMENT,
-            data.subType ? data.subType : constants.common.INSTITUTIONAL,
-            userId
-          );
-
-          _.merge(solutionDataToBeUpdated, createSolutionData);
-
-          solution = await solutionsHelper.create(solutionDataToBeUpdated);
-        }
-
-        if (solution && solution._id) {
-          await database.models.programs.findOneAndUpdate(
-            {
-              _id: userPrivateProgram._id,
-            },
-            {
-              $addToSet: { components: ObjectId(solution._id) },
-            }
-          );
-        }
-
-        return resolve({
-          message: constants.apiResponses.USER_PROGRAM_AND_SOLUTION_CREATED,
-          result: {
-            program: userPrivateProgram,
-            solution: solution,
-            parentSolutionInformation: parentSolutionInformation,
-          },
-        });
+        return resolve(createProgramAndSolutionDetails);
       } catch (error) {
         return reject(error);
       }
@@ -1260,82 +998,89 @@ module.exports = class UsersHelper {
         });
       }
     });
-  }
+  }  
 };
 
-/**
- * Generate program creation data.
- * @method
- * @name _createProgramData
- * @returns {Object} - program creation data
- */
 
-function _createProgramData(
-  name,
-  externalId,
-  isAPrivateProgram,
-  status,
-  description,
-  userId,
-  startDate,
-  endDate,
-  createdBy = ""
-) {
-  let programData = {};
-  programData.name = name;
-  programData.externalId = externalId;
-  programData.isAPrivateProgram = isAPrivateProgram;
-  programData.status = status;
-  programData.description = description;
-  programData.userId = userId;
-  programData.createdBy = createdBy;
-  programData.startDate = startDate;
-  programData.endDate = endDate;
-  return programData;
-}
 
-/**
- * Generate solution creation data.
- * @method
- * @name _createSolutionData
- * @returns {Object} - solution creation data
- */
+// /**
+//  * Generate program creation data.
+//  * @method
+//  * @name _createProgramData
+//  * @returns {Object} - program creation data
+//  */
 
-function _createSolutionData(
-  name = "",
-  externalId = "",
-  isAPrivateProgram = "",
-  status,
-  description = "",
-  userId,
-  isReusable = "",
-  parentSolutionId = "",
-  type = "",
-  subType = "",
-  updatedBy = ""
-) {
-  let solutionData = {};
-  solutionData.name = name;
-  solutionData.externalId = externalId;
-  solutionData.isAPrivateProgram = isAPrivateProgram;
-  solutionData.status = status;
-  solutionData.description = description;
-  solutionData.userId = userId;
-  if (parentSolutionId) {
-    solutionData.parentSolutionId = parentSolutionId;
-  }
-  if (type) {
-    solutionData.type = type;
-  }
-  if (subType) {
-    solutionData.subType = subType;
-  }
-  if (updatedBy) {
-    solutionData.updatedBy = updatedBy;
-  }
-  if (isReusable) {
-    solutionData.isReusable = isReusable;
-  }
+// function _createProgramData(
+//   name,
+//   externalId,
+//   isAPrivateProgram,
+//   status,
+//   description,
+//   userId,
+//   startDate,
+//   endDate,
+//   createdBy = ""
+// ) {
 
-  return solutionData;
-}
+//   let programData = {};
+//   programData.name = name;
+//   programData.externalId = externalId;
+//   programData.isAPrivateProgram = isAPrivateProgram;
+//   programData.status = status;
+//   programData.description = description;
+//   programData.userId = userId;
+//   programData.createdBy = createdBy;
+//   programData.startDate = startDate;
+//   programData.endDate = endDate;
+//   return programData;
+// }
+
+// /**
+//  * Generate solution creation data.
+//  * @method
+//  * @name _createSolutionData
+//  * @returns {Object} - solution creation data
+//  */
+
+// function _createSolutionData(
+//   name = "",
+//   externalId = "",
+//   isAPrivateProgram = "",
+//   status,
+//   description = "",
+//   userId,
+//   isReusable = "",
+//   parentSolutionId = "",
+//   type = "",
+//   subType = "",
+//   updatedBy = "",
+//   projectTemplateId = ""
+// ) {
+//   let solutionData = {};
+//   solutionData.name = name;
+//   solutionData.externalId = externalId;
+//   solutionData.isAPrivateProgram = isAPrivateProgram;
+//   solutionData.status = status;
+//   solutionData.description = description;
+//   solutionData.author = userId;
+//   if (parentSolutionId) {
+//     solutionData.parentSolutionId = parentSolutionId;
+//   }
+//   if (type) {
+//     solutionData.type = type;
+//   }
+//   if (subType) {
+//     solutionData.subType = subType;
+//   }
+//   if (updatedBy) {
+//     solutionData.updatedBy = updatedBy;
+//   }
+//   if (isReusable) {
+//     solutionData.isReusable = isReusable;
+//   }
+//   if (projectTemplateId) {
+//     solutionData.projectTemplateId = projectTemplateId;
+//   }
+
+//   return solutionData;
+// }
