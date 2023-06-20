@@ -210,6 +210,11 @@ let enviromentVariables = {
   "PROGRAM_USERS_JOINED_TOPIC" : {
     "message" : "OFF/TOPIC_NAME",
     "optional" : false
+  },
+  "TIMEZONE_DIFFRENECE_BETWEEN_LOCAL_TIME_AND_UTC":{
+    "message" : "Timezone diffrence required",
+    "optional" : true,
+    "default" : "+05:30"
   }
 }
 

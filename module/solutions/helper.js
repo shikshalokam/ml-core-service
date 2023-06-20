@@ -13,7 +13,8 @@ const improvementProjectService = require(ROOT_PATH +
 const appsPortalBaseUrl = process.env.APP_PORTAL_BASE_URL + "/";
 const userService = require(ROOT_PATH + "/generics/services/users");
 const programUsersHelper = require(MODULES_BASE_PATH + "/programUsers/helper");
-
+const timeZoneDifference =
+  process.env.TIMEZONE_DIFFRENECE_BETWEEN_LOCAL_TIME_AND_UTC;
 
 /**
  * SolutionsHelper
@@ -99,7 +100,7 @@ module.exports = class SolutionsHelper {
           {
             externalId: solutionData.programExternalId,
           },
-          ["name", "description", "scope"]
+          ["name", "description", "scope", "endDate", "startDate"]
         );
 
         if (!programData.length > 0) {
@@ -176,12 +177,24 @@ module.exports = class SolutionsHelper {
 
         solutionData.status = constants.common.ACTIVE;
 
-        if(checkDate){
-          if(solutionData.hasOwnProperty("endDate")){
-            solutionData.endDate = gen.utils.getStartDate(solutionData.endDate)
+        if (checkDate) {
+          if (solutionData.hasOwnProperty("endDate")) {
+            solutionData.endDate = gen.utils.getEndDate(
+              solutionData.endDate,
+              timeZoneDifference
+            );
+            if (solutionData.endDate > programData[0].endDate) {
+              solutionData.endDate = programData[0].endDate;
+            }
           }
-          if(solutionData.hasOwnProperty("startDate")){
-            solutionData.startDate = gen.utils.getStartDate(solutionData.startDate)
+          if (solutionData.hasOwnProperty("startDate")) {
+            solutionData.startDate = gen.utils.getStartDate(
+              solutionData.startDate,
+              timeZoneDifference
+            );
+            if (solutionData.startDate < programData[0].startDate) {
+              solutionData.startDate = programData[0].startDate;
+            }
           }
         }
 
@@ -422,6 +435,7 @@ module.exports = class SolutionsHelper {
 
         let solutionDocument = await this.solutionDocuments(queryObject, [
           "_id",
+          "programId",
         ]);
 
         if (!solutionDocument.length > 0) {
@@ -430,12 +444,38 @@ module.exports = class SolutionsHelper {
             message: constants.apiResponses.SOLUTION_NOT_FOUND,
           });
         }
-        if(checkDate){
-          if(solutionData.hasOwnProperty("endDate")){
-            solutionData.endDate = gen.utils.getStartDate(solutionData.endDate)
+
+        let programData = await programsHelper.programDocuments(
+          {
+            _id: solutionDocument[0].programId,
+          },
+          ["_id", "endDate", "startDate"]
+        );
+
+        if (!programData.length > 0) {
+          throw {
+            message: constants.apiResponses.PROGRAM_NOT_FOUND,
+          };
+        }
+
+        if (checkDate) {
+          if (solutionData.hasOwnProperty("endDate")) {
+            solutionData.endDate = gen.utils.getEndDate(
+              solutionData.endDate,
+              timeZoneDifference
+            );
+            if (solutionData.endDate > programData[0].endDate) {
+              solutionData.endDate = programData[0].endDate;
+            }
           }
-          if(solutionData.hasOwnProperty("startDate")){
-            solutionData.startDate = gen.utils.getStartDate(solutionData.startDate)
+          if (solutionData.hasOwnProperty("startDate")) {
+            solutionData.startDate = gen.utils.getStartDate(
+              solutionData.startDate,
+              timeZoneDifference
+            );
+            if (solutionData.startDate < programData[0].startDate) {
+              solutionData.startDate = programData[0].startDate;
+            }
           }
         }
 
