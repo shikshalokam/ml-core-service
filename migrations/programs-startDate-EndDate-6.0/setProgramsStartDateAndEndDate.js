@@ -112,6 +112,7 @@ var fs = require("fs");
             { _id: id },
             { $set: { startDate: startDate, endDate: endDate } }
           );
+        console.log("program Updated : ", id);
         updatedProgramIds.push(id);
       }
     }
