@@ -5,7 +5,6 @@ let mongoUrl = process.env.MONGODB_URL;
 let dbName = mongoUrl.split("/").pop();
 let url = mongoUrl.split(dbName)[0];
 var fs = require("fs");
-const { ObjectId } = require("mongodb");
 
 (async () => {
   let connection = await MongoClient.connect(url, { useNewUrlParser: true });
