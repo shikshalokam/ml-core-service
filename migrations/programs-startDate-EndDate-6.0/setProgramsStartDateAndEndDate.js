@@ -67,38 +67,39 @@ var fs = require("fs");
             })
             .sort({ endDate: -1 })
             .toArray();
+
           //looping throught each solution to check if solution need update or not
-          solutions.forEach(async (solution) => {
+          for (let i = 0; i < solutions.length; i++) {
             //this will be used to check if solution needs to be updated or not
             let update = false;
             let query = { $set: {} };
             //checking if have startdate
-            if (!solution.hasOwnProperty("startDate")) {
+            if (!solutions[i].hasOwnProperty("startDate")) {
               //if it will not have startDate then createdAt will become startdate
               update = true;
-              solution.startDate = solution.createdAt;
-              query["$set"].startDate = solution.startDate;
+              solutions[i].startDate = solutions[i].createdAt;
+              query["$set"].startDate = solutions[i].startDate;
             }
             //checking if endDate is present or not
-            if (!solution.hasOwnProperty("endDate")) {
+            if (!solutions[i].hasOwnProperty("endDate")) {
               // if it dosent have endDate then endDate will be calculated as runTime + 1year
-              solution.endDate = new Date();
-              solution.endDate.setFullYear(
-                solution.endDate.getFullYear(),
-                solution.endDate.getMonth() + monthToAdd
+              solutions[i].endDate = new Date();
+              solutions[i].endDate.setFullYear(
+                solutions[i].endDate.getFullYear(),
+                solutions[i].endDate.getMonth() + monthToAdd
               );
-              query["$set"].endDate = solution.endDate;
+              query["$set"].endDate = solutions[i].endDate;
               update = true;
             }
             //if update is required then it will upate the solution
             if (update) {
               await db
                 .collection("solutions")
-                .findOneAndUpdate({ _id: solution._id }, query);
-              updatedSolutionIds.push(solution._id);
+                .findOneAndUpdate({ _id: solutions[i]._id }, query);
+              updatedSolutionIds.push(solutions[i]._id);
             }
-            return solution;
-          });
+          }
+
           //get start and end date from solution startDate and endDate
           let dates = getStartAndEndDates(solutions);
           startDate = dates.startDate;
