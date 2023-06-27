@@ -1727,6 +1727,10 @@ module.exports = class SolutionsHelper {
             } else if (!isSolutionActive) {
               throw new Error(constants.apiResponses.LINK_IS_EXPIRED);
             }
+          } else {
+            if (!isSolutionActive) {
+              throw new Error(constants.apiResponses.LINK_IS_EXPIRED);
+            }
           }
         } else if (solutionData.type === constants.common.SURVEY) {
           // Get survey submissions of user
@@ -1828,6 +1832,9 @@ module.exports = class SolutionsHelper {
               throw new Error(constants.apiResponses.LINK_IS_EXPIRED);
             }
           } else {
+            if (!isSolutionActive) {
+              throw new Error(constants.apiResponses.LINK_IS_EXPIRED);
+            }
             // user is not targeted, create private program and solution.
             let privateProgramAndSolutionDetails =
               await this.privateProgramAndSolutionDetails(
