@@ -226,15 +226,16 @@ module.exports = class UsersHelper {
         let totalCount = 0;
         let mergedData = [];
 
+        // fetching all the targted solutions in program
         let autoTargetedSolutions =
           await solutionsHelper.forUserRoleAndLocation(
-            requestedData,
-            type,
-            "",
-            programId,
-            constants.common.DEFAULT_PAGE_SIZE,
-            constants.common.DEFAULT_PAGE_NO,
-            search
+            requestedData, //user Role information
+            type, // type of solution user is looking for
+            "", //subtype of solutions
+            programId, //program for solutions
+            constants.common.DEFAULT_PAGE_SIZE, //page size
+            constants.common.DEFAULT_PAGE_NO, //page no
+            search //search text
           );
 
         let projectSolutionIdIndexMap = {};
@@ -259,7 +260,7 @@ module.exports = class UsersHelper {
           const getAllResources = [];
 
           /**
-           * here we need to find if user is started any solution and that is not listed in targted solutions
+           * here we need to find if user is started any solution and that is not listed in targted solution
            * @function importedProjects
            * @function userSurveys
            * @function userObservations
@@ -312,9 +313,12 @@ module.exports = class UsersHelper {
               });
             }
           });
+
+          // getting all the targted solutionIds from targted solutions
           const allTargetedSolutionIds =
             gen.utils.convertArrayObjectIdtoStringOfObjectId(mergedData);
 
+          //finding solutions which are not targtted but user has submitted.
           const resourcesWithPreviousProfile = _.differenceWith(
             solutionIds,
             allTargetedSolutionIds
@@ -326,6 +330,7 @@ module.exports = class UsersHelper {
            * @project [Array] of projections
            *
            * @return [{Objects}] array of solutions documents
+           * // will get all the solutions documents based on all profile
            */
           const solutionsWithPreviousProfile =
             await solutionsHelper.solutionDocuments(
@@ -347,7 +352,9 @@ module.exports = class UsersHelper {
                 "certificateTemplateId",
               ]
             );
+          //Pushing all the solutions document which user started with previous profile
           mergedData.push(...solutionsWithPreviousProfile);
+          //incressing total count of solutions in program
           totalCount += solutionsWithPreviousProfile.length;
 
           mergedData = mergedData.map((targetedData, index) => {
@@ -410,11 +417,11 @@ module.exports = class UsersHelper {
 
         if (surveySolutionIds.length > 0) {
           let userSurveySubmission = await surveyService.assignedSurveys(
-            token,
-            "",
-            "",
-            false,
-            surveySolutionIds
+            token, //userToken
+            "", //search text
+            "", //filter
+            false, //surveyReportPage
+            surveySolutionIds //solutionIds
           );
 
           if (
