@@ -65,13 +65,13 @@ module.exports = class UsersHelper {
   ) {
     return new Promise(async (resolve, reject) => {
       try {
-
-        let createProgramAndSolutionDetails = await solutionsHelper.createProgramAndSolution(
-          userId,
-          data,
-          userToken,
-          createADuplicateSolution
-        );
+        let createProgramAndSolutionDetails =
+          await solutionsHelper.createProgramAndSolution(
+            userId,
+            data,
+            userToken,
+            createADuplicateSolution
+          );
         return resolve(createProgramAndSolutionDetails);
       } catch (error) {
         return reject(error);
@@ -225,42 +225,41 @@ module.exports = class UsersHelper {
 
         let totalCount = 0;
         let mergedData = [];
-        /**
-         * This @forUserRoleAndLocation check that particular program in belongs to user or not it belongs to user then it will return same program ID
-         * @param requestedData {
-         *  "district": "2f76dcf5-e43b-4f71-a3f2-c8f19e1fce03",
-            "block": "966c3be4-c125-467d-aaff-1eb1cd525923",
-            "state": "bc75cc99-9205-463e-a722-5326857838f8",
-            "school": "28226200404",
-            "role": "HM"
-         * }
-            @param programId :- programId passed in request
-            @returns : {
-            "success":true,
-            "message":"Targeted programs fetched successfully",
-            "data":[
-                {
-                  "_id":"63a42786c0b15a0009f0505e"
-                }
-            ],
-            "count":1
-          }
-         */
-        let targetedPrograms = await programsHelper.forUserRoleAndLocation(
-          requestedData,
-          "", // not passing page size
-          "", // not passing page number
-          "", // not passing search text
-          ["_id"],
-          programId // program Id we have to that will be validated
-        );
 
-        // check current program is targeted or not
-        if (targetedPrograms.data.length === 0) {
+        let autoTargetedSolutions =
+          await solutionsHelper.forUserRoleAndLocation(
+            requestedData,
+            type,
+            "",
+            programId,
+            constants.common.DEFAULT_PAGE_SIZE,
+            constants.common.DEFAULT_PAGE_NO,
+            search
+          );
+
+        let projectSolutionIdIndexMap = {};
+
+        if (
+          autoTargetedSolutions.data.data &&
+          autoTargetedSolutions.data.data.length > 0
+        ) {
+          // Remove observation solutions which for project tasks.
+
+          _.remove(autoTargetedSolutions.data.data, function (solution) {
+            return (
+              solution.referenceFrom == constants.common.PROJECT &&
+              solution.type == constants.common.OBSERVATION
+            );
+          });
+
+          totalCount = autoTargetedSolutions.data.data.length;
+          mergedData = autoTargetedSolutions.data.data;
+
           const solutionIds = [];
           const getAllResources = [];
 
           /**
+           * here we need to find if user is started any solution and that is not listed in targted solutions
            * @function importedProjects
            * @function userSurveys
            * @function userObservations
@@ -313,6 +312,13 @@ module.exports = class UsersHelper {
               });
             }
           });
+          const allTargetedSolutionIds =
+            gen.utils.convertArrayObjectIdtoStringOfObjectId(mergedData);
+
+          const resourcesWithPreviousProfile = _.differenceWith(
+            solutionIds,
+            allTargetedSolutionIds
+          );
 
           /**
            * @function solutionDocuments
@@ -321,149 +327,123 @@ module.exports = class UsersHelper {
            *
            * @return [{Objects}] array of solutions documents
            */
-          mergedData = await solutionsHelper.solutionDocuments(
-            { _id: { $in: solutionIds } },
-            [
-              "name",
-              "description",
-              "programName",
-              "programId",
-              "externalId",
-              "projectTemplateId",
-              "type",
-              "language",
-              "creator",
-              "endDate",
-              "link",
-              "referenceFrom",
-              "entityType",
-              "certificateTemplateId",
-            ]
-          );
-          totalCount = mergedData.length;
-        } else {
-          let autoTargetedSolutions =
-            await solutionsHelper.forUserRoleAndLocation(
-              requestedData,
-              type,
-              "",
-              programId,
-              constants.common.DEFAULT_PAGE_SIZE,
-              constants.common.DEFAULT_PAGE_NO,
-              search
+          const solutionsWithPreviousProfile =
+            await solutionsHelper.solutionDocuments(
+              { _id: { $in: resourcesWithPreviousProfile } },
+              [
+                "name",
+                "description",
+                "programName",
+                "programId",
+                "externalId",
+                "projectTemplateId",
+                "type",
+                "language",
+                "creator",
+                "endDate",
+                "link",
+                "referenceFrom",
+                "entityType",
+                "certificateTemplateId",
+              ]
             );
+          mergedData.push(...solutionsWithPreviousProfile);
+          totalCount += solutionsWithPreviousProfile.length;
 
-          let projectSolutionIdIndexMap = {};
+          mergedData = mergedData.map((targetedData, index) => {
+            if (targetedData.type == constants.common.IMPROVEMENT_PROJECT) {
+              projectSolutionIdIndexMap[targetedData._id.toString()] = index;
+            }
+            delete targetedData.programId;
+            delete targetedData.programName;
+            return targetedData;
+          });
+        }
 
-          if (
-            autoTargetedSolutions.data.data &&
-            autoTargetedSolutions.data.data.length > 0
-          ) {
-            // Remove observation solutions which for project tasks.
+        // Get projects already started by a user in a given program
 
-            _.remove(autoTargetedSolutions.data.data, function (solution) {
-              return (
-                solution.referenceFrom == constants.common.PROJECT &&
-                solution.type == constants.common.OBSERVATION
-              );
-            });
+        let importedProjects = await improvementProjectService.importedProjects(
+          token,
+          programId
+        );
 
-            totalCount = autoTargetedSolutions.data.data.length;
-            mergedData = autoTargetedSolutions.data.data;
+        // Add projectId to the solution object if the user has already started a project for the improvement project solution.
 
-            mergedData = mergedData.map((targetedData, index) => {
-              if (targetedData.type == constants.common.IMPROVEMENT_PROJECT) {
-                projectSolutionIdIndexMap[targetedData._id.toString()] = index;
-              }
-              delete targetedData.programId;
-              delete targetedData.programName;
-              return targetedData;
-            });
-          }
-
-          // Get projects already started by a user in a given program
-
-          let importedProjects =
-            await improvementProjectService.importedProjects(token, programId);
-
-          // Add projectId to the solution object if the user has already started a project for the improvement project solution.
-
-          if (importedProjects.success) {
-            if (importedProjects.data && importedProjects.data.length > 0) {
-              importedProjects.data.forEach((importedProject) => {
-                if (
+        if (importedProjects.success) {
+          if (importedProjects.data && importedProjects.data.length > 0) {
+            importedProjects.data.forEach((importedProject) => {
+              if (
+                projectSolutionIdIndexMap[
+                  importedProject.solutionInformation._id
+                ] !== undefined
+              ) {
+                mergedData[
                   projectSolutionIdIndexMap[
                     importedProject.solutionInformation._id
-                  ] !== undefined
-                ) {
-                  mergedData[
-                    projectSolutionIdIndexMap[
-                      importedProject.solutionInformation._id
-                    ]
-                  ].projectId = importedProject._id;
-                } else {
-                  let data = importedProject.solutionInformation;
-                  data["projectTemplateId"] = importedProject.projectTemplateId;
-                  data["projectId"] = importedProject._id;
-                  data["type"] = constants.common.IMPROVEMENT_PROJECT;
-                  mergedData.push(data);
-                  totalCount = totalCount + 1;
-                }
-              });
-            }
+                  ]
+                ].projectId = importedProject._id;
+              } else {
+                let data = importedProject.solutionInformation;
+                data["projectTemplateId"] = importedProject.projectTemplateId;
+                data["projectId"] = importedProject._id;
+                data["type"] = constants.common.IMPROVEMENT_PROJECT;
+                mergedData.push(data);
+                totalCount = totalCount + 1;
+              }
+            });
           }
+        }
 
-          if (mergedData.length > 0) {
-            let startIndex = pageSize * (pageNo - 1);
-            let endIndex = startIndex + pageSize;
-            mergedData = mergedData.slice(startIndex, endIndex);
+        if (mergedData.length > 0) {
+          let startIndex = pageSize * (pageNo - 1);
+          let endIndex = startIndex + pageSize;
+          mergedData = mergedData.slice(startIndex, endIndex);
+        }
+
+        // get all solutionIds of type survey
+        let surveySolutionIds = [];
+        mergedData.forEach((element) => {
+          if (element.type === constants.common.SURVEY) {
+            surveySolutionIds.push(element._id);
           }
+        });
 
-          // get all solutionIds of type survey
-          let surveySolutionIds = [];
-          mergedData.forEach((element) => {
-            if (element.type === constants.common.SURVEY) {
-              surveySolutionIds.push(element._id);
-            }
-          });
+        if (surveySolutionIds.length > 0) {
+          let userSurveySubmission = await surveyService.assignedSurveys(
+            token,
+            "",
+            "",
+            false,
+            surveySolutionIds
+          );
 
-          if (surveySolutionIds.length > 0) {
-            let userSurveySubmission = await surveyService.assignedSurveys(
-              token,
-              "",
-              "",
-              false,
-              surveySolutionIds
-            );
-
-            if (
-              userSurveySubmission.success &&
-              userSurveySubmission.data &&
-              userSurveySubmission.data.data &&
-              userSurveySubmission.data.data.length > 0
+          if (
+            userSurveySubmission.success &&
+            userSurveySubmission.data &&
+            userSurveySubmission.data.data &&
+            userSurveySubmission.data.data.length > 0
+          ) {
+            for (
+              let surveySubmissionPointer = 0;
+              surveySubmissionPointer < userSurveySubmission.data.data.length;
+              surveySubmissionPointer++
             ) {
               for (
-                let surveySubmissionPointer = 0;
-                surveySubmissionPointer < userSurveySubmission.data.data.length;
-                surveySubmissionPointer++
+                let mergedDataPointer = 0;
+                mergedDataPointer < mergedData.length;
+                mergedDataPointer++
               ) {
-                for (
-                  let mergedDataPointer = 0;
-                  mergedDataPointer < mergedData.length;
-                  mergedDataPointer++
+                if (
+                  mergedData[mergedDataPointer].type ==
+                    constants.common.SURVEY &&
+                  userSurveySubmission.data.data[surveySubmissionPointer]
+                    .solutionId == mergedData[mergedDataPointer]._id
                 ) {
-                  if (
-                    mergedData[mergedDataPointer].type ==
-                      constants.common.SURVEY &&
-                    userSurveySubmission.data.data[surveySubmissionPointer]
-                      .solutionId == mergedData[mergedDataPointer]._id
-                  ) {
-                    mergedData[mergedDataPointer].submissionId =
-                      userSurveySubmission.data.data[
-                        surveySubmissionPointer
-                      ].submissionId;
-                    break;
-                  }
+                  mergedData[mergedDataPointer].submissionId =
+                    userSurveySubmission.data.data[
+                      surveySubmissionPointer
+                    ].submissionId;
+                  break;
                 }
               }
             }
@@ -575,14 +555,16 @@ module.exports = class UsersHelper {
         }
 
         //find total number of programs related to user
-        let userRelatedPrograms = targetedProgramIds.concat(nonTargetedProgramIds);
-        
+        let userRelatedPrograms = targetedProgramIds.concat(
+          nonTargetedProgramIds
+        );
+
         if (!userRelatedPrograms.length > 0) {
           throw {
             message: constants.apiResponses.PROGRAM_NOT_FOUND,
           };
         }
-        
+
         // Splitting the userRelatedPrograms array based on the page number and size.
         // The returned data is not coming in the order of userRelatedPrograms elements when all the IDs are passed.
         // We can't add a sort to the programDocuments function because it will also sort programs joined from the previous profile, which should come at the end of the list for us.
@@ -591,8 +573,8 @@ module.exports = class UsersHelper {
         // 2. Previous profile programs should always come last.
         let startIndex = pageSize * (pageNo - 1);
         let endIndex = startIndex + pageSize;
-        userRelatedPrograms = userRelatedPrograms.slice(startIndex,endIndex) 
-        
+        userRelatedPrograms = userRelatedPrograms.slice(startIndex, endIndex);
+
         let userRelatedProgramsData = await programsHelper.programDocuments(
           { _id: { $in: userRelatedPrograms } },
           ["name", "externalId", "metaInformation"],
@@ -606,13 +588,15 @@ module.exports = class UsersHelper {
             message: constants.apiResponses.PROGRAM_NOT_FOUND,
           };
         }
-        
+
         // programDocuments function will not return result in the order which ids are passed. This code block will ensure that the response is rearranged in correct order
-        // We can't implement sort logic in programDocuments function because userRelatedPrograms can contain prev profile programs also 
-        let programsResult = userRelatedPrograms.map(id => {
-          return userRelatedProgramsData.find(data => data._id.toString() === id.toString());
+        // We can't implement sort logic in programDocuments function because userRelatedPrograms can contain prev profile programs also
+        let programsResult = userRelatedPrograms.map((id) => {
+          return userRelatedProgramsData.find(
+            (data) => data._id.toString() === id.toString()
+          );
         });
-       
+
         programDetails.data = programsResult;
         programDetails.count = programCount;
         programDetails.description = constants.apiResponses.PROGRAM_DESCRIPTION;
@@ -957,7 +941,7 @@ module.exports = class UsersHelper {
             _id: { $in: previousProfilesJoinedProgramIds },
             startDate: { $lte: new Date() },
             endDate: { $gte: new Date() },
-            isAPrivateProgram: false
+            isAPrivateProgram: false,
           };
 
           //call program details to check if the program is active or not
@@ -998,10 +982,8 @@ module.exports = class UsersHelper {
         });
       }
     });
-  }  
+  }
 };
-
-
 
 // /**
 //  * Generate program creation data.
