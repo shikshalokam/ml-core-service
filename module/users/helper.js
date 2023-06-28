@@ -273,9 +273,6 @@ module.exports = class UsersHelper {
           // Creates an array of promises based on users Input
           switch (type) {
             case constants.common.IMPROVEMENT_PROJECT:
-              getAllResources.push(
-                improvementProjectService.importedProjects(token, programId)
-              );
               break;
             case constants.common.SURVEY:
               getAllResources.push(surveyService.userSurveys(token, programId));
@@ -286,9 +283,6 @@ module.exports = class UsersHelper {
               );
               break;
             default:
-              getAllResources.push(
-                improvementProjectService.importedProjects(token, programId)
-              );
               getAllResources.push(surveyService.userSurveys(token, programId));
               getAllResources.push(
                 surveyService.userObservations(token, programId)
@@ -300,14 +294,7 @@ module.exports = class UsersHelper {
           //Will find all solutionId from response
           allResources.forEach((resources) => {
             // this condition is required because it returns response in different object structure
-            if (
-              resources.type === constants.common.IMPROVEMENT_PROJECT &&
-              resources.success === true
-            ) {
-              resources.data.forEach((importedProject) => {
-                solutionIds.push(importedProject.solutionInformation._id);
-              });
-            } else if (resources.success === true) {
+            if (resources.success === true) {
               resources.result.forEach((resource) => {
                 solutionIds.push(resource.solutionId);
               });
@@ -367,40 +354,42 @@ module.exports = class UsersHelper {
           });
         }
 
-        // Get projects already started by a user in a given program
+        if (
+          (type =
+            constants.common.IMPROVEMENT_PROJECT ||
+            type === constants.common.EMPTY_STRING)
+        ) {
+          // Get projects already started by a user in a given program
+          let importedProjects =
+            await improvementProjectService.importedProjects(token, programId);
 
-        let importedProjects = await improvementProjectService.importedProjects(
-          token,
-          programId
-        );
+          // Add projectId to the solution object if the user has already started a project for the improvement project solution.
 
-        // Add projectId to the solution object if the user has already started a project for the improvement project solution.
-
-        if (importedProjects.success) {
-          if (importedProjects.data && importedProjects.data.length > 0) {
-            importedProjects.data.forEach((importedProject) => {
-              if (
-                projectSolutionIdIndexMap[
-                  importedProject.solutionInformation._id
-                ] !== undefined
-              ) {
-                mergedData[
+          if (importedProjects.success) {
+            if (importedProjects.data && importedProjects.data.length > 0) {
+              importedProjects.data.forEach((importedProject) => {
+                if (
                   projectSolutionIdIndexMap[
                     importedProject.solutionInformation._id
-                  ]
-                ].projectId = importedProject._id;
-              } else {
-                let data = importedProject.solutionInformation;
-                data["projectTemplateId"] = importedProject.projectTemplateId;
-                data["projectId"] = importedProject._id;
-                data["type"] = constants.common.IMPROVEMENT_PROJECT;
-                mergedData.push(data);
-                totalCount = totalCount + 1;
-              }
-            });
+                  ] !== undefined
+                ) {
+                  mergedData[
+                    projectSolutionIdIndexMap[
+                      importedProject.solutionInformation._id
+                    ]
+                  ].projectId = importedProject._id;
+                } else {
+                  let data = importedProject.solutionInformation;
+                  data["projectTemplateId"] = importedProject.projectTemplateId;
+                  data["projectId"] = importedProject._id;
+                  data["type"] = constants.common.IMPROVEMENT_PROJECT;
+                  mergedData.push(data);
+                  totalCount = totalCount + 1;
+                }
+              });
+            }
           }
         }
-
         if (mergedData.length > 0) {
           let startIndex = pageSize * (pageNo - 1);
           let endIndex = startIndex + pageSize;
