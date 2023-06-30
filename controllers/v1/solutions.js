@@ -842,13 +842,13 @@ module.exports = class Solutions extends Abstract {
   async verifyLink(req) {
     return new Promise(async (resolve, reject) => {
       try {
-        
         let solutionData = await solutionsHelper.verifyLink(
           req.params._id,
           req.body,
           req.userDetails.userId,
           req.userDetails.userToken,
-          req.query.hasOwnProperty("createProject") ? gen.utils.convertStringToBoolean(req.query.createProject) : true
+          req.query.hasOwnProperty("createProject") ? gen.utils.convertStringToBoolean(req.query.createProject) : true,
+          req.query.createPrivateSolutionIfNotTargeted ? req.query.createPrivateSolutionIfNotTargeted : false
         );
 
         return resolve(solutionData);

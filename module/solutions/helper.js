@@ -1681,6 +1681,7 @@ module.exports = class SolutionsHelper {
    * @param {String} userToken - user token.
    * @param {Boolean} createProject - create project.
    * @param {Object} bodyData - Req Body.
+   * @param {Object} createPrivateSolutionIfNotTargeted - flag to create private program if user is non targeted
    * @returns {Object} - Details of the solution.
    */
 
@@ -1689,7 +1690,8 @@ module.exports = class SolutionsHelper {
     bodyData = {},
     userId = "",
     userToken = "",
-    createProject = true
+    createProject = true,
+    createPrivateSolutionIfNotTargeted = false
   ) {
     return new Promise(async (resolve, reject) => {
       try {
@@ -1841,39 +1843,57 @@ module.exports = class SolutionsHelper {
             if (!isSolutionActive) {
               throw new Error(constants.apiResponses.LINK_IS_EXPIRED);
             }
-            // user is not targeted, create private program and solution.
-            let privateProgramAndSolutionDetails =
+
+            let checkForProjectExist ={};
+            // By default will be false for old version of app
+            if ( createPrivateSolutionIfNotTargeted ) {
+              // user is not targeted and privateSolutionCreation required
+              let privateProgramAndSolutionDetails =
               await this.privateProgramAndSolutionDetails(
                 solutionData,
                 userId,
                 userToken
               );
-            if (!privateProgramAndSolutionDetails.success) {
-              throw {
-                status: httpStatusCode.bad_request.status,
-                message: constants.apiResponses.SOLUTION_PROGRAMS_NOT_CREATED,
+              if (!privateProgramAndSolutionDetails.success) {
+                throw {
+                  status: httpStatusCode.bad_request.status,
+                  message: constants.apiResponses.SOLUTION_PROGRAMS_NOT_CREATED,
+                };
+              }
+              // Replace public solutionId with private solutionId.
+              if (privateProgramAndSolutionDetails.result != "") {
+                checkForTargetedSolution.result["solutionId"] =
+                  privateProgramAndSolutionDetails.result;
+              }
+
+              //non targeted project exist
+              let checkIfUserProjectExistsQuery = {
+                createdBy: userId,
+                referenceFrom: constants.common.LINK,
+                solutionId: privateProgramAndSolutionDetails.result,
               };
-            }
-            // Adding privateSolutionId to response. We can't replace solutionId because it can cause issue in prev (Before 6.0) app flow.
-            if (privateProgramAndSolutionDetails.result != "") {
-              checkForTargetedSolution.result["privateSolutionId"] =
-                privateProgramAndSolutionDetails.result;
-            }
 
-            //non targeted project exist
-            let checkIfUserProjectExistsQuery = {
-              createdBy: userId,
-              referenceFrom: constants.common.LINK,
-              solutionId: privateProgramAndSolutionDetails.result,
-            };
-
-            let checkForProjectExist =
+              checkForProjectExist =
               await improvementProjectService.projectDocuments(
                 userToken,
                 checkIfUserProjectExistsQuery,
                 ["_id"]
               );
-
+              
+            } else {
+              // Fetch non-targeted projects created for older app version flow (before 6.0) 
+              let checkIfUserProjectExistsQuery = {
+                createdBy: userId,
+                referenceFrom: constants.common.LINK,
+                link: link,
+              };
+              checkForProjectExist =
+              await improvementProjectService.projectDocuments(
+                userToken,
+                checkIfUserProjectExistsQuery,
+                ["_id"]
+              );    
+            }
             if (
               checkForProjectExist.success &&
               checkForProjectExist.data &&
@@ -1883,6 +1903,7 @@ module.exports = class SolutionsHelper {
               checkForTargetedSolution.result["projectId"] =
                 checkForProjectExist.data[0]._id;
             }
+            
           }
         }
         delete checkForTargetedSolution.result["status"];
@@ -1899,6 +1920,7 @@ module.exports = class SolutionsHelper {
       }
     });
   }
+
 
   /**
    * privateProgramAndSolutionDetails
