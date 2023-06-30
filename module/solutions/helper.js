@@ -749,8 +749,14 @@ module.exports = class SolutionsHelper {
         }
 
         matchQuery["startDate"] = { $lte: new Date() };
-        matchQuery["endDate"] = { $gte: new Date() };
-
+        // for survey type solutions even after expiry it should be visible to user for 15 days
+        if (type === constants.common.SURVEY) {
+          const currentDate = new Date();
+          currentDate.setDate(currentDate.getDate() - 15);
+          matchQuery["endDate"] = { $gte: currentDate };
+        } else {
+          matchQuery["endDate"] = { $gte: new Date() };
+        }
         let targetedSolutions = await this.list(
           type,
           subType,
