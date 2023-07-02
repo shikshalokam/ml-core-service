@@ -1844,9 +1844,30 @@ module.exports = class SolutionsHelper {
               throw new Error(constants.apiResponses.LINK_IS_EXPIRED);
             }
 
-            let checkForProjectExist ={};
+            // check if private-Project already exists
+            let checkIfUserProjectExistsQuery = {
+              createdBy: userId,
+              referenceFrom: constants.common.LINK,
+              link: link,
+            };
+            let checkForProjectExist =
+            await improvementProjectService.projectDocuments(
+              userToken,
+              checkIfUserProjectExistsQuery,
+              ["_id"]
+            );   
+            if (
+              checkForProjectExist.success &&
+              checkForProjectExist.data &&
+              checkForProjectExist.data.length > 0 &&
+              checkForProjectExist.data[0]._id != ""
+            ) {
+              checkForTargetedSolution.result["projectId"] =
+                checkForProjectExist.data[0]._id;
+            }
+            // If project not found and createPrivateSolutionIfNotTargeted := true
             // By default will be false for old version of app
-            if ( createPrivateSolutionIfNotTargeted ) {
+            if ( !checkForTargetedSolution.result["projectId"] && checkForTargetedSolution.result["projectId"] != "" && createPrivateSolutionIfNotTargeted ) {
               // user is not targeted and privateSolutionCreation required
               let privateProgramAndSolutionDetails =
               await this.privateProgramAndSolutionDetails(
@@ -1864,45 +1885,8 @@ module.exports = class SolutionsHelper {
               if (privateProgramAndSolutionDetails.result != "") {
                 checkForTargetedSolution.result["solutionId"] =
                   privateProgramAndSolutionDetails.result;
-              }
-
-              //non targeted project exist
-              let checkIfUserProjectExistsQuery = {
-                createdBy: userId,
-                referenceFrom: constants.common.LINK,
-                solutionId: privateProgramAndSolutionDetails.result,
-              };
-
-              checkForProjectExist =
-              await improvementProjectService.projectDocuments(
-                userToken,
-                checkIfUserProjectExistsQuery,
-                ["_id"]
-              );
-              
-            } else {
-              // Fetch non-targeted projects created for older app version flow (before 6.0) 
-              let checkIfUserProjectExistsQuery = {
-                createdBy: userId,
-                referenceFrom: constants.common.LINK,
-                link: link,
-              };
-              checkForProjectExist =
-              await improvementProjectService.projectDocuments(
-                userToken,
-                checkIfUserProjectExistsQuery,
-                ["_id"]
-              );    
-            }
-            if (
-              checkForProjectExist.success &&
-              checkForProjectExist.data &&
-              checkForProjectExist.data.length > 0 &&
-              checkForProjectExist.data[0]._id != ""
-            ) {
-              checkForTargetedSolution.result["projectId"] =
-                checkForProjectExist.data[0]._id;
-            }
+              }      
+            } 
             
           }
         }
