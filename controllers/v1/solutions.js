@@ -847,8 +847,7 @@ module.exports = class Solutions extends Abstract {
           req.body,
           req.userDetails.userId,
           req.userDetails.userToken,
-          req.query.hasOwnProperty("createProject") ? gen.utils.convertStringToBoolean(req.query.createProject) : true,
-          req.query.createPrivateSolutionIfNotTargeted ? req.query.createPrivateSolutionIfNotTargeted : false
+          req.query.hasOwnProperty("createProject") ? gen.utils.convertStringToBoolean(req.query.createProject) : true
         );
 
         return resolve(solutionData);

@@ -1690,8 +1690,7 @@ module.exports = class SolutionsHelper {
     bodyData = {},
     userId = "",
     userToken = "",
-    createProject = true,
-    createPrivateSolutionIfNotTargeted = false
+    createProject = true
   ) {
     return new Promise(async (resolve, reject) => {
       try {
@@ -1867,7 +1866,7 @@ module.exports = class SolutionsHelper {
             }
             // If project not found and createPrivateSolutionIfNotTargeted := true
             // By default will be false for old version of app
-            if ( !checkForTargetedSolution.result["projectId"] && checkForTargetedSolution.result["projectId"] != "" && createPrivateSolutionIfNotTargeted ) {
+            if ( !checkForTargetedSolution.result["projectId"] || checkForTargetedSolution.result["projectId"] === "" ) {
               // user is not targeted and privateSolutionCreation required
               let privateProgramAndSolutionDetails =
               await this.privateProgramAndSolutionDetails(
