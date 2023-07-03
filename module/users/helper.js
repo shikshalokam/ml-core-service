@@ -255,104 +255,104 @@ module.exports = class UsersHelper {
 
           totalCount = autoTargetedSolutions.data.data.length;
           mergedData = autoTargetedSolutions.data.data;
-
-          const solutionIds = [];
-          const getAllResources = [];
-
-          /**
-           * here we need to find if user is started any solution and that is not listed in targted solution
-           * @function importedProjects
-           * @function userSurveys
-           * @function userObservations
-           *
-           * @param token string: userToken
-           * @param programId string: programId
-           *
-           * @returns {Promise}
-           */
-          // Creates an array of promises based on users Input
-          switch (type) {
-            case constants.common.IMPROVEMENT_PROJECT:
-              break;
-            case constants.common.SURVEY:
-              getAllResources.push(surveyService.userSurveys(token, programId));
-              break;
-            case constants.common.OBSERVATION:
-              getAllResources.push(
-                surveyService.userObservations(token, programId)
-              );
-              break;
-            default:
-              getAllResources.push(surveyService.userSurveys(token, programId));
-              getAllResources.push(
-                surveyService.userObservations(token, programId)
-              );
-          }
-          //here will wait till all promises are resolved
-          const allResources = await Promise.all(getAllResources);
-
-          //Will find all solutionId from response
-          allResources.forEach((resources) => {
-            // this condition is required because it returns response in different object structure
-            if (resources.success === true) {
-              resources.result.forEach((resource) => {
-                solutionIds.push(resource.solutionId);
-              });
-            }
-          });
-
-          // getting all the targted solutionIds from targted solutions
-          const allTargetedSolutionIds =
-            gen.utils.convertArrayObjectIdtoStringOfObjectId(mergedData);
-
-          //finding solutions which are not targtted but user has submitted.
-          const resourcesWithPreviousProfile = _.differenceWith(
-            solutionIds,
-            allTargetedSolutionIds
-          );
-
-          /**
-           * @function solutionDocuments
-           * @param {Object} of solutionIds
-           * @project [Array] of projections
-           *
-           * @return [{Objects}] array of solutions documents
-           * // will get all the solutions documents based on all profile
-           */
-          const solutionsWithPreviousProfile =
-            await solutionsHelper.solutionDocuments(
-              { _id: { $in: resourcesWithPreviousProfile } },
-              [
-                "name",
-                "description",
-                "programName",
-                "programId",
-                "externalId",
-                "projectTemplateId",
-                "type",
-                "language",
-                "creator",
-                "endDate",
-                "link",
-                "referenceFrom",
-                "entityType",
-                "certificateTemplateId",
-              ]
-            );
-          //Pushing all the solutions document which user started with previous profile
-          mergedData.push(...solutionsWithPreviousProfile);
-          //incressing total count of solutions in program
-          totalCount += solutionsWithPreviousProfile.length;
-
-          mergedData = mergedData.map((targetedData, index) => {
-            if (targetedData.type == constants.common.IMPROVEMENT_PROJECT) {
-              projectSolutionIdIndexMap[targetedData._id.toString()] = index;
-            }
-            delete targetedData.programId;
-            delete targetedData.programName;
-            return targetedData;
-          });
         }
+
+        const solutionIds = [];
+        const getAllResources = [];
+
+        /**
+         * here we need to find if user is started any solution and that is not listed in targted solution
+         * @function importedProjects
+         * @function userSurveys
+         * @function userObservations
+         *
+         * @param token string: userToken
+         * @param programId string: programId
+         *
+         * @returns {Promise}
+         */
+        // Creates an array of promises based on users Input
+        switch (type) {
+          case constants.common.IMPROVEMENT_PROJECT:
+            break;
+          case constants.common.SURVEY:
+            getAllResources.push(surveyService.userSurveys(token, programId));
+            break;
+          case constants.common.OBSERVATION:
+            getAllResources.push(
+              surveyService.userObservations(token, programId)
+            );
+            break;
+          default:
+            getAllResources.push(surveyService.userSurveys(token, programId));
+            getAllResources.push(
+              surveyService.userObservations(token, programId)
+            );
+        }
+        //here will wait till all promises are resolved
+        const allResources = await Promise.all(getAllResources);
+
+        //Will find all solutionId from response
+        allResources.forEach((resources) => {
+          // this condition is required because it returns response in different object structure
+          if (resources.success === true) {
+            resources.result.forEach((resource) => {
+              solutionIds.push(resource.solutionId);
+            });
+          }
+        });
+
+        // getting all the targted solutionIds from targted solutions
+        const allTargetedSolutionIds =
+          gen.utils.convertArrayObjectIdtoStringOfObjectId(mergedData);
+
+        //finding solutions which are not targtted but user has submitted.
+        const resourcesWithPreviousProfile = _.differenceWith(
+          solutionIds,
+          allTargetedSolutionIds
+        );
+
+        /**
+         * @function solutionDocuments
+         * @param {Object} of solutionIds
+         * @project [Array] of projections
+         *
+         * @return [{Objects}] array of solutions documents
+         * // will get all the solutions documents based on all profile
+         */
+        const solutionsWithPreviousProfile =
+          await solutionsHelper.solutionDocuments(
+            { _id: { $in: resourcesWithPreviousProfile } },
+            [
+              "name",
+              "description",
+              "programName",
+              "programId",
+              "externalId",
+              "projectTemplateId",
+              "type",
+              "language",
+              "creator",
+              "endDate",
+              "link",
+              "referenceFrom",
+              "entityType",
+              "certificateTemplateId",
+            ]
+          );
+        //Pushing all the solutions document which user started with previous profile
+        mergedData.push(...solutionsWithPreviousProfile);
+        //incressing total count of solutions in program
+        totalCount += solutionsWithPreviousProfile.length;
+
+        mergedData = mergedData.map((targetedData, index) => {
+          if (targetedData.type == constants.common.IMPROVEMENT_PROJECT) {
+            projectSolutionIdIndexMap[targetedData._id.toString()] = index;
+          }
+          delete targetedData.programId;
+          delete targetedData.programName;
+          return targetedData;
+        });
 
         if (
           (type =
