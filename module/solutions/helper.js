@@ -2409,15 +2409,13 @@ module.exports = class SolutionsHelper {
               duplicateProgram.endDate,
               userId
             );
-            // root organisation data of private program user. This function will return user organisation Id.
-            let rootOrganisationDetails = await this.getRootOrganisationOfUser(
-              userToken,
-              userId
-            );
-            if (!rootOrganisationDetails.success) {
-              return resolve(rootOrganisationDetails);
+            // set rootorganisation from parent program
+            if (
+              checkforProgramExist[0].hasOwnProperty("rootOrganisations")
+            ) {
+              duplicateProgram.rootOrganisations =
+                checkforProgramExist[0].rootOrganisations;
             }
-            duplicateProgram.rootOrganisations = rootOrganisationDetails.data;
             if (
               checkforProgramExist[0].hasOwnProperty("requestForPIIConsent")
             ) {
@@ -2453,15 +2451,9 @@ module.exports = class SolutionsHelper {
             endDate
           );
 
-          // root organisation data of private program user. This function will return user organisation Id.
-          let rootOrganisationDetails = await this.getRootOrganisationOfUser(
-            userToken,
-            userId
-          );
-          if (!rootOrganisationDetails.success) {
-            return resolve(rootOrganisationDetails);
+          if (data.rootOrganisations) {
+            programData.rootOrganisations = data.rootOrganisations;
           }
-          programData.rootOrganisations = rootOrganisationDetails.data;
           userPrivateProgram = await programsHelper.create(programData);
         }
 
@@ -2661,49 +2653,6 @@ module.exports = class SolutionsHelper {
         });
       } catch (error) {
         return reject(error);
-      }
-    });
-  }
-
-  /**
-   * Find getRootOrganisationOfUser.
-   * @method
-   * @name getRootOrganisationOfUser
-   * @param {String} userToken - user token
-   * @param {String} userId - userId
-   * @returns {Array} - user rootOrganisation data
-   */
-  static getRootOrganisationOfUser(userToken, userId) {
-    return new Promise(async (resolve, reject) => {
-      try {
-        let result = [];
-        // Fetch user profile
-        let userProfile = await userService.profile(userToken, userId);
-
-        if (
-          !userProfile.success ||
-          !userProfile.data ||
-          !userProfile.data.rootOrgId ||
-          userProfile.data.rootOrgId == ""
-        ) {
-          throw {
-            status: httpStatusCode.bad_request.status,
-            message: constants.apiResponses.USER_ROOT_ORG_NOT_FOUND,
-          };
-        }
-        result.push(userProfile.data.rootOrgId);
-        return resolve({
-          success: true,
-          data: result,
-        });
-      } catch (error) {
-        return resolve({
-          success: false,
-          status: error.status
-            ? error.status
-            : httpStatusCode["internal_server_error"].status,
-          message: error.message,
-        });
       }
     });
   }
