@@ -1868,6 +1868,13 @@ module.exports = class SolutionsHelper {
             // By default will be false for old version of app
             if ( !checkForTargetedSolution.result["projectId"] || checkForTargetedSolution.result["projectId"] === "" ) {
               // user is not targeted and privateSolutionCreation required
+            /**
+             * function privateProgramAndSolutionDetails 
+             * Request:
+             * @param {solutionData} solution data
+             * @param {userToken} for UserId
+             * @response private solutionId
+            */
               let privateProgramAndSolutionDetails =
               await this.privateProgramAndSolutionDetails(
                 solutionData,
