@@ -842,7 +842,6 @@ module.exports = class Solutions extends Abstract {
   async verifyLink(req) {
     return new Promise(async (resolve, reject) => {
       try {
-        
         let solutionData = await solutionsHelper.verifyLink(
           req.params._id,
           req.body,

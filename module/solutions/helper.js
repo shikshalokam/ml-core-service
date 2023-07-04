@@ -1681,6 +1681,7 @@ module.exports = class SolutionsHelper {
    * @param {String} userToken - user token.
    * @param {Boolean} createProject - create project.
    * @param {Object} bodyData - Req Body.
+   * @param {Object} createPrivateSolutionIfNotTargeted - flag to create private program if user is non targeted
    * @returns {Object} - Details of the solution.
    */
 
@@ -1841,39 +1842,19 @@ module.exports = class SolutionsHelper {
             if (!isSolutionActive) {
               throw new Error(constants.apiResponses.LINK_IS_EXPIRED);
             }
-            // user is not targeted, create private program and solution.
-            let privateProgramAndSolutionDetails =
-              await this.privateProgramAndSolutionDetails(
-                solutionData,
-                userId,
-                userToken
-              );
-            if (!privateProgramAndSolutionDetails.success) {
-              throw {
-                status: httpStatusCode.bad_request.status,
-                message: constants.apiResponses.SOLUTION_PROGRAMS_NOT_CREATED,
-              };
-            }
-            // Adding privateSolutionId to response. We can't replace solutionId because it can cause issue in prev (Before 6.0) app flow.
-            if (privateProgramAndSolutionDetails.result != "") {
-              checkForTargetedSolution.result["privateSolutionId"] =
-                privateProgramAndSolutionDetails.result;
-            }
 
-            //non targeted project exist
+            // check if private-Project already exists
             let checkIfUserProjectExistsQuery = {
               createdBy: userId,
               referenceFrom: constants.common.LINK,
-              solutionId: privateProgramAndSolutionDetails.result,
+              link: link,
             };
-
             let checkForProjectExist =
-              await improvementProjectService.projectDocuments(
-                userToken,
-                checkIfUserProjectExistsQuery,
-                ["_id"]
-              );
-
+            await improvementProjectService.projectDocuments(
+              userToken,
+              checkIfUserProjectExistsQuery,
+              ["_id"]
+            );   
             if (
               checkForProjectExist.success &&
               checkForProjectExist.data &&
@@ -1883,6 +1864,36 @@ module.exports = class SolutionsHelper {
               checkForTargetedSolution.result["projectId"] =
                 checkForProjectExist.data[0]._id;
             }
+            // If project not found and createPrivateSolutionIfNotTargeted := true
+            // By default will be false for old version of app
+            if ( !checkForTargetedSolution.result["projectId"] || checkForTargetedSolution.result["projectId"] === "" ) {
+              // user is not targeted and privateSolutionCreation required
+            /**
+             * function privateProgramAndSolutionDetails 
+             * Request:
+             * @param {solutionData} solution data
+             * @param {userToken} for UserId
+             * @response private solutionId
+            */
+              let privateProgramAndSolutionDetails =
+              await this.privateProgramAndSolutionDetails(
+                solutionData,
+                userId,
+                userToken
+              );
+              if (!privateProgramAndSolutionDetails.success) {
+                throw {
+                  status: httpStatusCode.bad_request.status,
+                  message: constants.apiResponses.SOLUTION_PROGRAMS_NOT_CREATED,
+                };
+              }
+              // Replace public solutionId with private solutionId.
+              if (privateProgramAndSolutionDetails.result != "") {
+                checkForTargetedSolution.result["solutionId"] =
+                  privateProgramAndSolutionDetails.result;
+              }      
+            } 
+            
           }
         }
         delete checkForTargetedSolution.result["status"];
@@ -1899,6 +1910,7 @@ module.exports = class SolutionsHelper {
       }
     });
   }
+
 
   /**
    * privateProgramAndSolutionDetails
