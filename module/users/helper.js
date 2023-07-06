@@ -225,50 +225,36 @@ module.exports = class UsersHelper {
 
         let totalCount = 0;
         let mergedData = [];
-        let solutionTypes = [];
-        //check if type is passed or not if not passed then create an array of all types of solutions
-        if (type === "") {
-          solutionTypes = [
-            constants.common.SURVEY,
-            constants.common.IMPROVEMENT_PROJECT,
-            constants.common.OBSERVATION,
-          ];
-        } else {
-          solutionTypes = [type];
-        }
-        let autoTargetedSolutions = [];
 
         // fetching all the targted solutions in program
-        for (let i = 0; i < solutionTypes.length; i++) {
-          let solutions = await solutionsHelper.forUserRoleAndLocation(
+        let autoTargetedSolutions =
+          await solutionsHelper.forUserRoleAndLocation(
             requestedData, //user Role information
-            solutionTypes[i], // type of solution user is looking for
+            type, // type of solution user is looking for
             "", //subtype of solutions
             programId, //program for solutions
             constants.common.DEFAULT_PAGE_SIZE, //page size
             constants.common.DEFAULT_PAGE_NO, //page no
             search //search text
           );
-          autoTargetedSolutions = [
-            ...autoTargetedSolutions,
-            ...solutions.data.data,
-          ];
-        }
 
         let projectSolutionIdIndexMap = {};
 
-        if (autoTargetedSolutions.length > 0) {
+        if (
+          autoTargetedSolutions.data.data &&
+          autoTargetedSolutions.data.data.length > 0
+        ) {
           // Remove observation solutions which for project tasks.
 
-          _.remove(autoTargetedSolutions, function (solution) {
+          _.remove(autoTargetedSolutions.data.data, function (solution) {
             return (
               solution.referenceFrom == constants.common.PROJECT &&
               solution.type == constants.common.OBSERVATION
             );
           });
 
-          totalCount = autoTargetedSolutions.length;
-          mergedData = autoTargetedSolutions;
+          totalCount = autoTargetedSolutions.data.data.length;
+          mergedData = autoTargetedSolutions.data.data;
         }
 
         const solutionIds = [];

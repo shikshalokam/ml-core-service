@@ -724,9 +724,20 @@ module.exports = class SolutionsHelper {
           matchQuery["$or"] = [];
 
           targetedTypes.forEach((type) => {
-            let singleType = {
-              type: type,
-            };
+            let singleType 
+            if(type === constants.common.SURVEY){
+              singleType = {
+                type: type,
+              };
+              const currentDate = new Date();
+              currentDate.setDate(currentDate.getDate() - 15);
+              singleType["endDate"] = { $gte: currentDate };
+            }else{
+              singleType = {
+                type: type,
+              };
+              singleType["endDate"] = { $gte:  new Date() };
+            }
 
             if (type === constants.common.IMPROVEMENT_PROJECT) {
               singleType["projectTemplateId"] = { $exists: true };
@@ -737,6 +748,13 @@ module.exports = class SolutionsHelper {
         } else {
           if (type !== "") {
             matchQuery["type"] = type;
+            if (type === constants.common.SURVEY) {
+              const currentDate = new Date();
+              currentDate.setDate(currentDate.getDate() - 15);
+              matchQuery["endDate"] = { $gte: currentDate };
+            } else {
+              matchQuery["endDate"] = { $gte: new Date() };
+            }
           }
 
           if (subType !== "") {
@@ -750,13 +768,7 @@ module.exports = class SolutionsHelper {
 
         matchQuery["startDate"] = { $lte: new Date() };
         // for survey type solutions even after expiry it should be visible to user for 15 days
-        if (type === constants.common.SURVEY) {
-          const currentDate = new Date();
-          currentDate.setDate(currentDate.getDate() - 15);
-          matchQuery["endDate"] = { $gte: currentDate };
-        } else {
-          matchQuery["endDate"] = { $gte: new Date() };
-        }
+        
         let targetedSolutions = await this.list(
           type,
           subType,
@@ -918,6 +930,7 @@ module.exports = class SolutionsHelper {
             "creator",
             "link",
             "certificateTemplateId",
+            "endDate",
           ]
         );
 
@@ -938,6 +951,7 @@ module.exports = class SolutionsHelper {
           success: false,
           message: error.message,
           data: {},
+          status: error.status,
         });
       }
     });
@@ -1777,7 +1791,7 @@ module.exports = class SolutionsHelper {
               .surveyId
               ? surveySubmissionData[0].surveyId
               : "";
-          } else if (!isSolutionActive) {
+          } else if (solutionData.endDate < new Date()) {
             throw new Error(constants.apiResponses.LINK_IS_EXPIRED);
           }
         } else if (solutionData.type === constants.common.IMPROVEMENT_PROJECT) {
@@ -1850,11 +1864,11 @@ module.exports = class SolutionsHelper {
               link: link,
             };
             let checkForProjectExist =
-            await improvementProjectService.projectDocuments(
-              userToken,
-              checkIfUserProjectExistsQuery,
-              ["_id"]
-            );   
+              await improvementProjectService.projectDocuments(
+                userToken,
+                checkIfUserProjectExistsQuery,
+                ["_id"]
+              );
             if (
               checkForProjectExist.success &&
               checkForProjectExist.data &&
@@ -1866,21 +1880,24 @@ module.exports = class SolutionsHelper {
             }
             // If project not found and createPrivateSolutionIfNotTargeted := true
             // By default will be false for old version of app
-            if ( !checkForTargetedSolution.result["projectId"] || checkForTargetedSolution.result["projectId"] === "" ) {
+            if (
+              !checkForTargetedSolution.result["projectId"] ||
+              checkForTargetedSolution.result["projectId"] === ""
+            ) {
               // user is not targeted and privateSolutionCreation required
-            /**
-             * function privateProgramAndSolutionDetails 
-             * Request:
-             * @param {solutionData} solution data
-             * @param {userToken} for UserId
-             * @response private solutionId
-            */
+              /**
+               * function privateProgramAndSolutionDetails
+               * Request:
+               * @param {solutionData} solution data
+               * @param {userToken} for UserId
+               * @response private solutionId
+               */
               let privateProgramAndSolutionDetails =
-              await this.privateProgramAndSolutionDetails(
-                solutionData,
-                userId,
-                userToken
-              );
+                await this.privateProgramAndSolutionDetails(
+                  solutionData,
+                  userId,
+                  userToken
+                );
               if (!privateProgramAndSolutionDetails.success) {
                 throw {
                   status: httpStatusCode.bad_request.status,
@@ -1910,7 +1927,6 @@ module.exports = class SolutionsHelper {
       }
     });
   }
-
 
   /**
    * privateProgramAndSolutionDetails
@@ -2111,7 +2127,7 @@ module.exports = class SolutionsHelper {
           solutionData[0].endDate &&
           new Date() > new Date(solutionData[0].endDate)
         ) {
-          if (solutionData[0].status === constants.common.ACTIVE) {
+          if (solutionData[0].status === constants.common.ACTIVE && solutionData[0].type !== constants.common.SURVEY) {
             let updateSolution = await this.update(
               solutionData[0]._id,
               {
@@ -2190,6 +2206,7 @@ module.exports = class SolutionsHelper {
           "programId",
           "name",
           "projectTemplateId",
+          "endDate"
         ]);
 
         if (!Array.isArray(solutionData) || solutionData.length < 1) {
@@ -2410,9 +2427,7 @@ module.exports = class SolutionsHelper {
               userId
             );
             // set rootorganisation from parent program
-            if (
-              checkforProgramExist[0].hasOwnProperty("rootOrganisations")
-            ) {
+            if (checkforProgramExist[0].hasOwnProperty("rootOrganisations")) {
               duplicateProgram.rootOrganisations =
                 checkforProgramExist[0].rootOrganisations;
             }
