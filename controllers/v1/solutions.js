@@ -322,7 +322,8 @@ module.exports = class Solutions extends Abstract {
         let solutionDetails = 
         await solutionsHelper.detailsBasedOnRoleAndLocation(
           req.params._id,
-          req.body
+          req.body,
+          req.query.type = req.query.type ? req.query.type : ""
         );
           
         solutionDetails.result = solutionDetails.data;

@@ -724,7 +724,7 @@ module.exports = class SolutionsHelper {
           matchQuery["$or"] = [];
 
           targetedTypes.forEach((type) => {
-            let singleType;
+            let singleType = {};
             if (type === constants.common.SURVEY) {
               singleType = {
                 type: type,
@@ -902,10 +902,13 @@ module.exports = class SolutionsHelper {
    * @returns {JSON} - Details of solution based on role and location.
    */
 
-  static detailsBasedOnRoleAndLocation(solutionId, bodyData) {
+  static detailsBasedOnRoleAndLocation(solutionId, bodyData, type = "") {
     return new Promise(async (resolve, reject) => {
       try {
-        let queryData = await this.queryBasedOnRoleAndLocation(bodyData);
+        let queryData = await this.queryBasedOnRoleAndLocation(
+          bodyData,
+          type
+        );
 
         if (!queryData.success) {
           return resolve(queryData);
@@ -1791,7 +1794,7 @@ module.exports = class SolutionsHelper {
               .surveyId
               ? surveySubmissionData[0].surveyId
               : "";
-          } else if (solutionData.endDate < new Date()) {
+          } else if (!isSolutionActive) {
             throw new Error(constants.apiResponses.LINK_IS_EXPIRED);
           }
         } else if (solutionData.type === constants.common.IMPROVEMENT_PROJECT) {
@@ -2126,10 +2129,7 @@ module.exports = class SolutionsHelper {
           solutionData[0].endDate &&
           new Date() > new Date(solutionData[0].endDate)
         ) {
-          if (
-            solutionData[0].status === constants.common.ACTIVE &&
-            solutionData[0].type !== constants.common.SURVEY
-          ) {
+          if (solutionData[0].status === constants.common.ACTIVE) {
             let updateSolution = await this.update(
               solutionData[0]._id,
               {
