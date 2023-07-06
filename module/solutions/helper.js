@@ -724,19 +724,19 @@ module.exports = class SolutionsHelper {
           matchQuery["$or"] = [];
 
           targetedTypes.forEach((type) => {
-            let singleType 
-            if(type === constants.common.SURVEY){
+            let singleType;
+            if (type === constants.common.SURVEY) {
               singleType = {
                 type: type,
               };
               const currentDate = new Date();
               currentDate.setDate(currentDate.getDate() - 15);
               singleType["endDate"] = { $gte: currentDate };
-            }else{
+            } else {
               singleType = {
                 type: type,
               };
-              singleType["endDate"] = { $gte:  new Date() };
+              singleType["endDate"] = { $gte: new Date() };
             }
 
             if (type === constants.common.IMPROVEMENT_PROJECT) {
@@ -768,7 +768,7 @@ module.exports = class SolutionsHelper {
 
         matchQuery["startDate"] = { $lte: new Date() };
         // for survey type solutions even after expiry it should be visible to user for 15 days
-        
+
         let targetedSolutions = await this.list(
           type,
           subType,
@@ -1908,9 +1908,8 @@ module.exports = class SolutionsHelper {
               if (privateProgramAndSolutionDetails.result != "") {
                 checkForTargetedSolution.result["solutionId"] =
                   privateProgramAndSolutionDetails.result;
-              }      
-            } 
-            
+              }
+            }
           }
         }
         delete checkForTargetedSolution.result["status"];
@@ -2127,7 +2126,10 @@ module.exports = class SolutionsHelper {
           solutionData[0].endDate &&
           new Date() > new Date(solutionData[0].endDate)
         ) {
-          if (solutionData[0].status === constants.common.ACTIVE && solutionData[0].type !== constants.common.SURVEY) {
+          if (
+            solutionData[0].status === constants.common.ACTIVE &&
+            solutionData[0].type !== constants.common.SURVEY
+          ) {
             let updateSolution = await this.update(
               solutionData[0]._id,
               {
@@ -2206,7 +2208,7 @@ module.exports = class SolutionsHelper {
           "programId",
           "name",
           "projectTemplateId",
-          "endDate"
+          "endDate",
         ]);
 
         if (!Array.isArray(solutionData) || solutionData.length < 1) {
