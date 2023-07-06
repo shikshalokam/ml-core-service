@@ -2208,7 +2208,6 @@ module.exports = class SolutionsHelper {
           "programId",
           "name",
           "projectTemplateId",
-          "endDate",
         ]);
 
         if (!Array.isArray(solutionData) || solutionData.length < 1) {
