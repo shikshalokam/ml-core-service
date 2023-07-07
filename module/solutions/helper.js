@@ -1792,9 +1792,7 @@ module.exports = class SolutionsHelper {
               ? surveySubmissionData[0].surveyId
               : "";
             checkForTargetedSolution.result.submissionStatus =
-              surveySubmissionData[0].status
-                ? surveySubmissionData[0].status
-                : "";
+              surveySubmissionData[0].status;
           } else if (!isSolutionActive) {
             throw new Error(constants.apiResponses.LINK_IS_EXPIRED);
           }
