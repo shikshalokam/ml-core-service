@@ -905,10 +905,7 @@ module.exports = class SolutionsHelper {
   static detailsBasedOnRoleAndLocation(solutionId, bodyData, type = "") {
     return new Promise(async (resolve, reject) => {
       try {
-        let queryData = await this.queryBasedOnRoleAndLocation(
-          bodyData,
-          type
-        );
+        let queryData = await this.queryBasedOnRoleAndLocation(bodyData, type);
 
         if (!queryData.success) {
           return resolve(queryData);
@@ -1794,6 +1791,10 @@ module.exports = class SolutionsHelper {
               .surveyId
               ? surveySubmissionData[0].surveyId
               : "";
+            checkForTargetedSolution.result.submissionStatus =
+              surveySubmissionData[0].status
+                ? surveySubmissionData[0].status
+                : "";
           } else if (!isSolutionActive) {
             throw new Error(constants.apiResponses.LINK_IS_EXPIRED);
           }
