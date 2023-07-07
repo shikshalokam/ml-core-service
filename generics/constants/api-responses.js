@@ -179,7 +179,7 @@ module.exports = {
   "PROJECT_TEMPLATE_ID_NOT_FOUND": "Project templates not exists in solution",
   "SOLUTION_TARGETED_ENTITY" : "Targeted Entity Types Fetched",
   "ENTITY_ID_OR_LOCATION_ID_NOT_FOUND" : "Entity id or location id not found",
-  "NOT_AUTHORIZED_TO_ACCESS" :"You are not authorised to access this resource",
+  "NOT_AUTHORIZED_TO_ACCESS" : "You are not authorised to access this resource",
   "NO_LOCATION_ID_FOUND_IN_DATA" : "Location Id not found in data",
   "DATA_FETCHED_SUCCESSFULLY" : "Data fetched successfully",
   "DATA_DELETED_SUCCESSFULLY" : "Data deleted successfully",
@@ -197,5 +197,7 @@ module.exports = {
   "PROGRAM_NOT_CREATED" : "Program not created",
   "PROGRAM_USERS_NOT_CREATED" : "Program users not created",
   "PROGRAM_USERS_NOT_UPDATED" : "Program users not updated",
-  "USER_EXTENSION_FTECHED":"User extension fetched successfully"
+  "USER_EXTENSION_FTECHED" : "User extension fetched successfully",
+  "USER_PROGRAM_AND_SOLUTION_CREATED" : "User program and solution created successfully",
+  "SOLUTION_PROGRAMS_NOT_CREATED" : "Failed to create program and solution"
 };

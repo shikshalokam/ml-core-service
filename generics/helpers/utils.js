@@ -6,16 +6,16 @@
  */
 
 // Dependencies
-const {validate : uuidValidate,v4 : uuidV4} = require('uuid');
+const { validate: uuidValidate, v4: uuidV4 } = require("uuid");
 const md5 = require("md5");
 
- /**
-  * convert string to camelCaseToTitleCase.
-  * @function
-  * @name camelCaseToTitleCase
-  * @param {String} in_camelCaseString - String of camel case.
-  * @returns {String} returns a titleCase string. ex: helloThereMister, o/p: Hello There Mister
-*/
+/**
+ * convert string to camelCaseToTitleCase.
+ * @function
+ * @name camelCaseToTitleCase
+ * @param {String} in_camelCaseString - String of camel case.
+ * @returns {String} returns a titleCase string. ex: helloThereMister, o/p: Hello There Mister
+ */
 
 function camelCaseToTitleCase(in_camelCaseString) {
   var result = in_camelCaseString // "ToGetYourGEDInTimeASongAboutThe26ABCsIsOfTheEssenceButAPersonalIDCardForUser456InRoom26AContainingABC26TimesIsNotAsEasyAs123ForC3POOrR2D2Or2R2D"
@@ -38,130 +38,132 @@ function camelCaseToTitleCase(in_camelCaseString) {
   return result.charAt(0).toUpperCase() + result.slice(1);
 }
 
-
- /**
-  * Convert string from hyphen case to camelCase.
-  * @function
-  * @name hyphenCaseToCamelCase
-  * @param {String} string - String in hyphen case.
-  * @returns {String} returns a camelCase string.
-*/
+/**
+ * Convert string from hyphen case to camelCase.
+ * @function
+ * @name hyphenCaseToCamelCase
+ * @param {String} string - String in hyphen case.
+ * @returns {String} returns a camelCase string.
+ */
 
 function hyphenCaseToCamelCase(string) {
-  return string.replace(/-([a-z])/g, function (g) { return g[1].toUpperCase(); });
+  return string.replace(/-([a-z])/g, function (g) {
+    return g[1].toUpperCase();
+  });
 }
 
- /**
-  * convert string to lowerCase.
-  * @function
-  * @name lowerCase
-  * @param {String} str 
-  * @returns {String} returns a lowercase string. ex: HELLO, o/p: hello
-*/
+/**
+ * convert string to lowerCase.
+ * @function
+ * @name lowerCase
+ * @param {String} str
+ * @returns {String} returns a lowercase string. ex: HELLO, o/p: hello
+ */
 
 function lowerCase(str) {
-  return str.toLowerCase()
+  return str.toLowerCase();
 }
 
- /**
-  * check whether the given string is url.
-  * @function
-  * @name lowerCase
-  * @param {String} str 
-  * @returns {Boolean} returns a Boolean value. ex:"http://example.com:3000/pathname/?search=test" , o/p:true
-*/
+/**
+ * check whether the given string is url.
+ * @function
+ * @name lowerCase
+ * @param {String} str
+ * @returns {Boolean} returns a Boolean value. ex:"http://example.com:3000/pathname/?search=test" , o/p:true
+ */
 
 function checkIfStringIsUrl(str) {
-  var pattern = new RegExp('^(https?:\\/\\/)?' + // protocol
-    '((([a-z\\d]([a-z\\d-]*[a-z\\d])*)\\.?)+[a-z]{2,}|' + // domain name
-    '((\\d{1,3}\\.){3}\\d{1,3}))' + // OR ip (v4) address
-    '(\\:\\d+)?(\\/[-a-z\\d%_.~+]*)*' + // port and path
-    '(\\?[;&a-z\\d%_.~+=-]*)?' + // query string
-    '(\\#[-a-z\\d_]*)?$', 'i'); // fragment locator
+  var pattern = new RegExp(
+    "^(https?:\\/\\/)?" + // protocol
+      "((([a-z\\d]([a-z\\d-]*[a-z\\d])*)\\.?)+[a-z]{2,}|" + // domain name
+      "((\\d{1,3}\\.){3}\\d{1,3}))" + // OR ip (v4) address
+      "(\\:\\d+)?(\\/[-a-z\\d%_.~+]*)*" + // port and path
+      "(\\?[;&a-z\\d%_.~+=-]*)?" + // query string
+      "(\\#[-a-z\\d_]*)?$",
+    "i"
+  ); // fragment locator
   return pattern.test(str);
 }
 
- /**
-  * check whether the data is present in env.
-  * @function
-  * @name checkIfEnvDataExistsOrNot
-  * @param {String} str 
-  * @returns {String} returns a env data if found else default value. 
-*/
+/**
+ * check whether the data is present in env.
+ * @function
+ * @name checkIfEnvDataExistsOrNot
+ * @param {String} str
+ * @returns {String} returns a env data if found else default value.
+ */
 
-function checkIfEnvDataExistsOrNot(data){
-  
+function checkIfEnvDataExistsOrNot(data) {
   let value;
 
-  if(process.env[data] && process.env[data] !== ""){
-    value  = process.env[data]
+  if (process.env[data] && process.env[data] !== "") {
+    value = process.env[data];
   } else {
-    let defaultEnv = "DEFAULT_"+data;
-    value = process.env[defaultEnv]
+    let defaultEnv = "DEFAULT_" + data;
+    value = process.env[defaultEnv];
   }
 
   return value;
 }
 
- /**
-  * check whether the id is mongodbId or not.
-  * @function
-  * @name isValidMongoId
-  * @param {String} id 
-  * @returns {Boolean} returns whether id is valid mongodb id or not.  
-*/
+/**
+ * check whether the id is mongodbId or not.
+ * @function
+ * @name isValidMongoId
+ * @param {String} id
+ * @returns {Boolean} returns whether id is valid mongodb id or not.
+ */
 
 function isValidMongoId(id) {
   return ObjectId.isValid(id) && new ObjectId(id).toString() === id;
 }
 
-  /**
-   * Convert string to mongodb object id.
-   * @method
-   * @name convertStringToObjectId
-   * @param id - string id
-   * @returns {ObjectId} - returns objectId 
-  */
+/**
+ * Convert string to mongodb object id.
+ * @method
+ * @name convertStringToObjectId
+ * @param id - string id
+ * @returns {ObjectId} - returns objectId
+ */
 
 function convertStringToObjectId(id) {
-    
   let checkWhetherIdIsValidMongoId = gen.utils.isValidMongoId(id);
-  if(checkWhetherIdIsValidMongoId) {
-      id = ObjectId(id);
+  if (checkWhetherIdIsValidMongoId) {
+    id = ObjectId(id);
   }
 
   return id;
 }
 
 /**
-   * Generate unique id.s
-   * @method
-   * @name generateUniqueId
-   * @returns {String} - unique id 
-  */
+ * Generate unique id.s
+ * @method
+ * @name generateUniqueId
+ * @returns {String} - unique id
+ */
 
 function generateUniqueId() {
   return uuidV4();
 }
 
- /**
-  * check whether the url is a valid sunbird API
-  * @function
-  * @name checkIfURLIsSunbirdAPI
-  * @param {String} url 
-  * @returns {Boolean} returns whether url is valid sunbird API or not.  
-*/
+/**
+ * check whether the url is a valid sunbird API
+ * @function
+ * @name checkIfURLIsSunbirdAPI
+ * @param {String} url
+ * @returns {Boolean} returns whether url is valid sunbird API or not.
+ */
 
 function checkIfURLIsSunbirdAPI(url) {
-  return (url.startsWith(process.env.sunbird_url)) ? true : false;
+  return url.startsWith(process.env.sunbird_url) ? true : false;
 }
 
- /**
-  * Get epoch time from current date.
-  * @function
-  * @name epochTime
-  * @returns {Date} returns epoch time.  
-*/
+/**
+ * Get epoch time from current date.
+ * @function
+ * @name epochTime
+ * @returns {Date} returns epoch time.
+ */
 
 function epochTime() {
   var currentDate = new Date();
@@ -170,151 +172,229 @@ function epochTime() {
 }
 
 /**
-  * Parse a single column.
-  * @function
-  * @name valueParser - Parse value
-  * @param {String} dataToBeParsed - data to be parsed. 
-  * @returns {Object} returns parsed data
-*/
+ * Parse a single column.
+ * @function
+ * @name valueParser - Parse value
+ * @param {String} dataToBeParsed - data to be parsed.
+ * @returns {Object} returns parsed data
+ */
 
 function valueParser(dataToBeParsed) {
+  let parsedData = {};
 
-  let parsedData = {}
+  Object.keys(dataToBeParsed).forEach((eachDataToBeParsed) => {
+    parsedData[eachDataToBeParsed] = dataToBeParsed[eachDataToBeParsed].trim();
+  });
 
-  Object.keys(dataToBeParsed).forEach(eachDataToBeParsed => {
-    parsedData[eachDataToBeParsed] = dataToBeParsed[eachDataToBeParsed].trim()
-  })
-
-  if(parsedData._arrayFields && parsedData._arrayFields.split(",").length > 0) {
-    parsedData._arrayFields.split(",").forEach(arrayTypeField => {
+  if (
+    parsedData._arrayFields &&
+    parsedData._arrayFields.split(",").length > 0
+  ) {
+    parsedData._arrayFields.split(",").forEach((arrayTypeField) => {
       if (parsedData[arrayTypeField]) {
-        parsedData[arrayTypeField] = parsedData[arrayTypeField].split(",")
+        parsedData[arrayTypeField] = parsedData[arrayTypeField].split(",");
       }
-    })
+    });
   }
 
-  return parsedData
+  return parsedData;
 }
 
- /**
-  * check whether string is valid uuid.
-  * @function
-  * @name checkValidUUID
-  * @param {String} uuids 
-  * @returns {Boolean} returns a Boolean value true/false
-*/
+/**
+ * check whether string is valid uuid.
+ * @function
+ * @name checkValidUUID
+ * @param {String} uuids
+ * @returns {Boolean} returns a Boolean value true/false
+ */
 
 function checkValidUUID(uuids) {
-
   var validateUUID = true;
-  if(Array.isArray(uuids)){
-      for (var i = 0; uuids.length > i; i++) {
-          if(!uuidValidate(uuids[i])){
-            validateUUID = false
-          }
+  if (Array.isArray(uuids)) {
+    for (var i = 0; uuids.length > i; i++) {
+      if (!uuidValidate(uuids[i])) {
+        validateUUID = false;
       }
-  }else {
-     validateUUID = uuidValidate(uuids);
+    }
+  } else {
+    validateUUID = uuidValidate(uuids);
   }
   return validateUUID;
 }
 
 function convertStringToBoolean(stringData) {
-  let stringToBoolean = (stringData === "TRUE" || stringData === "true");
+  let stringToBoolean = stringData === "TRUE" || stringData === "true";
   return stringToBoolean;
 }
 
 /**
-  * md5 hash
-  * @function
-  * @name md5Hash
-  * @returns {String} returns hashed value.  
-*/
+ * md5 hash
+ * @function
+ * @name md5Hash
+ * @returns {String} returns hashed value.
+ */
 
 function md5Hash(value) {
   return md5(value);
 }
 
 /**
-  * filter out location id and code
-  * @function
-  * @name filterLocationIdandCode
-  * @returns {Object} - Object contain locationid and location code array.  
-*/
+ * filter out location id and code
+ * @function
+ * @name filterLocationIdandCode
+ * @returns {Object} - Object contain locationid and location code array.
+ */
 
 function filterLocationIdandCode(dataArray) {
   let locationIds = [];
   let locationCodes = [];
-  dataArray.forEach(element=>{
-      if (this.checkValidUUID(element)) {
-          locationIds.push(element);
-      } else {
-          locationCodes.push(element);
-      }
+  dataArray.forEach((element) => {
+    if (this.checkValidUUID(element)) {
+      locationIds.push(element);
+    } else {
+      locationCodes.push(element);
+    }
   });
-  return ({
-    ids : locationIds,
-    codes : locationCodes
-  });
+  return {
+    ids: locationIds,
+    codes: locationCodes,
+  };
 }
 
 function arrayIdsTobjectIds(ids) {
-  return ids.map(id => ObjectId(id));
+  return ids.map((id) => ObjectId(id));
 }
 
 /**
-  * check whether string contains only number
-  * @function
-  * @name checkIfStringIsNumber
-  * @returns {Boolean} returns a Boolean value true/false
-*/
+ * check whether string contains only number
+ * @function
+ * @name checkIfStringIsNumber
+ * @returns {Boolean} returns a Boolean value true/false
+ */
 
 function checkIfStringIsNumber(str) {
   return /^[0-9]+$/.test(str);
 }
 
 /**
-  * array of object to array objectId
-  * @function
-  * @name arrayOfObjectToArrayOfObjectId
-  * @returns {Boolean} returns a Boolean value true/false
-*/
+ * array of object to array objectId
+ * @function
+ * @name arrayOfObjectToArrayOfObjectId
+ * @returns {Boolean} returns a Boolean value true/false
+ */
 
 function arrayOfObjectToArrayOfObjectId(ids) {
-  return ids.map(obj => obj._id);
+  return ids.map((obj) => obj._id);
 }
 
 /**
-  * Returns array of objects in string format and accepts array of objectId
-  * @function
-  * @name convertArrayObjectIdtoStringOfObjectId
-  * @returns {Boolean} returns a array of objectIds in string format
-  * Input = [ObjectId(6319a4d53c40dd000978dacb), ObjectId(6319a4d53c40dd000978dacb)] This array will contain buffer of objectId
-  * Output = ["6319a4d53c40dd000978dacb","6319a4d53c40dd000978dacb"] This is the output in format of string
-*/
+ * Returns array of objects in string format and accepts array of objectId
+ * @function
+ * @name convertArrayObjectIdtoStringOfObjectId
+ * @returns {Boolean} returns a array of objectIds in string format
+ * Input = [ObjectId(6319a4d53c40dd000978dacb), ObjectId(6319a4d53c40dd000978dacb)] This array will contain buffer of objectId
+ * Output = ["6319a4d53c40dd000978dacb","6319a4d53c40dd000978dacb"] This is the output in format of string
+ */
 
 function convertArrayObjectIdtoStringOfObjectId(ids) {
-  return ids.map(obj => obj._id.toString());
+  return ids.map((obj) => obj._id.toString());
 }
 
+/**
+ * Returns date and time with offset
+ * @function
+ * @name addOffsetToDateTime
+ * @returns {date} returns date and time with offset
+ * example:
+ * input = Sun Jun 16 2024 23:59:59 GMT+0000 (Coordinated Universal Time), +05:30
+ * output = Sun Jun 16 2024 18:29:59 GMT+0000 (Coordinated Universal Time)
+ */
+
+function addOffsetToDateTime(time, timeZoneDifference) {
+  //get the offset time from env with respect UTC
+  let localTimeZone = timeZoneDifference;
+  //convert offset time to minutes
+  let localTime = localTimeZone.split(":");
+  let localHourDifference = Number(localTime[0]);
+  let getTimeDiffInMinutes =
+    localHourDifference * 60 +
+    (localHourDifference / Math.abs(localHourDifference)) *
+      Number(localTime[1]);
+  //get server offset time w.r.t. UTC time
+  let timeDifference = new Date().getTimezoneOffset();
+  //get actual time difference in minutes
+  let differenceWithLocal = timeDifference + getTimeDiffInMinutes;
+  // if its 0 then return same time
+  if (differenceWithLocal === 0) {
+    return time;
+  } else {
+    // set time difference
+    let getMinutes = differenceWithLocal % 60;
+    let getHours = (differenceWithLocal - getMinutes) / 60;
+    time.setHours(time.getHours() - getHours);
+    time.setMinutes(time.getMinutes() - getMinutes);
+    return time;
+  }
+}
+
+/**
+ * Returns startDate if time is not passed it will add default time with offset to utc
+ * @function
+ * @name getStartDate
+ * @returns {date} returns date and time with offset
+ * example:
+ * input = 2022-06-01, +05:30
+ * output = Wed Jan 31 2001 18:30:00 GMT+0000 (Coordinated Universal Time)
+ */
+function getStartDate(date, timeZoneDifference) {
+  let startDate = date.split(" ");
+  if (startDate[1] === "" || startDate[1] === undefined) {
+    date = startDate[0] + " 00:00:00";
+  }
+  date = new Date(date);
+  date = addOffsetToDateTime(date, timeZoneDifference);
+  return date;
+}
+
+/**
+ * Returns endDate if time is not passed it will add default time with offset to utc
+ * @function
+ * @name getEndDate
+ * @returns {date} returns date and time with offset
+ * example:
+ * input = 2024-06-16, +05:30
+ * output = Sun Jun 16 2024 18:29:59 GMT+0000 (Coordinated Universal Time)
+ */
+function getEndDate(date, timeZoneDifference) {
+  let endDate = date.split(" ");
+  if (endDate[1] === "" || endDate[1] === undefined) {
+    date = endDate[0] + " 23:59:59";
+  }
+  date = new Date(date);
+  date = addOffsetToDateTime(date, timeZoneDifference);
+  return date;
+}
 module.exports = {
-  camelCaseToTitleCase : camelCaseToTitleCase,
-  lowerCase : lowerCase,
-  checkIfStringIsUrl : checkIfStringIsUrl,
-  checkIfEnvDataExistsOrNot : checkIfEnvDataExistsOrNot,
-  hyphenCaseToCamelCase : hyphenCaseToCamelCase,
-  isValidMongoId : isValidMongoId,
-  convertStringToObjectId : convertStringToObjectId,
-  generateUniqueId : generateUniqueId,
-  checkIfURLIsSunbirdAPI : checkIfURLIsSunbirdAPI,
-  epochTime : epochTime,
-  valueParser : valueParser,
-  checkValidUUID : checkValidUUID,
-  convertStringToBoolean : convertStringToBoolean,
-  md5Hash : md5Hash,
-  filterLocationIdandCode : filterLocationIdandCode,
-  arrayIdsTobjectIds : arrayIdsTobjectIds,
-  checkIfStringIsNumber : checkIfStringIsNumber,
-  arrayOfObjectToArrayOfObjectId : arrayOfObjectToArrayOfObjectId,
-  convertArrayObjectIdtoStringOfObjectId:convertArrayObjectIdtoStringOfObjectId
+  camelCaseToTitleCase: camelCaseToTitleCase,
+  lowerCase: lowerCase,
+  checkIfStringIsUrl: checkIfStringIsUrl,
+  checkIfEnvDataExistsOrNot: checkIfEnvDataExistsOrNot,
+  hyphenCaseToCamelCase: hyphenCaseToCamelCase,
+  isValidMongoId: isValidMongoId,
+  convertStringToObjectId: convertStringToObjectId,
+  generateUniqueId: generateUniqueId,
+  checkIfURLIsSunbirdAPI: checkIfURLIsSunbirdAPI,
+  epochTime: epochTime,
+  valueParser: valueParser,
+  checkValidUUID: checkValidUUID,
+  convertStringToBoolean: convertStringToBoolean,
+  md5Hash: md5Hash,
+  filterLocationIdandCode: filterLocationIdandCode,
+  arrayIdsTobjectIds: arrayIdsTobjectIds,
+  checkIfStringIsNumber: checkIfStringIsNumber,
+  arrayOfObjectToArrayOfObjectId: arrayOfObjectToArrayOfObjectId,
+  convertArrayObjectIdtoStringOfObjectId:
+    convertArrayObjectIdtoStringOfObjectId,
+  getStartDate: getStartDate,
+  getEndDate: getEndDate,
 };

@@ -361,7 +361,7 @@ const setUserConsent = function ( token, consentData ) {
         try {
             
             let url = userServiceUrl + constants.endpoints.USER_CONSENT_API;
-
+            
             const options = {
                 headers : {
                     "content-type": "application/json",
@@ -381,8 +381,9 @@ const setUserConsent = function ( token, consentData ) {
                 if (err) {
                     result.success = false;
                 } else {
-                    
+                   
                     let response = JSON.parse(data.body);
+                    
                     if( response.responseCode === httpStatusCode['http_responsecode_ok'].message ) {
                         result["data"] = response;
                     } else {
