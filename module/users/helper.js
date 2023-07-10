@@ -383,6 +383,10 @@ module.exports = class UsersHelper {
                   data["projectTemplateId"] = importedProject.projectTemplateId;
                   data["projectId"] = importedProject._id;
                   data["type"] = constants.common.IMPROVEMENT_PROJECT;
+                  // if project is having certificate pass certificateTemplateId details with solution details.
+                  if ( importedProject.certificate && importedProject.certificate.templateId ) {
+                    data["certificateTemplateId"] = importedProject.certificate.templateId;
+                  }
                   mergedData.push(data);
                   totalCount = totalCount + 1;
                 }
