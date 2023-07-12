@@ -13,6 +13,8 @@ const improvementProjectService = require(ROOT_PATH +
 const appsPortalBaseUrl = process.env.APP_PORTAL_BASE_URL + "/";
 const userService = require(ROOT_PATH + "/generics/services/users");
 const programUsersHelper = require(MODULES_BASE_PATH + "/programUsers/helper");
+const timeZoneDifference =
+  process.env.TIMEZONE_DIFFRENECE_BETWEEN_LOCAL_TIME_AND_UTC;
 
 /**
  * SolutionsHelper
@@ -98,7 +100,7 @@ module.exports = class SolutionsHelper {
           {
             externalId: solutionData.programExternalId,
           },
-          ["name", "description", "scope"]
+          ["name", "description", "scope", "endDate", "startDate"]
         );
 
         if (!programData.length > 0) {
@@ -175,12 +177,24 @@ module.exports = class SolutionsHelper {
 
         solutionData.status = constants.common.ACTIVE;
 
-        if(checkDate){
-          if(solutionData.hasOwnProperty("endDate")){
-            solutionData.endDate = gen.utils.getStartDate(solutionData.endDate)
+        if (checkDate) {
+          if (solutionData.hasOwnProperty("endDate")) {
+            solutionData.endDate = gen.utils.getEndDate(
+              solutionData.endDate,
+              timeZoneDifference
+            );
+            if (solutionData.endDate > programData[0].endDate) {
+              solutionData.endDate = programData[0].endDate;
+            }
           }
-          if(solutionData.hasOwnProperty("startDate")){
-            solutionData.startDate = gen.utils.getStartDate(solutionData.startDate)
+          if (solutionData.hasOwnProperty("startDate")) {
+            solutionData.startDate = gen.utils.getStartDate(
+              solutionData.startDate,
+              timeZoneDifference
+            );
+            if (solutionData.startDate < programData[0].startDate) {
+              solutionData.startDate = programData[0].startDate;
+            }
           }
         }
 
@@ -421,6 +435,7 @@ module.exports = class SolutionsHelper {
 
         let solutionDocument = await this.solutionDocuments(queryObject, [
           "_id",
+          "programId",
         ]);
 
         if (!solutionDocument.length > 0) {
@@ -429,12 +444,41 @@ module.exports = class SolutionsHelper {
             message: constants.apiResponses.SOLUTION_NOT_FOUND,
           });
         }
-        if(checkDate){
-          if(solutionData.hasOwnProperty("endDate")){
-            solutionData.endDate = gen.utils.getStartDate(solutionData.endDate)
+
+        if (
+          checkDate &&
+          (solutionData.hasOwnProperty("endDate") ||
+            solutionData.hasOwnProperty("endDate"))
+        ) {
+          let programData = await programsHelper.programDocuments(
+            {
+              _id: solutionDocument[0].programId,
+            },
+            ["_id", "endDate", "startDate"]
+          );
+
+          if (!programData.length > 0) {
+            throw {
+              message: constants.apiResponses.PROGRAM_NOT_FOUND,
+            };
           }
-          if(solutionData.hasOwnProperty("startDate")){
-            solutionData.startDate = gen.utils.getStartDate(solutionData.startDate)
+          if (solutionData.hasOwnProperty("endDate")) {
+            solutionData.endDate = gen.utils.getEndDate(
+              solutionData.endDate,
+              timeZoneDifference
+            );
+            if (solutionData.endDate > programData[0].endDate) {
+              solutionData.endDate = programData[0].endDate;
+            }
+          }
+          if (solutionData.hasOwnProperty("startDate")) {
+            solutionData.startDate = gen.utils.getStartDate(
+              solutionData.startDate,
+              timeZoneDifference
+            );
+            if (solutionData.startDate < programData[0].startDate) {
+              solutionData.startDate = programData[0].startDate;
+            }
           }
         }
 
@@ -680,9 +724,20 @@ module.exports = class SolutionsHelper {
           matchQuery["$or"] = [];
 
           targetedTypes.forEach((type) => {
-            let singleType = {
-              type: type,
-            };
+            let singleType = {};
+            if (type === constants.common.SURVEY) {
+              singleType = {
+                type: type,
+              };
+              const currentDate = new Date();
+              currentDate.setDate(currentDate.getDate() - 15);
+              singleType["endDate"] = { $gte: currentDate };
+            } else {
+              singleType = {
+                type: type,
+              };
+              singleType["endDate"] = { $gte: new Date() };
+            }
 
             if (type === constants.common.IMPROVEMENT_PROJECT) {
               singleType["projectTemplateId"] = { $exists: true };
@@ -693,6 +748,13 @@ module.exports = class SolutionsHelper {
         } else {
           if (type !== "") {
             matchQuery["type"] = type;
+            if (type === constants.common.SURVEY) {
+              const currentDate = new Date();
+              currentDate.setDate(currentDate.getDate() - 15);
+              matchQuery["endDate"] = { $gte: currentDate };
+            } else {
+              matchQuery["endDate"] = { $gte: new Date() };
+            }
           }
 
           if (subType !== "") {
@@ -705,7 +767,7 @@ module.exports = class SolutionsHelper {
         }
 
         matchQuery["startDate"] = { $lte: new Date() };
-        matchQuery["endDate"] = { $gte: new Date() };
+        // for survey type solutions even after expiry it should be visible to user for 15 days
 
         let targetedSolutions = await this.list(
           type,
@@ -840,14 +902,15 @@ module.exports = class SolutionsHelper {
    * @returns {JSON} - Details of solution based on role and location.
    */
 
-  static detailsBasedOnRoleAndLocation(solutionId, bodyData) {
+  static detailsBasedOnRoleAndLocation(solutionId, bodyData, type = "") {
     return new Promise(async (resolve, reject) => {
       try {
-        let queryData = await this.queryBasedOnRoleAndLocation(bodyData);
+        let queryData = await this.queryBasedOnRoleAndLocation(bodyData, type);
 
         if (!queryData.success) {
           return resolve(queryData);
         }
+
         queryData.data["_id"] = solutionId;
         let targetedSolutionDetails = await this.solutionDocuments(
           queryData.data,
@@ -867,6 +930,7 @@ module.exports = class SolutionsHelper {
             "creator",
             "link",
             "certificateTemplateId",
+            "endDate",
           ]
         );
 
@@ -887,6 +951,7 @@ module.exports = class SolutionsHelper {
           success: false,
           message: error.message,
           data: {},
+          status: error.status,
         });
       }
     });
@@ -1630,6 +1695,7 @@ module.exports = class SolutionsHelper {
    * @param {String} userToken - user token.
    * @param {Boolean} createProject - create project.
    * @param {Object} bodyData - Req Body.
+   * @param {Object} createPrivateSolutionIfNotTargeted - flag to create private program if user is non targeted
    * @returns {Object} - Details of the solution.
    */
 
@@ -1654,6 +1720,7 @@ module.exports = class SolutionsHelper {
           userId,
           userToken
         );
+
         if (
           !checkForTargetedSolution ||
           Object.keys(checkForTargetedSolution.result).length <= 0
@@ -1662,7 +1729,6 @@ module.exports = class SolutionsHelper {
         }
 
         let solutionData = checkForTargetedSolution.result;
-
         let isSolutionActive =
           solutionData.status === constants.common.INACTIVE ? false : true;
         if (solutionData.type == constants.common.OBSERVATION) {
@@ -1680,6 +1746,10 @@ module.exports = class SolutionsHelper {
                   ? observationDetailFromLink.result._id
                   : "";
             } else if (!isSolutionActive) {
+              throw new Error(constants.apiResponses.LINK_IS_EXPIRED);
+            }
+          } else {
+            if (!isSolutionActive) {
               throw new Error(constants.apiResponses.LINK_IS_EXPIRED);
             }
           }
@@ -1721,6 +1791,8 @@ module.exports = class SolutionsHelper {
               .surveyId
               ? surveySubmissionData[0].surveyId
               : "";
+            checkForTargetedSolution.result.submissionStatus =
+              surveySubmissionData[0].status;
           } else if (!isSolutionActive) {
             throw new Error(constants.apiResponses.LINK_IS_EXPIRED);
           }
@@ -1783,20 +1855,22 @@ module.exports = class SolutionsHelper {
               throw new Error(constants.apiResponses.LINK_IS_EXPIRED);
             }
           } else {
-            //non targeted project exist
+            if (!isSolutionActive) {
+              throw new Error(constants.apiResponses.LINK_IS_EXPIRED);
+            }
+
+            // check if private-Project already exists
             let checkIfUserProjectExistsQuery = {
               createdBy: userId,
               referenceFrom: constants.common.LINK,
               link: link,
             };
-
             let checkForProjectExist =
               await improvementProjectService.projectDocuments(
                 userToken,
                 checkIfUserProjectExistsQuery,
                 ["_id"]
               );
-
             if (
               checkForProjectExist.success &&
               checkForProjectExist.data &&
@@ -1806,11 +1880,120 @@ module.exports = class SolutionsHelper {
               checkForTargetedSolution.result["projectId"] =
                 checkForProjectExist.data[0]._id;
             }
+            // If project not found and createPrivateSolutionIfNotTargeted := true
+            // By default will be false for old version of app
+            if (
+              !checkForTargetedSolution.result["projectId"] ||
+              checkForTargetedSolution.result["projectId"] === ""
+            ) {
+              // user is not targeted and privateSolutionCreation required
+              /**
+               * function privateProgramAndSolutionDetails
+               * Request:
+               * @param {solutionData} solution data
+               * @param {userToken} for UserId
+               * @response private solutionId
+               */
+              let privateProgramAndSolutionDetails =
+                await this.privateProgramAndSolutionDetails(
+                  solutionData,
+                  userId,
+                  userToken
+                );
+              if (!privateProgramAndSolutionDetails.success) {
+                throw {
+                  status: httpStatusCode.bad_request.status,
+                  message: constants.apiResponses.SOLUTION_PROGRAMS_NOT_CREATED,
+                };
+              }
+              // Replace public solutionId with private solutionId.
+              if (privateProgramAndSolutionDetails.result != "") {
+                checkForTargetedSolution.result["solutionId"] =
+                  privateProgramAndSolutionDetails.result;
+              }
+            }
           }
         }
         delete checkForTargetedSolution.result["status"];
 
         return resolve(checkForTargetedSolution);
+      } catch (error) {
+        return resolve({
+          success: false,
+          status: error.status
+            ? error.status
+            : httpStatusCode["internal_server_error"].status,
+          message: error.message,
+        });
+      }
+    });
+  }
+
+  /**
+   * privateProgramAndSolutionDetails
+   * @method
+   * @name PrivateProgramAndSolutionDetails
+   * @param {Object} solutionData - solution data.
+   * @param {String} userId - user Id.
+   * @param {String} userToken - user token.
+   * @returns {Object} - Details of the private solution.
+   */
+
+  static privateProgramAndSolutionDetails(
+    solutionData,
+    userId = "",
+    userToken = ""
+  ) {
+    return new Promise(async (resolve, reject) => {
+      try {
+        // Check if a private program and private solution already exist or not for this user.
+        let privateSolutionDetails = await this.solutionDocuments(
+          {
+            parentSolutionId: solutionData.solutionId,
+            author: userId,
+            type: solutionData.type,
+            isAPrivateProgram: true,
+          },
+          ["_id", "programId", "programName"]
+        );
+
+        if (!privateSolutionDetails.length > 0) {
+          // Data for program and solution creation
+          let programAndSolutionData = {
+            type: constants.common.IMPROVEMENT_PROJECT,
+            subType: constants.common.IMPROVEMENT_PROJECT,
+            isReusable: false,
+            solutionId: solutionData.solutionId,
+          };
+
+          if (solutionData.programId && solutionData.programId !== "") {
+            programAndSolutionData["programId"] = solutionData.programId;
+            programAndSolutionData["programName"] = solutionData.programName;
+          }
+          // create private program and solution
+          let solutionAndProgramCreation = await this.createProgramAndSolution(
+            userId,
+            programAndSolutionData,
+            userToken,
+            "true" // create duplicate solution
+          );
+
+          if (!solutionAndProgramCreation.success) {
+            throw {
+              status: httpStatusCode.bad_request.status,
+              message: constants.apiResponses.SOLUTION_PROGRAMS_NOT_CREATED,
+            };
+          }
+          return resolve({
+            success: true,
+            result: solutionAndProgramCreation.result.solution._id,
+          });
+        } else {
+          return resolve({
+            success: true,
+            result: privateSolutionDetails[0]._id,
+          });
+        }
       } catch (error) {
         return resolve({
           success: false,
@@ -2178,6 +2361,317 @@ module.exports = class SolutionsHelper {
     });
   }
 
+  // moved this function to solutions helper to avoid circular dependency with users/helper
+  /**
+   * Create user program and solution
+   * @method
+   * @name createProgramAndSolution
+   * @param {string} userId - logged in user Id.
+   * @param {object} programData - data needed for creation of program.
+   * @param {object} solutionData - data needed for creation of solution.
+   * @returns {Array} - Created user program and solution.
+   */
+
+  static createProgramAndSolution(
+    userId,
+    data,
+    userToken,
+    createADuplicateSolution = ""
+  ) {
+    return new Promise(async (resolve, reject) => {
+      try {
+        let userPrivateProgram = {};
+        let dateFormat = gen.utils.epochTime();
+        let parentSolutionInformation = {};
+
+        createADuplicateSolution = gen.utils.convertStringToBoolean(
+          createADuplicateSolution
+        );
+        //program part
+        if (data.programId && data.programId !== "") {
+          let filterQuery = {
+            _id: data.programId,
+          };
+
+          if (createADuplicateSolution === false) {
+            filterQuery.createdBy = userId;
+          }
+
+          let checkforProgramExist = await programsHelper.programDocuments(
+            filterQuery,
+            "all",
+            ["__v"]
+          );
+
+          if (!checkforProgramExist.length > 0) {
+            return resolve({
+              status: httpStatusCode["bad_request"].status,
+              message: constants.apiResponses.PROGRAM_NOT_FOUND,
+              result: {},
+            });
+          }
+
+          if (createADuplicateSolution === true) {
+            let duplicateProgram = checkforProgramExist[0];
+            duplicateProgram = await _createProgramData(
+              duplicateProgram.name,
+              duplicateProgram.externalId
+                ? duplicateProgram.externalId + "-" + dateFormat
+                : duplicateProgram.name + "-" + dateFormat,
+              true,
+              constants.common.ACTIVE,
+              duplicateProgram.description,
+              userId,
+              duplicateProgram.startDate,
+              duplicateProgram.endDate,
+              userId
+            );
+            // set rootorganisation from parent program
+            if (checkforProgramExist[0].hasOwnProperty("rootOrganisations")) {
+              duplicateProgram.rootOrganisations =
+                checkforProgramExist[0].rootOrganisations;
+            }
+            if (
+              checkforProgramExist[0].hasOwnProperty("requestForPIIConsent")
+            ) {
+              duplicateProgram.requestForPIIConsent =
+                checkforProgramExist[0].requestForPIIConsent;
+            }
+            userPrivateProgram = await programsHelper.create(
+              _.omit(duplicateProgram, ["_id", "components", "scope"])
+            );
+          } else {
+            userPrivateProgram = checkforProgramExist[0];
+          }
+        } else {
+          /* If the programId is not passed from the front end, we will enter this else block. 
+          In this block, we need to provide the necessary basic details to create a new program, Including startDate and endDate.*/
+          // Current date
+          let startDate = new Date();
+          // Add one year to the current date
+          let endDate = new Date();
+          endDate.setFullYear(endDate.getFullYear() + 1);
+          let programData = await _createProgramData(
+            data.programName,
+            data.programExternalId
+              ? data.programExternalId
+              : data.programName + "-" + dateFormat,
+            true,
+            constants.common.ACTIVE,
+            data.programDescription
+              ? data.programDescription
+              : data.programName,
+            userId,
+            startDate,
+            endDate
+          );
+
+          if (data.rootOrganisations) {
+            programData.rootOrganisations = data.rootOrganisations;
+          }
+          userPrivateProgram = await programsHelper.create(programData);
+        }
+
+        let solutionDataToBeUpdated = {
+          programId: userPrivateProgram._id,
+          programExternalId: userPrivateProgram.externalId,
+          programName: userPrivateProgram.name,
+          programDescription: userPrivateProgram.description,
+          isAPrivateProgram: userPrivateProgram.isAPrivateProgram,
+        };
+
+        //entities
+        if (
+          Array.isArray(data.entities) &&
+          data.entities &&
+          data.entities.length > 0
+        ) {
+          let entitiesData = [];
+          let bodyData = {};
+
+          let locationData = gen.utils.filterLocationIdandCode(data.entities);
+
+          if (locationData.ids.length > 0) {
+            bodyData = {
+              id: locationData.ids,
+            };
+            let entityData = await userService.locationSearch(bodyData);
+
+            if (!entityData.success) {
+              return resolve({
+                status: httpStatusCode["bad_request"].status,
+                message: constants.apiResponses.ENTITY_NOT_FOUND,
+                result: {},
+              });
+            }
+
+            entityData.data.forEach((entity) => {
+              entitiesData.push(entity.id);
+            });
+
+            solutionDataToBeUpdated["entityType"] = entityData.data[0].type;
+          }
+
+          if (locationData.codes.length > 0) {
+            let filterData = {
+              code: locationData.codes,
+            };
+            let entityDetails = await userService.locationSearch(filterData);
+            let entityDocuments = entityDetails.data;
+            if (!entityDetails.success || !entityDocuments.length > 0) {
+              return resolve({
+                status: httpStatusCode["bad_request"].status,
+                message: constants.apiResponses.ENTITY_NOT_FOUND,
+                result: {},
+              });
+            }
+
+            entityDocuments.forEach((entity) => {
+              entitiesData.push(entity.id);
+            });
+
+            solutionDataToBeUpdated["entityType"] = constants.common.SCHOOL;
+          }
+
+          if (data.type && data.type !== constants.common.IMPROVEMENT_PROJECT) {
+            solutionDataToBeUpdated["entities"] = entitiesData;
+          }
+        }
+
+        //solution part
+        let solution = "";
+        if (data.solutionId && data.solutionId !== "") {
+          let solutionData = await this.solutionDocuments(
+            {
+              _id: data.solutionId,
+            },
+            [
+              "name",
+              "link",
+              "type",
+              "subType",
+              "externalId",
+              "description",
+              "certificateTemplateId",
+              "projectTemplateId",
+            ]
+          );
+
+          if (!solutionData.length > 0) {
+            return resolve({
+              status: httpStatusCode["bad_request"].status,
+              message: constants.apiResponses.SOLUTION_NOT_FOUND,
+              result: {},
+            });
+          }
+
+          if (createADuplicateSolution === true) {
+            let duplicateSolution = solutionData[0];
+            let solutionCreationData = await _createSolutionData(
+              duplicateSolution.name,
+              duplicateSolution.externalId
+                ? duplicateSolution.externalId + "-" + dateFormat
+                : duplicateSolution.name + "-" + dateFormat,
+              true,
+              constants.common.ACTIVE,
+              duplicateSolution.description,
+              userId,
+              false,
+              duplicateSolution._id,
+              duplicateSolution.type,
+              duplicateSolution.subType,
+              userId,
+              duplicateSolution.projectTemplateId
+            );
+
+            _.merge(duplicateSolution, solutionCreationData);
+            _.merge(duplicateSolution, solutionDataToBeUpdated);
+
+            solution = await this.create(
+              _.omit(duplicateSolution, ["_id", "link"])
+            );
+            parentSolutionInformation.solutionId = duplicateSolution._id;
+            parentSolutionInformation.link = duplicateSolution.link;
+          } else {
+            if (solutionData[0].isReusable === false) {
+              return resolve({
+                status: httpStatusCode["bad_request"].status,
+                message: constants.apiResponses.SOLUTION_NOT_FOUND,
+                result: {},
+              });
+            }
+
+            solution = await database.models.solutions.findOneAndUpdate(
+              {
+                _id: solutionData[0]._id,
+              },
+              {
+                $set: solutionDataToBeUpdated,
+              },
+              {
+                new: true,
+              }
+            );
+          }
+        } else {
+          let externalId, description;
+          if (data.solutionName) {
+            externalId = data.solutionExternalId
+              ? data.solutionExternalId
+              : data.solutionName + "-" + dateFormat;
+            description = data.solutionDescription
+              ? data.solutionDescription
+              : data.solutionName;
+          } else {
+            externalId = userId + "-" + dateFormat;
+            description = userPrivateProgram.programDescription;
+          }
+
+          let createSolutionData = await _createSolutionData(
+            data.solutionName
+              ? data.solutionName
+              : userPrivateProgram.programName,
+            externalId,
+            userPrivateProgram.isAPrivateProgram,
+            constants.common.ACTIVE,
+            description,
+            "",
+            false,
+            "",
+            data.type ? data.type : constants.common.ASSESSMENT,
+            data.subType ? data.subType : constants.common.INSTITUTIONAL,
+            userId
+          );
+          _.merge(solutionDataToBeUpdated, createSolutionData);
+          solution = await this.create(solutionDataToBeUpdated);
+        }
+
+        if (solution && solution._id) {
+          await database.models.programs.findOneAndUpdate(
+            {
+              _id: userPrivateProgram._id,
+            },
+            {
+              $addToSet: { components: ObjectId(solution._id) },
+            }
+          );
+        }
+
+        return resolve({
+          success: true,
+          message: constants.apiResponses.USER_PROGRAM_AND_SOLUTION_CREATED,
+          result: {
+            program: userPrivateProgram,
+            solution: solution,
+            parentSolutionInformation: parentSolutionInformation,
+          },
+        });
+      } catch (error) {
+        return reject(error);
+      }
+    });
+  }
+
   /**
    * Solution Report Information.
    * @method
@@ -2312,4 +2806,85 @@ function _generateLink(appsPortalBaseUrl, prefix, solutionLink, solutionType) {
   }
 
   return link;
+}
+
+/**
+ * Generate program creation data.
+ * @method
+ * @name _createProgramData
+ * @returns {Object} - program creation data
+ */
+
+function _createProgramData(
+  name,
+  externalId,
+  isAPrivateProgram,
+  status,
+  description,
+  userId,
+  startDate,
+  endDate,
+  createdBy = ""
+) {
+  let programData = {};
+  programData.name = name;
+  programData.externalId = externalId;
+  programData.isAPrivateProgram = isAPrivateProgram;
+  programData.status = status;
+  programData.description = description;
+  programData.userId = userId;
+  programData.createdBy = createdBy;
+  programData.startDate = startDate;
+  programData.endDate = endDate;
+  return programData;
+}
+
+/**
+ * Generate solution creation data.
+ * @method
+ * @name _createSolutionData
+ * @returns {Object} - solution creation data
+ */
+
+function _createSolutionData(
+  name = "",
+  externalId = "",
+  isAPrivateProgram = "",
+  status,
+  description = "",
+  userId,
+  isReusable = "",
+  parentSolutionId = "",
+  type = "",
+  subType = "",
+  updatedBy = "",
+  projectTemplateId = ""
+) {
+  let solutionData = {};
+  solutionData.name = name;
+  solutionData.externalId = externalId;
+  solutionData.isAPrivateProgram = isAPrivateProgram;
+  solutionData.status = status;
+  solutionData.description = description;
+  solutionData.author = userId;
+  if (parentSolutionId) {
+    solutionData.parentSolutionId = parentSolutionId;
+  }
+  if (type) {
+    solutionData.type = type;
+  }
+  if (subType) {
+    solutionData.subType = subType;
+  }
+  if (updatedBy) {
+    solutionData.updatedBy = updatedBy;
+  }
+  if (isReusable) {
+    solutionData.isReusable = isReusable;
+  }
+  if (projectTemplateId) {
+    solutionData.projectTemplateId = projectTemplateId;
+  }
+
+  return solutionData;
 }
