@@ -129,7 +129,7 @@ Note: Add `<name you want to give the db>` to mongoDB url in `.env` file.
 
 ### DB Schema
 
-The schema serves as a blueprint for creating and maintaining the database that supports the ML core services' data storage and retrieval operations.
+The schema serves as a blueprint for creating and maintaining the database that supports the ML core services data storage and retrieval operations.
 
 ![ML-Core Service](https://ml-services-uploads.s3.ap-south-1.amazonaws.com/DBSchema/ML-Core.png)
 
@@ -149,4 +149,3 @@ Creating a branch from master.
 
 For more information on git you can use :  
  https://education.github.com/git-cheat-sheet-education.pdf
-
