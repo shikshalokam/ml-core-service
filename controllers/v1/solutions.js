@@ -322,7 +322,8 @@ module.exports = class Solutions extends Abstract {
         let solutionDetails = 
         await solutionsHelper.detailsBasedOnRoleAndLocation(
           req.params._id,
-          req.body
+          req.body,
+          req.query.type ? req.query.type : ""
         );
           
         solutionDetails.result = solutionDetails.data;
@@ -842,7 +843,6 @@ module.exports = class Solutions extends Abstract {
   async verifyLink(req) {
     return new Promise(async (resolve, reject) => {
       try {
-        
         let solutionData = await solutionsHelper.verifyLink(
           req.params._id,
           req.body,

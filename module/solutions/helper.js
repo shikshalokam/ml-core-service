@@ -724,9 +724,20 @@ module.exports = class SolutionsHelper {
           matchQuery["$or"] = [];
 
           targetedTypes.forEach((type) => {
-            let singleType = {
-              type: type,
-            };
+            let singleType = {};
+            if (type === constants.common.SURVEY) {
+              singleType = {
+                type: type,
+              };
+              const currentDate = new Date();
+              currentDate.setDate(currentDate.getDate() - 15);
+              singleType["endDate"] = { $gte: currentDate };
+            } else {
+              singleType = {
+                type: type,
+              };
+              singleType["endDate"] = { $gte: new Date() };
+            }
 
             if (type === constants.common.IMPROVEMENT_PROJECT) {
               singleType["projectTemplateId"] = { $exists: true };
@@ -737,6 +748,13 @@ module.exports = class SolutionsHelper {
         } else {
           if (type !== "") {
             matchQuery["type"] = type;
+            if (type === constants.common.SURVEY) {
+              const currentDate = new Date();
+              currentDate.setDate(currentDate.getDate() - 15);
+              matchQuery["endDate"] = { $gte: currentDate };
+            } else {
+              matchQuery["endDate"] = { $gte: new Date() };
+            }
           }
 
           if (subType !== "") {
@@ -750,13 +768,7 @@ module.exports = class SolutionsHelper {
 
         matchQuery["startDate"] = { $lte: new Date() };
         // for survey type solutions even after expiry it should be visible to user for 15 days
-        if (type === constants.common.SURVEY) {
-          const currentDate = new Date();
-          currentDate.setDate(currentDate.getDate() - 15);
-          matchQuery["endDate"] = { $gte: currentDate };
-        } else {
-          matchQuery["endDate"] = { $gte: new Date() };
-        }
+
         let targetedSolutions = await this.list(
           type,
           subType,
@@ -890,10 +902,10 @@ module.exports = class SolutionsHelper {
    * @returns {JSON} - Details of solution based on role and location.
    */
 
-  static detailsBasedOnRoleAndLocation(solutionId, bodyData) {
+  static detailsBasedOnRoleAndLocation(solutionId, bodyData, type = "") {
     return new Promise(async (resolve, reject) => {
       try {
-        let queryData = await this.queryBasedOnRoleAndLocation(bodyData);
+        let queryData = await this.queryBasedOnRoleAndLocation(bodyData, type);
 
         if (!queryData.success) {
           return resolve(queryData);
@@ -918,6 +930,7 @@ module.exports = class SolutionsHelper {
             "creator",
             "link",
             "certificateTemplateId",
+            "endDate",
           ]
         );
 
@@ -938,6 +951,7 @@ module.exports = class SolutionsHelper {
           success: false,
           message: error.message,
           data: {},
+          status: error.status,
         });
       }
     });
@@ -1681,6 +1695,7 @@ module.exports = class SolutionsHelper {
    * @param {String} userToken - user token.
    * @param {Boolean} createProject - create project.
    * @param {Object} bodyData - Req Body.
+   * @param {Object} createPrivateSolutionIfNotTargeted - flag to create private program if user is non targeted
    * @returns {Object} - Details of the solution.
    */
 
@@ -1776,6 +1791,8 @@ module.exports = class SolutionsHelper {
               .surveyId
               ? surveySubmissionData[0].surveyId
               : "";
+            checkForTargetedSolution.result.submissionStatus =
+              surveySubmissionData[0].status;
           } else if (!isSolutionActive) {
             throw new Error(constants.apiResponses.LINK_IS_EXPIRED);
           }
@@ -1841,39 +1858,19 @@ module.exports = class SolutionsHelper {
             if (!isSolutionActive) {
               throw new Error(constants.apiResponses.LINK_IS_EXPIRED);
             }
-            // user is not targeted, create private program and solution.
-            let privateProgramAndSolutionDetails =
-              await this.privateProgramAndSolutionDetails(
-                solutionData,
-                userId,
-                userToken
-              );
-            if (!privateProgramAndSolutionDetails.success) {
-              throw {
-                status: httpStatusCode.bad_request.status,
-                message: constants.apiResponses.SOLUTION_PROGRAMS_NOT_CREATED,
-              };
-            }
-            // Adding privateSolutionId to response. We can't replace solutionId because it can cause issue in prev (Before 6.0) app flow.
-            if (privateProgramAndSolutionDetails.result != "") {
-              checkForTargetedSolution.result["privateSolutionId"] =
-                privateProgramAndSolutionDetails.result;
-            }
 
-            //non targeted project exist
+            // check if private-Project already exists
             let checkIfUserProjectExistsQuery = {
               createdBy: userId,
               referenceFrom: constants.common.LINK,
-              solutionId: privateProgramAndSolutionDetails.result,
+              link: link,
             };
-
             let checkForProjectExist =
               await improvementProjectService.projectDocuments(
                 userToken,
                 checkIfUserProjectExistsQuery,
                 ["_id"]
               );
-
             if (
               checkForProjectExist.success &&
               checkForProjectExist.data &&
@@ -1882,6 +1879,38 @@ module.exports = class SolutionsHelper {
             ) {
               checkForTargetedSolution.result["projectId"] =
                 checkForProjectExist.data[0]._id;
+            }
+            // If project not found and createPrivateSolutionIfNotTargeted := true
+            // By default will be false for old version of app
+            if (
+              !checkForTargetedSolution.result["projectId"] ||
+              checkForTargetedSolution.result["projectId"] === ""
+            ) {
+              // user is not targeted and privateSolutionCreation required
+              /**
+               * function privateProgramAndSolutionDetails
+               * Request:
+               * @param {solutionData} solution data
+               * @param {userToken} for UserId
+               * @response private solutionId
+               */
+              let privateProgramAndSolutionDetails =
+                await this.privateProgramAndSolutionDetails(
+                  solutionData,
+                  userId,
+                  userToken
+                );
+              if (!privateProgramAndSolutionDetails.success) {
+                throw {
+                  status: httpStatusCode.bad_request.status,
+                  message: constants.apiResponses.SOLUTION_PROGRAMS_NOT_CREATED,
+                };
+              }
+              // Replace public solutionId with private solutionId.
+              if (privateProgramAndSolutionDetails.result != "") {
+                checkForTargetedSolution.result["solutionId"] =
+                  privateProgramAndSolutionDetails.result;
+              }
             }
           }
         }
@@ -2397,15 +2426,11 @@ module.exports = class SolutionsHelper {
               duplicateProgram.endDate,
               userId
             );
-            // root organisation data of private program user. This function will return user organisation Id.
-            let rootOrganisationDetails = await this.getRootOrganisationOfUser(
-              userToken,
-              userId
-            );
-            if (!rootOrganisationDetails.success) {
-              return resolve(rootOrganisationDetails);
+            // set rootorganisation from parent program
+            if (checkforProgramExist[0].hasOwnProperty("rootOrganisations")) {
+              duplicateProgram.rootOrganisations =
+                checkforProgramExist[0].rootOrganisations;
             }
-            duplicateProgram.rootOrganisations = rootOrganisationDetails.data;
             if (
               checkforProgramExist[0].hasOwnProperty("requestForPIIConsent")
             ) {
@@ -2441,15 +2466,9 @@ module.exports = class SolutionsHelper {
             endDate
           );
 
-          // root organisation data of private program user. This function will return user organisation Id.
-          let rootOrganisationDetails = await this.getRootOrganisationOfUser(
-            userToken,
-            userId
-          );
-          if (!rootOrganisationDetails.success) {
-            return resolve(rootOrganisationDetails);
+          if (data.rootOrganisations) {
+            programData.rootOrganisations = data.rootOrganisations;
           }
-          programData.rootOrganisations = rootOrganisationDetails.data;
           userPrivateProgram = await programsHelper.create(programData);
         }
 
@@ -2649,49 +2668,6 @@ module.exports = class SolutionsHelper {
         });
       } catch (error) {
         return reject(error);
-      }
-    });
-  }
-
-  /**
-   * Find getRootOrganisationOfUser.
-   * @method
-   * @name getRootOrganisationOfUser
-   * @param {String} userToken - user token
-   * @param {String} userId - userId
-   * @returns {Array} - user rootOrganisation data
-   */
-  static getRootOrganisationOfUser(userToken, userId) {
-    return new Promise(async (resolve, reject) => {
-      try {
-        let result = [];
-        // Fetch user profile
-        let userProfile = await userService.profile(userToken, userId);
-
-        if (
-          !userProfile.success ||
-          !userProfile.data ||
-          !userProfile.data.rootOrgId ||
-          userProfile.data.rootOrgId == ""
-        ) {
-          throw {
-            status: httpStatusCode.bad_request.status,
-            message: constants.apiResponses.USER_ROOT_ORG_NOT_FOUND,
-          };
-        }
-        result.push(userProfile.data.rootOrgId);
-        return resolve({
-          success: true,
-          data: result,
-        });
-      } catch (error) {
-        return resolve({
-          success: false,
-          status: error.status
-            ? error.status
-            : httpStatusCode["internal_server_error"].status,
-          message: error.message,
-        });
       }
     });
   }
