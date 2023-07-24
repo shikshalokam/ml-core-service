@@ -895,7 +895,6 @@ module.exports = class UsersHelper {
    * Find non-targeted joined program.
    * @method
    * @name getUserJoinedPrograms
-   * @param {Array} targetedProgramIds - programIds
    * @param {String} searchText - search text
    * @param {String} userId - userId
    * @returns {Object} - non-targeted joined program details.
