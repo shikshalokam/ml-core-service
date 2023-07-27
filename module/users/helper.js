@@ -915,7 +915,9 @@ module.exports = class UsersHelper {
           {
             userId: userId,
           },
-          ["programId"]
+          ["programId"],
+          "none",// not passing skip fields
+          true // sort data.
         );
 
         if (programUsersData.length > 0) {
