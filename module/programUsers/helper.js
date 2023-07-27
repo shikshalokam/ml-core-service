@@ -80,12 +80,14 @@ module.exports = class ProgramUsersHelper {
      * @param {Array} [filterData = "all"] - template filter query.
      * @param {Array} [fieldsArray = "all"] - projected fields.
      * @param {Array} [skipFields = "none"] - field not to include
+     * @param {Sort} [sortedData = ""] - sorting data
      * @returns {Array} Lists of program user. 
     */
     static programUsersDocuments(
         filterData = "all", 
         fieldsArray = "all",
-        skipFields = "none"
+        skipFields = "none",
+        sortedData = ""
     ) {
         return new Promise(async (resolve, reject) => {
             try {
@@ -96,22 +98,27 @@ module.exports = class ProgramUsersHelper {
                 if (fieldsArray != "all") {
                     fieldsArray.forEach(field => {
                         projection[field] = 1;
-                   });
-               }
+                    });
+                }
                
-               if( skipFields !== "none" ) {
+                if( skipFields !== "none" ) {
                    skipFields.forEach(field=>{
                        projection[field] = 0;
                    });
-               }
-               
-               let programUsers = 
-               await database.models.programUsers.find(
-                   queryObject, 
-                   projection
-               ).lean();
+                }
+                let programUsers;
+                if( sortedData !== "" ) {       
+                    programUsers = await database.models.programUsers
+                    .find(queryObject, projection)
+                    .sort(sortedData)
+                    .lean();
+                } else {
+                    programUsers = await database.models.programUsers
+                    .find(queryObject, projection)
+                    .lean();
+                } 
            
-               return resolve(programUsers);
+                return resolve(programUsers);
             
             } catch (error) {
                 return reject(error);

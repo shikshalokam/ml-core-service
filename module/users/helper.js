@@ -514,8 +514,17 @@ module.exports = class UsersHelper {
       try {
         let programDetails = {};
         let targetedProgramIds = [];
-        let nonTargetedProgramIds = [];
+        let alreadyStartedProgramsIds = [];
         let programCount = 0;
+        //get all programs which user has joined irrespective of targeted and non targeted programs
+        let alreadyStartedPrograms = await this.getUserJoinedPrograms(
+          searchText,
+          userId
+        );
+
+        if (alreadyStartedPrograms.success && alreadyStartedPrograms.data) {
+          alreadyStartedProgramsIds = alreadyStartedPrograms.data;
+        }
 
         // getting all program details matching the user profile. not passing pageSize and pageNo to get all data.
         let targetedPrograms = await programsHelper.forUserRoleAndLocation(
@@ -535,30 +544,20 @@ module.exports = class UsersHelper {
           targetedProgramIds = gen.utils.arrayOfObjectToArrayOfObjectId(
             targetedPrograms.data
           );
-          programCount = targetedPrograms.count;
         }
-
-        // In case user changed profile after joined a program, we need to find the such program details. (programs not targeted to user profile anymore)
-        let nontargetedJoinedPrograms =
-          await this.getUserJoinedProgramDetailsWithPreviousProfiles(
-            targetedProgramIds,
-            searchText,
-            userId
-          );
-
-        if (
-          nontargetedJoinedPrograms.success &&
-          nontargetedJoinedPrograms.data
-        ) {
-          nonTargetedProgramIds = nontargetedJoinedPrograms.data;
-          programCount = programCount + nontargetedJoinedPrograms.count; // update program count
-        }
-
-        //find total number of programs related to user
-        let userRelatedPrograms = targetedProgramIds.concat(
-          nonTargetedProgramIds
+        // filter tagregeted program ids if any targetedProgramIds are prsent in alreadyStartedPrograms then remove that
+        let allTargetedProgramButNotJoined = _.differenceWith(
+          targetedProgramIds,
+          alreadyStartedProgramsIds,
+          _.isEqual
         );
 
+        //find total number of programs related to user
+        let userRelatedPrograms = alreadyStartedProgramsIds.concat(
+          allTargetedProgramButNotJoined
+        );
+        //total number of programs
+        programCount = userRelatedPrograms.length;
         if (!userRelatedPrograms.length > 0) {
           throw {
             message: constants.apiResponses.PROGRAM_NOT_FOUND,
@@ -575,6 +574,7 @@ module.exports = class UsersHelper {
         let endIndex = startIndex + pageSize;
         userRelatedPrograms = userRelatedPrograms.slice(startIndex, endIndex);
 
+        //fetching all the programsDocuments
         let userRelatedProgramsData = await programsHelper.programDocuments(
           { _id: { $in: userRelatedPrograms } },
           ["name", "externalId", "metaInformation"],
@@ -898,21 +898,16 @@ module.exports = class UsersHelper {
   /**
    * Find non-targeted joined program.
    * @method
-   * @name getUserJoinedProgramDetailsWithPreviousProfiles
-   * @param {Array} targetedProgramIds - programIds
+   * @name getUserJoinedPrograms
    * @param {String} searchText - search text
    * @param {String} userId - userId
    * @returns {Object} - non-targeted joined program details.
    */
-  static getUserJoinedProgramDetailsWithPreviousProfiles(
-    targetedProgramIds,
-    searchText = "",
-    userId
-  ) {
+  static getUserJoinedPrograms(searchText = "", userId) {
     return new Promise(async (resolve, reject) => {
       try {
         let programUsersIds = [];
-        let nonTargettedProgramDetails = [];
+        let alreadyStartedPrograms = [];
 
         // find all programs joined by the user
         // programUsersData will contain list of programs joined by user from all the profiles. This can be considered as the super set of user programs
@@ -920,7 +915,9 @@ module.exports = class UsersHelper {
           {
             userId: userId,
           },
-          ["programId"]
+          ["programId"],
+          "none",// not passing skip fields
+          { updatedAt: -1 } // sort data.
         );
 
         if (programUsersData.length > 0) {
@@ -928,17 +925,10 @@ module.exports = class UsersHelper {
             return obj.programId;
           });
         }
-
-        // if we find the difference between programUsersData and targettedProgramIds we will get program details joined by user other than the current profile
-        let previousProfilesJoinedProgramIds = _.differenceWith(
-          programUsersIds,
-          targetedProgramIds,
-          _.isEqual
-        );
-
-        if (previousProfilesJoinedProgramIds.length > 0) {
+        
+        if (programUsersIds.length > 0) {
           let findQuery = {
-            _id: { $in: previousProfilesJoinedProgramIds },
+            _id: { $in: programUsersIds },
             startDate: { $lte: new Date() },
             endDate: { $gte: new Date() },
             isAPrivateProgram: false,
@@ -952,7 +942,7 @@ module.exports = class UsersHelper {
             findQuery,
             ["_id"]
           );
-
+            
           // get _ids to array
           if (
             programDetails.success > 0 &&
@@ -960,17 +950,22 @@ module.exports = class UsersHelper {
             programDetails.data.data &&
             programDetails.data.data.length > 0
           ) {
-            nonTargettedProgramDetails =
-              gen.utils.arrayOfObjectToArrayOfObjectId(
-                programDetails.data.data
-              );
+            // programsDetails will return all the program dcouments but it will be not sorted and we have programUsersIds that is sorted based on that will sort Ids
+            // We can't implement sort logic in programDocuments function because userRelatedPrograms can contain prev profile programs also
+            let programDetailsResponse = programDetails.data.data;
+            let programsResult = _.filter(programUsersIds, (id) =>
+              _.find(programDetailsResponse, (data) => data._id.toString() === id.toString())
+            );
+            // get all the programs ids in array
+            alreadyStartedPrograms =
+              gen.utils.arrayOfObjectToArrayOfObjectId(programsResult);
           }
         }
 
         return resolve({
           success: true,
-          data: nonTargettedProgramDetails,
-          count: nonTargettedProgramDetails.length,
+          data: alreadyStartedPrograms,
+          count: alreadyStartedPrograms.length,
         });
       } catch (error) {
         return resolve({
