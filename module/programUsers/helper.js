@@ -80,14 +80,14 @@ module.exports = class ProgramUsersHelper {
      * @param {Array} [filterData = "all"] - template filter query.
      * @param {Array} [fieldsArray = "all"] - projected fields.
      * @param {Array} [skipFields = "none"] - field not to include
-     * @param {Sort} [sort = false] - require sorting or not
+     * @param {Sort} [sortedData = ""] - sorting data
      * @returns {Array} Lists of program user. 
     */
     static programUsersDocuments(
         filterData = "all", 
         fieldsArray = "all",
         skipFields = "none",
-        sort = false
+        sortedData = ""
     ) {
         return new Promise(async (resolve, reject) => {
             try {
@@ -106,18 +106,17 @@ module.exports = class ProgramUsersHelper {
                        projection[field] = 0;
                    });
                 }
-
-                let programUsersQuery = database.models.programUsers.find(
-                    queryObject,
-                    projection
-                  );
-            
-                // Conditionally apply sorting if sort is true
-                if (sort) {
-                    programUsersQuery = programUsersQuery.sort({ updatedAt: -1 });
-                }
-        
-                let programUsers = await programUsersQuery.lean();
+                let programUsers;
+                if( sortedData !== "" ) {       
+                    programUsers = await database.models.programUsers
+                    .find(queryObject, projection)
+                    .sort(sortedData)
+                    .lean();
+                } else {
+                    programUsers = await database.models.programUsers
+                    .find(queryObject, projection)
+                    .lean();
+                } 
            
                 return resolve(programUsers);
             
