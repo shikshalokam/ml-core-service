@@ -96,22 +96,23 @@ module.exports = class ProgramUsersHelper {
                 if (fieldsArray != "all") {
                     fieldsArray.forEach(field => {
                         projection[field] = 1;
-                   });
-               }
+                    });
+                }
                
-               if( skipFields !== "none" ) {
+                if( skipFields !== "none" ) {
                    skipFields.forEach(field=>{
                        projection[field] = 0;
                    });
-               }
-               
-               let programUsers = 
-               await database.models.programUsers.find(
-                   queryObject, 
-                   projection
-               ).lean();
+                }
+                // Add the sorting query
+                let sortQuery = { updatedAt: -1 }; // -1 for descending (latest first)
+
+                let programUsers = await database.models.programUsers
+                .find(queryObject, projection)
+                .sort(sortQuery) // Apply the sorting
+                .lean();
            
-               return resolve(programUsers);
+                return resolve(programUsers);
             
             } catch (error) {
                 return reject(error);

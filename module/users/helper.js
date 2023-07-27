@@ -553,8 +553,8 @@ module.exports = class UsersHelper {
         );
 
         //find total number of programs related to user
-        let userRelatedPrograms = allTargetedProgramButNotJoined.concat(
-          alreadyStartedProgramsIds
+        let userRelatedPrograms = alreadyStartedProgramsIds.concat(
+          allTargetedProgramButNotJoined
         );
         //total number of programs
         programCount = userRelatedPrograms.length;
@@ -915,19 +915,15 @@ module.exports = class UsersHelper {
           {
             userId: userId,
           },
-          ["programId", "updatedAt"]
+          ["programId"]
         );
 
         if (programUsersData.length > 0) {
-          //sort programs documents on updatedAt
-          programUsersData = programUsersData.sort(
-            (a, b) => b.updatedAt - a.updatedAt
-          );
           programUsersIds = programUsersData.map(function (obj) {
             return obj.programId;
           });
         }
-
+        
         if (programUsersIds.length > 0) {
           let findQuery = {
             _id: { $in: programUsersIds },
@@ -944,7 +940,7 @@ module.exports = class UsersHelper {
             findQuery,
             ["_id"]
           );
-
+            
           // get _ids to array
           if (
             programDetails.success > 0 &&
@@ -955,15 +951,9 @@ module.exports = class UsersHelper {
             // programsDetails will return all the program dcouments but it will be not sorted and we have programUsersIds that is sorted based on that will sort Ids
             // We can't implement sort logic in programDocuments function because userRelatedPrograms can contain prev profile programs also
             let programDetailsResponse = programDetails.data.data;
-            let programsResult = programUsersIds.map((id) => {
-              return programDetailsResponse.find(
-                (data) => data._id.toString() === id.toString()
-              );
-            });
-            // after sorting we need to remove undefined values from programResult
-            programsResult = programsResult.filter(function (program) {
-              return program !== undefined;
-            });
+            let programsResult = _.filter(programUsersIds, (id) =>
+              _.find(programDetailsResponse, (data) => data._id.toString() === id.toString())
+            );
             // get all the programs ids in array
             alreadyStartedPrograms =
               gen.utils.arrayOfObjectToArrayOfObjectId(programsResult);
