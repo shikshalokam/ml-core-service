@@ -199,5 +199,7 @@ module.exports = {
   "PROGRAM_USERS_NOT_UPDATED" : "Program users not updated",
   "USER_EXTENSION_FTECHED" : "User extension fetched successfully",
   "USER_PROGRAM_AND_SOLUTION_CREATED" : "User program and solution created successfully",
-  "SOLUTION_PROGRAMS_NOT_CREATED" : "Failed to create program and solution"
+  "SOLUTION_PROGRAMS_NOT_CREATED" : "Failed to create program and solution",
+  "FAILED_CUSTOM_BUCKER_URL" : "Failed to generate custom bucket url",
+  "FAILED_TO_CREATE_DOWNLOADABLEURL" : "Failed to generate downloadableUrl"
 };

@@ -21,11 +21,11 @@ module.exports = class FilesHelper {
    * Get all signed urls.
    * @method
    * @name preSignedUrls
-   * @param {Array} payloadData - payload for files data.
-   * @param {String} referenceType - reference type
-   * @param {String} userId - Logged in user id.
-   * @param {String} templateId - certificateTemplateId.
-   * @returns {Array} - consists of all signed urls files.
+   * @param {Array} payloadData       - payload for files data.
+   * @param {String} referenceType    - reference type
+   * @param {String} userId           - Logged in user id.
+   * @param {String} templateId       - certificateTemplateId.
+   * @returns {Array}                 - consists of all signed urls files.
    */
 
   static preSignedUrls(payloadData, referenceType, userId = "") {
@@ -33,19 +33,8 @@ module.exports = class FilesHelper {
       try {
           
           let payloadIds = Object.keys(payloadData);
-
-          let bucketName = "";
-          let cloudStorage = process.env.CLOUD_STORAGE;
-
-          if( cloudStorage === "AWS" ) {
-              bucketName = process.env.AWS_BUCKET_NAME;
-          } else if (cloudStorage === "GC" ) {
-            bucketName = process.env.GCP_BUCKET_NAME;
-          }  else if (cloudStorage === constants.common.ORACLE_CLOUD_SERVICE ) {
-            bucketName = process.env.OCI_BUCKET_NAME;
-          } else {
-            bucketName = process.env.AZURE_STORAGE_CONTAINER;
-          }
+          let cloudStorage = process.env.SUNBIRD_CLOUD_STORAGE_PROVIDER;
+          let bucketName = process.env.CLOUD_STORAGE_PRIVATEREPORTS_BUCKETNAME;
 
           let result = {
               [payloadIds[0]] : {}
@@ -68,7 +57,7 @@ module.exports = class FilesHelper {
                     if( !imagePayload.success ) {
                         return resolve({
                             status : httpStatusCode['bad_request'].status,
-                            message : constants.common.FAILED_PRE_SIGNED_URL,
+                            message : constants.apiResponses.FAILED_PRE_SIGNED_URL,
                             result : {}
                         });
                     }
@@ -106,7 +95,7 @@ module.exports = class FilesHelper {
             if( !imagePayload.success ) {
                 return resolve({
                     status : httpStatusCode['bad_request'].status,
-                    message : constants.common.FAILED_PRE_SIGNED_URL,
+                    message : constants.apiResponses.FAILED_PRE_SIGNED_URL,
                     result : {}
                 });
             }
@@ -124,63 +113,116 @@ module.exports = class FilesHelper {
     })
   }
 
-    /**
-     * Get Downloadable URL from cloud.
-     * @method
-     * @name getDownloadableUrl
-     * @param {Array} payloadData - payload for files data.
-     * @returns {JSON} Response with status and message.
+  /**
+   * Get Downloadable URL from cloud.
+   * @method
+   * @name getDownloadableUrl
+   * @param {Array} payloadData       - payload for files data.
+   * @returns {JSON}                  - Response with status and message.
+ */
+
+  static getDownloadableUrl(payloadData) {
+    return new Promise(async (resolve, reject) => {
+
+      try {
+
+        let cloudStorage = process.env.SUNBIRD_CLOUD_STORAGE_PROVIDER;
+        let bucketName = process.env.CLOUD_STORAGE_PRIVATEREPORTS_BUCKETNAME;
+        
+        let downloadableUrl = await filesHelpers.getDownloadableUrl(
+          payloadData,
+          bucketName,
+          cloudStorage
+        );
+        if( !downloadableUrl.success ) {
+          return resolve({
+              status : httpStatusCode['bad_request'].status,
+              message : constants.apiResponses.FAILED_TO_CREATE_DOWNLOADABLEURL,
+              result : {}
+          });
+        }
+  
+        return resolve({
+          message: constants.apiResponses.CLOUD_SERVICE_SUCCESS_MESSAGE,
+          result: downloadableUrl.result
+        })
+
+      } catch (error) {
+
+        return reject({
+          status:
+            error.status ||
+            httpStatusCode["internal_server_error"].status,
+
+          message:
+            error.message
+            || httpStatusCode["internal_server_error"].message,
+
+          errorObject: error
+        })
+
+      }
+    })
+
+  }
+
+  /**
+   * Get custom bucket signedUrls or downloadable Urls.
+   * @method
+   * @name customBucketUrls
+   * @param {String} urlType        - Type of url should be return as response, presigned or downloadable URLs.
+   * @param {Object} request        - Request body.
+   * @returns {Array}               - consists of all urls  for files.
    */
 
-    static getDownloadableUrl(payloadData) {
-      return new Promise(async (resolve, reject) => {
-  
-        try {
-  
-          let bucketName = "";
-          let cloudStorage = process.env.CLOUD_STORAGE;
-  
-          if (cloudStorage === "AWS") {
-            bucketName = process.env.AWS_BUCKET_NAME;
-          } else if (cloudStorage === "GC") {
-            bucketName = process.env.GCP_BUCKET_NAME;
-          }  else if (cloudStorage === constants.common.ORACLE_CLOUD_SERVICE) {
-            bucketName = process.env.OCI_BUCKET_NAME;
-          } 
-          else {
-            bucketName = process.env.AZURE_STORAGE_CONTAINER;
-          }
-  
-          let downloadableUrl =
-            await filesHelpers.getDownloadableUrl(
-              payloadData,
-              bucketName,
-              cloudStorage
-            );
-  
-          return resolve({
-            message: constants.apiResponses.CLOUD_SERVICE_SUCCESS_MESSAGE,
-            result: downloadableUrl
-          })
-  
-        } catch (error) {
-  
-          return reject({
-            status:
-              error.status ||
-              httpStatusCode["internal_server_error"].status,
-  
-            message:
-              error.message
-              || httpStatusCode["internal_server_error"].message,
-  
-            errorObject: error
-          })
-  
+  static customBucketUrls(urlType, request) {
+    return new Promise(async (resolve, reject) => {
+      try {
+        // Extract required data from the request object
+        let files = request.request.files;
+        let cloudStorage = process.env.SUNBIRD_CLOUD_STORAGE_PROVIDER;
+        let bucketName = request.bucketName;
+        let customBucketUrlsData;
+
+        // Generate custom bucket URLs based on the URL type
+        if (urlType === constants.common.PRESIGNEDURL) {
+          let folderPath = request.folderPath;
+          customBucketUrlsData = await filesHelpers.preSignedUrls(
+            files,
+            bucketName,
+            cloudStorage,
+            folderPath,
+            request.expiresIn
+          );
+        } else {
+          customBucketUrlsData = await filesHelpers.getDownloadableUrl(
+            files,
+            bucketName,
+            cloudStorage,
+            request.expiresIn
+          );
+          
         }
-      })
-  
-    }
+
+        // Check if customBucketUrlsData is successful
+        if( !customBucketUrlsData.success ) {
+          return resolve({
+              status : httpStatusCode['bad_request'].status,
+              message : constants.apiResponses.FAILED_CUSTOM_BUCKER_URL,
+              result : {}
+          });
+        }
+        // Prepare the response data with custom bucket URLs
+        const result = { files: customBucketUrlsData.result };
+        return resolve({
+          message : constants.apiResponses.URL_GENERATED,
+          data : result
+        })
+      } catch (error) {
+        return reject(error)
+      }
+    })
+  }
 }
 
 
