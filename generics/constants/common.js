@@ -78,6 +78,6 @@ module.exports = {
   PROGRAM: "Program",
   EMPTY_STRING: "",
   DOWNLOADABLEURL_EXPIRY: 525610, // Unit is minute
-  WRITE_PERMISSION: "WRITE",
+  WRITE_PERMISSION: "w",
   PRESIGNEDURL: "presignedUrl"
 };
