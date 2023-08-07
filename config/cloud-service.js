@@ -1,33 +1,35 @@
-const cloudService  = require('client-cloud-services');
+// Import the required module
+const cloudService = require('client-cloud-services');
 
-let cloudConfig = {
-    provider: process.env.SUNBIRD_CLOUD_STORAGE_PROVIDER,
-    identity: process.env.CLOUD_PRIVATE_STORAGE_ACCOUNTNAME,
-    credential: process.env.CLOUD_PRIVATE_STORAGE_SECRET,
-    reportsContainer: process.env.CLOUD_STORAGE_PRIVATEREPORTS_BUCKETNAME,
-    labelsContainer: process.env.CLOUD_STORAGE_RESOURCEBUNDLE_BUCKETNAME,
-    region: process.env.CLOUD_PRIVATE_STORAGE_REGION || null,
-    projectId: process.env.CLOUD_PRIVATE_STORAGE_PROJECT || null,
-    endpoint: process.env.CLOUD_PRIVATE_ENDPOINT || null
-};
-console.log("cloudConfig :",cloudConfig)
-let cloudClient = cloudService.init(cloudConfig);
-console.log("Yeahhhhh cloudClient : ",cloudClient)
-let presignedUrl = cloudClient.getSignedUrl("telemetry-data-store","observation/distinctCount/dataTest.jpeg",262800,"WRITE")
-let downloadableUrl = cloudClient.getDownloadableUrl("telemetry-data-store","observation/distinctCount/dataTest.jpeg",262800)
-// let presignedUrl = cloudClient.getSignedUrl("dev-mentoring","reports/cspSample.pdf")
+/**
+ * Function to initialize the cloud client with the provided configuration.
+ * If any error occurs during initialization, it will be logged, and the process will exit.
+ */
+function initializeCloudClient() {
+  try {
+    // Cloud configuration containing credentials and container names
+    let cloudConfig = {
+      provider: process.env.SUNBIRD_CLOUD_STORAGE_PROVIDER,
+      identity: process.env.CLOUD_PRIVATE_STORAGE_ACCOUNTNAME,
+      credential: process.env.CLOUD_PRIVATE_STORAGE_SECRET,
+      reportsContainer: process.env.CLOUD_STORAGE_PRIVATEREPORTS_BUCKETNAME,
+      labelsContainer: process.env.CLOUD_STORAGE_RESOURCEBUNDLE_BUCKETNAME,
+      region: process.env.CLOUD_PRIVATE_STORAGE_REGION || null,
+      projectId: process.env.CLOUD_PRIVATE_STORAGE_PROJECT || null,
+      endpoint: process.env.CLOUD_PRIVATE_ENDPOINT || null
+    };
 
-console.log("presignedUrl :",presignedUrl)
-console.log("downloadableUrl :",downloadableUrl)
+    // Initialize the cloud client using the provided configuration
+    let cloudClient = cloudService.init(cloudConfig);
 
-// async function someFunction() {
-//     try {
-//       let presignedUrl = await cloudClient.getSignedUrl("dev-mentoring", "reports/cspSample.pdf");
-//       console.log("presignedUrl :", presignedUrl);
-//     } catch (error) {
-//       // Handle any errors that might occur during the asynchronous operation
-//       console.error("Error:", error);
-//     }
-// }
-// someFunction();
-exports.cloudClient = cloudClient;
+    // Export the cloudClient so that it can be used in other modules
+    exports.cloudClient = cloudClient;
+  } catch (error) {
+    // If any error occurs during initialization, log the error and exit the process
+    console.error('Error occurred during cloud client initialization:', error.message);
+    process.exit();
+  }
+}
+
+// Call the function to initialize the cloud client
+initializeCloudClient();

@@ -152,7 +152,7 @@ module.exports = class Files {
       * @returns {JSON} Response with status and message.
     */
 
-     async getDownloadableUrl(req) {
+    async getDownloadableUrl(req) {
         return new Promise(async (resolve, reject) => {
 
             try {
@@ -235,34 +235,33 @@ module.exports = class Files {
       * @returns {JSON}             - Response with status and message.
     */
 
-   async customBucketUrls(req) {
-    return new Promise(async (resolve, reject) => {
+    async customBucketUrls(req) {
+        return new Promise(async (resolve, reject) => {
+            try {
+                let customBucketUrl =
+                await filesHelpers.customBucketUrls(
+                    req.query.urlType,
+                    req.body,
+                );
+                customBucketUrl["result"] = customBucketUrl["data"];
+                return resolve(customBucketUrl);
 
-        try {
-            let customBucketUrl =
-            await filesHelpers.customBucketUrls(
-                 req.query.urlType,
-                 req.body,
-            );
-            customBucketUrl["result"] = customBucketUrl["data"];
-            return resolve(customBucketUrl);
+            } catch (error) {
+                
+                return reject({
+                    status:
+                        error.status ||
+                        httpStatusCode["internal_server_error"].status,
 
-        } catch (error) {
-            
-            return reject({
-                status:
-                    error.status ||
-                    httpStatusCode["internal_server_error"].status,
+                    message:
+                        error.message
+                        || httpStatusCode["internal_server_error"].message,
 
-                message:
-                    error.message
-                    || httpStatusCode["internal_server_error"].message,
-
-                errorObject: error
-            })
-        }
-    })
-   }
+                    errorObject: error
+                })
+            }
+        })
+    }
     
 
 };
