@@ -117,7 +117,9 @@ module.exports = class FilesHelper {
        
         // Get cloud storage provider value from the environment.
         let cloudStorage = process.env.SUNBIRD_CLOUD_STORAGE_PROVIDER;
-        let linkExpireTime = constants.common.NO_OF_EXPIRY_TIME;
+        let noOfMinutes = constants.common.NO_OF_MINUTES;
+        let linkExpireTime = constants.common.NO_OF_EXPIRY_TIME * noOfMinutes;
+       
         // Override cloud storage provider name if provided explicitly.
         if (storageName !== '') {
           cloudStorage = storageName;
@@ -198,7 +200,8 @@ module.exports = class FilesHelper {
 
         // Get cloud storage provider value from the environment.
         let cloudStorage = process.env.SUNBIRD_CLOUD_STORAGE_PROVIDER;
-        let linkExpireTime = constants.common.NO_OF_EXPIRY_TIME;
+        let noOfMinutes = constants.common.NO_OF_MINUTES;
+        let linkExpireTime = constants.common.NO_OF_EXPIRY_TIME * noOfMinutes;
         // Override cloud storage provider name if provided explicitly.
         if (storageName !== '') {
           cloudStorage = storageName;
