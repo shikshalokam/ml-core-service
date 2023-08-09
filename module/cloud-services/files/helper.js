@@ -167,15 +167,15 @@ module.exports = class FilesHelper {
   }
 
   /**
-   * Get custom bucket signedUrls or downloadable Urls.
+   * Get bucket specific signedUrls or downloadable Urls.
    * @method
-   * @name customBucketUrls
+   * @name bucketSpecificUrl
    * @param {String} urlType        - Type of url should be return as response, presigned or downloadable URLs.
    * @param {Object} request        - Request body.
    * @returns {Array}               - consists of all urls  for files.
    */
 
-  static customBucketUrls(urlType, request) {
+  static bucketSpecificUrl(urlType, request) {
     return new Promise(async (resolve, reject) => {
       try {
         // Extract required data from the request object

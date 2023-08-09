@@ -9,12 +9,11 @@
 // Dependencies
 const Zip = require('adm-zip');
 const fs = require('fs');
-const request = require('request');
-const awsServices = require(ROOT_PATH + '/generics/services/aws');
-const googleCloudServices = require(ROOT_PATH +
-  '/generics/services/google-cloud');
-const azureService = require(ROOT_PATH + '/generics/services/azure');
-const oracleSerices = require(ROOT_PATH + '/generics/services/oracle-cloud');
+// const request = require('request');
+// const awsServices = require(ROOT_PATH + '/generics/services/aws');
+// const googleCloudServices = require(ROOT_PATH +'/generics/services/google-cloud');
+// const azureService = require(ROOT_PATH + '/generics/services/azure');
+// const oracleSerices = require(ROOT_PATH + '/generics/services/oracle-cloud');
 const {cloudClient} = require(ROOT_PATH + '/config/cloud-service');
 
 /**
@@ -23,82 +22,82 @@ const {cloudClient} = require(ROOT_PATH + '/config/cloud-service');
  */
 
 module.exports = class FilesHelper {
-  /**
-   * Upload file in different services based on cloud storage provide.
-   * @method
-   * @name upload
-   * @param  {file}  - file to upload.
-   * @param  {filePathForBucket}  - file path where the file should upload.
-   * @param {String} - bucketName
-   * @param {String} - storage - name of the cloud storage 
-   * @returns {json} Response consists of links of uploaded file.
-   */
+  // /**
+  //  * Upload file in different services based on cloud storage provide.
+  //  * @method
+  //  * @name upload
+  //  * @param  {file}  - file to upload.
+  //  * @param  {filePathForBucket}  - file path where the file should upload.
+  //  * @param {String} - bucketName
+  //  * @param {String} - storage - name of the cloud storage 
+  //  * @returns {json} Response consists of links of uploaded file.
+  //  */
 
-  static upload(file, filePathForBucket, bucketName, storage = "") {
-    return new Promise(async (resolve, reject) => {
-      try {
+  // static upload(file, filePathForBucket, bucketName, storage = "") {
+  //   return new Promise(async (resolve, reject) => {
+  //     try {
 
-        let deleteFile = false;
-        let filePath;
-        if (file && file.data && file.name) {
-          deleteFile = true;
-          let tempPath = constants.common.UPLOAD_FOLDER_PATH;
-          if (!fs.existsSync(`${ROOT_PATH}${tempPath}`)) {
-            fs.mkdirSync(`${ROOT_PATH}${tempPath}`)
-          }
+  //       let deleteFile = false;
+  //       let filePath;
+  //       if (file && file.data && file.name) {
+  //         deleteFile = true;
+  //         let tempPath = constants.common.UPLOAD_FOLDER_PATH;
+  //         if (!fs.existsSync(`${ROOT_PATH}${tempPath}`)) {
+  //           fs.mkdirSync(`${ROOT_PATH}${tempPath}`)
+  //         }
 
-          let uniqueId = gen.utils.generateUniqueId();
-          let fileName = uniqueId + file.name;
-          filePath = `${ROOT_PATH}${tempPath}` + '/' + fileName;
-          fs.writeFileSync(filePath, file.data);
-          file = filePath;
+  //         let uniqueId = gen.utils.generateUniqueId();
+  //         let fileName = uniqueId + file.name;
+  //         filePath = `${ROOT_PATH}${tempPath}` + '/' + fileName;
+  //         fs.writeFileSync(filePath, file.data);
+  //         file = filePath;
 
-        }
+  //       }
 
-        let cloudStorage = process.env.CLOUD_STORAGE;
-        let result
-        if (storage) {
-          cloudStorage = storage;
-        }
+  //       let cloudStorage = process.env.CLOUD_STORAGE;
+  //       let result
+  //       if (storage) {
+  //         cloudStorage = storage;
+  //       }
 
-        if (cloudStorage === constants.common.AWS_SERVICE) {
-          result = await awsServices.uploadFile(
-            file,
-            filePathForBucket,
-            bucketName
-          )
-        } else if (
-          cloudStorage === constants.common.GOOGLE_CLOUD_SERVICE
-        ) {
-          result = await googleCloudServices.uploadFile(
-            file,
-            filePathForBucket,
-            bucketName
-          )
-        } else if (
-          cloudStorage === constants.common.AZURE_SERVICE
-        ) {
-          result = await azureService.uploadFile(
-            file,
-            filePathForBucket,
-            bucketName
-          )
-        } else if (cloudStorage === constants.common.ORACLE_CLOUD_SERVICE) {
-          result = await oracleSerices.uploadFile(
-            file,
-            filePathForBucket,
-            bucketName
-          )
-        }
-        if (deleteFile) {
-          _removeFiles(filePath);
-        }
-        return resolve(result)
-      } catch (error) {
-        return reject(error)
-      }
-    })
-  }
+  //       if (cloudStorage === constants.common.AWS_SERVICE) {
+  //         result = await awsServices.uploadFile(
+  //           file,
+  //           filePathForBucket,
+  //           bucketName
+  //         )
+  //       } else if (
+  //         cloudStorage === constants.common.GOOGLE_CLOUD_SERVICE
+  //       ) {
+  //         result = await googleCloudServices.uploadFile(
+  //           file,
+  //           filePathForBucket,
+  //           bucketName
+  //         )
+  //       } else if (
+  //         cloudStorage === constants.common.AZURE_SERVICE
+  //       ) {
+  //         result = await azureService.uploadFile(
+  //           file,
+  //           filePathForBucket,
+  //           bucketName
+  //         )
+  //       } else if (cloudStorage === constants.common.ORACLE_CLOUD_SERVICE) {
+  //         result = await oracleSerices.uploadFile(
+  //           file,
+  //           filePathForBucket,
+  //           bucketName
+  //         )
+  //       }
+  //       if (deleteFile) {
+  //         _removeFiles(filePath);
+  //       }
+  //       return resolve(result)
+  //     } catch (error) {
+  //       return reject(error)
+  //     }
+  //   })
+  // }
 
   /**
    * Get downloadable url
@@ -212,49 +211,41 @@ module.exports = class FilesHelper {
           linkExpireTime = expireIn;
         }
 
-        let signedUrls = new Array()
-
-        for (let pointerToFileNames = 0; pointerToFileNames < fileNames.length; pointerToFileNames++) {
-
-          let file = "";
+        // Create an array of promises for signed URLs
+        const signedUrlsPromises = fileNames.map(async (fileName) => {
+          let file = folderPath && folderPath !== '' ? folderPath + fileName : fileName;
           
-          if( folderPath && folderPath !== '' ) {
-            file = folderPath + fileNames[pointerToFileNames]; 
-          } else {
-            file = fileNames[pointerToFileNames]
-          }
-
-          // Get the signed URL from the cloud client SDK.
           let signedUrlResponse = await cloudClient.getSignedUrl(
-            bucket,
-            file,
-            linkExpireTime,
-            constants.common.WRITE_PERMISSION
-          )
-          
-          signedUrls.push({
-            file: file,
-            url: signedUrlResponse,
-            payload: { sourcePath: file },
-            cloudStorage: cloudStorage
-          })
-        }
+              bucket,
+              file,
+              linkExpireTime,
+              constants.common.WRITE_PERMISSION
+          );
 
-        if (signedUrls.length == fileNames.length) {
-          return resolve({
+          return {
+              file: file,
+              url: signedUrlResponse,
+              payload: { sourcePath: file },
+              cloudStorage: cloudStorage
+          };
+        });
+
+        // Wait for all signed URLs promises to resolve
+        const signedUrls = await Promise.all(signedUrlsPromises);
+
+        // Return success response with the signed URLs
+        return resolve({
             success: true,
             message: constants.apiResponses.URL_GENERATED,
             result: signedUrls
-          })
-        } else {
-          return resolve({
-            success: false,
-            message: constants.apiResponses.FAILED_PRE_SIGNED_URL,
-            result: signedUrls
-          })
-        }
+        });
+        
       } catch (error) {
-        return reject(error)
+        return reject({
+          success: false,
+          message: constants.apiResponses.FAILED_PRE_SIGNED_URL,
+          error: error
+        })
       }
     })
   }

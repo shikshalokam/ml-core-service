@@ -12,7 +12,7 @@ module.exports = (req) => {
             req.checkBody('request').exists().withMessage("request data is required");
             req.checkBody('ref').exists().withMessage("required reference type");
         },
-        customBucketUrls : function() {
+        bucketSpecificUrl : function() {
             // Check if the urlType query parameter is not provided or not one of the allowed values
             req.checkQuery('urlType')
             .exists().withMessage("urlType is required")
