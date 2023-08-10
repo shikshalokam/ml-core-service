@@ -9,6 +9,8 @@
 // Dependencies
 
 let filesHelpers = require(ROOT_PATH+"/module/files/helper");
+const cloudStorage = process.env.SUNBIRD_CLOUD_STORAGE_PROVIDER;
+const bucketName = process.env.CLOUD_STORAGE_PRIVATEREPORTS_BUCKETNAME;
 
 /**
  * FilesHelper
@@ -33,8 +35,6 @@ module.exports = class FilesHelper {
       try {
           
           let payloadIds = Object.keys(payloadData);
-          let cloudStorage = process.env.SUNBIRD_CLOUD_STORAGE_PROVIDER;
-          let bucketName = process.env.CLOUD_STORAGE_PRIVATEREPORTS_BUCKETNAME;
 
           let result = {
               [payloadIds[0]] : {}
@@ -125,9 +125,6 @@ module.exports = class FilesHelper {
     return new Promise(async (resolve, reject) => {
 
       try {
-
-        let cloudStorage = process.env.SUNBIRD_CLOUD_STORAGE_PROVIDER;
-        let bucketName = process.env.CLOUD_STORAGE_PRIVATEREPORTS_BUCKETNAME;
         
         let downloadableUrl = await filesHelpers.getDownloadableUrl(
           payloadData,
