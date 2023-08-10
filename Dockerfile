@@ -1,4 +1,4 @@
-FROM node:14.19.0
+FROM node:16
 
 WORKDIR /opt/core
 
