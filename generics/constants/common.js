@@ -79,5 +79,8 @@ module.exports = {
   EMPTY_STRING: "",
   DOWNLOADABLEURL_EXPIRY: 525610, // Unit is minute
   WRITE_PERMISSION: "w",
-  PRESIGNEDURL: "presignedUrl"
+  READ_PERMISSION: "r",
+  SIGNEDURL: "signedUrl",
+  WRITE: "write",
+  READ: "read"
 };

@@ -165,64 +165,6 @@ module.exports = class FilesHelper {
     })
 
   }
-
-  /**
-   * Get bucket specific signedUrls or downloadable Urls.
-   * @method
-   * @name bucketSpecificUrl
-   * @param {String} urlType        - Type of url should be return as response, presigned or downloadable URLs.
-   * @param {Object} request        - Request body.
-   * @returns {Array}               - consists of all urls  for files.
-   */
-
-  static bucketSpecificUrl(urlType, request) {
-    return new Promise(async (resolve, reject) => {
-      try {
-        // Extract required data from the request object
-        let files = request.request.files;
-        let cloudStorage = process.env.SUNBIRD_CLOUD_STORAGE_PROVIDER;
-        let bucketName = request.bucketName;
-        let customBucketUrlsData;
-
-        // Generate custom bucket URLs based on the URL type
-        if (urlType === constants.common.PRESIGNEDURL) {
-          let folderPath = request.folderPath;
-          customBucketUrlsData = await filesHelpers.preSignedUrls(
-            files,
-            bucketName,
-            cloudStorage,
-            folderPath,
-            request.expiresIn
-          );
-        } else {
-          customBucketUrlsData = await filesHelpers.getDownloadableUrl(
-            files,
-            bucketName,
-            cloudStorage,
-            request.expiresIn
-          );
-          
-        }
-
-        // Check if customBucketUrlsData is successful
-        if( !customBucketUrlsData.success ) {
-          return resolve({
-              status : httpStatusCode['bad_request'].status,
-              message : constants.apiResponses.FAILED_CUSTOM_BUCKER_URL,
-              result : {}
-          });
-        }
-        // Prepare the response data with custom bucket URLs
-        const result = { files: customBucketUrlsData.result };
-        return resolve({
-          message : constants.apiResponses.URL_GENERATED,
-          data : result
-        })
-      } catch (error) {
-        return reject(error)
-      }
-    })
-  }
 }
 
 
