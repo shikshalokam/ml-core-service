@@ -10,7 +10,7 @@
 const Zip = require('adm-zip');
 const fs = require('fs');
 const {cloudClient} = require(ROOT_PATH + '/config/cloud-service');
-let cloudStorage = process.env.SUNBIRD_CLOUD_STORAGE_PROVIDER;
+let cloudStorage = process.env.CLOUD_STORAGE_PROVIDER;
 
        
 

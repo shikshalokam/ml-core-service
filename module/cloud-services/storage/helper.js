@@ -28,7 +28,7 @@ module.exports = class StorageHelper {
       try {
         // Extract required data from the request object
         let files = request.request.files;
-        let cloudStorage = process.env.SUNBIRD_CLOUD_STORAGE_PROVIDER;
+        let cloudStorage = process.env.CLOUD_STORAGE_PROVIDER;
         let bucketName = request.bucketName;
         let customBucketUrlsData;
         

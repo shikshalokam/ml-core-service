@@ -9,8 +9,8 @@
 // Dependencies
 
 let filesHelpers = require(ROOT_PATH+"/module/files/helper");
-const cloudStorage = process.env.SUNBIRD_CLOUD_STORAGE_PROVIDER;
-const bucketName = process.env.CLOUD_STORAGE_PRIVATEREPORTS_BUCKETNAME;
+const cloudStorage = process.env.CLOUD_STORAGE_PROVIDER;
+const bucketName = process.env.CLOUD_STORAGE_REPORTS_BUCKETNAME;
 
 /**
  * FilesHelper

@@ -20,15 +20,15 @@ let enviromentVariables = {
     "message" : "Required internal access token",
     "optional" : false
   },
-  "SUNBIRD_CLOUD_STORAGE_PROVIDER" : {
+  "CLOUD_STORAGE_PROVIDER" : {
     "message" : "Require cloud storage provider",
     "optional" : false
   },
-  "CLOUD_PRIVATE_STORAGE_SECRET" : {
+  "CLOUD_STORAGE_SECRET" : {
     "message" : "Require client storage provider identity",
     "optional" : false
   },
-  "CLOUD_STORAGE_PRIVATEREPORTS_BUCKETNAME" : {
+  "CLOUD_STORAGE_REPORTS_BUCKETNAME" : {
     "message" : "Require client storage provider reportsContainer",
     "optional" : false
   }, 
