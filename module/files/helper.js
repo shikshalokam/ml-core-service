@@ -138,6 +138,7 @@ module.exports = class FilesHelper {
               }
               responseObj.filePath = element
               // Get the downloadable URL from the cloud client SDK.
+              // {sample response} : https://sunbirdstagingpublic.blob.core.windows.net/sample-name/reports/uploadFile2.jpg?st=2023-08-05T07%3A11%3A25Z&se=2024-02-03T14%3A11%3A25Z&sp=r&sv=2018-03-28&sr=b&sig=k66FWCIJ9NjoZfShccLmml3vOq9Lt%2FDirSrSN55UclU%3D
               responseObj.url = await cloudClient.getDownloadableUrl(
                 bucketName,
                 element,
@@ -212,6 +213,7 @@ module.exports = class FilesHelper {
         }
 
         // Create an array of promises for signed URLs
+        // {sample response} : https://sunbirdstagingpublic.blob.core.windows.net/samiksha/reports/sample.pdf?sv=2020-10-02&st=2023-08-03T07%3A53%3A53Z&se=2023-08-03T08%3A53%3A53Z&sr=b&sp=w&sig=eZOHrBBH%2F55E93Sxq%2BHSrniCEmKrKc7LYnfNwz6BvWE%3D
         const signedUrlsPromises = fileNames.map(async (fileName) => {
           let file = folderPath && folderPath !== '' ? folderPath + fileName : fileName;
           
