@@ -158,7 +158,7 @@ module.exports = class FilesHelper {
           };
           if ( addDruidFileUrlForIngestion ) {
             // {sample response} : { type: 's3', uris: [ 's3://dev-mentoring/reports/cspSample.pdf' ] }
-            let druidIngestionConfig = await cloudClient.getDruidFileUrlForIngestion(
+            let druidIngestionConfig = await cloudClient.getFileUrlForIngestion(
               bucket,             // bucket name
               file                // file path
             );

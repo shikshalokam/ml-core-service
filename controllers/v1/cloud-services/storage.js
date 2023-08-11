@@ -66,7 +66,13 @@ module.exports = class Storage {
                         "payload": {
                             "sourcePath": "01c04166-a65e-4e92-a87b-a9e4194e771d/5f72f9998925ec7c60f79a91/cd6763c9-a64a-4241-9907-4365970e8d11_uploadFile.jpg"
                         },
-                        "cloudStorage": "azure"
+                        "cloudStorage": "azure",
+                        "inputSource": {
+                            "type": "azure",
+                            "uris": [
+                                "azure://dev-mentoring/observation/npmpackagecheck/uploadFile.jpg"
+                            ]
+                        }
                     },
                     {
                         "file": "uploadFile2.jpg",
@@ -74,7 +80,13 @@ module.exports = class Storage {
                         "payload": {
                             "sourcePath": "01c04166-a65e-4e92-a87b-a9e4194e771d/5f72f9998925ec7c60f79a91/1626ec00-f890-4f8b-9594-4342868e8703_uploadFile2.jpg"
                         },
-                        "cloudStorage": "azure"
+                        "cloudStorage": "azure",
+                        "inputSource": {
+                            "type": "azure",
+                            "uris": [
+                                "azure://dev-mentoring/observation/npmpackagecheck/uploadFile2.jpg"
+                            ]
+                        }
                     }
                 ]
             }
