@@ -46,26 +46,3 @@ module.exports = (req) => {
     }
 
 };
-
-
-// //For Presigned Url
-// {
-//     "request" : {     
-//       "files": ["uploadFile.jpg", "uploadFile2.jpg"]
-//     }
-//     "folderPath" : "observation/distinctCount/",
-//     "bucketName" : "sample_bucket_name",
-//     "expiresIn": 262500,
-//     "action" : "signedUrl",
-//     "operation" : "read/write"
-// }
-// //For downloadable Url
-// {
-//     "request" : {      
-//       "files": ["reports/sample.pdf"]//need to send file paths
-//     }
-//     "action" : "downloadableUrl",
-//     "bucketName" : "sample_bucket_name",
-//     "expiresIn": 262500 
-//   }
-// }

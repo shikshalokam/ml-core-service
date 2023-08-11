@@ -105,16 +105,17 @@ module.exports = class FilesHelper {
    * Get all signed urls.
    * @method
    * @name preSignedUrls
-   * @param {Array} [fileNames]       - fileNames.
-   * @param {String} bucket           - name of the bucket
-   * @param {Array} [storageName]     - Storage name if provided.
-   * @param {String} folderPath       - folderPath
-   * @param {Number} expireIn         - Link expire time.
-   * @param {String} permission       - Action permission
-   * @returns {Array}                 - consists of all signed urls files.
+   * @param {Array} [fileNames]                         - fileNames.
+   * @param {String} bucket                             - name of the bucket
+   * @param {Array} [storageName]                       - Storage name if provided.
+   * @param {String} folderPath                         - folderPath
+   * @param {Number} expireIn                           - Link expire time.
+   * @param {String} permission                         - Action permission
+   * @param {Boolean} addDruidFileUrlForIngestion       - Add druid injection data to response {true/false}
+   * @returns {Array}                                   - consists of all signed urls files.
    */
 
-  static preSignedUrls(fileNames, bucket, storageName = '',folderPath, expireIn = '', permission = '') {
+  static preSignedUrls(fileNames, bucket, storageName = '',folderPath, expireIn = '', permission = '', addDruidFileUrlForIngestion = false) {
     return new Promise(async (resolve, reject) => {
       try {
         let actionPermission = constants.common.WRITE_PERMISSION;
@@ -149,12 +150,21 @@ module.exports = class FilesHelper {
               actionPermission    // read/write
           );
 
-          return {
+          let response = {
               file: file,
               url: signedUrlResponse,
               payload: { sourcePath: file },
               cloudStorage: cloudStorage
           };
+          if ( addDruidFileUrlForIngestion ) {
+            // {sample response} : { type: 's3', uris: [ 's3://dev-mentoring/reports/cspSample.pdf' ] }
+            let druidIngestionConfig = await cloudClient.getDruidFileUrlForIngestion(
+              bucket,             // bucket name
+              file                // file path
+            );
+            response.inputSource = druidIngestionConfig;
+          }
+          return response;
         });
 
         // Wait for all signed URLs promises to resolve

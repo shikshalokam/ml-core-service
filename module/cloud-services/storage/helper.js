@@ -48,7 +48,8 @@ module.exports = class StorageHelper {
                 cloudStorage,       // cloud storage name
                 folderPath,         // folder path
                 request.expiresIn,  // link expiry time
-                permission          // action permission
+                permission,         // action permission
+                true                // addDruidFileUrlForIngestion
             );
         } else { 
             customBucketUrlsData = await filesHelpers.getDownloadableUrl(
