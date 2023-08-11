@@ -28,8 +28,8 @@ let enviromentVariables = {
     "message" : "Require client storage provider identity",
     "optional" : false
   },
-  "CLOUD_STORAGE_REPORTS_BUCKETNAME" : {
-    "message" : "Require client storage provider reportsContainer",
+  "CLOUD_STORAGE_BUCKETNAME" : {
+    "message" : "Require client storage bucket name",
     "optional" : false
   }, 
   "KEYCLOAK_PUBLIC_KEY_PATH" : {

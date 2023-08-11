@@ -12,8 +12,8 @@ function initializeCloudClient() {
       provider: process.env.CLOUD_STORAGE_PROVIDER,
       identity: process.env.CLOUD_STORAGE_ACCOUNTNAME,
       credential: process.env.CLOUD_STORAGE_SECRET,
-      reportsContainer: process.env.CLOUD_STORAGE_REPORTS_BUCKETNAME,
-      labelsContainer: process.env.CLOUD_STORAGE_RESOURCEBUNDLE_BUCKETNAME,
+      privateContainer: process.env.CLOUD_STORAGE_RESOURCEBUNDLE_BUCKETNAME,
+      publicContainer: process.env.CLOUD_STORAGE_BUCKETNAME,
       region: process.env.CLOUD_STORAGE_REGION || null,
       projectId: process.env.CLOUD_STORAGE_PROJECT || null,
       endpoint: process.env.CLOUD_ENDPOINT || null
