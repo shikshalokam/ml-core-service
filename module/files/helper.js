@@ -9,12 +9,10 @@
 // Dependencies
 const Zip = require('adm-zip');
 const fs = require('fs');
-const request = require('request');
-const awsServices = require(ROOT_PATH + '/generics/services/aws');
-const googleCloudServices = require(ROOT_PATH +
-  '/generics/services/google-cloud');
-const azureService = require(ROOT_PATH + '/generics/services/azure');
-const oracleSerices = require(ROOT_PATH + '/generics/services/oracle-cloud');
+const {cloudClient} = require(ROOT_PATH + '/config/cloud-service');
+let cloudStorage = process.env.CLOUD_STORAGE_PROVIDER;
+
+       
 
 /**
  * FilesHelper
@@ -22,100 +20,34 @@ const oracleSerices = require(ROOT_PATH + '/generics/services/oracle-cloud');
  */
 
 module.exports = class FilesHelper {
-  /**
-   * Upload file in different services based on cloud storage provide.
-   * @method
-   * @name upload
-   * @param  {file}  - file to upload.
-   * @param  {filePathForBucket}  - file path where the file should upload.
-   * @param {String} - bucketName
-   * @param {String} - storage - name of the cloud storage 
-   * @returns {json} Response consists of links of uploaded file.
-   */
-
-  static upload(file, filePathForBucket, bucketName, storage = "") {
-    return new Promise(async (resolve, reject) => {
-      try {
-
-        let deleteFile = false;
-        let filePath;
-        if (file && file.data && file.name) {
-          deleteFile = true;
-          let tempPath = constants.common.UPLOAD_FOLDER_PATH;
-          if (!fs.existsSync(`${ROOT_PATH}${tempPath}`)) {
-            fs.mkdirSync(`${ROOT_PATH}${tempPath}`)
-          }
-
-          let uniqueId = gen.utils.generateUniqueId();
-          let fileName = uniqueId + file.name;
-          filePath = `${ROOT_PATH}${tempPath}` + '/' + fileName;
-          fs.writeFileSync(filePath, file.data);
-          file = filePath;
-
-        }
-
-        let cloudStorage = process.env.CLOUD_STORAGE;
-        let result
-        if (storage) {
-          cloudStorage = storage;
-        }
-
-        if (cloudStorage === constants.common.AWS_SERVICE) {
-          result = await awsServices.uploadFile(
-            file,
-            filePathForBucket,
-            bucketName
-          )
-        } else if (
-          cloudStorage === constants.common.GOOGLE_CLOUD_SERVICE
-        ) {
-          result = await googleCloudServices.uploadFile(
-            file,
-            filePathForBucket,
-            bucketName
-          )
-        } else if (
-          cloudStorage === constants.common.AZURE_SERVICE
-        ) {
-          result = await azureService.uploadFile(
-            file,
-            filePathForBucket,
-            bucketName
-          )
-        } else if (cloudStorage === constants.common.ORACLE_CLOUD_SERVICE) {
-          result = await oracleSerices.uploadFile(
-            file,
-            filePathForBucket,
-            bucketName
-          )
-        }
-        if (deleteFile) {
-          _removeFiles(filePath);
-        }
-        return resolve(result)
-      } catch (error) {
-        return reject(error)
-      }
-    })
-  }
-
+  
   /**
    * Get downloadable url
    * @method
-   * @name getDownloadableUrl
-   * @param  {filePath}  - File path.
-   * @param  {String}  - Bucket name
-   * @param  {String}  - Storage name
-   * @return {String} - Downloadable url link
+   * @name                        - getDownloadableUrl
+   * @param {filePath}            - File path.
+   * @param {String}              - Bucket name
+   * @param {Array} storageName   - Storage name if provided.
+   * @param {Number} expireIn     - Link expire time.
+   * @return {String}             - Downloadable url link
    */
 
-  static getDownloadableUrl(filePath, bucketName, storageName = '') {
+  static getDownloadableUrl(filePath, bucketName, storageName = '',expireIn = '') {
     return new Promise(async (resolve, reject) => {
       try {
-        let cloudStorage = process.env.CLOUD_STORAGE
-
+       
+        
+        
+        let noOfMinutes = constants.common.NO_OF_MINUTES;
+        let linkExpireTime = constants.common.NO_OF_EXPIRY_TIME * noOfMinutes;
+       
+        // Override cloud storage provider name if provided explicitly.
         if (storageName !== '') {
-          cloudStorage = storageName
+          cloudStorage = storageName;
+        }
+        // Override linkExpireTime if provided explicitly.
+        if (expireIn !== '') {
+          linkExpireTime = expireIn;
         }
 
         if (Array.isArray(filePath) && filePath.length > 0) {
@@ -123,34 +55,45 @@ module.exports = class FilesHelper {
 
           await Promise.all(
             filePath.map(async element => {
-              let responseObj = {}
+              let responseObj = {
+                cloudStorage : cloudStorage
+              }
               responseObj.filePath = element
-              responseObj.url = await _getLinkFromCloudService(
-                element,
+              // Get the downloadable URL from the cloud client SDK.
+              // {sample response} : https://sunbirdstagingpublic.blob.core.windows.net/sample-name/reports/uploadFile2.jpg?st=2023-08-05T07%3A11%3A25Z&se=2024-02-03T14%3A11%3A25Z&sp=r&sv=2018-03-28&sr=b&sig=k66FWCIJ9NjoZfShccLmml3vOq9Lt%2FDirSrSN55UclU%3D
+              responseObj.url = await cloudClient.getDownloadableUrl(
                 bucketName,
-                cloudStorage
+                element,
+                linkExpireTime // Link ExpireIn 
               )
-
               result.push(responseObj)
             })
           )
-
-          return resolve(result)
+          return resolve({
+            success: true,
+            message: constants.apiResponses.URL_GENERATED,
+            result: result
+          })
         } else {
           let result
-
-          result = await _getLinkFromCloudService(
-            filePath,
-            bucketName,
-            cloudStorage
+          // Get the downloadable URL from the cloud client SDK.
+          result = await cloudClient.getDownloadableUrl(
+            bucketName,       // bucket name
+            filePath,         // resource file path
+            linkExpireTime    // Link Expire time
           )
-
+      
           let responseObj = {
             filePath: filePath,
-            url: result
+            url: result,
+            cloudStorage : cloudStorage
           }
-
-          return resolve(responseObj)
+          return resolve({
+            success: true,
+            message: constants.apiResponses.URL_GENERATED,
+            result: responseObj
+          })
+    
         }
       } catch (error) {
         return reject(error)
@@ -162,82 +105,84 @@ module.exports = class FilesHelper {
    * Get all signed urls.
    * @method
    * @name preSignedUrls
-   * @param {Array} [fileNames] - fileNames.
-   * @param {String} bucket - name of the bucket
-   * @param {Array} [storageName] - Storage name if provided.
-   * @param {String} folderPath - folderPath
-   * @returns {Array} - consists of all signed urls files.
+   * @param {Array} [fileNames]                         - fileNames.
+   * @param {String} bucket                             - name of the bucket
+   * @param {Array} [storageName]                       - Storage name if provided.
+   * @param {String} folderPath                         - folderPath
+   * @param {Number} expireIn                           - Link expire time.
+   * @param {String} permission                         - Action permission
+   * @param {Boolean} addDruidFileUrlForIngestion       - Add druid injection data to response {true/false}
+   * @returns {Array}                                   - consists of all signed urls files.
    */
 
-  static preSignedUrls(fileNames, bucket, storageName = '',folderPath) {
+  static preSignedUrls(fileNames, bucket, storageName = '',folderPath, expireIn = '', permission = '', addDruidFileUrlForIngestion = false) {
     return new Promise(async (resolve, reject) => {
       try {
+        let actionPermission = constants.common.WRITE_PERMISSION;
         if (!Array.isArray(fileNames) || fileNames.length < 1) {
           throw new Error('File names not given.')
         }
-
-        let cloudStorage = process.env.CLOUD_STORAGE
-
+        let noOfMinutes = constants.common.NO_OF_MINUTES;
+        let linkExpireTime = constants.common.NO_OF_EXPIRY_TIME * noOfMinutes;
+        // Override cloud storage provider name if provided explicitly.
         if (storageName !== '') {
-          cloudStorage = storageName
+          cloudStorage = storageName;
         }
 
-        let signedUrls = new Array()
+        // Override actionPermission if provided explicitly.
+        if (permission !== '') {
+          actionPermission = permission;
+        }        
+        // Override linkExpireTime if provided explicitly.
+        if (expireIn !== '') {
+          linkExpireTime = expireIn;
+        }
 
-        for (
-          let pointerToFileNames = 0;
-          pointerToFileNames < fileNames.length;
-          pointerToFileNames++
-        ) {
-
-          let file = "";
+        // Create an array of promises for signed URLs
+        // {sample response} : https://sunbirdstagingpublic.blob.core.windows.net/samiksha/reports/sample.pdf?sv=2020-10-02&st=2023-08-03T07%3A53%3A53Z&se=2023-08-03T08%3A53%3A53Z&sr=b&sp=w&sig=eZOHrBBH%2F55E93Sxq%2BHSrniCEmKrKc7LYnfNwz6BvWE%3D
+        const signedUrlsPromises = fileNames.map(async (fileName) => {
+          let file = folderPath && folderPath !== '' ? folderPath + fileName : fileName;
           
-          if( folderPath && folderPath !== '' ) {
-            file = folderPath + fileNames[pointerToFileNames]; 
-          } else {
-            file = fileNames[pointerToFileNames]
-          }
-          
-          let signedUrlResponse
+          let signedUrlResponse = await cloudClient.getSignedUrl(
+              bucket,             // bucket name
+              file,               // file path
+              linkExpireTime,     // expire
+              actionPermission    // read/write
+          );
 
-          if (cloudStorage === constants.common.GOOGLE_CLOUD_SERVICE) {
-            signedUrlResponse = await googleCloudServices.signedUrl(
-              file,
-              bucket
-            )
-          } else if (cloudStorage === constants.common.AWS_SERVICE) {
-            signedUrlResponse = await awsServices.signedUrl(file, bucket)
-          } else if (cloudStorage === constants.common.AZURE_SERVICE) {
-            signedUrlResponse = await azureService.signedUrl(file, bucket)
-          } else if (cloudStorage === constants.common.ORACLE_CLOUD_SERVICE) {
-            signedUrlResponse = await oracleSerices.signedUrl(file, bucket)
-          }
-
-          if (signedUrlResponse.success) {
-            signedUrls.push({
+          let response = {
               file: file,
-              url: signedUrlResponse.url,
-              payload: { sourcePath: signedUrlResponse.name },
+              url: signedUrlResponse,
+              payload: { sourcePath: file },
               cloudStorage: cloudStorage
-            })
+          };
+          if ( addDruidFileUrlForIngestion ) {
+            // {sample response} : { type: 's3', uris: [ 's3://dev-mentoring/reports/cspSample.pdf' ] }
+            let druidIngestionConfig = await cloudClient.getFileUrlForIngestion(
+              bucket,             // bucket name
+              file                // file path
+            );
+            response.inputSource = druidIngestionConfig;
           }
-        }
+          return response;
+        });
 
-        if (signedUrls.length == fileNames.length) {
-          return resolve({
+        // Wait for all signed URLs promises to resolve
+        const signedUrls = await Promise.all(signedUrlsPromises);
+
+        // Return success response with the signed URLs
+        return resolve({
             success: true,
             message: constants.apiResponses.URL_GENERATED,
             result: signedUrls
-          })
-        } else {
-          return resolve({
-            success: false,
-            message: constants.apiResponses.FAILED_PRE_SIGNED_URL,
-            result: signedUrls
-          })
-        }
+        });
+        
       } catch (error) {
-        return reject(error)
+        return reject({
+          success: false,
+          message: constants.apiResponses.FAILED_PRE_SIGNED_URL,
+          error: error
+        })
       }
     })
   }
@@ -382,37 +327,6 @@ module.exports = class FilesHelper {
     return
   }
 
-}
-
-/**
- * Get downloadable url
- * @method
- * @name _getLinkFromCloudService
- * @param  {filePath}  - File path.
- * @return {String} - Downloadable url link
- */
-
-function _getLinkFromCloudService(filePath, bucketName, cloudStorage) {
-  return new Promise(async function (resolve, reject) {
-    try {
-      let result
-      if (cloudStorage === constants.common.AWS_SERVICE) {
-        result = await awsServices.getDownloadableUrl(filePath, bucketName)
-      } else if (cloudStorage === constants.common.GOOGLE_CLOUD_SERVICE) {
-        result = await googleCloudServices.getDownloadableUrl(
-          filePath,
-          bucketName
-        )
-      } else if (cloudStorage === constants.common.AZURE_SERVICE) {
-        result = await azureService.getDownloadableUrl(filePath, bucketName)
-      } else if (cloudStorage === constants.common.ORACLE_CLOUD_SERVICE) {
-        result = await oracleSerices.getDownloadableUrl(filePath, bucketName)
-      }
-      return resolve(result)
-    } catch (error) {
-      return reject(error)
-    }
-  })
 }
 
 /**

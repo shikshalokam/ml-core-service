@@ -19,10 +19,7 @@
   "author": "Shikshalokam <info@shikshalokam.com>",
   "license": "ISC",
   "dependencies": {
-    "@azure/storage-blob": "^12.1.1",
-    "@google-cloud/storage": "^4.3.1",
     "adm-zip": "^0.4.14",
-    "aws-sdk": "^2.624.0",
     "body-parser": "^1.18.2",
     "bunyan": "^1.8.12",
     "bunyan-format": "^0.2.1",
@@ -31,6 +28,7 @@
     "chai-http": "^4.3.0",
     "cheerio": "^1.0.0-rc.12",
     "cli-table": "^0.3.1",
+    "client-cloud-services": "^3.0.4",
     "commander": "^2.20.0",
     "cors": "^2.8.4",
     "csvtojson": "^2.0.10",
