@@ -16,6 +16,7 @@ require("./healthCheck")(app);
 
 require("./config");
 require("./config/globals")();
+require("./config/cloud-service");
 
 let environmentData = require("./envVariables")();
 

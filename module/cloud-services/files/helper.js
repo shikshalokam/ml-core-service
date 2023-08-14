@@ -9,6 +9,8 @@
 // Dependencies
 
 let filesHelpers = require(ROOT_PATH+"/module/files/helper");
+const cloudStorage = process.env.CLOUD_STORAGE_PROVIDER;
+const bucketName = process.env.CLOUD_STORAGE_BUCKETNAME;
 
 /**
  * FilesHelper
@@ -21,11 +23,11 @@ module.exports = class FilesHelper {
    * Get all signed urls.
    * @method
    * @name preSignedUrls
-   * @param {Array} payloadData - payload for files data.
-   * @param {String} referenceType - reference type
-   * @param {String} userId - Logged in user id.
-   * @param {String} templateId - certificateTemplateId.
-   * @returns {Array} - consists of all signed urls files.
+   * @param {Array} payloadData       - payload for files data.
+   * @param {String} referenceType    - reference type
+   * @param {String} userId           - Logged in user id.
+   * @param {String} templateId       - certificateTemplateId.
+   * @returns {Array}                 - consists of all signed urls files.
    */
 
   static preSignedUrls(payloadData, referenceType, userId = "") {
@@ -33,19 +35,6 @@ module.exports = class FilesHelper {
       try {
           
           let payloadIds = Object.keys(payloadData);
-
-          let bucketName = "";
-          let cloudStorage = process.env.CLOUD_STORAGE;
-
-          if( cloudStorage === "AWS" ) {
-              bucketName = process.env.AWS_BUCKET_NAME;
-          } else if (cloudStorage === "GC" ) {
-            bucketName = process.env.GCP_BUCKET_NAME;
-          }  else if (cloudStorage === constants.common.ORACLE_CLOUD_SERVICE ) {
-            bucketName = process.env.OCI_BUCKET_NAME;
-          } else {
-            bucketName = process.env.AZURE_STORAGE_CONTAINER;
-          }
 
           let result = {
               [payloadIds[0]] : {}
@@ -68,7 +57,7 @@ module.exports = class FilesHelper {
                     if( !imagePayload.success ) {
                         return resolve({
                             status : httpStatusCode['bad_request'].status,
-                            message : constants.common.FAILED_PRE_SIGNED_URL,
+                            message : constants.apiResponses.FAILED_PRE_SIGNED_URL,
                             result : {}
                         });
                     }
@@ -106,7 +95,7 @@ module.exports = class FilesHelper {
             if( !imagePayload.success ) {
                 return resolve({
                     status : httpStatusCode['bad_request'].status,
-                    message : constants.common.FAILED_PRE_SIGNED_URL,
+                    message : constants.apiResponses.FAILED_PRE_SIGNED_URL,
                     result : {}
                 });
             }
@@ -124,63 +113,55 @@ module.exports = class FilesHelper {
     })
   }
 
-    /**
-     * Get Downloadable URL from cloud.
-     * @method
-     * @name getDownloadableUrl
-     * @param {Array} payloadData - payload for files data.
-     * @returns {JSON} Response with status and message.
-   */
+  /**
+   * Get Downloadable URL from cloud.
+   * @method
+   * @name getDownloadableUrl
+   * @param {Array} payloadData       - payload for files data.
+   * @returns {JSON}                  - Response with status and message.
+ */
 
-    static getDownloadableUrl(payloadData) {
-      return new Promise(async (resolve, reject) => {
-  
-        try {
-  
-          let bucketName = "";
-          let cloudStorage = process.env.CLOUD_STORAGE;
-  
-          if (cloudStorage === "AWS") {
-            bucketName = process.env.AWS_BUCKET_NAME;
-          } else if (cloudStorage === "GC") {
-            bucketName = process.env.GCP_BUCKET_NAME;
-          }  else if (cloudStorage === constants.common.ORACLE_CLOUD_SERVICE) {
-            bucketName = process.env.OCI_BUCKET_NAME;
-          } 
-          else {
-            bucketName = process.env.AZURE_STORAGE_CONTAINER;
-          }
-  
-          let downloadableUrl =
-            await filesHelpers.getDownloadableUrl(
-              payloadData,
-              bucketName,
-              cloudStorage
-            );
-  
+  static getDownloadableUrl(payloadData) {
+    return new Promise(async (resolve, reject) => {
+
+      try {
+        
+        let downloadableUrl = await filesHelpers.getDownloadableUrl(
+          payloadData,
+          bucketName,
+          cloudStorage
+        );
+        if( !downloadableUrl.success ) {
           return resolve({
-            message: constants.apiResponses.CLOUD_SERVICE_SUCCESS_MESSAGE,
-            result: downloadableUrl
-          })
-  
-        } catch (error) {
-  
-          return reject({
-            status:
-              error.status ||
-              httpStatusCode["internal_server_error"].status,
-  
-            message:
-              error.message
-              || httpStatusCode["internal_server_error"].message,
-  
-            errorObject: error
-          })
-  
+              status : httpStatusCode['bad_request'].status,
+              message : constants.apiResponses.FAILED_TO_CREATE_DOWNLOADABLEURL,
+              result : {}
+          });
         }
-      })
   
-    }
+        return resolve({
+          message: constants.apiResponses.CLOUD_SERVICE_SUCCESS_MESSAGE,
+          result: downloadableUrl.result
+        })
+
+      } catch (error) {
+
+        return reject({
+          status:
+            error.status ||
+            httpStatusCode["internal_server_error"].status,
+
+          message:
+            error.message
+            || httpStatusCode["internal_server_error"].message,
+
+          errorObject: error
+        })
+
+      }
+    })
+
+  }
 }
 
 

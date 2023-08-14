@@ -20,99 +20,17 @@ let enviromentVariables = {
     "message" : "Required internal access token",
     "optional" : false
   },
-  "CLOUD_STORAGE" : {
-    "message" : "Enable/Disable cloud services",
+  "CLOUD_STORAGE_PROVIDER" : {
+    "message" : "Require cloud storage provider",
     "optional" : false
   },
-  "GCP_PATH" : {
-    "message" : "Required Gcp path",
-    "optional" : true,
-    "requiredIf" : {
-      "key": "CLOUD_STORAGE",
-      "operator": "EQUALS",
-      "value" : "GC"
-    }
+  "CLOUD_STORAGE_SECRET" : {
+    "message" : "Require client storage provider identity",
+    "optional" : false
   },
-  "GCP_BUCKET_NAME" : {
-    "message" : "Required Gcp bucket name",
-    "optional" : true,
-    "requiredIf" : {
-      "key": "CLOUD_STORAGE",
-      "operator": "EQUALS",
-      "value" : "GC"
-    }
-  },
-  "AZURE_ACCOUNT_NAME" : {
-    "message" : "Required Azure Account name",
-    "optional" : true,
-    "requiredIf" : {
-      "key": "CLOUD_STORAGE",
-      "operator": "EQUALS",
-      "value" : "AZURE"
-    }
-  },
-  "AZURE_ACCOUNT_KEY" : {
-    "message" : "Required Azure Account key",
-    "optional" : true,
-    "requiredIf" : {
-      "key": "CLOUD_STORAGE",
-      "operator": "EQUALS",
-      "value" : "AZURE"
-    }
-  },
-  "AZURE_STORAGE_CONTAINER" :  {
-    "message" : "Required Azure container",
-    "optional" : true,
-    "requiredIf" : {
-      "key": "CLOUD_STORAGE",
-      "operator": "EQUALS",
-      "value" : "AZURE"
-    }
-  },
-  "AWS_ACCESS_KEY_ID" : {
-    "message" : "Required Aws access key id",
-    "optional" : true,
-    "requiredIf" : {
-      "key": "CLOUD_STORAGE",
-      "operator": "EQUALS",
-      "value" : "AWS"
-    }
-  }, 
-  "AWS_SECRET_ACCESS_KEY" : {
-    "message" : "Required Aws secret access key",
-    "optional" : true,
-    "requiredIf" : {
-      "key": "CLOUD_STORAGE",
-      "operator": "EQUALS",
-      "value" : "AWS"
-    }
-  }, 
-  "AWS_BUCKET_NAME" : {
-    "message" : "Required Aws bucket name",
-    "optional" : true,
-    "requiredIf" : {
-      "key": "CLOUD_STORAGE",
-      "operator": "EQUALS",
-      "value" : "AWS"
-    }
-  }, 
-  "AWS_BUCKET_REGION" : {
-    "message" : "Required Aws bucket region",
-    "optional" : true,
-    "requiredIf" : {
-      "key": "CLOUD_STORAGE",
-      "operator": "EQUALS",
-      "value" : "AWS"
-    }
-  }, 
-  "AWS_BUCKET_ENDPOINT" : {
-    "message" : "Required Aws bucket endpoint",
-    "optional" : true,
-    "requiredIf" : {
-      "key": "CLOUD_STORAGE",
-      "operator": "EQUALS",
-      "value" : "AWS"
-    }
+  "CLOUD_STORAGE_BUCKETNAME" : {
+    "message" : "Require client storage bucket name",
+    "optional" : false
   }, 
   "KEYCLOAK_PUBLIC_KEY_PATH" : {
     "message" : "Required keycloak public key path",
@@ -144,51 +62,6 @@ let enviromentVariables = {
     "message" : "Form service base url",
     "optional" : true,
     "default": "http://player:3000"
-  },
-  "OCI_ACCESS_KEY_ID" : {
-    "message" : "Required oracle access key id",
-    "optional" : true,
-    "requiredIf" : {
-      "key": "CLOUD_STORAGE",
-      "operator": "EQUALS",
-      "value" : "OCI"
-    }
-  }, 
-  "OCI_SECRET_ACCESS_KEY" : {
-    "message" : "Required Oracle secret access key",
-    "optional" : true,
-    "requiredIf" : {
-      "key": "CLOUD_STORAGE",
-      "operator": "EQUALS",
-      "value" : "OCI"
-    }
-  }, 
-  "OCI_BUCKET_NAME" : {
-    "message" : "Required Oracle bucket name",
-    "optional" : true,
-    "requiredIf" : {
-      "key": "CLOUD_STORAGE",
-      "operator": "EQUALS",
-      "value" : "OCI"
-    }
-  }, 
-  "OCI_BUCKET_REGION" : {
-    "message" : "Required Oracle bucket region",
-    "optional" : true,
-    "requiredIf" : {
-      "key": "CLOUD_STORAGE",
-      "operator": "EQUALS",
-      "value" : "OCI"
-    }
-  }, 
-  "OCI_BUCKET_ENDPOINT" : {
-    "message" : "Required Oracle bucket endpoint",
-    "optional" : true,
-    "requiredIf" : {
-      "key": "CLOUD_STORAGE",
-      "operator": "EQUALS",
-      "value" : "OCI"
-    }
   }, 
   "KAFKA_COMMUNICATIONS_ON_OFF" : {
     "message" : "Enable/Disable kafka communications",

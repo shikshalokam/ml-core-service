@@ -152,7 +152,7 @@ module.exports = class Files {
       * @returns {JSON} Response with status and message.
     */
 
-     async getDownloadableUrl(req) {
+    async getDownloadableUrl(req) {
         return new Promise(async (resolve, reject) => {
 
             try {
@@ -183,6 +183,6 @@ module.exports = class Files {
         })
 
     }
-
+    
 };
 
