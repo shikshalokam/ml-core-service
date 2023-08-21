@@ -154,7 +154,7 @@ module.exports = class FilesHelper {
               file: file,
               url: signedUrlResponse,
               payload: { sourcePath: file },
-              cloudStorage: cloudStorage
+              cloudStorage: cloudStorage.toUpperCase()
           };
           if ( addDruidFileUrlForIngestion ) {
             // {sample response} : { type: 's3', uris: [ 's3://dev-mentoring/reports/cspSample.pdf' ] }
