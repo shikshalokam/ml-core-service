@@ -6,10 +6,10 @@
  */
 
 /**
-  * Database configuration.
-  * @function
-  * @name db_connect
-*/
+ * Database configuration.
+ * @function
+ * @name db_connect
+ */
 
 let db_connect = function () {
   global.database = require("./db/mongodb")();
@@ -18,30 +18,30 @@ let db_connect = function () {
 };
 
 /**
-  * Elastic search configuration.
-  * @function
-  * @name elasticsearch_connect
-*/
+ * Elastic search configuration.
+ * @function
+ * @name elasticsearch_connect
+ */
 
 // let elasticsearch_connect = function () {
 //   global.elasticsearch = require("./db/elastic-search")();
 // };
 
 /**
-  * Kafka connection.
-  * @function
-  * @name kafka_connect
-*/
+ * Kafka connection.
+ * @function
+ * @name kafka_connect
+ */
 
-const kafka_connect = function() {
+const kafka_connect = function () {
   global.kafkaClient = require("./kafka")();
 };
 
 const configuration = {
   root: require("path").normalize(__dirname + "/.."),
   app: {
-    name: "ml-core-service"
-  }
+    name: "ml-core-service",
+  },
 };
 
 db_connect();

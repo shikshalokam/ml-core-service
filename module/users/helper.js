@@ -384,8 +384,12 @@ module.exports = class UsersHelper {
                   data["projectId"] = importedProject._id;
                   data["type"] = constants.common.IMPROVEMENT_PROJECT;
                   // if project is having certificate pass certificateTemplateId details with solution details.
-                  if ( importedProject.certificate && importedProject.certificate.templateId ) {
-                    data["certificateTemplateId"] = importedProject.certificate.templateId;
+                  if (
+                    importedProject.certificate &&
+                    importedProject.certificate.templateId
+                  ) {
+                    data["certificateTemplateId"] =
+                      importedProject.certificate.templateId;
                   }
                   mergedData.push(data);
                   totalCount = totalCount + 1;
@@ -916,7 +920,7 @@ module.exports = class UsersHelper {
             userId: userId,
           },
           ["programId"],
-          "none",// not passing skip fields
+          "none", // not passing skip fields
           { updatedAt: -1 } // sort data.
         );
 
@@ -925,12 +929,12 @@ module.exports = class UsersHelper {
             return obj.programId;
           });
         }
-        
+
         if (programUsersIds.length > 0) {
           let findQuery = {
             _id: { $in: programUsersIds },
-            startDate: { $lte: new Date() },
-            endDate: { $gte: new Date() },
+            // startDate: { $lte: new Date() },
+            // endDate: { $gte: new Date() },
             isAPrivateProgram: false,
           };
 
@@ -942,7 +946,7 @@ module.exports = class UsersHelper {
             findQuery,
             ["_id"]
           );
-            
+
           // get _ids to array
           if (
             programDetails.success > 0 &&
@@ -954,7 +958,10 @@ module.exports = class UsersHelper {
             // We can't implement sort logic in programDocuments function because userRelatedPrograms can contain prev profile programs also
             let programDetailsResponse = programDetails.data.data;
             let programsResult = _.filter(programUsersIds, (id) =>
-              _.find(programDetailsResponse, (data) => data._id.toString() === id.toString())
+              _.find(
+                programDetailsResponse,
+                (data) => data._id.toString() === id.toString()
+              )
             );
             // get all the programs ids in array
             alreadyStartedPrograms =
