@@ -929,8 +929,6 @@ module.exports = class UsersHelper {
         if (programUsersIds.length > 0) {
           let findQuery = {
             _id: { $in: programUsersIds },
-            startDate: { $lte: new Date() },
-            endDate: { $gte: new Date() },
             isAPrivateProgram: false,
           };
 
