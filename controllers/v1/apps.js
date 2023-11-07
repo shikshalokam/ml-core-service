@@ -2,26 +2,26 @@
  * name : apps.js
  * author : Deepa
  * created-date : 27-08-2020
- * Description : App Related information. 
+ * Description : App Related information.
  */
 
- // Dependencies
- const appsHelper = require(MODULES_BASE_PATH + "/apps/helper");
- 
+// Dependencies
+const appsHelper = require(MODULES_BASE_PATH + "/apps/helper");
+
+/**
+ * Apps
+ * @class
+ */
+module.exports = class Apps extends Abstract {
+  constructor() {
+    super(schemas["apps"]);
+  }
+
+  static get name() {
+    return "apps";
+  }
+
   /**
-     * Apps
-     * @class
- */
- module.exports = class Apps extends Abstract {
-   constructor() {
-     super(schemas["apps"]);
-   }
- 
-   static get name() {
-     return "apps";
-   }
-
-    /**
      * @api {get} /kendra/api/v1/apps/details/{{appName}}
      * Get app details
      * @apiVersion 1.0.0
@@ -44,40 +44,32 @@
      * @apiUse errorBody
      */
 
-    /**
-      * Get app details.
-      * @method
-      * @name details
-      * @param {String} name - app name
-      * @returns {JSON} created app version data.
-    */
+  /**
+   * Get app details.
+   * @method
+   * @name details
+   * @param {String} name - app name
+   * @returns {JSON} created app version data.
+   */
 
-   async details(req) {
-     return new Promise(async (resolve, reject) => {
-       try {
+  async details(req) {
+    return new Promise(async (resolve, reject) => {
+      try {
+        let appDetails = await appsHelper.getDetails(req.params._id);
 
-          let appDetails = await appsHelper.getDetails(
-            req.params._id
-          );
+        return resolve({
+          message: appDetails.message,
+          result: appDetails.data,
+        });
+      } catch (error) {
+        reject({
+          status:
+            error.status || httpStatusCode["internal_server_error"].status,
 
-          return resolve({
-            message : appDetails.message,
-            result : appDetails.data
-          });
-        
-        } catch (error) {
-          reject({                                        
-              status: 
-              error.status || 
-              httpStatusCode["internal_server_error"].status,
-
-              message: 
-              error.message || 
-              httpStatusCode["internal_server_error"].message
-          })
-        }
-      })
-    }
-
+          message:
+            error.message || httpStatusCode["internal_server_error"].message,
+        });
+      }
+    });
+  }
 };
- 

@@ -384,8 +384,12 @@ module.exports = class UsersHelper {
                   data["projectId"] = importedProject._id;
                   data["type"] = constants.common.IMPROVEMENT_PROJECT;
                   // if project is having certificate pass certificateTemplateId details with solution details.
-                  if ( importedProject.certificate && importedProject.certificate.templateId ) {
-                    data["certificateTemplateId"] = importedProject.certificate.templateId;
+                  if (
+                    importedProject.certificate &&
+                    importedProject.certificate.templateId
+                  ) {
+                    data["certificateTemplateId"] =
+                      importedProject.certificate.templateId;
                   }
                   mergedData.push(data);
                   totalCount = totalCount + 1;
@@ -916,7 +920,7 @@ module.exports = class UsersHelper {
             userId: userId,
           },
           ["programId"],
-          "none",// not passing skip fields
+          "none", // not passing skip fields
           { updatedAt: -1 } // sort data.
         );
 
@@ -925,7 +929,7 @@ module.exports = class UsersHelper {
             return obj.programId;
           });
         }
-        
+
         if (programUsersIds.length > 0) {
           let findQuery = {
             _id: { $in: programUsersIds },
@@ -940,7 +944,7 @@ module.exports = class UsersHelper {
             findQuery,
             ["_id"]
           );
-            
+
           // get _ids to array
           if (
             programDetails.success > 0 &&
@@ -952,7 +956,10 @@ module.exports = class UsersHelper {
             // We can't implement sort logic in programDocuments function because userRelatedPrograms can contain prev profile programs also
             let programDetailsResponse = programDetails.data.data;
             let programsResult = _.filter(programUsersIds, (id) =>
-              _.find(programDetailsResponse, (data) => data._id.toString() === id.toString())
+              _.find(
+                programDetailsResponse,
+                (data) => data._id.toString() === id.toString()
+              )
             );
             // get all the programs ids in array
             alreadyStartedPrograms =
@@ -972,6 +979,54 @@ module.exports = class UsersHelper {
             ? error.status
             : httpStatusCode["internal_server_error"].status,
           message: error.message,
+        });
+      }
+    });
+  }
+
+  static userDelete(kafkaEvent) {
+    return new Promise(async (resolve, reject) => {
+      let userId = kafkaEvent.edata.userId;
+      let userProfileUpdateData = [];
+      let programUsersData = await programUsersHelper.programUsersDocuments(
+        {
+          userId: userId,
+        },
+        ["userProfile"],
+        "none"
+      );
+      if (programUsersData.length > 0) {
+        programUsersData.forEach((userProfile) => {
+          let updatedUserProfile = userProfile.userProfile;
+          let updateProfile = {
+            updateOne: {
+              filter: { _id: userProfile._id },
+              update: {
+                $set: { "userProfile.firstName": "deletedUser" },
+                $unset: {
+                  "userProfile.email": 1,
+                  "userProfile.maskedEmail": 1,
+                  "userProfile.maskedPhone": 1,
+                  "userProfile.recoveryEmail": 1,
+                  "userProfile.phone": 1,
+                  "userProfile.lastName": 1,
+                  "userProfile.prevUsedPhone": 1,
+                  "userProfile.prevUsedEmail": 1,
+                  "userProfile.recoveryPhone": 1,
+                },
+              },
+              multi: true,
+            },
+          };
+          userProfileUpdateData.push(updateProfile);
+        });
+      }
+      let updateUserProfile = await programUsersHelper.bulkProfileUpdate(
+        userProfileUpdateData
+      );
+      if (updateUserProfile) {
+        return resolve({
+          success: true,
         });
       }
     });
