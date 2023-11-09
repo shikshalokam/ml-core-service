@@ -6,7 +6,7 @@
  */
 
 //Dependencies
-const filesHelper = require(MODULES_BASE_PATH + "/cloud-services/files/helper");
+const filesHelper = require(MODULES_BASE_PATH + "/files/helper");
 const path = require("path");
 
 /**
@@ -114,29 +114,28 @@ module.exports = class AppsHelper {
           throw new Error(constants.apiResponses.APP_DETAILS_NOT_FOUND);
         }
 
-        // let bucketName = process.env.CLOUD_STORAGE_BUCKETNAME;
-        // if (
-        //   process.env.CLOUD_STORAGE_PROVIDER ==
-        //   constants.common.GOOGLE_CLOUD_SERVICE
-        // ) {
-        //   bucketName = process.env.GCP_BUCKET_NAME;
-        // } else if (
-        //   process.env.CLOUD_STORAGE_PROVIDER == constants.common.AWS_SERVICE
-        // ) {
-        //   bucketName = process.env.AWS_BUCKET_NAME;
-        // } else if (
-        //   process.env.CLOUD_STORAGE_PROVIDER == constants.common.AZURE_SERVICE
-        // ) {
-        //   bucketName = process.env.AZURE_STORAGE_CONTAINER;
-        // }
+        let bucketName = "";
+        if (
+          process.env.CLOUD_STORAGE == constants.common.GOOGLE_CLOUD_SERVICE
+        ) {
+          bucketName = process.env.GCP_BUCKET_NAME;
+        } else if (process.env.CLOUD_STORAGE == constants.common.AWS_SERVICE) {
+          bucketName = process.env.AWS_BUCKET_NAME;
+        } else if (
+          process.env.CLOUD_STORAGE == constants.common.AZURE_SERVICE
+        ) {
+          bucketName = process.env.AZURE_STORAGE_CONTAINER;
+        }
 
-        // let getDownloadableUrl = await filesHelper.getDownloadableUrl(
-        //   appDocument.data[0].logo
-        // );
+        let getDownloadableUrl = await filesHelper.getDownloadableUrl(
+          appDocument.data[0].logo,
+          bucketName,
+          process.env.CLOUD_STORAGE
+        );
 
-        // if (getDownloadableUrl["url"] && getDownloadableUrl.url !== "") {
-        //   appDocument.data[0].logo = getDownloadableUrl.url;
-        // }
+        if (getDownloadableUrl["url"] && getDownloadableUrl.url !== "") {
+          appDocument.data[0].logo = getDownloadableUrl.url;
+        }
 
         return resolve({
           success: true,
@@ -144,7 +143,7 @@ module.exports = class AppsHelper {
           data: appDocument.data[0],
         });
       } catch (error) {
-        return reject({
+        return resolve({
           success: false,
           message: error.message,
           data: false,
