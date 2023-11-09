@@ -8,6 +8,7 @@
 // Dependencies
 const { validate: uuidValidate, v4: uuidV4 } = require("uuid");
 const md5 = require("md5");
+const packageData = require(ROOT_PATH + "/package.json");
 
 /**
  * convert string to camelCaseToTitleCase.
@@ -374,6 +375,38 @@ function getEndDate(date, timeZoneDifference) {
   date = addOffsetToDateTime(date, timeZoneDifference);
   return date;
 }
+function getTelemetryEvent(message) {
+  let telemetryEvent = {
+    eid: "AUDIT",
+    ets: epochTime(),
+    ver: "3.0",
+    mid: generateUniqueId(),
+    actor: { id: message.edata.userId, type: "User" },
+    context: {
+      channel: message.context.channel,
+      pdata: {
+        id: process.env.ID,
+        pid: "manage-learn",
+        ver: packageData.version,
+      },
+      env: "User",
+      cdata: [{ id: generateUniqueId(), type: "Request" }],
+      rollup: {},
+    },
+    object: {
+      id: message.edata.userId,
+      type: "User",
+    },
+    edata: {
+      state: "Delete",
+      type: "DeleteUserStatus",
+      props: [
+        "{keycloakCredentials:false, userLookUpTable:true, userExternalIdTable:true, userTable:true}",
+      ],
+    },
+  };
+  return telemetryEvent;
+}
 module.exports = {
   camelCaseToTitleCase: camelCaseToTitleCase,
   lowerCase: lowerCase,
@@ -397,4 +430,5 @@ module.exports = {
     convertArrayObjectIdtoStringOfObjectId,
   getStartDate: getStartDate,
   getEndDate: getEndDate,
+  getTelemetryEvent: getTelemetryEvent,
 };

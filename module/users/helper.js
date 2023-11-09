@@ -984,6 +984,13 @@ module.exports = class UsersHelper {
     });
   }
 
+  /**
+   * deletes Data from ProgramsUsers Collection
+   * @method
+   * @name userDelete
+   * @param {Object}  - kafkaEvent
+   * @returns {Object} - status of delete.
+   */
   static userDelete(kafkaEvent) {
     return new Promise(async (resolve, reject) => {
       let userId = kafkaEvent.edata.userId;
@@ -995,14 +1002,16 @@ module.exports = class UsersHelper {
         ["userProfile"],
         "none"
       );
+      if (programUsersData.length === 0) {
+        return resolve({ success: false });
+      }
       if (programUsersData.length > 0) {
         programUsersData.forEach((userProfile) => {
-          let updatedUserProfile = userProfile.userProfile;
           let updateProfile = {
             updateOne: {
               filter: { _id: userProfile._id },
               update: {
-                $set: { "userProfile.firstName": "deletedUser" },
+                $set: { "userProfile.firstName": "Deleted User" },
                 $unset: {
                   "userProfile.email": 1,
                   "userProfile.maskedEmail": 1,

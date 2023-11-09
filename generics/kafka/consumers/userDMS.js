@@ -7,9 +7,9 @@
 
 //dependencies
 const usersHelper = require(MODULES_BASE_PATH + "/users/helper.js");
-
+const kafkaProducersHelper = require(ROOT_PATH + "/generics/kafka/producers");
 /**
- * submission consumer message received.
+ * userdelete consumer message received.
  * @function
  * @name messageReceived
  * @param {String} message - consumer data
@@ -22,8 +22,22 @@ var messageReceived = function (message) {
       let parsedMessage = JSON.parse(message.value);
       if (parsedMessage.edata.action === "delete-user") {
         let userDeleteResponse = await usersHelper.userDelete(parsedMessage);
-        console.log(userDeleteResponse);
+
         if (userDeleteResponse.success == true) {
+          let msgData = await gen.utils.getTelemetryEvent(parsedMessage);
+          let telemetryEvent = {
+            timestamp: new Date(),
+            msg: JSON.stringify(msgData),
+            lname: "TelemetryEventLogger",
+            tname: "",
+            level: "INFO",
+            HOSTNAME: "",
+            "application.home": "",
+          };
+          await kafkaProducersHelper.pushTelemetryEventToKafka(telemetryEvent);
+          return resolve("Message Processed.");
+        } else {
+          return resolve("Message Processed.");
         }
       }
     } catch (error) {

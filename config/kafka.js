@@ -17,6 +17,7 @@ let USER_DELETE_TOPIC = process.env.USER_DELETE_TOPIC;
 const connect = function () {
   const Producer = kafka.Producer;
   KeyedMessage = kafka.KeyedMessage;
+  const Consumer = kafka.Consumer;
 
   const client = new kafka.KafkaClient({
     kafkaHost: process.env.KAFKA_URL,
@@ -36,30 +37,26 @@ const connect = function () {
   producer.on("error", function (err) {
     console.log("kafka producer creation error!");
   });
+  const topics = [{ topic: process.env.USER_DELETE_TOPIC }];
 
-  if (USER_DELETE_TOPIC) {
-    let consumer = new kafka.ConsumerGroup(
-      {
-        kafkaHost: process.env.KAFKA_URL,
-        groupId: process.env.KAFKA_GROUP_ID,
-        autoCommit: true,
-      },
-      USER_DELETE_TOPIC
-    );
+  const options = {
+    autoCommit: true,
+  };
 
-    consumer.on("message", async function (message) {
-      console.log("-------Kafka consumer log starts here------------------");
-      console.log("Topic Name: ", USER_DELETE_TOPIC);
-      console.log("Message: ", JSON.stringify(message));
-      console.log("-------Kafka consumer log ends here------------------");
+  const consumer = new Consumer(client, topics, options);
 
-      userDMSConsumer.messageReceived(message);
-    });
+  consumer.on("message", function (message) {
+    console.log("-------Kafka consumer log starts here------------------");
+    console.log("Topic Name: ", USER_DELETE_TOPIC);
+    console.log("Message: ", JSON.stringify(message));
+    console.log("-------Kafka consumer log ends here------------------");
 
-    consumer.on("error", async function (error) {
-      userDMSConsumer.errorTriggered(error);
-    });
-  }
+    userDMSConsumer.messageReceived(message);
+  });
+
+  consumer.on("error", function (err) {
+    userDMSConsumer.errorTriggered(err);
+  });
 
   return {
     kafkaProducer: producer,

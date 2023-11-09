@@ -12,6 +12,9 @@ const programUsersSubmissionTopic =
     ? process.env.PROGRAM_USERS_JOINED_TOPIC
     : `${process.env.APPLICATION_ENV}.programuser.info`;
 
+const telemetryEventTopic = process.env.TELEMETRY_TOPIC
+  ? process.env.TELEMETRY_TOPIC
+  : "sl-telemetry-dev";
 /**
  * Push program users to kafka.
  * @function
@@ -37,18 +40,18 @@ const pushProgramUsersToKafka = function (message) {
 };
 
 /**
- * Push program users to kafka.
+ * Push telemetry event to kafka.
  * @function
- * @name pushProgramUsersToKafka
+ * @name pushTelemetryEventToKafka
  * @param {Object} message - Message data.
  */
 
-const pushTelemetryToKafka = function (message) {
+const pushTelemetryEventToKafka = function (message) {
   return new Promise(async (resolve, reject) => {
     try {
       let kafkaPushStatus = await pushMessageToKafka([
         {
-          topic: programUsersSubmissionTopic,
+          topic: telemetryEventTopic,
           messages: JSON.stringify(message),
         },
       ]);
@@ -106,5 +109,5 @@ const pushMessageToKafka = function (payload) {
 
 module.exports = {
   pushProgramUsersToKafka: pushProgramUsersToKafka,
-  pushTelemetryToKafka: pushTelemetryToKafka,
+  pushTelemetryEventToKafka: pushTelemetryEventToKafka,
 };
