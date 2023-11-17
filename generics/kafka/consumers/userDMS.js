@@ -1,7 +1,7 @@
 /**
  * name : userDMS.js
  * author : Ankit Shahu
- * created-date : 22-Nov-2020
+ * created-date : 10-Nov-2023
  * Description : User delete consumer.
  */
 
