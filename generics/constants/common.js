@@ -82,5 +82,11 @@ module.exports = {
   READ_PERMISSION: "r",
   SIGNEDURL: "signedUrl",
   WRITE: "write",
-  READ: "read"
+  READ: "read",
+  DELETED_USER: "Deleted User",
+  TELEMTRY_EVENT_LOGGER: "TelemetryEventLogger",
+  INFO_LEVEL: "INFO",
+  DELETE_STATE: "Delete",
+  USER_DELETE_TYPE: "DeleteUserStatus",
+  AUDIT: "AUDIT",
 };

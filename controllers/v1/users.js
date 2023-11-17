@@ -5,7 +5,6 @@
  * Description : All user related information.
  */
 
-
 /**
  * dependencies
  */
@@ -13,34 +12,32 @@
 const usersHelper = require(MODULES_BASE_PATH + "/users/helper.js");
 
 /**
-    * User
-    * @class
-*/
+ * User
+ * @class
+ */
 
 module.exports = class Users extends Abstract {
+  constructor() {
+    super(schemas["users"]);
+  }
 
-    constructor() {
-        super(schemas["users"]);
-    }
+  /**
+   * @apiDefine errorBody
+   * @apiError {String} status 4XX,5XX
+   * @apiError {String} message Error
+   */
 
-    /**
-     * @apiDefine errorBody
-     * @apiError {String} status 4XX,5XX
-     * @apiError {String} message Error
-     */
+  /**
+   * @apiDefine successBody
+   *  @apiSuccess {String} status 200
+   * @apiSuccess {String} result Data
+   */
 
-    /**
-     * @apiDefine successBody
-     *  @apiSuccess {String} status 200
-     * @apiSuccess {String} result Data
-     */
+  static get name() {
+    return "users";
+  }
 
-
-    static get name() {
-        return "users";
-    }
-
-    /**
+  /**
      * @api {get} /kendra/api/v1/users/privatePrograms/:userId List of user private programs
      * @apiVersion 2.0.0
      * @apiName List of user private programs
@@ -64,38 +61,37 @@ module.exports = class Users extends Abstract {
      * @apiUse errorBody
      */
 
-    /**
-    * Private Programs .
-    * @method
-    * @name privatePrograms
-    * @param {Object} req -request Data.
-    * @param {String} req.params._id - user id
-    * @returns {JSON} - List of programs created by user.
-    */
+  /**
+   * Private Programs .
+   * @method
+   * @name privatePrograms
+   * @param {Object} req -request Data.
+   * @param {String} req.params._id - user id
+   * @returns {JSON} - List of programs created by user.
+   */
 
-    privatePrograms(req) {
-        return new Promise(async (resolve, reject) => {
-            try {
-                
-                let programsData = 
-                await usersHelper.privatePrograms(
-                    (req.params._id && req.params._id != "") ? 
-                    req.params._id : 
-                    req.userDetails.userId
-                );
-                
-                return resolve(programsData);
-            } catch (error) {
-                return reject({
-                    status: error.status || httpStatusCode.internal_server_error.status,
-                    message: error.message || httpStatusCode.internal_server_error.message,
-                    errorObject: error
-                });
-            }
+  privatePrograms(req) {
+    return new Promise(async (resolve, reject) => {
+      try {
+        let programsData = await usersHelper.privatePrograms(
+          req.params._id && req.params._id != ""
+            ? req.params._id
+            : req.userDetails.userId
+        );
+
+        return resolve(programsData);
+      } catch (error) {
+        return reject({
+          status: error.status || httpStatusCode.internal_server_error.status,
+          message:
+            error.message || httpStatusCode.internal_server_error.message,
+          errorObject: error,
         });
-    }
+      }
+    });
+  }
 
-     /**
+  /**
      * @api {post} /kendra/api/v1/users/createProgram/:userId?programId=:programId Users created program and solution.
      * @apiVersion 2.0.0
      * @apiName Users created program and solution.
@@ -171,44 +167,43 @@ module.exports = class Users extends Abstract {
     }}
      */
 
-    /**
-    * Create user program and solution.
-    * @method
-    * @name createProgramAndSolution
-    * @param {Object} req -request Data.
-    * @param {String} req.params._id - user id
-    * @returns {JSON} - Created user program and solution.
-    */
+  /**
+   * Create user program and solution.
+   * @method
+   * @name createProgramAndSolution
+   * @param {Object} req -request Data.
+   * @param {String} req.params._id - user id
+   * @returns {JSON} - Created user program and solution.
+   */
 
-   createProgramAndSolution(req) {
+  createProgramAndSolution(req) {
     return new Promise(async (resolve, reject) => {
+      try {
+        let createdProgramAndSolution =
+          await usersHelper.createProgramAndSolution(
+            req.params._id && req.params._id != ""
+              ? req.params._id
+              : req.userDetails.userId,
+            req.body,
+            req.userDetails.userToken,
+            req.query.createADuplicateSolution
+              ? req.query.createADuplicateSolution
+              : ""
+          );
 
-        try {
-
-            let createdProgramAndSolution = 
-            await usersHelper.createProgramAndSolution(
-                (req.params._id && req.params._id != "") ? 
-                req.params._id : 
-                req.userDetails.userId,
-                req.body,
-                req.userDetails.userToken,
-                req.query.createADuplicateSolution ? req.query.createADuplicateSolution : ""
-            );
-
-            return resolve(createdProgramAndSolution);
-
-        } catch (error) {
-            return reject({
-                status: error.status || httpStatusCode.internal_server_error.status,
-                message: error.message || httpStatusCode.internal_server_error.message,
-                errorObject: error
-            });
-        }
-
+        return resolve(createdProgramAndSolution);
+      } catch (error) {
+        return reject({
+          status: error.status || httpStatusCode.internal_server_error.status,
+          message:
+            error.message || httpStatusCode.internal_server_error.message,
+          errorObject: error,
+        });
+      }
     });
-   }
+  }
 
-   /**
+  /**
   * @api {post} /kendra/api/v1/users/solutions/:programId?page=:page&limit=:limit&search=:searchText
   * @apiVersion 1.0.0
   * @apiName User solutions
@@ -261,48 +256,42 @@ module.exports = class Users extends Abstract {
   **/
 
   /**
-  * User targeted solutions.
-  * @method
-  * @name solutions
-  * @param  {req}  - requested data.
-  * @returns {json} List of targeted solutions.
-  */
+   * User targeted solutions.
+   * @method
+   * @name solutions
+   * @param  {req}  - requested data.
+   * @returns {json} List of targeted solutions.
+   */
 
- solutions(req) {
+  solutions(req) {
     return new Promise(async (resolve, reject) => {
       try {
-        
         let targetedSolutions = await usersHelper.solutions(
-            req.params._id,
-            req.body,
-            req.pageSize,
-            req.pageNo,
-            req.searchText,
-            req.userDetails.userToken,
-            req.userDetails.userId,
-            req.query.type = req.query.type ? req.query.type : ""
+          req.params._id,
+          req.body,
+          req.pageSize,
+          req.pageNo,
+          req.searchText,
+          req.userDetails.userToken,
+          req.userDetails.userId,
+          (req.query.type = req.query.type ? req.query.type : "")
         );
 
         targetedSolutions["result"] = targetedSolutions.data;
         return resolve(targetedSolutions);
-
       } catch (error) {
-
         return reject({
-            status: 
-            error.status || 
-            httpStatusCode["internal_server_error"].status,
+          status:
+            error.status || httpStatusCode["internal_server_error"].status,
 
-            message: 
-            error.message || 
-            httpStatusCode["internal_server_error"].message
-        })
-
+          message:
+            error.message || httpStatusCode["internal_server_error"].message,
+        });
       }
     });
   }
 
-/**
+  /**
      * @api {post} /kendra/api/v1/users/programs?page=:page&limit=:limit&search=:search 
      * Program List
      * @apiVersion 1.0.0
@@ -337,64 +326,55 @@ module.exports = class Users extends Abstract {
     }
     */
 
-    /**
-      * List of targeted user programs
-      * @method
-      * @name programs
-      * @param  {Request} req request body.
-      * @param {String} req.pageNo - pageNo
-      * @param {String} req.pageSize - pageSize
-      * @param {String} req.searchText - searchText
-      * @param {String} req.query.isAPrivateProgram - isAPrivateProgram
-      * @returns {Object} list of targeted user programs. 
-     */
+  /**
+   * List of targeted user programs
+   * @method
+   * @name programs
+   * @param  {Request} req request body.
+   * @param {String} req.pageNo - pageNo
+   * @param {String} req.pageSize - pageSize
+   * @param {String} req.searchText - searchText
+   * @param {String} req.query.isAPrivateProgram - isAPrivateProgram
+   * @returns {Object} list of targeted user programs.
+   */
 
-    programs(req) {
-      return new Promise(async (resolve, reject) => {
+  programs(req) {
+    return new Promise(async (resolve, reject) => {
+      try {
+        let isAPrivateProgram = gen.utils.convertStringToBoolean(
+          req.query.isAPrivateProgram
+        );
 
-        try {
+        if (isAPrivateProgram) {
+          let programsData = await usersHelper.privatePrograms(
+            req.userDetails.userId
+          );
+          return resolve(programsData);
+        } else {
+          let programs = await usersHelper.programs(
+            req.body,
+            req.pageNo,
+            req.pageSize,
+            req.searchText,
+            req.userDetails.userId
+          );
 
-          let isAPrivateProgram = gen.utils.convertStringToBoolean(req.query.isAPrivateProgram);
-
-          if(isAPrivateProgram){
-
-            let programsData = await usersHelper.privatePrograms(req.userDetails.userId);
-            return resolve(programsData);
-
-          } else {
-            
-            let programs = 
-              await usersHelper.programs( 
-                  req.body,
-                  req.pageNo,
-                  req.pageSize,
-                  req.searchText,
-                  req.userDetails.userId
-              );
-
-              programs.result = programs.data;
-              return resolve(programs);
-
-          }
-          
-        } catch (error) {
-
-            return reject({
-                status: 
-                error.status || 
-                httpStatusCode["internal_server_error"].status,
-
-                message: 
-                error.message || 
-                httpStatusCode["internal_server_error"].message
-            })
-
+          programs.result = programs.data;
+          return resolve(programs);
         }
+      } catch (error) {
+        return reject({
+          status:
+            error.status || httpStatusCode["internal_server_error"].status,
 
-      })
-    }
+          message:
+            error.message || httpStatusCode["internal_server_error"].message,
+        });
+      }
+    });
+  }
 
-       /**
+  /**
      * @api {get} /kendra/api/v1/users/entityTypesByLocationAndRole/:stateLocationId?role=:role
      * List of entity type by location and role.
      * @apiVersion 1.0.0
@@ -414,61 +394,56 @@ module.exports = class Users extends Abstract {
     ]}
     */
 
-    /**
-      * Lists of entity types based on location and role.
-      * @method
-      * @name entityTypesByLocationAndRole
-      * @param  {Request} req request body.
-      * @returns {JSON} List of entiites mapping form.
-     */
+  /**
+   * Lists of entity types based on location and role.
+   * @method
+   * @name entityTypesByLocationAndRole
+   * @param  {Request} req request body.
+   * @returns {JSON} List of entiites mapping form.
+   */
 
-    entityTypesByLocationAndRole(req) {
+  entityTypesByLocationAndRole(req) {
+    return new Promise(async (resolve, reject) => {
+      try {
+        let currentMaximumCountOfRequiredEntities = 0;
+        let requiredEntities = new Array();
+        let roleArray = req.query.role.split(",");
 
-        return new Promise(async (resolve, reject) => {
+        // Calculate required entities for each of the role and send the output of the role which has maximum length.
+        for (let roleCount = 0; roleCount < roleArray.length; roleCount++) {
+          const eachRole = roleArray[roleCount];
+          const entitiesMappingData =
+            await usersHelper.entityTypesByLocationAndRole(
+              req.params._id,
+              eachRole
+            );
+          if (
+            entitiesMappingData.data &&
+            entitiesMappingData.data.length >
+              currentMaximumCountOfRequiredEntities
+          ) {
+            currentMaximumCountOfRequiredEntities =
+              entitiesMappingData.data.length;
+            requiredEntities = entitiesMappingData;
+            requiredEntities.result = entitiesMappingData.data;
+          }
+        }
 
-            try {
-                
-                let currentMaximumCountOfRequiredEntities = 0;
-                let requiredEntities = new Array;
-                let roleArray = req.query.role.split(",");
+        // entitiesMappingData["result"] = requiredEntities;
+        resolve(requiredEntities);
+      } catch (error) {
+        return reject({
+          status:
+            error.status || httpStatusCode["internal_server_error"].status,
 
-                // Calculate required entities for each of the role and send the output of the role which has maximum length.
-                for (let roleCount = 0; roleCount < roleArray.length; roleCount++) {
-                    const eachRole = roleArray[roleCount];
-                    const entitiesMappingData = 
-                    await usersHelper.entityTypesByLocationAndRole(
-                        req.params._id,
-                        eachRole
-                    );
-                    if(entitiesMappingData.data && entitiesMappingData.data.length > currentMaximumCountOfRequiredEntities) {
-                        currentMaximumCountOfRequiredEntities = entitiesMappingData.data.length;
-                        requiredEntities = entitiesMappingData;
-                        requiredEntities.result = entitiesMappingData.data;
-                    }
-                }
+          message:
+            error.message || httpStatusCode["internal_server_error"].message,
+        });
+      }
+    });
+  }
 
-                // entitiesMappingData["result"] = requiredEntities;
-                resolve(requiredEntities);
-
-            } catch (error) {
-
-                return reject({
-                    status: 
-                    error.status || 
-                    httpStatusCode["internal_server_error"].status,
-
-                    message: 
-                    error.message || 
-                    httpStatusCode["internal_server_error"].message
-                })
-
-            }
-
-
-        })
-    }
-    
-     /**
+  /**
     * @api {post} /kendra/api/v1/users/targetedEntity/:solutionId Targeted entity.
     * @apiVersion 1.0.0
     * @apiName Targeted entity.
@@ -495,7 +470,7 @@ module.exports = class Users extends Abstract {
     }}
     */
 
-     /**
+  /**
    * Targeted entity
    * @method
    * @name targetedEntity
@@ -504,85 +479,85 @@ module.exports = class Users extends Abstract {
    * @returns {Array} Details entity.
    */
 
-    async targetedEntity(req) {
-        return new Promise(async (resolve, reject) => {
-          try {
-            
-            let roleArray = req.body.role.split(",");
-            let targetedEntities = {};
+  async targetedEntity(req) {
+    return new Promise(async (resolve, reject) => {
+      try {
+        let roleArray = req.body.role.split(",");
+        let targetedEntities = {};
 
-            if ( roleArray.length === 1 ) {
+        if (roleArray.length === 1) {
+          const detailEntity = await usersHelper.targetedEntity(
+            req.params._id,
+            req.body
+          );
 
-                const detailEntity = 
-                await usersHelper.targetedEntity(
-                    req.params._id,
-                    req.body
-                );
+          detailEntity["result"] = detailEntity.data;
 
-                detailEntity["result"] = detailEntity.data;
-    
-                return resolve(detailEntity);
+          return resolve(detailEntity);
+        } else {
+          let roleWiseTargetedEntities = new Array();
 
-            } else {
+          for (let roleCount = 0; roleCount < roleArray.length; roleCount++) {
+            const eachRole = roleArray[roleCount];
+            let bodyData = _.omit(req.body, ["role"]);
+            bodyData.role = eachRole;
 
-                let roleWiseTargetedEntities = new Array();
+            const detailEntity = await usersHelper.targetedEntity(
+              req.params._id,
+              bodyData
+            );
 
-                for ( let roleCount = 0; roleCount < roleArray.length; roleCount++ ) {
-
-                    const eachRole = roleArray[roleCount];
-                    let bodyData = _.omit(req.body, ['role']);
-                    bodyData.role = eachRole;
-                    
-                    const detailEntity = 
-                    await usersHelper.targetedEntity(
-                        req.params._id,
-                        bodyData
-                    );
-
-                    if ( detailEntity.data && Object.keys(detailEntity.data).length > 0 ) {
-                        roleWiseTargetedEntities.push(detailEntity.data);
-                    }
-                }
-                //no targeted entity
-                if ( roleWiseTargetedEntities.length  == 0 ) {
-                    throw {
-                        status: httpStatusCode["bad_request"].status,
-                        message: constants.apiResponses.ENTITIES_NOT_ALLOWED_IN_ROLE
-                    };
-                } 
-                //one targeted entity 
-                else if ( roleWiseTargetedEntities && roleWiseTargetedEntities.length == 1 ) {
-                    
-                    targetedEntities.result = roleWiseTargetedEntities[0];
-
-                } 
-                // multiple targeted entity
-                else if ( roleWiseTargetedEntities && roleWiseTargetedEntities.length > 1 ) {
-                    // request body contain role and entity information
-                    let targetedEntity = await usersHelper.getHighestTargetedEntity(
-                        roleWiseTargetedEntities, req.body
-                    );
-           
-                    if ( !targetedEntity.data ) {
-                        throw {
-                            status: httpStatusCode["bad_request"].status,
-                            message: constants.apiResponses.ENTITIES_NOT_ALLOWED_IN_ROLE
-                        };
-                    }
-                    targetedEntities.result = targetedEntity.data;
-                }
+            if (
+              detailEntity.data &&
+              Object.keys(detailEntity.data).length > 0
+            ) {
+              roleWiseTargetedEntities.push(detailEntity.data);
             }
-
-            return resolve(targetedEntities);
-    
-          } catch (error) {
-            return reject({
-              status: error.status || httpStatusCode.internal_server_error.status,
-              message: error.message || httpStatusCode.internal_server_error.message,
-              errorObject: error
-            });
           }
-        });
-    }
-};
+          //no targeted entity
+          if (roleWiseTargetedEntities.length == 0) {
+            throw {
+              status: httpStatusCode["bad_request"].status,
+              message: constants.apiResponses.ENTITIES_NOT_ALLOWED_IN_ROLE,
+            };
+          }
+          //one targeted entity
+          else if (
+            roleWiseTargetedEntities &&
+            roleWiseTargetedEntities.length == 1
+          ) {
+            targetedEntities.result = roleWiseTargetedEntities[0];
+          }
+          // multiple targeted entity
+          else if (
+            roleWiseTargetedEntities &&
+            roleWiseTargetedEntities.length > 1
+          ) {
+            // request body contain role and entity information
+            let targetedEntity = await usersHelper.getHighestTargetedEntity(
+              roleWiseTargetedEntities,
+              req.body
+            );
 
+            if (!targetedEntity.data) {
+              throw {
+                status: httpStatusCode["bad_request"].status,
+                message: constants.apiResponses.ENTITIES_NOT_ALLOWED_IN_ROLE,
+              };
+            }
+            targetedEntities.result = targetedEntity.data;
+          }
+        }
+
+        return resolve(targetedEntities);
+      } catch (error) {
+        return reject({
+          status: error.status || httpStatusCode.internal_server_error.status,
+          message:
+            error.message || httpStatusCode.internal_server_error.message,
+          errorObject: error,
+        });
+      }
+    });
+  }
+};

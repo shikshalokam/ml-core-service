@@ -375,38 +375,36 @@ function getEndDate(date, timeZoneDifference) {
   date = addOffsetToDateTime(date, timeZoneDifference);
   return date;
 }
-function getTelemetryEvent(message) {
+/**
+ * generate telemetry raw event
+ * @function
+ * @name getTelemetryEvent
+ * @returns {Object} returns uuid.
+ */
+function getTelemetryEvent() {
   let telemetryEvent = {
-    eid: "AUDIT",
+    eid: "",
     ets: epochTime(),
     ver: "3.0",
     mid: generateUniqueId(),
-    actor: { id: message.edata.userId, type: "User" },
+    actor: {},
     context: {
-      channel: message.context.channel,
+      channel: "",
       pdata: {
         id: process.env.ID,
         pid: "manage-learn",
         ver: packageData.version,
       },
-      env: "User",
+      env: "",
       cdata: [{ id: generateUniqueId(), type: "Request" }],
       rollup: {},
     },
-    object: {
-      id: message.edata.userId,
-      type: "User",
-    },
-    edata: {
-      state: "Delete",
-      type: "DeleteUserStatus",
-      props: [
-        "{keycloakCredentials:false, userLookUpTable:true, userExternalIdTable:true, userTable:true}",
-      ],
-    },
+    object: {},
+    edata: {},
   };
   return telemetryEvent;
 }
+
 module.exports = {
   camelCaseToTitleCase: camelCaseToTitleCase,
   lowerCase: lowerCase,

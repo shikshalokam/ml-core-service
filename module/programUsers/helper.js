@@ -151,14 +151,19 @@ module.exports = class ProgramUsersHelper {
     });
   }
 
-  static bulkProfileUpdate(profileData) {
+  /**
+   * bulkUpdate function is used to do bulk operations.
+   * @method
+   * @name bulkUpdate
+   * @param {Object} [Data] -  Data along with filter and quries.
+   * @returns {Object} - status of bulk operation.
+   */
+  static bulkUpdate(Data) {
     return new Promise(async (resolve, reject) => {
       try {
-        let programUsersDelete = await database.models.programUsers.bulkWrite(
-          profileData
-        );
-        if (programUsersDelete.result.ok) {
-          return resolve(programUsersDelete);
+        let bulkUpdates = await database.models.programUsers.bulkWrite(Data);
+        if (bulkUpdates.result.ok) {
+          return resolve(bulkUpdates);
         }
       } catch (error) {
         return reject(error);
