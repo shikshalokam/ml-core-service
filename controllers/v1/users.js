@@ -5,8 +5,6 @@
  * Description : All user related information.
  */
 
-const { error } = require("log");
-
 
 /**
  * dependencies
@@ -97,24 +95,7 @@ module.exports = class Users extends Abstract {
         });
     }
 
-    pushEventKafka(req){
-        return new Promise(async (resolve, reject) => {
-            try {
-                let data = {
-                    highWaterOffset:63,
-                    key:null,
-                    offset:62,
-                    partition:0,
-                    topic:'deleteuser',
-                    value:'{"eid":"BE_JOB_REQUEST","ets":1619527882745,"mid":"LP.1619527882745.32dc378a-430f-49f6-83b5-bd73b767ad36","actor":{"id":"delete-user","type":"System"},"context":{"channel":"01309282781705830427","pdata":{"id":"org.sunbird.platform","ver":"1.0"},"env":"dev"},"object":{"id":"<deleted-userId>","type":"User"},"edata":{"organisationId":"0126796199493140480","userId":"00a032ac-94cf-40fe-a153-98117a6ab00c","suggested_users":[{"role":"ORG_ADMIN","users":["<orgAdminUserId>"]},{"role":"CONTENT_CREATOR","users":["<contentCreatorUserId>"]},{"role":"COURSE_MENTOR","users":["<courseMentorUserId>"]}],"action":"delete-user","iteration":1}}'
-                }
-                let respo = await userDeleteConsumer.messageReceived(data)
-                resolve(respo);
-            } catch (err) {
-                return error
-            }
-        })
-    }
+
 
      /**
      * @api {post} /kendra/api/v1/users/createProgram/:userId?programId=:programId Users created program and solution.
