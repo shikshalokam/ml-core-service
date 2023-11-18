@@ -95,8 +95,6 @@ module.exports = class Users extends Abstract {
         });
     }
 
-
-
      /**
      * @api {post} /kendra/api/v1/users/createProgram/:userId?programId=:programId Users created program and solution.
      * @apiVersion 2.0.0
