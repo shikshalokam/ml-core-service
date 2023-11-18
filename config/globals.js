@@ -99,6 +99,19 @@ module.exports = function () {
     }
   });
 
+  // KAFKA CONSUMERS
+
+  fs.readdirSync(ROOT_PATH + "/generics/kafka/consumers").forEach(function (
+    file
+  ) {
+    if (file.match(/\.js$/) !== null) {
+      var name = file.replace(".js", "");
+      global[name + "Consumer"] = require(ROOT_PATH +
+        "/generics/kafka/consumers/" +
+        file);
+    }
+  });
+
   //define cache as global variable
   global.cache = require(ROOT_PATH+"/generics/helpers/cache");
 

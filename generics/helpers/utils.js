@@ -8,7 +8,7 @@
 // Dependencies
 const { validate: uuidValidate, v4: uuidV4 } = require("uuid");
 const md5 = require("md5");
-
+const packageData = require(ROOT_PATH + "/package.json");
 /**
  * convert string to camelCaseToTitleCase.
  * @function
@@ -374,6 +374,54 @@ function getEndDate(date, timeZoneDifference) {
   date = addOffsetToDateTime(date, timeZoneDifference);
   return date;
 }
+
+/**
+ * generate skeleton telemetry raw event
+ * @function
+ * @name generateTelemetryEventSkeletonStructure
+ * @returns {Object} returns uuid.
+ */
+ function generateTelemetryEventSkeletonStructure() {
+  let telemetrySkeleton = {
+    eid: "",
+    ets: epochTime(),
+    ver: constants.common.TELEMETRY_VERSION,
+    mid: generateUniqueId(),
+    actor: {},
+    context: {
+      channel: "",
+      pdata: {
+        id: process.env.ID,
+        ver: packageData.version,
+      },
+      env: "",
+      cdata: [],
+      rollup: {},
+    },
+    object: {},
+    edata: {},
+  };
+  return telemetrySkeleton;
+}
+
+/**
+ * generate telemetry raw event
+ * @function
+ * @name generateTelemetryEvent
+ * @returns {Object} returns uuid.
+ */
+ function generateTelemetryEvent(rawEvent) {
+  let telemetryEvent = {
+    timestamp: new Date(),
+    msg: JSON.stringify(rawEvent),
+    lname: "",
+    tname: "",
+    level: "",
+    HOSTNAME: "",
+    "application.home": "",
+  };
+  return telemetryEvent;
+}
 module.exports = {
   camelCaseToTitleCase: camelCaseToTitleCase,
   lowerCase: lowerCase,
@@ -397,4 +445,6 @@ module.exports = {
     convertArrayObjectIdtoStringOfObjectId,
   getStartDate: getStartDate,
   getEndDate: getEndDate,
+  generateTelemetryEventSkeletonStructure: generateTelemetryEventSkeletonStructure,
+  generateTelemetryEvent: generateTelemetryEvent
 };
