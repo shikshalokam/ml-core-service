@@ -9,7 +9,7 @@
 const kafkaCommunicationsOnOff = process.env.KAFKA_COMMUNICATIONS_ON_OFF;
 const programUsersSubmissionTopic = (process.env.PROGRAM_USERS_JOINED_TOPIC != "OFF") ? process.env.PROGRAM_USERS_JOINED_TOPIC : `${process.env.APPLICATION_ENV}.programuser.info`;
 const telemetryEventTopic = (process.env.TELEMETRY_TOPIC != "OFF") ? process.env.TELEMETRY_TOPIC : `${process.env.APPLICATION_ENV}.telemetry.raw`;
-const telemetryEventOnOff = process.env.TELEMETRY_ON_OFF
+
 /**
   * Push program users to kafka.
   * @function
@@ -45,9 +45,6 @@ const pushProgramUsersToKafka = function (message) {
  const pushTelemetryEventToKafka = function (message) {
   return new Promise(async (resolve, reject) => {
     try {
-      if(telemetryEventOnOff != "OFF"){
-
-      
         let kafkaPushStatus = await pushMessageToKafka([
           {
             topic: telemetryEventTopic,
@@ -55,9 +52,7 @@ const pushProgramUsersToKafka = function (message) {
           },
         ]);
         return resolve(kafkaPushStatus);
-      } else {
-        return resolve({success: true})
-      }
+      
     } catch (error) {
       return reject(error);
     }

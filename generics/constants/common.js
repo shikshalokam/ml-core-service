@@ -92,5 +92,6 @@ module.exports = {
   AUDIT: "AUDIT",
   DELETE_USER: "delete-user",
   USER: "User",
-  USER_DELETE_MODULE: "userDelete"
+  USER_DELETE_MODULE: "userDelete",
+  OFF: "OFF"
 };

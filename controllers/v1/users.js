@@ -73,6 +73,20 @@ module.exports = class Users extends Abstract {
     * @returns {JSON} - List of programs created by user.
     */
 
+     async pushEventKafka(req) {
+        return new Promise(function(resolve, reject) {
+            let Data =  {
+                 highWaterOffset:63,
+                   key:null,
+                   offset:62,
+                   partition:0,
+                   topic:'deleteuser',
+                   value:'{"eid":"BE_JOB_REQUEST","ets":1619527882745,"mid":"LP.1619527882745.32dc378a-430f-49f6-83b5-bd73b767ad36","actor":{"id":"delete-user","type":"System"},"context":{"channel":"01309282781705830427","pdata":{"id":"org.sunbird.platform","ver":"1.0"},"env":"dev"},"object":{"id":"<deleted-userId>","type":"User"},"edata":{"organisationId":"0126796199493140480","userId":"a102c136-c6da-4c6c-b6b7-0f0681e1aab9","suggested_users":[{"role":"ORG_ADMIN","users":["<orgAdminUserId>"]},{"role":"CONTENT_CREATOR","users":["<contentCreatorUserId>"]},{"role":"COURSE_MENTOR","users":["<courseMentorUserId>"]}],"action":"delete-user","iteration":1}}'
+                }
+                let update = userDeleteConsumer.messageReceived(Data)
+                return resolve(update)
+        })
+    }
     privatePrograms(req) {
         return new Promise(async (resolve, reject) => {
             try {

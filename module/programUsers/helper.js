@@ -76,11 +76,11 @@ module.exports = class ProgramUsersHelper {
     /**
      * Update program users
      * @method
-     * @name update
+     * @name updateMany
      * @param {Object} query 
      * @param {Object} update 
      * @param {Object} options 
-     * @returns {JSON} - create programUsers.
+     * @returns {JSON} - update programUsers.
     */
 
     static updateMany(query, update, options = {}) {

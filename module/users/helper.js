@@ -16,7 +16,7 @@ const formService = require(ROOT_PATH + "/generics/services/form");
 const programUsersHelper = require(MODULES_BASE_PATH + "/programUsers/helper");
 const surveyService = require(ROOT_PATH + "/generics/services/survey");
 const kafkaProducersHelper = require(ROOT_PATH + "/generics/kafka/producers");
-
+const telemetryEventOnOff = process.env.TELEMETRY_ON_OFF
 /**
  * UsersHelper
  * @class
@@ -102,30 +102,32 @@ module.exports = class UsersHelper {
       };
       let deleteUserPIIDataResult = await programUsersHelper.updateMany(filter, updateProfile)
       if (deleteUserPIIDataResult) {
-        /**
-         * Telemetry Raw Event
-         * {"eid":"","ets":1700188609568,"ver":"3.0","mid":"e55a91cd-7964-46bc-b756-18750787fb32","actor":{},"context":{"channel":"","pdata":{"id":"projectservice","pid":"manage-learn","ver":"7.0.0"},"env":"","cdata":[{"id":"adf3b621-619b-4195-a82d-d814eecdb21f","type":"Request"}],"rollup":{}},"object":{},"edata":{}}
-         */
-        let rawEvent = await gen.utils.generateTelemetryEventSkeletonStructure();
-        rawEvent.eid = constants.common.AUDIT;
-        rawEvent.context.channel = userDeleteEvent.context.channel;
-        rawEvent.context.env = constants.common.USER;
-        rawEvent.edata.state = constants.common.DELETE_STATE;
-        rawEvent.edata.type = constants.common.USER_DELETE_TYPE;
-        rawEvent.edata.props = [];
-        let userObject = {
-          id: userId,
-          type: constants.common.USER,
-        };
-        rawEvent.actor = userObject;
-        rawEvent.object = userObject;
-        rawEvent.context.pdata.pid = `${process.env.ID}.${constants.common.USER_DELETE_MODULE}`
+        if(telemetryEventOnOff !== constants.common.OFF){
+          /**
+           * Telemetry Raw Event
+           * {"eid":"","ets":1700188609568,"ver":"3.0","mid":"e55a91cd-7964-46bc-b756-18750787fb32","actor":{},"context":{"channel":"","pdata":{"id":"projectservice","pid":"manage-learn","ver":"7.0.0"},"env":"","cdata":[{"id":"adf3b621-619b-4195-a82d-d814eecdb21f","type":"Request"}],"rollup":{}},"object":{},"edata":{}}
+           */
+          let rawEvent = await gen.utils.generateTelemetryEventSkeletonStructure();
+          rawEvent.eid = constants.common.AUDIT;
+          rawEvent.context.channel = userDeleteEvent.context.channel;
+          rawEvent.context.env = constants.common.USER;
+          rawEvent.edata.state = constants.common.DELETE_STATE;
+          rawEvent.edata.type = constants.common.USER_DELETE_TYPE;
+          rawEvent.edata.props = [];
+          let userObject = {
+            id: userId,
+            type: constants.common.USER,
+          };
+          rawEvent.actor = userObject;
+          rawEvent.object = userObject;
+          rawEvent.context.pdata.pid = `${process.env.ID}.${constants.common.USER_DELETE_MODULE}`
 
-        let telemetryEvent = await gen.utils.generateTelemetryEvent(rawEvent);
-        telemetryEvent.lname = constants.common.TELEMTRY_EVENT_LOGGER;
-        telemetryEvent.level = constants.common.INFO_LEVEL
+          let telemetryEvent = await gen.utils.generateTelemetryEvent(rawEvent);
+          telemetryEvent.lname = constants.common.TELEMTRY_EVENT_LOGGER;
+          telemetryEvent.level = constants.common.INFO_LEVEL
 
-        await kafkaProducersHelper.pushTelemetryEventToKafka(telemetryEvent);
+          await kafkaProducersHelper.pushTelemetryEventToKafka(telemetryEvent);
+        }
         return resolve({
           success: true,
         });
