@@ -88,7 +88,23 @@ let enviromentVariables = {
     "message" : "Timezone diffrence required",
     "optional" : true,
     "default" : "+05:30"
-  }
+  },
+  "USER_DELETE_TOPIC": {
+    message: "Required user delete kafka consumer topic name",
+    optional: false,
+  },
+  "ID": {
+    message: "Required Service ID",
+    optional: false,
+  },
+  "TELEMETRY_ON_OFF":{
+    message: "Required telemetry on/off status",
+    optional: false,
+  },
+  "TELEMETRY_TOPIC": {
+    message: "Required telemetry topic",
+    optional: false,
+  },
 }
 
 let success = true;

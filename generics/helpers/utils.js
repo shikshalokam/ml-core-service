@@ -405,7 +405,7 @@ function getEndDate(date, timeZoneDifference) {
 }
 
 /**
- * generate telemetry raw event
+ * generate telemetry event
  * @function
  * @name generateTelemetryEvent
  * @returns {Object} returns uuid.
