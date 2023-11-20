@@ -8,7 +8,7 @@
 // Dependencies
 const kafkaCommunicationsOnOff = process.env.KAFKA_COMMUNICATIONS_ON_OFF;
 const programUsersSubmissionTopic = (process.env.PROGRAM_USERS_JOINED_TOPIC != "OFF") ? process.env.PROGRAM_USERS_JOINED_TOPIC : `${process.env.APPLICATION_ENV}.programuser.info`;
-const telemetryEventTopic = (process.env.TELEMETRY_TOPIC != "OFF") ? process.env.TELEMETRY_TOPIC : `${process.env.APPLICATION_ENV}.telemetry.raw`;
+const telemetryEventTopic = process.env.TELEMETRY_TOPIC;
 
 /**
   * Push program users to kafka.
