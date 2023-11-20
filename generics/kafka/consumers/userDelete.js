@@ -1,5 +1,5 @@
 /**
- * name : userDMS.js
+ * name : userDelete.js
  * author : Ankit Shahu
  * created-date : 10-Nov-2023
  * Description : User delete consumer.
@@ -28,10 +28,10 @@ var messageReceived = function (message) {
   return new Promise(async function (resolve, reject) {
     try {
       let parsedMessage = JSON.parse(message.value);
-      if (parsedMessage.edata.action === "delete-user") {
-        let userDeleteResponse = await usersHelper.userDelete(parsedMessage);
+      if (parsedMessage.edata.action === constants.common.DELETE_USER) {
+        let deleteUserPIIResponse = await usersHelper.deleteUserPIIData(parsedMessage);
 
-        if (userDeleteResponse.success == true) {
+        if (deleteUserPIIResponse.success == true) {
           return resolve("Message Processed.");
         } else {
           return resolve("Message Processed.");

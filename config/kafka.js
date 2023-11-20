@@ -3,47 +3,50 @@
  * author : vishnu
  * created-date : 10-Jan-2023
  * Description : Kafka Configurations related information.
- */
+*/
+
 
 //dependencies
-const kafka = require("kafka-node");
+const kafka = require('kafka-node');
 let USER_DELETE_TOPIC = process.env.USER_DELETE_TOPIC;
 /**
- * Kafka configurations.
- * @function
- * @name connect
- */
+  * Kafka configurations.
+  * @function
+  * @name connect
+*/
 
-const connect = function () {
-  const Producer = kafka.Producer;
-  KeyedMessage = kafka.KeyedMessage;
+const connect = function() {
 
-  const client = new kafka.KafkaClient({
-    kafkaHost: process.env.KAFKA_URL,
-  });
+    const Producer = kafka.Producer
+    KeyedMessage = kafka.KeyedMessage
+    
+    const client = new kafka.KafkaClient({
+      kafkaHost : process.env.KAFKA_URL
+    });
 
-  client.on("error", function (error) {
-    console.log(error);
-    console.log("kafka connection error!");
-  });
+    client.on('error', function(error) {
+        console.log("kafka connection error!")
+    });
 
-  const producer = new Producer(client);
+    const producer = new Producer(client)
 
-  producer.on("ready", function () {
-    console.log("Connected to Kafka");
-  });
+    producer.on('ready', function () {
+        console.log("Connected to Kafka");
+    });
+   
+    producer.on('error', function (err) {
+        console.log("kafka producer creation error!")
+    })
 
-  producer.on("error", function (err) {
-    console.log("kafka producer creation error!");
-  });
+    _sendToKafkaConsumers(USER_DELETE_TOPIC, process.env.KAFKA_URL);
 
-  _sendToKafkaConsumers(USER_DELETE_TOPIC, process.env.KAFKA_URL);
+    return {
+      kafkaProducer: producer,
+      kafkaClient: client
+    };
 
-  return {
-    kafkaProducer: producer,
-    kafkaClient: client,
-  };
 };
+
 
 /**
  * Send data based on topic to kafka consumers
@@ -53,7 +56,7 @@ const connect = function () {
  * @param {String} host - kafka host
  */
 
-var _sendToKafkaConsumers = function (topic, host) {
+ var _sendToKafkaConsumers = function (topic, host) {
   if (topic && topic != "") {
     let consumer = new kafka.ConsumerGroup(
       {
@@ -72,15 +75,16 @@ var _sendToKafkaConsumers = function (topic, host) {
 
       // call userDelete consumer
       if (message && message.topic === USER_DELETE_TOPIC) {
-        userDMSConsumer.messageReceived(message);
+        userDeleteConsumer.messageReceived(message);
       }
     });
 
     consumer.on("error", async function (error) {
       if (error.topics && error.topics[0] === USER_DELETE_TOPIC) {
-        userDMSConsumer.errorTriggered(error);
+        userDeleteConsumer.errorTriggered(error);
       }
     });
   }
 };
+
 module.exports = connect;

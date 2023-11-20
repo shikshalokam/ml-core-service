@@ -5,7 +5,7 @@
  * Description : All common messages.
  */
 
-module.exports = {
+ module.exports = {
   SUCCESS: "Success.",
   FAILED: "Failed.",
   OK: "OK",
@@ -83,10 +83,15 @@ module.exports = {
   SIGNEDURL: "signedUrl",
   WRITE: "write",
   READ: "read",
+  TELEMETRY_VERSION: "3.0",
   DELETED_USER: "Deleted User",
   TELEMTRY_EVENT_LOGGER: "TelemetryEventLogger",
   INFO_LEVEL: "INFO",
   DELETE_STATE: "Delete",
   USER_DELETE_TYPE: "DeleteUserStatus",
   AUDIT: "AUDIT",
+  DELETE_USER: "delete-user",
+  USER: "User",
+  USER_DELETE_MODULE: "userDelete",
+  OFF: "OFF"
 };
