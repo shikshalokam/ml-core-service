@@ -102,7 +102,7 @@ module.exports = class UsersHelper {
           },
         };
         let deleteUserPIIDataResult = await programUsersHelper.updateMany(filter, updateProfile)
-        if (deleteUserPIIDataResult) {
+        if (deleteUserPIIDataResult && deleteUserPIIDataResult.nModified > 0) {
           if(telemetryEventOnOff !== constants.common.OFF){
             /**
              * Telemetry Raw Event
@@ -129,6 +129,10 @@ module.exports = class UsersHelper {
 
             await kafkaProducersHelper.pushTelemetryEventToKafka(telemetryEvent);
           }
+          return resolve({
+            success: true,
+          });
+        } else {
           return resolve({
             success: true,
           });
