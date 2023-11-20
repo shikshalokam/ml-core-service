@@ -80,57 +80,61 @@ module.exports = class UsersHelper {
    */
   static deleteUserPIIData(userDeleteEvent) {
     return new Promise(async (resolve, reject) => {
-      let userId = userDeleteEvent.edata.userId;
-      let filter = {
-          userId: userId,
-        }
-      let updateProfile =  {
-        $set: {
-          "userProfile.firstName": constants.common.DELETED_USER,
-        },
-        $unset: {
-          "userProfile.email": 1,
-          "userProfile.maskedEmail": 1,
-          "userProfile.maskedPhone": 1,
-          "userProfile.recoveryEmail": 1,
-          "userProfile.phone": 1,
-          "userProfile.lastName": 1,
-          "userProfile.prevUsedPhone": 1,
-          "userProfile.prevUsedEmail": 1,
-          "userProfile.recoveryPhone": 1,
-        },
-      };
-      let deleteUserPIIDataResult = await programUsersHelper.updateMany(filter, updateProfile)
-      if (deleteUserPIIDataResult) {
-        if(telemetryEventOnOff !== constants.common.OFF){
-          /**
-           * Telemetry Raw Event
-           * {"eid":"","ets":1700188609568,"ver":"3.0","mid":"e55a91cd-7964-46bc-b756-18750787fb32","actor":{},"context":{"channel":"","pdata":{"id":"projectservice","pid":"manage-learn","ver":"7.0.0"},"env":"","cdata":[{"id":"adf3b621-619b-4195-a82d-d814eecdb21f","type":"Request"}],"rollup":{}},"object":{},"edata":{}}
-           */
-          let rawEvent = await gen.utils.generateTelemetryEventSkeletonStructure();
-          rawEvent.eid = constants.common.AUDIT;
-          rawEvent.context.channel = userDeleteEvent.context.channel;
-          rawEvent.context.env = constants.common.USER;
-          rawEvent.edata.state = constants.common.DELETE_STATE;
-          rawEvent.edata.type = constants.common.USER_DELETE_TYPE;
-          rawEvent.edata.props = [];
-          let userObject = {
-            id: userId,
-            type: constants.common.USER,
-          };
-          rawEvent.actor = userObject;
-          rawEvent.object = userObject;
-          rawEvent.context.pdata.pid = `${process.env.ID}.${constants.common.USER_DELETE_MODULE}`
+      try{
+        let userId = userDeleteEvent.edata.userId;
+        let filter = {
+            userId: userId,
+          }
+        let updateProfile =  {
+          $set: {
+            "userProfile.firstName": constants.common.DELETED_USER,
+          },
+          $unset: {
+            "userProfile.email": 1,
+            "userProfile.maskedEmail": 1,
+            "userProfile.maskedPhone": 1,
+            "userProfile.recoveryEmail": 1,
+            "userProfile.phone": 1,
+            "userProfile.lastName": 1,
+            "userProfile.prevUsedPhone": 1,
+            "userProfile.prevUsedEmail": 1,
+            "userProfile.recoveryPhone": 1,
+          },
+        };
+        let deleteUserPIIDataResult = await programUsersHelper.updateMany(filter, updateProfile)
+        if (deleteUserPIIDataResult) {
+          if(telemetryEventOnOff !== constants.common.OFF){
+            /**
+             * Telemetry Raw Event
+             * {"eid":"","ets":1700188609568,"ver":"3.0","mid":"e55a91cd-7964-46bc-b756-18750787fb32","actor":{},"context":{"channel":"","pdata":{"id":"projectservice","pid":"manage-learn","ver":"7.0.0"},"env":"","cdata":[{"id":"adf3b621-619b-4195-a82d-d814eecdb21f","type":"Request"}],"rollup":{}},"object":{},"edata":{}}
+             */
+            let rawEvent = await gen.utils.generateTelemetryEventSkeletonStructure();
+            rawEvent.eid = constants.common.AUDIT;
+            rawEvent.context.channel = userDeleteEvent.context.channel;
+            rawEvent.context.env = constants.common.USER;
+            rawEvent.edata.state = constants.common.DELETE_STATE;
+            rawEvent.edata.type = constants.common.USER_DELETE_TYPE;
+            rawEvent.edata.props = [];
+            let userObject = {
+              id: userId,
+              type: constants.common.USER,
+            };
+            rawEvent.actor = userObject;
+            rawEvent.object = userObject;
+            rawEvent.context.pdata.pid = `${process.env.ID}.${constants.common.USER_DELETE_MODULE}`
 
-          let telemetryEvent = await gen.utils.generateTelemetryEvent(rawEvent);
-          telemetryEvent.lname = constants.common.TELEMTRY_EVENT_LOGGER;
-          telemetryEvent.level = constants.common.INFO_LEVEL
+            let telemetryEvent = await gen.utils.generateTelemetryEvent(rawEvent);
+            telemetryEvent.lname = constants.common.TELEMTRY_EVENT_LOGGER;
+            telemetryEvent.level = constants.common.INFO_LEVEL
 
-          await kafkaProducersHelper.pushTelemetryEventToKafka(telemetryEvent);
+            await kafkaProducersHelper.pushTelemetryEventToKafka(telemetryEvent);
+          }
+          return resolve({
+            success: true,
+          });
         }
-        return resolve({
-          success: true,
-        });
+      } catch (error) {
+        return reject(error);
       }
     });
   }
