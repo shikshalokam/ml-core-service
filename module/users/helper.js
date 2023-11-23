@@ -99,6 +99,7 @@ module.exports = class UsersHelper {
             "userProfile.prevUsedPhone": 1,
             "userProfile.prevUsedEmail": 1,
             "userProfile.recoveryPhone": 1,
+            "userProfile.dob": 1,
           },
         };
         let deleteUserPIIDataResult = await programUsersHelper.updateMany(filter, updateProfile)

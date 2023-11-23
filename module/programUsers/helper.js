@@ -87,13 +87,13 @@ module.exports = class ProgramUsersHelper {
         return new Promise(async (resolve, reject) => {
             try {
             
-                let programUsers = await database.models.programUsers.updateMany(
+                let updatedProgramUserCount = await database.models.programUsers.updateMany(
                     query, 
                     update,
                     options
                 );
-                if( programUsers) {
-                    return resolve(programUsers);
+                if( updatedProgramUserCount) {
+                    return resolve(updatedProgramUserCount);
                 }
             } catch (error) {
                 return reject(error);

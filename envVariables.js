@@ -89,9 +89,13 @@ let enviromentVariables = {
     "optional" : true,
     "default" : "+05:30"
   },
+  "USER_DELETE_ON_OFF": {
+    message: "Enable/Disable user delete flow",
+    optional: false,
+  },
   "USER_DELETE_TOPIC": {
     message: "Required user delete kafka consumer topic name",
-    optional: false,
+    optional: true,
   },
   "ID": {
     message: "Required Service ID",
@@ -103,7 +107,7 @@ let enviromentVariables = {
   },
   "TELEMETRY_TOPIC": {
     message: "Required telemetry topic",
-    optional: false,
+    optional: true,
   },
 }
 
