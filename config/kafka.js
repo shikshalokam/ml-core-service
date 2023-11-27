@@ -59,7 +59,7 @@ const connect = function() {
  * @param {String} host - kafka host
  */
 
- var _sendToKafkaConsumers = function (topic, host, status="ON") {
+ var _sendToKafkaConsumers = function (topic, host) {
 
   if (topic && topic != "") {
     let consumer = new kafka.ConsumerGroup(
