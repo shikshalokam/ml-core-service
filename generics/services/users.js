@@ -42,7 +42,16 @@ const profile = function ( token,userId = "" ) {
                     let response = JSON.parse(data.body);
                     console.log("response from userRead api call :",response)
                     if( response.responseCode === httpStatusCode['http_responsecode_ok'].message ) {
-                        result["data"] = response.result.response;
+                        result["data"] = _.omit(response.result.response, [
+                            "email",
+                            "maskedEmail",
+                            "maskedPhone",
+                            "recoveryEmail",
+                            "phone",
+                            "prevUsedPhone",
+                            "prevUsedEmail",
+                            "recoveryPhone",
+                        ]);
                     } else {
                         result["message"] = response.params.status;
                         result.success = false;

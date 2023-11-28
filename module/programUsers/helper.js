@@ -74,6 +74,34 @@ module.exports = class ProgramUsersHelper {
     }
 
     /**
+     * Update program users
+     * @method
+     * @name updateMany
+     * @param {Object} query 
+     * @param {Object} update 
+     * @param {Object} options 
+     * @returns {JSON} - update programUsers.
+    */
+
+    static updateMany(query, update, options = {}) {
+        return new Promise(async (resolve, reject) => {
+            try {
+            
+                let updatedProgramUserCount = await database.models.programUsers.updateMany(
+                    query, 
+                    update,
+                    options
+                );
+                if( updatedProgramUserCount) {
+                    return resolve(updatedProgramUserCount);
+                }
+            } catch (error) {
+                return reject(error);
+            }
+        })
+    }
+
+    /**
      * find program users details
      * @method
      * @name programUsersDocuments
