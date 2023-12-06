@@ -356,38 +356,42 @@ module.exports = class SolutionsHelper {
                 currentSolutionScope.entities = entitiesData;
               }
             }
+          
 
-              if (scopeData.roles) {
-                if (
-                  Array.isArray(scopeData.roles) &&
-                  scopeData.roles.length > 0
-                ) {
-                  let userRoles = await userRolesHelper.roleDocuments(
+            if (scopeData.roles) {
+              if (
+                Array.isArray(scopeData.roles) &&
+                scopeData.roles.length > 0
+              ) {
+                let userRoles = await userRolesHelper.roleDocuments(
+                  {
+                    code: { $in: scopeData.roles },
+                  },
+                  ["_id", "code"]
+                );
+
+                if (!userRoles.length > 0) {
+                  return resolve({
+                    status: httpStatusCode.bad_request.status,
+                    message: constants.apiResponses.INVALID_ROLE_CODE,
+                  });
+                }
+
+                currentSolutionScope["roles"] = userRoles;
+              } else {
+                if (scopeData.roles === constants.common.ALL_ROLES) {
+                  currentSolutionScope["roles"] = [
                     {
-                      code: { $in: scopeData.roles },
+                      code: constants.common.ALL_ROLES,
                     },
-                    ["_id", "code"]
-                  );
-
-                  if (!userRoles.length > 0) {
-                    return resolve({
-                      status: httpStatusCode.bad_request.status,
-                      message: constants.apiResponses.INVALID_ROLE_CODE,
-                    });
-                  }
-
-                  currentSolutionScope["roles"] = userRoles;
-                } else {
-                  if (scopeData.roles === constants.common.ALL_ROLES) {
-                    currentSolutionScope["roles"] = [
-                      {
-                        code: constants.common.ALL_ROLES,
-                      },
-                    ];
-                  }
+                  ];
                 }
               }
             }
+          }else{
+            currentSolutionScope = scopeData;
+          }
+            
           
 
           let updateSolution = await database.models.solutions
@@ -826,28 +830,36 @@ module.exports = class SolutionsHelper {
       try {
         let registryIds = [];
         let entityTypes = [];
-
-        // Object.keys(_.omit(data, ["filter", "role"])).forEach(
-        //   (requestedDataKey) => {
-        //     registryIds.push(data[requestedDataKey]);
-        //     entityTypes.push(requestedDataKey);
-        //   }
-        // );
-        // if (!registryIds.length > 0) {
-        //   throw {
-        //     message: constants.apiResponses.NO_LOCATION_ID_FOUND_IN_DATA,
-        //   };
-        // }
-
         let filterQuery = {
-          "scope.roles.code": {
-            $in: [constants.common.ALL_ROLES, ...data.role.split(",")],
-          },
-          // "scope.entities": { $in: registryIds },
-          // "scope.entityType": { $in: entityTypes },
           isReusable: false,
           isDeleted: false,
-        };
+        }
+
+        if(ValidateEntity !== "OFF"){
+          Object.keys(_.omit(data, ["filter", "role"])).forEach(
+            (requestedDataKey) => {
+              registryIds.push(data[requestedDataKey]);
+              entityTypes.push(requestedDataKey);
+            }
+          );
+          if (!registryIds.length > 0) {
+            throw {
+              message: constants.apiResponses.NO_LOCATION_ID_FOUND_IN_DATA,
+            };
+          }
+
+          filterQuery["scope.roles.code"] = {
+              $in: [constants.common.ALL_ROLES, ...data.role.split(",")],
+            }
+          filterQuery["scope.entities"]= { $in: registryIds }
+          filterQuery["scope.entityType"]= { $in: entityTypes }
+        }else{
+          let userRoleInfo = _.omit(data, ['filter'])
+          let userRoleKeys = Object.keys(userRoleInfo);
+          userRoleKeys.forEach(entities => {
+            filterQuery["scope."+entities] = {$in:userRoleInfo[entities].split(",")}
+          });
+        }
 
         if (type === constants.common.SURVEY) {
           filterQuery["status"] = {

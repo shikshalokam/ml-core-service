@@ -40,18 +40,8 @@ module.exports = {
         index : true
       },
       scope : {
-        entityType : String,
-        entities : {
-          type : Array,
-          index : true
-        },
-        roles : [{
-          _id : "ObjectId",
-          code : {
-            type : String,
-            index : true
-          }
-        }]
+       type:Object,
+       default:{}
       },
       isDeleted: {
         default : false,
