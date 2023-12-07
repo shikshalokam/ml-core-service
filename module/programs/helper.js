@@ -204,7 +204,7 @@ module.exports = class ProgramsHelper {
         }
 
         let scope = {};
-        if(validateEntity !== "OFF"){
+        if(validateEntity !== constants.common.OFF){
 
           if (scopeData.entityType) {
             // Get entity details of type {scopeData.entityType}
@@ -578,7 +578,7 @@ module.exports = class ProgramsHelper {
           isDeleted: false,
           status: constants.common.ACTIVE,
         }
-        if(validateEntity !== "OFF"){
+        if(validateEntity !== constants.common.OFF){
           let locationIds = Object.values(_.omit(data, ["role", "filter"])).map(
             (locationId) => {
               return locationId;

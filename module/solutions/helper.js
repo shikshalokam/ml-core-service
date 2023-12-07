@@ -280,7 +280,7 @@ module.exports = class SolutionsHelper {
           let currentSolutionScope = JSON.parse(
             JSON.stringify(programData[0].scope)
           );
-          if(validateEntity !== "OFF") {
+          if(validateEntity !== constants.common.OFF) {
             if (Object.keys(scopeData).length > 0) {
               if (scopeData.entityType) {
                 let bodyData = { type: scopeData.entityType };
@@ -835,7 +835,7 @@ module.exports = class SolutionsHelper {
           isDeleted: false,
         }
 
-        if(validateEntity !== "OFF"){
+        if(validateEntity !== constants.common.OFF){
           Object.keys(_.omit(data, ["filter", "role"])).forEach(
             (requestedDataKey) => {
               registryIds.push(data[requestedDataKey]);
