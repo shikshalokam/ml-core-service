@@ -417,7 +417,6 @@ module.exports = class SolutionsHelper {
           message: constants.apiResponses.SOLUTION_UPDATED,
         });
       } catch (error) {
-        console.log(error)
       return resolve({
           success: false,
         });
