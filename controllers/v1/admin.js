@@ -248,5 +248,50 @@
     })
   }
 
+  /**
+     * @api {post} /kendra/api/v1/admin/createIndex/:collectionName
+     * Creates indexs on collections 
+     * @apiVersion 1.0.0
+     * @apiGroup Admin
+     * @apiSampleRequest /kendra/api/v1/admin/index/apps
+     * @param {json} Request-Body:
+     * 
+         {
+              "keys": [
+                  "scope.roles"
+              ]
+          }
+     * @apiParamExample {json} Response:
+     * {
+          "message": "Keys indexed successfully",
+          "status": 200
+      }
+     * @apiUse successBody
+     * @apiUse errorBody
+     */
+
+    /**
+      * Create indexs on collections
+      * @method
+      * @name createIndex
+      * @param {String} _id - MongoDB Collection Name
+      * @param {Object} req - Req Body
+      * @returns {JSON} success body.
+    */
+  async createIndex(req) {
+    return new Promise(async (resolve, reject) => {
+      try {
+        let result = await adminHelper.createIndex(req.params._id,req.body)
+        resolve(result)
+      } catch (error) {
+        return reject({
+          status: error.status || httpStatusCode.internal_server_error.status,
+          message: error.message || httpStatusCode.internal_server_error.message,
+          errorObject: error,
+        });
+      }
+    });
+  }
+
 };
  

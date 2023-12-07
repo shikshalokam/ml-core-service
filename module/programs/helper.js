@@ -13,7 +13,7 @@ const kafkaProducersHelper = require(ROOT_PATH + "/generics/kafka/producers");
 const programUsersHelper = require(MODULES_BASE_PATH + "/programUsers/helper");
 const timeZoneDifference =
   process.env.TIMEZONE_DIFFRENECE_BETWEEN_LOCAL_TIME_AND_UTC;
-
+  const ValidateEntity = process.env.VALIDATE_ENTITIES
 /**
  * ProgramsHelper
  * @class
@@ -574,25 +574,35 @@ module.exports = class ProgramsHelper {
   static queryBasedOnRoleAndLocation(data) {
     return new Promise(async (resolve, reject) => {
       try {
-        let locationIds = Object.values(_.omit(data, ["role", "filter"])).map(
-          (locationId) => {
-            return locationId;
-          }
-        );
-        if (!locationIds.length > 0) {
-          throw {
-            message: constants.apiResponses.NO_LOCATION_ID_FOUND_IN_DATA,
-          };
-        }
-
         let filterQuery = {
-          "scope.roles.code": {
-            $in: [constants.common.ALL_ROLES, ...data.role.split(",")],
-          },
-          "scope.entities": { $in: locationIds },
           isDeleted: false,
           status: constants.common.ACTIVE,
-        };
+        }
+        if(ValidateEntity !== "OFF"){
+          let locationIds = Object.values(_.omit(data, ["role", "filter"])).map(
+            (locationId) => {
+              return locationId;
+            }
+          );
+          if (!locationIds.length > 0) {
+            throw {
+              message: constants.apiResponses.NO_LOCATION_ID_FOUND_IN_DATA,
+            };
+          }
+
+          filterQuery = {
+            "scope.roles.code": {
+              $in: [constants.common.ALL_ROLES, ...data.role.split(",")],
+            },
+            "scope.entities": { $in: locationIds },
+          };
+        } else {
+          let userRoleInfo = _.omit(data, ['filter'])
+          let userRoleKeys = Object.keys(userRoleInfo);
+          userRoleKeys.forEach(entities => {
+            filterQuery["scope."+entities] = {$in:userRoleInfo[entities].split(",")}
+          });
+        }
 
         if (data.filter && Object.keys(data.filter).length > 0) {
           Object.keys(data.filter).forEach((filterKey) => {
@@ -1028,7 +1038,7 @@ module.exports = class ProgramsHelper {
   ) {
     return new Promise(async (resolve, reject) => {
       try {
-        if(JoinedProgramEnabled !== "OFF") {
+       
           let pushProgramUsersDetailsToKafka = false;
           //Using programId fetch program details. Also checking the program status in the query.
           let programData = await this.programDocuments(
@@ -1196,11 +1206,7 @@ module.exports = class ProgramsHelper {
               _id: joinProgram._id,
             },
           });
-        } else {
-          return resolve({
-            success: true,
-          });
-        }
+       
       } catch (error) {
         return resolve({
           success: false,

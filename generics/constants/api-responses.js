@@ -201,5 +201,7 @@ module.exports = {
   "USER_PROGRAM_AND_SOLUTION_CREATED" : "User program and solution created successfully",
   "SOLUTION_PROGRAMS_NOT_CREATED" : "Failed to create program and solution",
   "FAILED_CUSTOM_BUCKER_URL" : "Failed to generate custom bucket url",
-  "FAILED_TO_CREATE_DOWNLOADABLEURL" : "Failed to generate downloadableUrl"
+  "FAILED_TO_CREATE_DOWNLOADABLEURL" : "Failed to generate downloadableUrl",
+  "KEYS_INDEXED_SUCCESSFULLY": 'Keys indexed successfully',
+  "KEYS_ALREADY_INDEXED": 'Keys already indexed',
 };
