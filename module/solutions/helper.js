@@ -15,6 +15,7 @@ const userService = require(ROOT_PATH + "/generics/services/users");
 const programUsersHelper = require(MODULES_BASE_PATH + "/programUsers/helper");
 const timeZoneDifference =
   process.env.TIMEZONE_DIFFRENECE_BETWEEN_LOCAL_TIME_AND_UTC;
+const validateEntity = process.env.VALIDATE_ENTITIES
 
 /**
  * SolutionsHelper
@@ -279,81 +280,83 @@ module.exports = class SolutionsHelper {
           let currentSolutionScope = JSON.parse(
             JSON.stringify(programData[0].scope)
           );
-
-          if (Object.keys(scopeData).length > 0) {
-            if (scopeData.entityType) {
-              let bodyData = { type: scopeData.entityType };
-              let entityTypeData = await userService.locationSearch(bodyData);
-              if (entityTypeData.success) {
-                currentSolutionScope.entityType = entityTypeData.data[0].type;
-              }
-            }
-
-            if (scopeData.entities && scopeData.entities.length > 0) {
-              //call learners api for search
-              let entityIds = [];
-              let bodyData = {};
-              let locationData = gen.utils.filterLocationIdandCode(
-                scopeData.entities
-              );
-
-              if (locationData.ids.length > 0) {
-                bodyData = {
-                  id: locationData.ids,
-                  type: currentSolutionScope.entityType,
-                };
-                let entityData = await userService.locationSearch(bodyData);
-                if (entityData.success) {
-                  entityData.data.forEach((entity) => {
-                    entityIds.push(entity.id);
-                  });
+          if(validateEntity !== constants.common.OFF) {
+            if (Object.keys(scopeData).length > 0) {
+              if (scopeData.entityType) {
+                let bodyData = { type: scopeData.entityType };
+                let entityTypeData = await userService.locationSearch(bodyData);
+                if (entityTypeData.success) {
+                  currentSolutionScope.entityType = entityTypeData.data[0].type;
                 }
               }
 
-              if (locationData.codes.length > 0) {
-                let filterData = {
-                  code: locationData.codes,
-                  type: currentSolutionScope.entityType,
-                };
-                let entityDetails = await userService.locationSearch(
-                  filterData
+              if (scopeData.entities && scopeData.entities.length > 0) {
+                //call learners api for search
+                let entityIds = [];
+                let bodyData = {};
+                let locationData = gen.utils.filterLocationIdandCode(
+                  scopeData.entities
                 );
 
-                if (entityDetails.success) {
-                  entityDetails.data.forEach((entity) => {
-                    entityIds.push(entity.id);
+                if (locationData.ids.length > 0) {
+                  bodyData = {
+                    id: locationData.ids,
+                    type: currentSolutionScope.entityType,
+                  };
+                  let entityData = await userService.locationSearch(bodyData);
+                  if (entityData.success) {
+                    entityData.data.forEach((entity) => {
+                      entityIds.push(entity.id);
+                    });
+                  }
+                }
+
+                if (locationData.codes.length > 0) {
+                  let filterData = {
+                    code: locationData.codes,
+                    type: currentSolutionScope.entityType,
+                  };
+                  let entityDetails = await userService.locationSearch(
+                    filterData
+                  );
+
+                  if (entityDetails.success) {
+                    entityDetails.data.forEach((entity) => {
+                      entityIds.push(entity.id);
+                    });
+                  }
+                }
+
+                if (!entityIds.length > 0) {
+                  return resolve({
+                    status: httpStatusCode.bad_request.status,
+                    message: constants.apiResponses.ENTITIES_NOT_FOUND,
                   });
                 }
+
+                let entitiesData = [];
+
+                // if( currentSolutionScope.entityType !== programData[0].scope.entityType ) {
+                //   let result = [];
+                //   let childEntities = await userService.getSubEntitiesBasedOnEntityType(currentSolutionScope.entities, currentSolutionScope.entityType, result);
+                //   if( childEntities.length > 0 ) {
+                //     entitiesData = entityIds.filter(element => childEntities.includes(element));
+                //   }
+                // } else {
+                entitiesData = entityIds;
+                // }
+
+                if (!entitiesData.length > 0) {
+                  return resolve({
+                    status: httpStatusCode.bad_request.status,
+                    message: constants.apiResponses.SCOPE_ENTITY_INVALID,
+                  });
+                }
+
+                currentSolutionScope.entities = entitiesData;
               }
-
-              if (!entityIds.length > 0) {
-                return resolve({
-                  status: httpStatusCode.bad_request.status,
-                  message: constants.apiResponses.ENTITIES_NOT_FOUND,
-                });
-              }
-
-              let entitiesData = [];
-
-              // if( currentSolutionScope.entityType !== programData[0].scope.entityType ) {
-              //   let result = [];
-              //   let childEntities = await userService.getSubEntitiesBasedOnEntityType(currentSolutionScope.entities, currentSolutionScope.entityType, result);
-              //   if( childEntities.length > 0 ) {
-              //     entitiesData = entityIds.filter(element => childEntities.includes(element));
-              //   }
-              // } else {
-              entitiesData = entityIds;
-              // }
-
-              if (!entitiesData.length > 0) {
-                return resolve({
-                  status: httpStatusCode.bad_request.status,
-                  message: constants.apiResponses.SCOPE_ENTITY_INVALID,
-                });
-              }
-
-              currentSolutionScope.entities = entitiesData;
             }
+          
 
             if (scopeData.roles) {
               if (
@@ -385,7 +388,11 @@ module.exports = class SolutionsHelper {
                 }
               }
             }
+          }else{
+            currentSolutionScope = scopeData;
           }
+            
+          
 
           let updateSolution = await database.models.solutions
             .findOneAndUpdate(
@@ -410,7 +417,7 @@ module.exports = class SolutionsHelper {
           message: constants.apiResponses.SOLUTION_UPDATED,
         });
       } catch (error) {
-        return resolve({
+      return resolve({
           success: false,
         });
       }
@@ -822,28 +829,36 @@ module.exports = class SolutionsHelper {
       try {
         let registryIds = [];
         let entityTypes = [];
-
-        Object.keys(_.omit(data, ["filter", "role"])).forEach(
-          (requestedDataKey) => {
-            registryIds.push(data[requestedDataKey]);
-            entityTypes.push(requestedDataKey);
-          }
-        );
-        if (!registryIds.length > 0) {
-          throw {
-            message: constants.apiResponses.NO_LOCATION_ID_FOUND_IN_DATA,
-          };
-        }
-
         let filterQuery = {
-          "scope.roles.code": {
-            $in: [constants.common.ALL_ROLES, ...data.role.split(",")],
-          },
-          "scope.entities": { $in: registryIds },
-          "scope.entityType": { $in: entityTypes },
           isReusable: false,
           isDeleted: false,
-        };
+        }
+
+        if(validateEntity !== constants.common.OFF){
+          Object.keys(_.omit(data, ["filter", "role"])).forEach(
+            (requestedDataKey) => {
+              registryIds.push(data[requestedDataKey]);
+              entityTypes.push(requestedDataKey);
+            }
+          );
+          if (!registryIds.length > 0) {
+            throw {
+              message: constants.apiResponses.NO_LOCATION_ID_FOUND_IN_DATA,
+            };
+          }
+
+          filterQuery["scope.roles.code"] = {
+              $in: [constants.common.ALL_ROLES, ...data.role.split(",")],
+            }
+          filterQuery["scope.entities"]= { $in: registryIds }
+          filterQuery["scope.entityType"]= { $in: entityTypes }
+        }else{
+          let userRoleInfo = _.omit(data, ['filter'])
+          let userRoleKeys = Object.keys(userRoleInfo);
+          userRoleKeys.forEach(entities => {
+            filterQuery["scope."+entities] = {$in:userRoleInfo[entities].split(",")}
+          });
+        }
 
         if (type === constants.common.SURVEY) {
           filterQuery["status"] = {

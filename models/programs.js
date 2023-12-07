@@ -40,6 +40,7 @@ module.exports = {
         index : true
       },
       scope : {
+        type: Object,
         entityType : String,
         entities : {
           type : Array,

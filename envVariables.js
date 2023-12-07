@@ -88,6 +88,12 @@ let enviromentVariables = {
     "message" : "Timezone diffrence required",
     "optional" : true,
     "default" : "+05:30"
+  },
+  "VALIDATE_ENTITIES" : {
+    "message" : "Requires Validate Entity Key for validating Entities",
+    "optional" : false,
+    "default" : "ON"
+
   }
 }
 
