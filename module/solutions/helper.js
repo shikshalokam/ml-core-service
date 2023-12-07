@@ -15,7 +15,7 @@ const userService = require(ROOT_PATH + "/generics/services/users");
 const programUsersHelper = require(MODULES_BASE_PATH + "/programUsers/helper");
 const timeZoneDifference =
   process.env.TIMEZONE_DIFFRENECE_BETWEEN_LOCAL_TIME_AND_UTC;
-const ValidateEntity = process.env.VALIDATE_ENTITIES
+const validateEntity = process.env.VALIDATE_ENTITIES
 
 /**
  * SolutionsHelper
@@ -280,7 +280,7 @@ module.exports = class SolutionsHelper {
           let currentSolutionScope = JSON.parse(
             JSON.stringify(programData[0].scope)
           );
-          if(ValidateEntity !== "OFF") {
+          if(validateEntity !== "OFF") {
             if (Object.keys(scopeData).length > 0) {
               if (scopeData.entityType) {
                 let bodyData = { type: scopeData.entityType };
@@ -835,7 +835,7 @@ module.exports = class SolutionsHelper {
           isDeleted: false,
         }
 
-        if(ValidateEntity !== "OFF"){
+        if(validateEntity !== "OFF"){
           Object.keys(_.omit(data, ["filter", "role"])).forEach(
             (requestedDataKey) => {
               registryIds.push(data[requestedDataKey]);

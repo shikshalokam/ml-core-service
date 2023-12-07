@@ -13,7 +13,7 @@ const kafkaProducersHelper = require(ROOT_PATH + "/generics/kafka/producers");
 const programUsersHelper = require(MODULES_BASE_PATH + "/programUsers/helper");
 const timeZoneDifference =
   process.env.TIMEZONE_DIFFRENECE_BETWEEN_LOCAL_TIME_AND_UTC;
-  const ValidateEntity = process.env.VALIDATE_ENTITIES
+  const validateEntity = process.env.VALIDATE_ENTITIES
 /**
  * ProgramsHelper
  * @class
@@ -578,7 +578,7 @@ module.exports = class ProgramsHelper {
           isDeleted: false,
           status: constants.common.ACTIVE,
         }
-        if(ValidateEntity !== "OFF"){
+        if(validateEntity !== "OFF"){
           let locationIds = Object.values(_.omit(data, ["role", "filter"])).map(
             (locationId) => {
               return locationId;
