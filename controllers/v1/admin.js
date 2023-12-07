@@ -253,7 +253,7 @@
      * Creates indexs on collections 
      * @apiVersion 1.0.0
      * @apiGroup Admin
-     * @apiSampleRequest /kendra/api/v1/admin/index/apps
+     * @apiSampleRequest /kendra/api/v1/admin/createIndex/apps
      * @param {json} Request-Body:
      * 
          {
