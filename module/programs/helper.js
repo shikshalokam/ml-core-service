@@ -204,7 +204,7 @@ module.exports = class ProgramsHelper {
         }
 
         let scope = {};
-        if(process.env.VALIDATE_ENTITIES !== "OFF"){
+        if(validateEntity !== "OFF"){
 
           if (scopeData.entityType) {
             // Get entity details of type {scopeData.entityType}

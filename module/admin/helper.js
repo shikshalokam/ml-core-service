@@ -310,7 +310,6 @@ module.exports = class adminHelper {
                   });
                 }
             } catch(error){
-                console.log(error)
                 reject(error.message)
             }
             

@@ -82,5 +82,6 @@ module.exports = {
   READ_PERMISSION: "r",
   SIGNEDURL: "signedUrl",
   WRITE: "write",
-  READ: "read"
+  READ: "read",
+  OFF: "OFF"
 };

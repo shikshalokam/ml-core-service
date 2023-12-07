@@ -72,8 +72,18 @@ module.exports = {
       project : Object,
       referenceFrom : String,
       scope : {
-        type: Object,
-        default: {},
+        entityType : String,
+        entities : {
+          type : Array,
+          index : true
+        },
+        roles : [{
+          _id : "ObjectId",
+          code : {
+            type : String,
+            index : true
+          }
+        }]
       },
       pageHeading: {
         default : "Domains",
