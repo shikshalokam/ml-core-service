@@ -121,6 +121,12 @@ let enviromentVariables = {
       value: "ON"
     }
   },
+  "VALIDATE_ENTITIES" : {
+    "message" : "Requires Validate Entity Key for validating Entities",
+    "optional" : false,
+    "default" : "ON"
+
+  }
 }
 
 let success = true;

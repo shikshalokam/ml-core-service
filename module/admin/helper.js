@@ -276,5 +276,45 @@ module.exports = class adminHelper {
         return query;
     }
 
+    /**
+      * Create a index on collections 
+      * @method
+      * @name createIndex
+      * @param {Object} reqBody - request body
+      * @returns {Object}  - indexed details details.
+     */
+
+    static createIndex(collection, reqBody){
+        return new Promise(async(resolve,reject)=>{
+            try{
+               
+                let keys = reqBody.keys;
+        
+                let presentIndex = await database.getCollection(collection).listIndexes({}, { key: 1 }).toArray();
+                let indexes = presentIndex.map((indexedKeys) => {
+                  return Object.keys(indexedKeys.key)[0];
+                });
+                let indexNotPresent = _.differenceWith(keys, indexes);
+                if (indexNotPresent.length > 0) {
+                  indexNotPresent.forEach(async (key) => {
+                    await database.getCollection(collection).createIndex({ [key]: 1 });
+                  });
+                  return resolve({
+                    message: constants.apiResponses.KEYS_INDEXED_SUCCESSFULLY,
+                    success: true,
+                  });
+                } else {
+                  return resolve({
+                    message: constants.apiResponses.KEYS_ALREADY_INDEXED,
+                    success: true,
+                  });
+                }
+            } catch(error){
+                reject(error.message)
+            }
+            
+        })
+    }
+
 }
 

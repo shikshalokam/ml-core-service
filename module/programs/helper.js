@@ -13,7 +13,7 @@ const kafkaProducersHelper = require(ROOT_PATH + "/generics/kafka/producers");
 const programUsersHelper = require(MODULES_BASE_PATH + "/programUsers/helper");
 const timeZoneDifference =
   process.env.TIMEZONE_DIFFRENECE_BETWEEN_LOCAL_TIME_AND_UTC;
-
+  const validateEntity = process.env.VALIDATE_ENTITIES
 /**
  * ProgramsHelper
  * @class
@@ -204,97 +204,100 @@ module.exports = class ProgramsHelper {
         }
 
         let scope = {};
+        if(validateEntity !== constants.common.OFF){
 
-        if (scopeData.entityType) {
-          // Get entity details of type {scopeData.entityType}
-          let bodyData = {
-            type: scopeData.entityType,
-          };
-          let entityTypeData = await userService.locationSearch(bodyData);
-
-          if (!entityTypeData.success) {
-            return resolve({
-              status: httpStatusCode.bad_request.status,
-              message: constants.apiResponses.ENTITY_TYPES_NOT_FOUND,
-            });
-          }
-
-          scope["entityType"] = entityTypeData.data[0].type;
-        }
-
-        if (scopeData.entities && scopeData.entities.length > 0) {
-          //call learners api for search
-          let entityIds = [];
-          let bodyData = {};
-          let locationData = gen.utils.filterLocationIdandCode(
-            scopeData.entities
-          );
-
-          //locationIds contain id of location data.
-          if (locationData.ids.length > 0) {
-            bodyData = {
-              id: locationData.ids,
+          if (scopeData.entityType) {
+            // Get entity details of type {scopeData.entityType}
+            let bodyData = {
               type: scopeData.entityType,
             };
-            let entityData = await userService.locationSearch(bodyData);
-            if (entityData.success) {
-              entityData.data.forEach((entity) => {
-                entityIds.push(entity.id);
-              });
-            }
-          }
+            let entityTypeData = await userService.locationSearch(bodyData);
 
-          if (locationData.codes.length > 0) {
-            let filterData = {
-              code: locationData.codes,
-              type: scopeData.entityType,
-            };
-            let entityDetails = await userService.locationSearch(filterData);
-
-            if (entityDetails.success) {
-              let entitiesData = entityDetails.data;
-              entitiesData.forEach((entity) => {
-                entityIds.push(entity.id);
-              });
-            }
-          }
-
-          if (!entityIds.length > 0) {
-            throw {
-              message: constants.apiResponses.ENTITIES_NOT_FOUND,
-            };
-          }
-          scope["entities"] = entityIds;
-        }
-
-        if (scopeData.roles) {
-          if (Array.isArray(scopeData.roles) && scopeData.roles.length > 0) {
-            let userRoles = await userRolesHelper.roleDocuments(
-              {
-                code: { $in: scopeData.roles },
-              },
-              ["_id", "code"]
-            );
-
-            if (!userRoles.length > 0) {
+            if (!entityTypeData.success) {
               return resolve({
                 status: httpStatusCode.bad_request.status,
-                message: constants.apiResponses.INVALID_ROLE_CODE,
+                message: constants.apiResponses.ENTITY_TYPES_NOT_FOUND,
               });
             }
 
-            scope["roles"] = userRoles;
-          } else {
-            if (scopeData.roles === constants.common.ALL_ROLES) {
-              scope["roles"] = [
+            scope["entityType"] = entityTypeData.data[0].type;
+          }
+
+          if (scopeData.entities && scopeData.entities.length > 0) {
+            //call learners api for search
+            let entityIds = [];
+            let bodyData = {};
+            let locationData = gen.utils.filterLocationIdandCode(
+              scopeData.entities
+            );
+
+            //locationIds contain id of location data.
+            if (locationData.ids.length > 0) {
+              bodyData = {
+                id: locationData.ids,
+                type: scopeData.entityType,
+              };
+              let entityData = await userService.locationSearch(bodyData);
+              if (entityData.success) {
+                entityData.data.forEach((entity) => {
+                  entityIds.push(entity.id);
+                });
+              }
+            }
+
+            if (locationData.codes.length > 0) {
+              let filterData = {
+                code: locationData.codes,
+                type: scopeData.entityType,
+              };
+              let entityDetails = await userService.locationSearch(filterData);
+
+              if (entityDetails.success) {
+                let entitiesData = entityDetails.data;
+                entitiesData.forEach((entity) => {
+                  entityIds.push(entity.id);
+                });
+              }
+            }
+
+            if (!entityIds.length > 0) {
+              throw {
+                message: constants.apiResponses.ENTITIES_NOT_FOUND,
+              };
+            }
+            scope["entities"] = entityIds;
+          }
+        
+          if (scopeData.roles) {
+            if (Array.isArray(scopeData.roles) && scopeData.roles.length > 0) {
+              let userRoles = await userRolesHelper.roleDocuments(
                 {
-                  code: constants.common.ALL_ROLES,
+                  code: { $in: scopeData.roles },
                 },
-              ];
+                ["_id", "code"]
+              );
+
+              if (!userRoles.length > 0) {
+                return resolve({
+                  status: httpStatusCode.bad_request.status,
+                  message: constants.apiResponses.INVALID_ROLE_CODE,
+                });
+              }
+
+              scope["roles"] = userRoles;
+            } else {
+              if (scopeData.roles === constants.common.ALL_ROLES) {
+                scope["roles"] = [
+                  {
+                    code: constants.common.ALL_ROLES,
+                  },
+                ];
+              }
             }
           }
+        } else {
+          scope = scopeData
         }
-
         let updateProgram = await database.models.programs
           .findOneAndUpdate(
             {
@@ -571,25 +574,35 @@ module.exports = class ProgramsHelper {
   static queryBasedOnRoleAndLocation(data) {
     return new Promise(async (resolve, reject) => {
       try {
-        let locationIds = Object.values(_.omit(data, ["role", "filter"])).map(
-          (locationId) => {
-            return locationId;
-          }
-        );
-        if (!locationIds.length > 0) {
-          throw {
-            message: constants.apiResponses.NO_LOCATION_ID_FOUND_IN_DATA,
-          };
-        }
-
         let filterQuery = {
-          "scope.roles.code": {
-            $in: [constants.common.ALL_ROLES, ...data.role.split(",")],
-          },
-          "scope.entities": { $in: locationIds },
           isDeleted: false,
           status: constants.common.ACTIVE,
-        };
+        }
+        if(validateEntity !== constants.common.OFF){
+          let locationIds = Object.values(_.omit(data, ["role", "filter"])).map(
+            (locationId) => {
+              return locationId;
+            }
+          );
+          if (!locationIds.length > 0) {
+            throw {
+              message: constants.apiResponses.NO_LOCATION_ID_FOUND_IN_DATA,
+            };
+          }
+
+          filterQuery = {
+            "scope.roles.code": {
+              $in: [constants.common.ALL_ROLES, ...data.role.split(",")],
+            },
+            "scope.entities": { $in: locationIds },
+          };
+        } else {
+          let userRoleInfo = _.omit(data, ['filter'])
+          let userRoleKeys = Object.keys(userRoleInfo);
+          userRoleKeys.forEach(entities => {
+            filterQuery["scope."+entities] = {$in:userRoleInfo[entities].split(",")}
+          });
+        }
 
         if (data.filter && Object.keys(data.filter).length > 0) {
           Object.keys(data.filter).forEach((filterKey) => {
@@ -1025,173 +1038,175 @@ module.exports = class ProgramsHelper {
   ) {
     return new Promise(async (resolve, reject) => {
       try {
-        let pushProgramUsersDetailsToKafka = false;
-        //Using programId fetch program details. Also checking the program status in the query.
-        let programData = await this.programDocuments(
-          {
-            _id: programId,
-            status: constants.common.ACTIVE,
-            isDeleted: false,
-          },
-          ["name", "externalId", "requestForPIIConsent", "rootOrganisations"]
-        );
-
-        if (!programData.length > 0) {
-          throw {
-            status: httpStatusCode.bad_request.status,
-            message: constants.apiResponses.PROGRAM_NOT_FOUND,
-          };
-        }
-        let programUsersData = {};
-        let update = {};
-
-        // check if user already joined for program or not
-        const programUsersDetails =
-          await programUsersHelper.programUsersDocuments(
+       
+          let pushProgramUsersDetailsToKafka = false;
+          //Using programId fetch program details. Also checking the program status in the query.
+          let programData = await this.programDocuments(
             {
-              userId: userId,
-              programId: programId,
+              _id: programId,
+              status: constants.common.ACTIVE,
+              isDeleted: false,
             },
-            ["_id", "consentShared"]
+            ["name", "externalId", "requestForPIIConsent", "rootOrganisations"]
           );
-        // if user not joined for program. we have add more key values to programUsersData
-        if (!programUsersDetails.length > 0) {
-          // Fetch user profile information by calling sunbird's user read api.
-          // !Important check specific fields of userProfile.
-          let userProfile = await userService.profile(userToken, userId);
-          if (
-            !userProfile.success ||
-            !userProfile.data ||
-            !userProfile.data.profileUserTypes ||
-            !userProfile.data.profileUserTypes.length > 0 ||
-            !userProfile.data.userLocations ||
-            !userProfile.data.userLocations.length > 0
-          ) {
+
+          if (!programData.length > 0) {
             throw {
               status: httpStatusCode.bad_request.status,
-              message: constants.apiResponses.PROGRAM_JOIN_FAILED,
+              message: constants.apiResponses.PROGRAM_NOT_FOUND,
             };
           }
-          programUsersData = {
-            programId: programId,
-            userRoleInformation: data.userRoleInformation,
-            userId: userId,
-            userProfile: userProfile.data,
-            resourcesStarted: false,
-          };
-          if (appName != "") {
-            programUsersData["appInformation.appName"] = appName;
-          }
-          if (appVersion != "") {
-            programUsersData["appInformation.appVersion"] = appVersion;
-          }
+          let programUsersData = {};
+          let update = {};
 
-          //For internal calls add consent using sunbird api
-          if (
-            callConsetAPIOnBehalfOfUser &&
-            programData[0].hasOwnProperty("requestForPIIConsent") &&
-            programData[0].requestForPIIConsent === true
-          ) {
+          // check if user already joined for program or not
+          const programUsersDetails =
+            await programUsersHelper.programUsersDocuments(
+              {
+                userId: userId,
+                programId: programId,
+              },
+              ["_id", "consentShared"]
+            );
+          // if user not joined for program. we have add more key values to programUsersData
+          if (!programUsersDetails.length > 0) {
+            // Fetch user profile information by calling sunbird's user read api.
+            // !Important check specific fields of userProfile.
+            let userProfile = await userService.profile(userToken, userId);
             if (
-              !programData[0].rootOrganisations ||
-              !programData[0].rootOrganisations.length > 0
+              !userProfile.success ||
+              !userProfile.data ||
+              !userProfile.data.profileUserTypes ||
+              !userProfile.data.profileUserTypes.length > 0 ||
+              !userProfile.data.userLocations ||
+              !userProfile.data.userLocations.length > 0
             ) {
               throw {
-                message: constants.apiResponses.PROGRAM_JOIN_FAILED,
                 status: httpStatusCode.bad_request.status,
+                message: constants.apiResponses.PROGRAM_JOIN_FAILED,
               };
             }
-            let userConsentRequestBody = {
-              request: {
-                consent: {
-                  status: constants.common.REVOKED,
-                  userId: userProfile.data.id,
-                  consumerId: programData[0].rootOrganisations[0],
-                  objectId: programId,
-                  objectType: constants.common.PROGRAM,
-                },
-              },
+            programUsersData = {
+              programId: programId,
+              userRoleInformation: data.userRoleInformation,
+              userId: userId,
+              userProfile: userProfile.data,
+              resourcesStarted: false,
             };
-            let consentResponse = await userService.setUserConsent(
-              userToken,
-              userConsentRequestBody
-            );
+            if (appName != "") {
+              programUsersData["appInformation.appName"] = appName;
+            }
+            if (appVersion != "") {
+              programUsersData["appInformation.appVersion"] = appVersion;
+            }
 
-            if (!consentResponse.success) {
-              throw {
-                message: constants.apiResponses.PROGRAM_JOIN_FAILED,
-                status: httpStatusCode.bad_request.status,
+            //For internal calls add consent using sunbird api
+            if (
+              callConsetAPIOnBehalfOfUser &&
+              programData[0].hasOwnProperty("requestForPIIConsent") &&
+              programData[0].requestForPIIConsent === true
+            ) {
+              if (
+                !programData[0].rootOrganisations ||
+                !programData[0].rootOrganisations.length > 0
+              ) {
+                throw {
+                  message: constants.apiResponses.PROGRAM_JOIN_FAILED,
+                  status: httpStatusCode.bad_request.status,
+                };
+              }
+              let userConsentRequestBody = {
+                request: {
+                  consent: {
+                    status: constants.common.REVOKED,
+                    userId: userProfile.data.id,
+                    consumerId: programData[0].rootOrganisations[0],
+                    objectId: programId,
+                    objectType: constants.common.PROGRAM,
+                  },
+                },
               };
+              let consentResponse = await userService.setUserConsent(
+                userToken,
+                userConsentRequestBody
+              );
+
+              if (!consentResponse.success) {
+                throw {
+                  message: constants.apiResponses.PROGRAM_JOIN_FAILED,
+                  status: httpStatusCode.bad_request.status,
+                };
+              }
             }
           }
-        }
 
-        // if requestForPIIConsent Is false and user not joined program till now then set pushProgramUsersDetailsToKafka = true;
-        // if requestForPIIConsent == true and data.consentShared value is true which means user interacted with the consent popup set pushProgramUsersDetailsToKafka = true;
-        // if programUsersDetails[0].consentShared === true which means the data is already pushed to Kafka once
-        if (
-          (programData[0].hasOwnProperty("requestForPIIConsent") &&
-            programData[0].requestForPIIConsent === false &&
-            !programUsersDetails.length > 0) ||
-          (programData[0].hasOwnProperty("requestForPIIConsent") &&
-            programData[0].requestForPIIConsent === true &&
-            data.hasOwnProperty("consentShared") &&
-            data.consentShared == true &&
-            ((programUsersDetails.length > 0 &&
-              programUsersDetails[0].consentShared === false) ||
-              !programUsersDetails.length > 0))
-        ) {
-          pushProgramUsersDetailsToKafka = true;
-        }
+          // if requestForPIIConsent Is false and user not joined program till now then set pushProgramUsersDetailsToKafka = true;
+          // if requestForPIIConsent == true and data.consentShared value is true which means user interacted with the consent popup set pushProgramUsersDetailsToKafka = true;
+          // if programUsersDetails[0].consentShared === true which means the data is already pushed to Kafka once
+          if (
+            (programData[0].hasOwnProperty("requestForPIIConsent") &&
+              programData[0].requestForPIIConsent === false &&
+              !programUsersDetails.length > 0) ||
+            (programData[0].hasOwnProperty("requestForPIIConsent") &&
+              programData[0].requestForPIIConsent === true &&
+              data.hasOwnProperty("consentShared") &&
+              data.consentShared == true &&
+              ((programUsersDetails.length > 0 &&
+                programUsersDetails[0].consentShared === false) ||
+                !programUsersDetails.length > 0))
+          ) {
+            pushProgramUsersDetailsToKafka = true;
+          }
 
-        //create or update query
-        const query = {
-          programId: programId,
-          userId: userId,
-        };
-        //if a resource is started
-        if (data.isResource) {
-          programUsersData.resourcesStarted = true;
-        }
-        //if user interacted with the consent-popup
-        if (data.hasOwnProperty("consentShared")) {
-          programUsersData.consentShared = data.consentShared;
-        }
-        update["$set"] = programUsersData;
-
-        // add record to programUsers collection
-        let joinProgram = await programUsersHelper.update(query, update, {
-          new: true,
-          upsert: true,
-        });
-
-        if (!joinProgram._id) {
-          throw {
-            message: constants.apiResponses.PROGRAM_JOIN_FAILED,
-            status: httpStatusCode.bad_request.status,
+          //create or update query
+          const query = {
+            programId: programId,
+            userId: userId,
           };
-        }
+          //if a resource is started
+          if (data.isResource) {
+            programUsersData.resourcesStarted = true;
+          }
+          //if user interacted with the consent-popup
+          if (data.hasOwnProperty("consentShared")) {
+            programUsersData.consentShared = data.consentShared;
+          }
+          update["$set"] = programUsersData;
 
-        let joinProgramDetails = joinProgram.toObject();
+          // add record to programUsers collection
+          let joinProgram = await programUsersHelper.update(query, update, {
+            new: true,
+            upsert: true,
+          });
 
-        if (pushProgramUsersDetailsToKafka) {
-          joinProgramDetails.programName = programData[0].name;
-          joinProgramDetails.programExternalId = programData[0].externalId;
-          joinProgramDetails.requestForPIIConsent =
-            programData[0].requestForPIIConsent;
-          //  push programUsers details to kafka
-          await kafkaProducersHelper.pushProgramUsersToKafka(
-            joinProgramDetails
-          );
-        }
+          if (!joinProgram._id) {
+            throw {
+              message: constants.apiResponses.PROGRAM_JOIN_FAILED,
+              status: httpStatusCode.bad_request.status,
+            };
+          }
 
-        return resolve({
-          message: constants.apiResponses.JOINED_PROGRAM,
-          success: true,
-          data: {
-            _id: joinProgram._id,
-          },
-        });
+          let joinProgramDetails = joinProgram.toObject();
+
+          if (pushProgramUsersDetailsToKafka) {
+            joinProgramDetails.programName = programData[0].name;
+            joinProgramDetails.programExternalId = programData[0].externalId;
+            joinProgramDetails.requestForPIIConsent =
+              programData[0].requestForPIIConsent;
+            //  push programUsers details to kafka
+            await kafkaProducersHelper.pushProgramUsersToKafka(
+              joinProgramDetails
+            );
+          }
+
+          return resolve({
+            message: constants.apiResponses.JOINED_PROGRAM,
+            success: true,
+            data: {
+              _id: joinProgram._id,
+            },
+          });
+       
       } catch (error) {
         return resolve({
           success: false,

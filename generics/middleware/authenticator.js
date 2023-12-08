@@ -108,7 +108,8 @@ module.exports = async function (req, res, next) {
     "/admin/dbFind",
     "/admin/dbDelete",
     "/admin/dbCreate",
-    "/cloud-services/storage/actions"
+    "/cloud-services/storage/actions",
+    "/admin/createIndex"
   ];
 
   for(let path = 0; path < mandatoryInternalAccessApiPaths.length ; path++ ) {

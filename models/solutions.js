@@ -72,6 +72,7 @@ module.exports = {
       project : Object,
       referenceFrom : String,
       scope : {
+        type:Object,
         entityType : String,
         entities : {
           type : Array,
