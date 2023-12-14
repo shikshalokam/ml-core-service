@@ -66,6 +66,34 @@ module.exports = class SolutionsHelper {
     });
   }
 
+   /**
+     * Update solution users
+     * @method
+     * @name updateMany
+     * @param {Object} query 
+     * @param {Object} update 
+     * @param {Object} options 
+     * @returns {JSON} - update solutions.
+    */
+
+   static updateMany(query, update, options = {}) {
+    return new Promise(async (resolve, reject) => {
+        try {
+        
+            let updatedSolutionCount = await database.models.solutions.updateMany(
+                query, 
+                update,
+                options
+            );
+            if( updatedSolutionCount) {
+                return resolve(updatedSolutionCount);
+            }
+        } catch (error) {
+            return reject(error);
+        }
+    })
+}
+
   /**
    * Create solution.
    * @method create
