@@ -102,8 +102,27 @@ module.exports = class UsersHelper {
             "userProfile.dob": 1,
           },
         };
-        let deleteUserPIIDataResult = await programUsersHelper.updateMany(filter, updateProfile)
-        if (deleteUserPIIDataResult && deleteUserPIIDataResult.nModified > 0) {
+        let solutionFilter = {
+          author: userId,
+        }
+        let updateSolutions =  {
+          $set: {
+            "creator": constants.common.DELETED_USER,
+          },
+        };
+        let solutionLicenseFilter = {
+          author: userId,
+          license: {$exists:true, $ne:""}
+        }
+        let updateSolutionsLicense =  {
+          $set: {
+            "license.author": constants.common.DELETED_USER,
+            "license.creator": constants.common.DELETED_USER
+          },
+        };
+        let deleteUserPII = [programUsersHelper.updateMany(filter, updateProfile), solutionsHelper.updateMany(solutionFilter, updateSolutions), solutionsHelper.updateMany(solutionLicenseFilter, updateSolutionsLicense)]
+        let deleteUserPIIDataResult  = await Promise.all(deleteUserPII);
+        if (deleteUserPIIDataResult && (deleteUserPIIDataResult[0].nModified > 0 || deleteUserPIIDataResult[1].nModified > 0  | deleteUserPIIDataResult[2].nModified > 0)) {
           if(telemetryEventOnOff !== constants.common.OFF){
             /**
              * Telemetry Raw Event
