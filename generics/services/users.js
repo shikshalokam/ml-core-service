@@ -51,6 +51,8 @@ const profile = function ( token,userId = "" ) {
                             "prevUsedPhone",
                             "prevUsedEmail",
                             "recoveryPhone",
+                            "encEmail",
+                            "encPhone"
                         ]);
                     } else {
                         result["message"] = response.params.status;

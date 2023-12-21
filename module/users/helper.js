@@ -100,6 +100,8 @@ module.exports = class UsersHelper {
             "userProfile.prevUsedEmail": 1,
             "userProfile.recoveryPhone": 1,
             "userProfile.dob": 1,
+            "userProfile.encEmail": 1,
+            "userProfile.encPhone": 1,
           },
         };
         let solutionFilter = {
