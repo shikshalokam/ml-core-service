@@ -1218,6 +1218,84 @@ module.exports = class ProgramsHelper {
       }
     });
   }
+  /**
+   * List Program using organization id.
+   * @method
+   * @name assets
+   * @query {String} type - Assets type (program/solutions).
+   * @returns {Object} - Details of the program under the organization.
+   */
+
+  static queryForOrganizationPrograms(bodyData){
+
+    return new Promise(async (resolve, reject) => {
+      try{
+        let programDocument=[];
+        let matchQuery={};
+        let filterEmptyStringsFromArray;
+
+        //if there is an empty string then remove from userids
+        if(!bodyData.filters.userId){
+          filterEmptyStringsFromArray=[];
+        }else{
+          filterEmptyStringsFromArray= bodyData.filters.userId.filter(str => str !== "");
+        }
+
+        if(filterEmptyStringsFromArray.length > 0){
+          matchQuery={
+            $and: [
+              {createdFor: {$in:[bodyData.filters.orgId]} }, 
+                {
+                 $or: [
+                  { owner: { $in: bodyData.filters.userId} }, 
+                   { owner: { $exists: false } } ,
+                 ]
+                }
+       ]
+          }
+        }else{
+
+          matchQuery = {createdFor:{$in:[bodyData.filters.orgId]}}
+
+        }
+
+        let projection1 = {};
+        if (bodyData.fields && bodyData.fields.length  > 0) {
+          bodyData.fields.forEach((projectedData) => {
+            if(projectedData === "objectType"){
+              projection1["objectType"]="program"
+            }else{
+            projection1[projectedData] = 1;
+            }
+          });
+        } 
+        let limitQuery =bodyData.limit;
+        programDocument.push(
+          { $match: matchQuery },
+          { $project: projection1 },
+          {$limit : limitQuery}
+        );
+      let programDocuments = await database.models.programs.aggregate(
+        programDocument
+      );
+      return resolve({
+        success: true,
+        message: constants.apiResponses.PROGRAM_LIST,
+        data: programDocuments,
+      });
+
+      }catch(error) {
+        return resolve({
+          success: false,
+          message: error.message,
+          data: [],
+        });
+      }
+    })
+
+  }
 };
+
+ 
 
 const solutionsHelper = require(MODULES_BASE_PATH + "/solutions/helper");

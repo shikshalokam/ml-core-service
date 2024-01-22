@@ -2404,6 +2404,85 @@ module.exports = class SolutionsHelper {
     });
   }
 
+   /**
+   * List Program using organization id.
+   * @method
+   * @name assets
+   * @query {String} type - Assets type (program/solutions).
+   * @returns {Object} - Details of the program under the organization.
+   */
+
+   static queryForOrganizationSolutions(bodyData){
+
+    return new Promise(async (resolve, reject) => {
+      try{
+        let solutionDocument=[];
+        let matchQuery={};
+        let filterEmptyStringsFromArray;
+
+        //if there is an empty string then remove from userids
+        if(!bodyData.filters.userId){
+          filterEmptyStringsFromArray=[];
+        }else{
+          filterEmptyStringsFromArray= bodyData.filters.userId.filter(str => str !== "");
+        }
+
+        if(filterEmptyStringsFromArray.length > 0){
+          matchQuery={
+            $and: [
+              {createdFor: {$in:[bodyData.filters.orgId]} }, 
+              // { author: { $in: bodyData.filters.userId} }, 
+
+                // {
+                //  $or: [
+                //   { author: { $in: bodyData.filters.userId} }, 
+                //    { author: { $exists: false } } ,
+                //  ]
+                // }
+       ]
+          }
+        }else{
+
+          matchQuery = {createdFor:{$in:[bodyData.filters.orgId]}}
+
+        }
+
+        let projection1 = {};
+        if (bodyData.fields && bodyData.fields.length  > 0) {
+          bodyData.fields.forEach((projectedData) => {
+            if(projectedData === "objectType"){
+              projection1["objectType"]="solution"
+            }else{
+            projection1[projectedData] = 1;
+            }
+          });
+        } 
+        let limitQuery =bodyData.limit;
+        solutionDocument.push(
+          { $match: matchQuery },
+          { $project: projection1 },
+          {$limit : limitQuery}
+        );
+      let solutionDocuments = await database.models.solutions.aggregate(
+        solutionDocument
+      );
+      return resolve({
+        success: true,
+        message: constants.apiResponses.SOLUTIONS_LIST,
+        data: solutionDocuments,
+      });
+
+      }catch(error) {
+        return resolve({
+          success: false,
+          message: error.message,
+          data: [],
+        });
+      }
+    })
+
+  }
+
   // moved this function to solutions helper to avoid circular dependency with users/helper
   /**
    * Create user program and solution
