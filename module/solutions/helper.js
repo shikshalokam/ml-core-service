@@ -2431,14 +2431,8 @@ module.exports = class SolutionsHelper {
           matchQuery={
             $and: [
               {createdFor: {$in:[bodyData.filters.orgId]} }, 
-              // { author: { $in: bodyData.filters.userId} }, 
-
-                // {
-                //  $or: [
-                //   { author: { $in: bodyData.filters.userId} }, 
-                //    { author: { $exists: false } } ,
-                //  ]
-                // }
+              { author: { $in: bodyData.filters.userId} }, 
+              {isAPrivateProgram:false}
        ]
           }
         }else{
@@ -2457,7 +2451,14 @@ module.exports = class SolutionsHelper {
             }
           });
         } 
-        let limitQuery =bodyData.limit;
+        let limitQuery;
+        //omit the limit if there is no type 
+        if(queryData === "" || queryData === undefined){
+         limitQuery =Number.MAX_SAFE_INTEGER;
+        }else{
+          limitQuery =bodyData.limit;
+
+        }
         solutionDocument.push(
           { $match: matchQuery },
           { $project: projection1 },

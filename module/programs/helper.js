@@ -1226,8 +1226,7 @@ module.exports = class ProgramsHelper {
    * @returns {Object} - Details of the program under the organization.
    */
 
-  static queryForOrganizationPrograms(bodyData){
-
+  static queryForOrganizationPrograms(bodyData,queryData){
     return new Promise(async (resolve, reject) => {
       try{
         let programDocument=[];
@@ -1245,14 +1244,11 @@ module.exports = class ProgramsHelper {
           matchQuery={
             $and: [
               {createdFor: {$in:[bodyData.filters.orgId]} }, 
-                {
-                 $or: [
-                  { owner: { $in: bodyData.filters.userId} }, 
-                   { owner: { $exists: false } } ,
-                 ]
-                }
+               { owner: { $in: bodyData.filters.userId} }, 
        ]
-          }
+       
+          
+    }
         }else{
 
           matchQuery = {createdFor:{$in:[bodyData.filters.orgId]}}
@@ -1269,11 +1265,22 @@ module.exports = class ProgramsHelper {
             }
           });
         } 
-        let limitQuery =bodyData.limit;
+        let limitQuery;
+        //omit the limit if there is no type 
+        if(queryData === "" || queryData === undefined){
+         limitQuery =Number.MAX_SAFE_INTEGER;
+        }else{
+          limitQuery =bodyData.limit;
+
+        }
+
+        
+       
         programDocument.push(
           { $match: matchQuery },
           { $project: projection1 },
           {$limit : limitQuery}
+
         );
       let programDocuments = await database.models.programs.aggregate(
         programDocument

@@ -11,12 +11,14 @@ module.exports = class AssetsHelper {
      static fetchPrograms(queryData,bodyData) {
         return new Promise(async (resolve, reject) => {
           try {
+
               let organizationAssets;
 
               switch(queryData){
                 case "program":
                   organizationAssets= await programsHelper.queryForOrganizationPrograms(
-                    bodyData
+                    bodyData,
+                    queryData
                 );
                 break;
                 case "solution":
@@ -25,9 +27,10 @@ module.exports = class AssetsHelper {
                   )
                    
                 break;
-                case "":
+                default:
                   let allOrganizationProgram =await programsHelper.queryForOrganizationPrograms(
-                    bodyData
+                    bodyData,
+                    queryData
                 );
                 let allOrganizationSolutions =await solutionsHelper.queryForOrganizationSolutions(
                   bodyData
@@ -38,7 +41,7 @@ module.exports = class AssetsHelper {
               }
             
              
-           if(queryData !== ""){
+           if(queryData !== "" && queryData !== undefined){
             return resolve({
               result: organizationAssets,
             });
@@ -48,7 +51,7 @@ module.exports = class AssetsHelper {
               message: constants.apiResponses.ASSETS_SUCCESSFULLY,
               result: organizationAssets,
               
-            });
+            }); 
           }
           } catch (error) {
             return reject(error);
