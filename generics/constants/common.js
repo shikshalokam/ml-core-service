@@ -88,9 +88,13 @@
   TELEMTRY_EVENT_LOGGER: "TelemetryEventLogger",
   INFO_LEVEL: "INFO",
   DELETE_STATE: "Delete",
+  TRANSFER_STATE:"",
   USER_DELETE_TYPE: "DeleteUserStatus",
   AUDIT: "AUDIT",
   DELETE_USER: "delete-user",
+  TRANSFER_OWNERSHIP_JOB:"ownership-transfer",
+  OWNERSHIP_TRANSFER_TYPE:"",
+  OWNERSHIP_TRANSFER_MODULE:"",
   USER: "User",
   USER_DELETE_MODULE: "userDelete",
   OFF: "OFF"

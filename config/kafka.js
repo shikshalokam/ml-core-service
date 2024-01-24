@@ -9,7 +9,8 @@
 //dependencies
 const kafka = require('kafka-node');
 const USER_DELETE_TOPIC = process.env.USER_DELETE_TOPIC;
-const USER_DELETE_ON_OFF = process.env.USER_DELETE_ON_OFF
+const USER_DELETE_ON_OFF = process.env.USER_DELETE_ON_OFF;
+const TRANSFER_OWNERSHIP_JOB =process.env.TRANSFER_OWNERSHIP_JOB;
 /**
   * Kafka configurations.
   * @function
@@ -81,11 +82,18 @@ const connect = function() {
       if (message && message.topic === USER_DELETE_TOPIC) {
         userDeleteConsumer.messageReceived(message);
       }
+       // call assets or ownership Transfer consumer
+       if (message && message.topic === TRANSFER_OWNERSHIP_JOB) {
+        assetsTransferConsumer.messageReceived(message);
+      }
     });
 
     consumer.on("error", async function (error) {
       if (error.topics && error.topics[0] === USER_DELETE_TOPIC) {
         userDeleteConsumer.errorTriggered(error);
+      }
+      if (error.topics && error.topics[0] === TRANSFER_OWNERSHIP_JOB) {
+        assetsTransferConsumer.errorTriggered(error);
       }
     });
   }

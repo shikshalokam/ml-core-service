@@ -681,7 +681,52 @@ module.exports = class UserExtensionHelper {
             }
         })
     }
+    
+    static findOne(query){
+        return new Promise(async (resolve, reject) => {
+            try{
+               let findUser =await database.models.userExtension.findOne(query)
+               resolve(findUser)
+            }catch(error){
+                reject(error);
+            }
+        })
+    }
+
+    static InsertOne(query){
+        return new Promise(async (resolve, reject) => {
+            try{
+               let insertProgram =await database.models.userExtension.insertOne(query)
+               resolve(insertProgram)
+            }catch(error){
+                reject(error);
+            }
+        })
+    }
+    static updateOne(query){
+        return new Promise(async (resolve, reject) => {
+            try{
+               let updateProgram =await database.models.userExtension.updateOne(query)
+               resolve(updateProgram)
+            }catch(error){
+                reject(error);
+            }
+        })
+    }
+    static createOne(data){
+        return new Promise(async (resolve, reject) => {
+            try{
+               let createUserExtension=await database.models.userExtension.create(data)
+               resolve(createUserExtension)
+            }catch(error){
+                reject(error);
+            }
+        })
+    }
+   
 };
+
+
 
 
 
