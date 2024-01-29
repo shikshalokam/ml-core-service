@@ -693,20 +693,33 @@ module.exports = class UserExtensionHelper {
         })
     }
 
-    static InsertOne(query){
+    static insertOne(query){
         return new Promise(async (resolve, reject) => {
             try{
-               let insertProgram =await database.models.userExtension.insertOne(query)
+               let insertProgram =await database.models.userExtension.insertOne(query,  { new: true, upsert: true })
                resolve(insertProgram)
             }catch(error){
                 reject(error);
             }
         })
     }
-    static updateOne(query){
+    static findOneandUpdate(query,updateToFields,arrayFilter){
         return new Promise(async (resolve, reject) => {
             try{
-               let updateProgram =await database.models.userExtension.updateOne(query)
+               let insertProgram = await database.models.userExtension.findOneAndUpdate(query,updateToFields, { arrayFilter, upsert:true}
+                )
+               resolve(insertProgram)
+            }catch(error){
+                reject(error);
+            }
+        })
+    }
+    static updateOne( query,setQuery){
+        return new Promise(async (resolve, reject) => {
+            try{
+               let updateProgram =await database.models.userExtension.updateOne( 
+                 query,setQuery,{upsert:true}
+                )
                resolve(updateProgram)
             }catch(error){
                 reject(error);

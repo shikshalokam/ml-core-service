@@ -14,6 +14,7 @@ const programUsersHelper = require(MODULES_BASE_PATH + "/programUsers/helper");
 const timeZoneDifference =
   process.env.TIMEZONE_DIFFRENECE_BETWEEN_LOCAL_TIME_AND_UTC;
   const validateEntity = process.env.VALIDATE_ENTITIES
+
 /**
  * ProgramsHelper
  * @class
@@ -1314,4 +1315,3 @@ module.exports = class ProgramsHelper {
 
  
 
-const solutionsHelper = require(MODULES_BASE_PATH + "/solutions/helper");
