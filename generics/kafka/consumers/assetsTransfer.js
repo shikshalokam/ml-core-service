@@ -57,10 +57,8 @@ const assetsHelper = require(MODULES_BASE_PATH + "/assets/helper.js");
 var messageReceived = function (message) {
     return new Promise(async function (resolve, reject) {
       try {
-        let originalMessage = JSON.parse(message.value);
-        let parsedMessage = originalMessage.value;
-        // let parsedMessage = message;
-        if (parsedMessage.edata.action === constants.common.TRANSFER_OWNERSHIP_JOB) {
+        let parsedMessage = JSON.parse(message.value);
+        if (parsedMessage.edata.action === constants.common.OWNERSHIP_TRANSFER_TOPIC) {
           let ownershipTransferResponse = await assetsHelper.ownershipTransfer(parsedMessage);
   
           if (ownershipTransferResponse.success == true) {

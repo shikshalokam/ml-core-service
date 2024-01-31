@@ -682,38 +682,33 @@ module.exports = class UserExtensionHelper {
         })
     }
     
-    static findOne(query){
+       /**
+   * Transfer ownership from User to ToUser based on Roles
+   * @method
+   * @name findOneandUpdate
+   * @param {Array} query - Array of queries to update.
+   * @returns {Array} 
+   */
+   
+    static findOneandUpdate(query){
         return new Promise(async (resolve, reject) => {
             try{
-               let findUser =await database.models.userExtension.findOne(query)
-               resolve(findUser)
+                let insertProgram = await database.models.userExtension.bulkWrite(query)
+               resolve(insertProgram)
             }catch(error){
                 reject(error);
             }
         })
     }
 
-    static insertOne(query){
-        return new Promise(async (resolve, reject) => {
-            try{
-               let insertProgram =await database.models.userExtension.insertOne(query,  { new: true, upsert: true })
-               resolve(insertProgram)
-            }catch(error){
-                reject(error);
-            }
-        })
-    }
-    static findOneandUpdate(query,updateToFields,arrayFilter){
-        return new Promise(async (resolve, reject) => {
-            try{
-               let insertProgram = await database.models.userExtension.findOneAndUpdate(query,updateToFields, { arrayFilter, upsert:true}
-                )
-               resolve(insertProgram)
-            }catch(error){
-                reject(error);
-            }
-        })
-    }
+   /**
+   * Remove programs Roles from FromUser when we create a newUser and Transfer
+   * @method
+   * @name updateOne
+   * @param {Object} query findMatchQuery.
+   * @param {Object} setQuery Remove programRoles from an FromUser.
+   * @returns {Array} 
+   */
     static updateOne( query,setQuery){
         return new Promise(async (resolve, reject) => {
             try{
@@ -726,6 +721,13 @@ module.exports = class UserExtensionHelper {
             }
         })
     }
+    /**
+   * Create a new User when toUser not available in the userExtension collection with transferred platformRoles from FromUser
+   * @method
+   * @name createOne
+   * @param {Object} data- newUserData.
+   * @returns {Array} 
+   */
     static createOne(data){
         return new Promise(async (resolve, reject) => {
             try{

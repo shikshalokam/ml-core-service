@@ -5,10 +5,19 @@ const userExtensionsHelper = require(MODULES_BASE_PATH +
   "/user-extension/helper");
 const userRolesHelper = require(MODULES_BASE_PATH + "/user-roles/helper");
 const kafkaProducersHelper = require(ROOT_PATH + "/generics/kafka/producers");
+const assetService = require(ROOT_PATH + "/generics/services/assetsTransfer");
 
 module.exports = class AssetsHelper {
-
-  static fetchPrograms(queryData, bodyData) {
+  
+  /**
+   * Get users assets based on Type .
+   * @method
+   * @name fetchAssets
+   * @param {String} queryData -  query for type data.
+   * @param {Object} [bodyData] - request body data data.
+   * @returns {Promise} returns a promise.
+   */
+  static fetchAssets(queryData, bodyData) {
     return new Promise(async (resolve, reject) => {
       try {
         let organizationAssets;
@@ -59,45 +68,63 @@ module.exports = class AssetsHelper {
     });
   }
 
+  /**
+   * Transfer ownership Kafka Event.
+   * @method
+   * @name deleteUownershipTransferserPIIData
+   * @param {ownershipTransferEvent} - userDeleteEvent message object 
+   * {
+      "highWaterOffset": 63,
+       "key": "",
+       "offset": 62,
+       "partition": 0,
+       "topic": "ownershiptransfer",
+       "edata": {
+          "action": "ownership-transfer",
+          "organisationId": "01269934121990553633",
+          "context": "Ownership Transfer",
+        "actionBy": {
+             "userId": "86d2d978-5b20-4453-8a76-82b5a4c728c9",
+            "userName": ""
+            },
+      "fromUserProfile": {
+              "userId": "19d81ef7-36ce-41fe-ae2d-c8365d977be4",
+              "userName": "",
+              "channel": "",
+              "organisationId": "",
+              "roles": [
+                 "PROGRAM_MANAGER"
+                 ]
+             },
+       "toUserProfile": {
+              "userId": "86d2d978-5b20-4453-8a76-82b5a4c728c9",
+              "userName": "test",
+              "firstName": "test",
+              "lastName": "",
+           "roles": [
+                "PROGRAM_MANAGER",
+                "CONTENT_CREATOR"
+               ]
+            },
+       "assetInformation": {
+             "objectType": "solution || program",
+             "identifier": "{{resource_identifier}}"
+           },
+         "iteration": 1
+  }
+}
+   * @returns {Promise} success Data.
+   */
   static ownershipTransfer(ownershipTransferEvent) {
     return new Promise(async (resolve, reject) => {
       try {
-
         let reqData = ownershipTransferEvent.edata;
         let fromFindQuery = {
           userId: reqData.fromUserProfile.userId,
           platformRoles: { $exists: true },
         };
-      
+
         let updateUserSolutionsDataResult;
-        //data for create user in user Extension
-        const newCollectionForUserExtension = {
-          platformRoles: [],
-          userId: reqData.toUserProfile.userId,
-          externalId: reqData.toUserProfile.userName,
-          updatedBy: reqData.actionBy.userId,
-          createdBy: reqData.actionBy.userId,
-        };
-        //filter for solution updates
-        let solutionFilter = {
-          author: reqData.toUserProfile.userId,
-        };
-        let updateSolutions = {
-          $set: {
-            author: reqData.toUserProfile.userId,
-            crator: reqData.toUserProfile.firstname,
-          },
-        };
-        let solutionLicenseFilter = {
-          author: reqData.fromUserProfile.userId,
-          license: { $exists: true, $ne: "" },
-        };
-        let updateSolutionsLicense = {
-          $set: {
-            "license.author": reqData.toUserProfile.firstName,
-            "license.creator": reqData.toUserProfile.firstName,
-          },
-        };
 
         if (
           reqData.actionBy.userId &&
@@ -106,21 +133,49 @@ module.exports = class AssetsHelper {
         ) {
           //get Fromuser details from user Extension
 
-          let fromUserData = await userExtensionsHelper.findOne(fromFindQuery);
+          let fromUserData = await userExtensionsHelper.userExtensionDocument(
+            fromFindQuery
+          );
           //get Touser details from user Extension
           let toFindQuery = {
             userId: reqData.toUserProfile.userId,
           };
-          let toUserData = await userExtensionsHelper.findOne(
+          let toUserData = await userExtensionsHelper.userExtensionDocument(
             toFindQuery
           );
-          let allAssetsData = fromUserData.platformRoles;
-          const typeOfAssetsToMove = reqData.assetInformation.objectType;
+          let allAssetsData = fromUserData?.platformRoles;
+          let typeOfAssetsToMove = reqData.assetInformation.objectType;
+          let checkAssetInformation =
+            reqData.hasOwnProperty("assetInformation");
 
           //condition for if there is no object type
-          if (!typeOfAssetsToMove && !typeOfAssetsToMove.length > 0) {
-            if (reqData.toUserProfile.roles.includes(constants.common.CONTENT_CREATOR)) {
-                 let updateUserSolutions = [
+          if (!checkAssetInformation) {
+            if (
+              reqData.toUserProfile.roles.includes(
+                constants.common.CONTENT_CREATOR
+              )
+            ) {
+              //filter for solution updates
+              let solutionFilter = {
+                author: reqData.fromUserProfile.userId,
+              };
+              let updateSolutions = {
+                $set: {
+                  author: reqData.toUserProfile.userId,
+                  creator: reqData.toUserProfile.firstname,
+                },
+              };
+              let solutionLicenseFilter = {
+                author: reqData.fromUserProfile.userId,
+                license: { $exists: true, $ne: "" },
+              };
+              let updateSolutionsLicense = {
+                $set: {
+                  "license.author": reqData.toUserProfile.firstName,
+                  "license.creator": reqData.toUserProfile.firstName,
+                },
+              };
+              let updateUserSolutions = [
                 solutionsHelper.updateMany(solutionFilter, updateSolutions),
                 solutionsHelper.updateMany(
                   solutionLicenseFilter,
@@ -131,122 +186,104 @@ module.exports = class AssetsHelper {
                 updateUserSolutions
               );
             } else {
-              if (fromUserData) {
-                if (
-                  reqData.toUserProfile.roles.includes(constants.common.PROGRAM_MANAGER) ||
-                  reqData.toUserProfile.roles.includes(constants.common. PROGRAM_DESIGNER)
-                ) {
-                    if (toUserData) {
+              if (
+                reqData.toUserProfile.roles.includes(
+                  constants.common.PROGRAM_MANAGER
+                ) ||
+                reqData.toUserProfile.roles.includes(
+                  constants.common.PROGRAM_DESIGNER
+                )
+              ) {
+                if (toUserData) {
+                  const updateQueries =
+                    await assetService.generateUpdateOperations(
+                      fromUserData,
+                      reqData,
+                      toUserData,
+                      allAssetsData
+                    );
+                  let updateProgram =
+                    await userExtensionsHelper.findOneandUpdate(updateQueries);
+                } else {
 
-                    let typeOfAssetsToMove = fromUserData.platformRoles.map(role =>  role.code);
-                    typeOfAssetsToMove.forEach(async roleCodeToUpdate => {
-                       
-                      const arrayToMove = allAssetsData.filter(
-                        (role) => role.code === roleCodeToUpdate
-                      );
-                      const updateToQuery = {
-                        userId: reqData.toUserProfile.userId,
-                        "platformRoles.code": roleCodeToUpdate,
-                      };
-            
-                      const updateToFields = {
-                        $push: {
-                          "platformRoles.$.programs": { $each: arrayToMove?.[0]?.programs },
-                        },
-                      };
-                      const arrayFilters = [{ "elem.code": roleCodeToUpdate }];
-            
-                      let deleteProgramFromUserQuery = {
-                        userId: reqData.fromUserProfile.userId,
-                        "platformRoles.code": roleCodeToUpdate,
-                      };
-                      let deleteProgramFromUserField = {
-                        $pull: {
-                          "platformRoles.$.programs": { $in: arrayToMove?.[0]?.programs },
-                        },
-                      }
-                      let updateProgram =
-                     await userExtensionsHelper.findOneandUpdate(
-                      updateToQuery,
-                      updateToFields,
-                        arrayFilters
-                      );
+                  //data for create new user in user Extension
+                  let newCollectionForUserExtension = {
+                    platformRoles: [],
+                    userId: reqData.toUserProfile.userId,
+                    externalId: reqData.toUserProfile.userName,
+                    updatedBy: reqData.actionBy.userId,
+                    createdBy: reqData.actionBy.userId,
+                  };
+                  const filterCodes = fromUserData.platformRoles.map(
+                    (role) => role.code
+                  );
 
-                      if (updateProgram){
-                        let deleteProgram =
-                        await userExtensionsHelper.findOneandUpdate(
-                          deleteProgramFromUserQuery,
-                          deleteProgramFromUserField,
-                          arrayFilters
-                        );
-                      }
-                    })
+                  let findProgramManagerQuery = {
+                    code: { $in: filterCodes },
+                  };
 
-                  } else {
-                    const filterCodes = fromUserData.platformRoles.map(role => role.code);
+                  let findProgramManagerId = await userRolesHelper.findOne(
+                    findProgramManagerQuery
+                  );
 
-                    let findProgramManagerQuery = {
-                      code: { $in:filterCodes},
-                    };
-         
-                    let findProgramManagerId = await userRolesHelper.findOne(
-                      findProgramManagerQuery
+                  const programRolesArray =
+                    assetService.createProgramRolesArray(
+                      fromUserData,
+                      findProgramManagerId
                     );
 
-                    const programRolesArray = [];
-                    for (const roleCode of fromUserData.platformRoles) {
-                      const matchingRole = findProgramManagerId.find(
-                        (role) => role.code === roleCode.code
-                      );
-                      if (matchingRole) {
-                        const roleId = matchingRole._id;
-                        if (
-                          roleCode.code === constants.common.PROGRAM_DESIGNER
-                        ) {
-                          programRolesArray.push({
-                            roleId: roleId,
-                            isAPlatformRole: true,
-                            entities: [],
-                            code: roleCode.code,
-                            programs: roleCode.programs,
-                          });
-                        } else {
-                          programRolesArray.push({
-                            roleId: roleId,
-                            code: roleCode.code,
-                            programs: roleCode.programs,
-                          });
-                        }
-                      }
-                    }
-                    newCollectionForUserExtension.platformRoles=programRolesArray;
-                    //create new Touser if he is not available in the user extension
-                    let createUserExtensions = await userExtensionsHelper.createOne(
+                  newCollectionForUserExtension.platformRoles =
+                    programRolesArray;
+
+                  //create new Touser if he is not available in the user extension
+                  let createUserExtensions =
+                    await userExtensionsHelper.createOne(
                       newCollectionForUserExtension
                     );
-                    if(createUserExtensions){
-                      let deleteProgramFromUserQuery={
-                        userId: reqData.fromUserProfile.userId,
-                        }
-                        let deleteProgramFromUserField={
-                          $set: { platformRoles: [] },
-                        }
-                       let deleteProgram = await userExtensionsHelper.updateOne(
-                          deleteProgramFromUserQuery,
-                          deleteProgramFromUserField
-                        );
-                    }
+                  if (createUserExtensions) {
+                    let deleteProgramFromUserQuery = {
+                      userId: reqData.fromUserProfile.userId,
+                    };
+                    let deleteProgramFromUserField = {
+                      $set: { platformRoles: [] },
+                    };
+                    let deleteProgram = await userExtensionsHelper.updateOne(
+                      deleteProgramFromUserQuery,
+                      deleteProgramFromUserField
+                    );
                   }
                 }
               }
             }
-
           } else {
             if (
-              reqData.toUserProfile.roles.includes(constants.common.CONTENT_CREATOR) &&
+              reqData.toUserProfile.roles.includes(
+                constants.common.CONTENT_CREATOR
+              ) &&
               typeOfAssetsToMove === constants.common.SOULTION
             ) {
-                 let updateUserSolutions = [
+              //filter for solution updates
+              let solutionFilter = {
+                author: reqData.fromUserProfile.userId,
+              };
+              let updateSolutions = {
+                $set: {
+                  author: reqData.toUserProfile.userId,
+                  creator: reqData.toUserProfile.firstname,
+                },
+              };
+              let solutionLicenseFilter = {
+                author: reqData.fromUserProfile.userId,
+                license: { $exists: true, $ne: "" },
+              };
+              let updateSolutionsLicense = {
+                $set: {
+                  "license.author": reqData.toUserProfile.firstName,
+                  "license.creator": reqData.toUserProfile.firstName,
+                },
+              };
+
+              let updateUserSolutions = [
                 solutionsHelper.updateMany(solutionFilter, updateSolutions),
                 solutionsHelper.updateMany(
                   solutionLicenseFilter,
@@ -257,111 +294,69 @@ module.exports = class AssetsHelper {
                 updateUserSolutions
               );
             } else {
-              if (fromUserData) {
-                if (
-                  reqData.toUserProfile.roles.includes(constants.common.PROGRAM_MANAGER) ||
-                  reqData.toUserProfile.roles.includes(constants.common.PROGRAM_DESIGNER)
-                ) {
-                    if (toUserData) {
+              if (
+                reqData.toUserProfile.roles.includes(
+                  constants.common.PROGRAM_MANAGER
+                ) ||
+                reqData.toUserProfile.roles.includes(
+                  constants.common.PROGRAM_DESIGNER
+                )
+              ) {
+                if (toUserData) {
+                  const updateQueries =
+                    await assetService.generateUpdateOperations(
+                      fromUserData,
+                      reqData,
+                      toUserData,
+                      allAssetsData
+                    );
+                  let updateProgram =
+                    await userExtensionsHelper.findOneandUpdate(updateQueries);
+                } else {
+                  //data for create user in user Extension
+                  let newCollectionForUserExtension = {
+                    platformRoles: [],
+                    userId: reqData.toUserProfile.userId,
+                    externalId: reqData.toUserProfile.userName,
+                    updatedBy: reqData.actionBy.userId,
+                    createdBy: reqData.actionBy.userId,
+                  };
+                  const filterCodes = fromUserData.platformRoles.map(
+                    (role) => role.code
+                  );
 
-                    let typeOfAssetsToMove = fromUserData.platformRoles.map(role =>  role.code);
-                    typeOfAssetsToMove.forEach(async roleCodeToUpdate => {
-                       
-                      const arrayToMove = allAssetsData.filter(
-                        (role) => role.code === roleCodeToUpdate
-                      );
-                      const updateToQuery = {
-                        userId: reqData.toUserProfile.userId,
-                        "platformRoles.code": roleCodeToUpdate,
-                      };
-            
-                      const updateToFields = {
-                        $push: {
-                          "platformRoles.$.programs": { $each: arrayToMove?.[0]?.programs },
-                        },
-                      };
-                      const arrayFilters = [{ "elem.code": roleCodeToUpdate }];
-            
-                      let deleteProgramFromUserQuery = {
-                        userId: reqData.fromUserProfile.userId,
-                        "platformRoles.code": roleCodeToUpdate,
-                      };
-                      let deleteProgramFromUserField = {
-                        $pull: {
-                          "platformRoles.$.programs": { $in: arrayToMove?.[0]?.programs },
-                        },
-                      }
-                      let updateProgram =
-                     await userExtensionsHelper.findOneandUpdate(
-                      updateToQuery,
-                      updateToFields,
-                        arrayFilters
-                      );
+                  let findProgramManagerQuery = {
+                    code: { $in: filterCodes },
+                  };
 
-                      if (updateProgram){
-                        let deleteProgram =
-                        await userExtensionsHelper.findOneandUpdate(
-                          deleteProgramFromUserQuery,
-                          deleteProgramFromUserField,
-                          arrayFilters
-                        );
-                      }
-                    })
+                  let findProgramManagerId = await userRolesHelper.findOne(
+                    findProgramManagerQuery
+                  );
 
-                  } else {
-                    const filterCodes = fromUserData.platformRoles.map(role => role.code);
-
-                    let findProgramManagerQuery = {
-                      code: { $in:filterCodes},
-                    };
-         
-                    let findProgramManagerId = await userRolesHelper.findOne(
-                      findProgramManagerQuery
+                  const programRolesArray =
+                    assetService.createProgramRolesArray(
+                      fromUserData,
+                      findProgramManagerId
                     );
 
-                    const programRolesArray = [];
-                    for (const roleCode of fromUserData.platformRoles) {
-                      const matchingRole = findProgramManagerId.find(
-                        (role) => role.code === roleCode.code
-                      );
-                      if (matchingRole) {
-                        const roleId = matchingRole._id;
-                        if (
-                          roleCode.code === constants.common.PROGRAM_DESIGNER
-                        ) {
-                          programRolesArray.push({
-                            roleId: roleId,
-                            isAPlatformRole: true,
-                            entities: [],
-                            code: roleCode.code,
-                            programs: roleCode.programs,
-                          });
-                        } else {
-                          programRolesArray.push({
-                            roleId: roleId,
-                            code: roleCode.code,
-                            programs: roleCode.programs,
-                          });
-                        }
-                      }
-                    }
-                    newCollectionForUserExtension.platformRoles=programRolesArray;
-                    //create new Touser if he is not available in the user extension
-                    let createUserExtensions = await userExtensionsHelper.createOne(
+                  newCollectionForUserExtension.platformRoles =
+                    programRolesArray;
+                  //create new Touser if he is not available in the user extension
+                  let createUserExtensions =
+                    await userExtensionsHelper.createOne(
                       newCollectionForUserExtension
                     );
-                    if(createUserExtensions){
-                      let deleteProgramFromUserQuery={
-                        userId: reqData.fromUserProfile.userId,
-                        }
-                        let deleteProgramFromUserField={
-                          $set: { platformRoles: [] },
-                        }
-                       let deleteProgram = await userExtensionsHelper.updateOne(
-                          deleteProgramFromUserQuery,
-                          deleteProgramFromUserField
-                        );
-                    }
+                  if (createUserExtensions) {
+                    let deleteProgramFromUserQuery = {
+                      userId: reqData.fromUserProfile.userId,
+                    };
+                    let deleteProgramFromUserField = {
+                      $set: { platformRoles: [] },
+                    };
+                    let deleteProgram = await userExtensionsHelper.updateOne(
+                      deleteProgramFromUserQuery,
+                      deleteProgramFromUserField
+                    );
                   }
                 }
               }
@@ -419,16 +414,4 @@ module.exports = class AssetsHelper {
     });
   }
 
-  static pushKafka(message) {
-    return new Promise(async (resolve, reject) => {
-      try {
-        const data = await kafkaProducersHelper.pushTransferAssetsToKafka(
-          message
-        );
-        resolve(data);
-      } catch (error) {
-        reject(error);
-      }
-    });
-  }
 };

@@ -92,7 +92,7 @@
   USER_DELETE_TYPE: "DeleteUserStatus",
   AUDIT: "AUDIT",
   DELETE_USER: "delete-user",
-  TRANSFER_OWNERSHIP_JOB:"ownership-transfer",
+  OWNERSHIP_TRANSFER_TOPIC:"ownership-transfer",
   OWNERSHIP_TRANSFER_TYPE:"OwnerTransferStatus",
   OWNERSHIP_TRANSFER_MODULE:"ownerTransfer",
   USER: "User",
@@ -100,6 +100,6 @@
   OFF: "OFF",
   PROGRAM_DESIGNER:"PROGRAM_DESIGNER",
   PROGRAM_MANAGER:"PROGRAM_MANAGER",
-  CONTENT_CREATOR:"Content_Creator",
+  CONTENT_CREATOR:"CONTENT_CREATOR",
   SOULTION:"solution",
 };

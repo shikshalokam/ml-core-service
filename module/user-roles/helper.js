@@ -87,7 +87,6 @@ module.exports = class UserRolesHelper {
     });
   }
 
-      
   static findOne(query){
     return new Promise(async (resolve, reject) => {
         try{

@@ -1265,16 +1265,7 @@ module.exports = class ProgramsHelper {
             projection1[projectedData] = 1;
             }
           });
-        } else{
-          projection1={
-            "_id":1,
-            "name":1,
-            "status":1,
-            "owner":1,
-            "orgId":1,
-            "objectType":"program"
-          }
-        }
+        } 
         let limitQuery;
         //omit the limit if there is no type 
         if(queryData === "" || queryData === undefined){
