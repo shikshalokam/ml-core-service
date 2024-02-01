@@ -21,7 +21,6 @@ module.exports = class AssetsHelper {
     return new Promise(async (resolve, reject) => {
       try {
         let organizationAssets;
-
         switch (queryData) {
           case "program":
             organizationAssets =
@@ -71,8 +70,8 @@ module.exports = class AssetsHelper {
   /**
    * Transfer ownership Kafka Event.
    * @method
-   * @name deleteUownershipTransferserPIIData
-   * @param {ownershipTransferEvent} - userDeleteEvent message object 
+   * @name ownershipTransfer
+   * @param {ownershipTransferEvent} - OwenerShip transfer Event message object 
    * {
       "highWaterOffset": 63,
        "key": "",
@@ -125,11 +124,15 @@ module.exports = class AssetsHelper {
         };
 
         let updateUserSolutionsDataResult;
+        let checkUsersRolesIsIdentical= assetService.checkRolesPresence(
+          reqData.fromUserProfile.roles,
+          reqData.fromUserProfile.roles
+        );
 
         if (
           reqData.actionBy.userId &&
           reqData.fromUserProfile.userId &&
-          reqData.toUserProfile.userId
+          reqData.toUserProfile.userId && checkUsersRolesIsIdentical
         ) {
           //get Fromuser details from user Extension
 
