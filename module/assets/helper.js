@@ -31,7 +31,7 @@ module.exports = class AssetsHelper {
             break;
           case "solution":
             organizationAssets =
-              await solutionsHelper.queryForOrganizationSolutions(bodyData);
+              await solutionsHelper.queryForOrganizationSolutions(bodyData,queryData);
 
             break;
           default:
@@ -41,7 +41,7 @@ module.exports = class AssetsHelper {
                 queryData
               );
             let allOrganizationSolutions =
-              await solutionsHelper.queryForOrganizationSolutions(bodyData);
+              await solutionsHelper.queryForOrganizationSolutions(bodyData,queryData);
             organizationAssets = [
               ...allOrganizationProgram.data,
               ...allOrganizationSolutions.data,
