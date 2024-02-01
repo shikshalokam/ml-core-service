@@ -661,7 +661,12 @@ module.exports = class SolutionsHelper {
 
         if (projection) {
           projection.forEach((projectedData) => {
+            if(projectedData === "objectType"){
+              projection1[projectedData] = "solution";
+
+            }else{
             projection1[projectedData] = 1;
+            }
           });
         } else {
           projection1 = {
@@ -675,11 +680,15 @@ module.exports = class SolutionsHelper {
         facetQuery["$facet"] = {};
 
         facetQuery["$facet"]["totalCount"] = [{ $count: "count" }];
-
+        
+        if (pageSize === "" && pageNo === "") {
+          facetQuery["$facet"]["data"] = [{ $skip: 0 }];
+        }else{
         facetQuery["$facet"]["data"] = [
           { $skip: pageSize * (pageNo - 1) },
           { $limit: pageSize },
         ];
+      }
 
         let projection2 = {};
 
@@ -2405,83 +2414,58 @@ module.exports = class SolutionsHelper {
   }
 
    /**
-   * List Program using organization id.
+   * List Solutions using organization id.
    * @method
-   * @name assets
+   * @name queryForOrganizationSolutions
    * @query {String} type - Assets type (program/solutions).
-   * @returns {Object} - Details of the program under the organization.
+   * @returns {Object} - Details of the solution under the organization.
    */
 
-   static queryForOrganizationSolutions(bodyData){
+   static queryForOrganizationSolutions(bodyData,queryData){
 
     return new Promise(async (resolve, reject) => {
-      try{
-        let solutionDocument=[];
-        let matchQuery={};
+      try {
+        let pageNo = "";
+        let pageSize = "";
+        let searchText = "";
+        let type = "";
+        let subType = "";
+        let matchQuery = {};
         let filterEmptyStringsFromArray;
 
         //if there is an empty string then remove from userids
-        if(!bodyData.filters.userId){
-          filterEmptyStringsFromArray=[];
-        }else{
-          filterEmptyStringsFromArray= bodyData.filters.userId.filter(str => str !== "");
+        if (!bodyData.filters.userId) {
+          filterEmptyStringsFromArray = [];
+        } else {
+          filterEmptyStringsFromArray = bodyData.filters.userId.filter(
+            (str) => str !== ""
+          );
         }
 
-        if(filterEmptyStringsFromArray.length > 0){
-          matchQuery={
+        if (filterEmptyStringsFromArray.length > 0) {
+          matchQuery = {
             $and: [
-              {createdFor: {$in:[bodyData.filters.orgId]} }, 
-              { author: { $in: bodyData.filters.userId} }, 
-              {isAPrivateProgram:false}
-       ]
-          }
-        }else{
-
-          matchQuery = {createdFor:{$in:[bodyData.filters.orgId]}}
-
+              { createdFor: { $in: [bodyData.filters.orgId] } },
+              { author: { $in: bodyData.filters.userId } },
+              { isAPrivateProgram: false },
+            ],
+          };
+        } else {
+          matchQuery = { createdFor: { $in: [bodyData.filters.orgId] } };
         }
-
-        let projection1 = {};
-        if (bodyData.fields && bodyData.fields.length  > 0) {
-          bodyData.fields.forEach((projectedData) => {
-            if(projectedData === "objectType"){
-              projection1["objectType"]="solution"
-            }else{
-            projection1[projectedData] = 1;
-            }
-          });
-        }  else{
-          projection1={
-            "_id":1,
-            "name":1,
-            "status":1,
-            "owner":1,
-            "orgId":1,
-            "objectType":"solution"
-          }
-        }
-        let limitQuery;
-        //omit the limit if there is no type 
-        if(queryData === "" || queryData === undefined){
-         limitQuery =Number.MAX_SAFE_INTEGER;
-        }else{
-          limitQuery =bodyData.limit;
-
-        }
-        solutionDocument.push(
-          { $match: matchQuery },
-          { $project: projection1 },
-          {$limit : limitQuery}
+        
+        let solutionDocuments = await this.list(
+          type,
+          subType,
+          matchQuery,
+          pageNo,
+          pageSize,
+          searchText,
+          bodyData.fields
         );
-      let solutionDocuments = await database.models.solutions.aggregate(
-        solutionDocument
-      );
-      return resolve({
-        success: true,
-        message: constants.apiResponses.SOLUTIONS_LIST,
-        data: solutionDocuments,
-      });
-
+        return resolve(
+           solutionDocuments,
+        );
       }catch(error) {
         return resolve({
           success: false,

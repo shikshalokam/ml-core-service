@@ -42,25 +42,21 @@ module.exports = class AssetsHelper {
               );
             let allOrganizationSolutions =
               await solutionsHelper.queryForOrganizationSolutions(bodyData,queryData);
-            organizationAssets = [
-              ...allOrganizationProgram.data,
-              ...allOrganizationSolutions.data,
-            ];
+            organizationAssets = {
+              success: true,
+              message: constants.apiResponses.ASSETS_SUCCESSFULLY,
+             data:{data:[ ...allOrganizationProgram.data.data,
+              ...allOrganizationSolutions.data.data]},
+              count:allOrganizationProgram.data.count + allOrganizationSolutions.data.count
+            }
 
             break;
         }
 
-        if (queryData !== "" && queryData !== undefined) {
-          return resolve({
+        return resolve({
             result: organizationAssets,
           });
-        } else {
-          return resolve({
-            success: true,
-            message: constants.apiResponses.ASSETS_SUCCESSFULLY,
-            result: organizationAssets,
-          });
-        }
+        
       } catch (error) {
         return reject(error);
       }

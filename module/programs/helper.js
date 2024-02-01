@@ -13,7 +13,7 @@ const kafkaProducersHelper = require(ROOT_PATH + "/generics/kafka/producers");
 const programUsersHelper = require(MODULES_BASE_PATH + "/programUsers/helper");
 const timeZoneDifference =
   process.env.TIMEZONE_DIFFRENECE_BETWEEN_LOCAL_TIME_AND_UTC;
-  const validateEntity = process.env.VALIDATE_ENTITIES
+const validateEntity = process.env.VALIDATE_ENTITIES;
 
 /**
  * ProgramsHelper
@@ -205,8 +205,7 @@ module.exports = class ProgramsHelper {
         }
 
         let scope = {};
-        if(validateEntity !== constants.common.OFF){
-
+        if (validateEntity !== constants.common.OFF) {
           if (scopeData.entityType) {
             // Get entity details of type {scopeData.entityType}
             let bodyData = {
@@ -268,7 +267,7 @@ module.exports = class ProgramsHelper {
             }
             scope["entities"] = entityIds;
           }
-        
+
           if (scopeData.roles) {
             if (Array.isArray(scopeData.roles) && scopeData.roles.length > 0) {
               let userRoles = await userRolesHelper.roleDocuments(
@@ -297,7 +296,7 @@ module.exports = class ProgramsHelper {
             }
           }
         } else {
-          scope = scopeData
+          scope = scopeData;
         }
         let updateProgram = await database.models.programs
           .findOneAndUpdate(
@@ -450,7 +449,11 @@ module.exports = class ProgramsHelper {
 
         if (projection && projection.length > 0) {
           projection.forEach((projectedData) => {
-            projection1[projectedData] = 1;
+            if (projectedData === "objectType") {
+              projection1[projectedData] = "program";
+            } else {
+              projection1[projectedData] = 1;
+            }
           });
         } else {
           projection1 = {
@@ -578,8 +581,8 @@ module.exports = class ProgramsHelper {
         let filterQuery = {
           isDeleted: false,
           status: constants.common.ACTIVE,
-        }
-        if(validateEntity !== constants.common.OFF){
+        };
+        if (validateEntity !== constants.common.OFF) {
           let locationIds = Object.values(_.omit(data, ["role", "filter"])).map(
             (locationId) => {
               return locationId;
@@ -598,10 +601,12 @@ module.exports = class ProgramsHelper {
             "scope.entities": { $in: locationIds },
           };
         } else {
-          let userRoleInfo = _.omit(data, ['filter'])
+          let userRoleInfo = _.omit(data, ["filter"]);
           let userRoleKeys = Object.keys(userRoleInfo);
-          userRoleKeys.forEach(entities => {
-            filterQuery["scope."+entities] = {$in:userRoleInfo[entities].split(",")}
+          userRoleKeys.forEach((entities) => {
+            filterQuery["scope." + entities] = {
+              $in: userRoleInfo[entities].split(","),
+            };
           });
         }
 
@@ -1039,175 +1044,173 @@ module.exports = class ProgramsHelper {
   ) {
     return new Promise(async (resolve, reject) => {
       try {
-       
-          let pushProgramUsersDetailsToKafka = false;
-          //Using programId fetch program details. Also checking the program status in the query.
-          let programData = await this.programDocuments(
-            {
-              _id: programId,
-              status: constants.common.ACTIVE,
-              isDeleted: false,
-            },
-            ["name", "externalId", "requestForPIIConsent", "rootOrganisations"]
-          );
+        let pushProgramUsersDetailsToKafka = false;
+        //Using programId fetch program details. Also checking the program status in the query.
+        let programData = await this.programDocuments(
+          {
+            _id: programId,
+            status: constants.common.ACTIVE,
+            isDeleted: false,
+          },
+          ["name", "externalId", "requestForPIIConsent", "rootOrganisations"]
+        );
 
-          if (!programData.length > 0) {
+        if (!programData.length > 0) {
+          throw {
+            status: httpStatusCode.bad_request.status,
+            message: constants.apiResponses.PROGRAM_NOT_FOUND,
+          };
+        }
+        let programUsersData = {};
+        let update = {};
+
+        // check if user already joined for program or not
+        const programUsersDetails =
+          await programUsersHelper.programUsersDocuments(
+            {
+              userId: userId,
+              programId: programId,
+            },
+            ["_id", "consentShared"]
+          );
+        // if user not joined for program. we have add more key values to programUsersData
+        if (!programUsersDetails.length > 0) {
+          // Fetch user profile information by calling sunbird's user read api.
+          // !Important check specific fields of userProfile.
+          let userProfile = await userService.profile(userToken, userId);
+          if (
+            !userProfile.success ||
+            !userProfile.data ||
+            !userProfile.data.profileUserTypes ||
+            !userProfile.data.profileUserTypes.length > 0 ||
+            !userProfile.data.userLocations ||
+            !userProfile.data.userLocations.length > 0
+          ) {
             throw {
               status: httpStatusCode.bad_request.status,
-              message: constants.apiResponses.PROGRAM_NOT_FOUND,
+              message: constants.apiResponses.PROGRAM_JOIN_FAILED,
             };
           }
-          let programUsersData = {};
-          let update = {};
+          programUsersData = {
+            programId: programId,
+            userRoleInformation: data.userRoleInformation,
+            userId: userId,
+            userProfile: userProfile.data,
+            resourcesStarted: false,
+          };
+          if (appName != "") {
+            programUsersData["appInformation.appName"] = appName;
+          }
+          if (appVersion != "") {
+            programUsersData["appInformation.appVersion"] = appVersion;
+          }
 
-          // check if user already joined for program or not
-          const programUsersDetails =
-            await programUsersHelper.programUsersDocuments(
-              {
-                userId: userId,
-                programId: programId,
-              },
-              ["_id", "consentShared"]
-            );
-          // if user not joined for program. we have add more key values to programUsersData
-          if (!programUsersDetails.length > 0) {
-            // Fetch user profile information by calling sunbird's user read api.
-            // !Important check specific fields of userProfile.
-            let userProfile = await userService.profile(userToken, userId);
+          //For internal calls add consent using sunbird api
+          if (
+            callConsetAPIOnBehalfOfUser &&
+            programData[0].hasOwnProperty("requestForPIIConsent") &&
+            programData[0].requestForPIIConsent === true
+          ) {
             if (
-              !userProfile.success ||
-              !userProfile.data ||
-              !userProfile.data.profileUserTypes ||
-              !userProfile.data.profileUserTypes.length > 0 ||
-              !userProfile.data.userLocations ||
-              !userProfile.data.userLocations.length > 0
+              !programData[0].rootOrganisations ||
+              !programData[0].rootOrganisations.length > 0
             ) {
               throw {
-                status: httpStatusCode.bad_request.status,
                 message: constants.apiResponses.PROGRAM_JOIN_FAILED,
+                status: httpStatusCode.bad_request.status,
               };
             }
-            programUsersData = {
-              programId: programId,
-              userRoleInformation: data.userRoleInformation,
-              userId: userId,
-              userProfile: userProfile.data,
-              resourcesStarted: false,
-            };
-            if (appName != "") {
-              programUsersData["appInformation.appName"] = appName;
-            }
-            if (appVersion != "") {
-              programUsersData["appInformation.appVersion"] = appVersion;
-            }
-
-            //For internal calls add consent using sunbird api
-            if (
-              callConsetAPIOnBehalfOfUser &&
-              programData[0].hasOwnProperty("requestForPIIConsent") &&
-              programData[0].requestForPIIConsent === true
-            ) {
-              if (
-                !programData[0].rootOrganisations ||
-                !programData[0].rootOrganisations.length > 0
-              ) {
-                throw {
-                  message: constants.apiResponses.PROGRAM_JOIN_FAILED,
-                  status: httpStatusCode.bad_request.status,
-                };
-              }
-              let userConsentRequestBody = {
-                request: {
-                  consent: {
-                    status: constants.common.REVOKED,
-                    userId: userProfile.data.id,
-                    consumerId: programData[0].rootOrganisations[0],
-                    objectId: programId,
-                    objectType: constants.common.PROGRAM,
-                  },
+            let userConsentRequestBody = {
+              request: {
+                consent: {
+                  status: constants.common.REVOKED,
+                  userId: userProfile.data.id,
+                  consumerId: programData[0].rootOrganisations[0],
+                  objectId: programId,
+                  objectType: constants.common.PROGRAM,
                 },
-              };
-              let consentResponse = await userService.setUserConsent(
-                userToken,
-                userConsentRequestBody
-              );
+              },
+            };
+            let consentResponse = await userService.setUserConsent(
+              userToken,
+              userConsentRequestBody
+            );
 
-              if (!consentResponse.success) {
-                throw {
-                  message: constants.apiResponses.PROGRAM_JOIN_FAILED,
-                  status: httpStatusCode.bad_request.status,
-                };
-              }
+            if (!consentResponse.success) {
+              throw {
+                message: constants.apiResponses.PROGRAM_JOIN_FAILED,
+                status: httpStatusCode.bad_request.status,
+              };
             }
           }
+        }
 
-          // if requestForPIIConsent Is false and user not joined program till now then set pushProgramUsersDetailsToKafka = true;
-          // if requestForPIIConsent == true and data.consentShared value is true which means user interacted with the consent popup set pushProgramUsersDetailsToKafka = true;
-          // if programUsersDetails[0].consentShared === true which means the data is already pushed to Kafka once
-          if (
-            (programData[0].hasOwnProperty("requestForPIIConsent") &&
-              programData[0].requestForPIIConsent === false &&
-              !programUsersDetails.length > 0) ||
-            (programData[0].hasOwnProperty("requestForPIIConsent") &&
-              programData[0].requestForPIIConsent === true &&
-              data.hasOwnProperty("consentShared") &&
-              data.consentShared == true &&
-              ((programUsersDetails.length > 0 &&
-                programUsersDetails[0].consentShared === false) ||
-                !programUsersDetails.length > 0))
-          ) {
-            pushProgramUsersDetailsToKafka = true;
-          }
+        // if requestForPIIConsent Is false and user not joined program till now then set pushProgramUsersDetailsToKafka = true;
+        // if requestForPIIConsent == true and data.consentShared value is true which means user interacted with the consent popup set pushProgramUsersDetailsToKafka = true;
+        // if programUsersDetails[0].consentShared === true which means the data is already pushed to Kafka once
+        if (
+          (programData[0].hasOwnProperty("requestForPIIConsent") &&
+            programData[0].requestForPIIConsent === false &&
+            !programUsersDetails.length > 0) ||
+          (programData[0].hasOwnProperty("requestForPIIConsent") &&
+            programData[0].requestForPIIConsent === true &&
+            data.hasOwnProperty("consentShared") &&
+            data.consentShared == true &&
+            ((programUsersDetails.length > 0 &&
+              programUsersDetails[0].consentShared === false) ||
+              !programUsersDetails.length > 0))
+        ) {
+          pushProgramUsersDetailsToKafka = true;
+        }
 
-          //create or update query
-          const query = {
-            programId: programId,
-            userId: userId,
+        //create or update query
+        const query = {
+          programId: programId,
+          userId: userId,
+        };
+        //if a resource is started
+        if (data.isResource) {
+          programUsersData.resourcesStarted = true;
+        }
+        //if user interacted with the consent-popup
+        if (data.hasOwnProperty("consentShared")) {
+          programUsersData.consentShared = data.consentShared;
+        }
+        update["$set"] = programUsersData;
+
+        // add record to programUsers collection
+        let joinProgram = await programUsersHelper.update(query, update, {
+          new: true,
+          upsert: true,
+        });
+
+        if (!joinProgram._id) {
+          throw {
+            message: constants.apiResponses.PROGRAM_JOIN_FAILED,
+            status: httpStatusCode.bad_request.status,
           };
-          //if a resource is started
-          if (data.isResource) {
-            programUsersData.resourcesStarted = true;
-          }
-          //if user interacted with the consent-popup
-          if (data.hasOwnProperty("consentShared")) {
-            programUsersData.consentShared = data.consentShared;
-          }
-          update["$set"] = programUsersData;
+        }
 
-          // add record to programUsers collection
-          let joinProgram = await programUsersHelper.update(query, update, {
-            new: true,
-            upsert: true,
-          });
+        let joinProgramDetails = joinProgram.toObject();
 
-          if (!joinProgram._id) {
-            throw {
-              message: constants.apiResponses.PROGRAM_JOIN_FAILED,
-              status: httpStatusCode.bad_request.status,
-            };
-          }
+        if (pushProgramUsersDetailsToKafka) {
+          joinProgramDetails.programName = programData[0].name;
+          joinProgramDetails.programExternalId = programData[0].externalId;
+          joinProgramDetails.requestForPIIConsent =
+            programData[0].requestForPIIConsent;
+          //  push programUsers details to kafka
+          await kafkaProducersHelper.pushProgramUsersToKafka(
+            joinProgramDetails
+          );
+        }
 
-          let joinProgramDetails = joinProgram.toObject();
-
-          if (pushProgramUsersDetailsToKafka) {
-            joinProgramDetails.programName = programData[0].name;
-            joinProgramDetails.programExternalId = programData[0].externalId;
-            joinProgramDetails.requestForPIIConsent =
-              programData[0].requestForPIIConsent;
-            //  push programUsers details to kafka
-            await kafkaProducersHelper.pushProgramUsersToKafka(
-              joinProgramDetails
-            );
-          }
-
-          return resolve({
-            message: constants.apiResponses.JOINED_PROGRAM,
-            success: true,
-            data: {
-              _id: joinProgram._id,
-            },
-          });
-       
+        return resolve({
+          message: constants.apiResponses.JOINED_PROGRAM,
+          success: true,
+          data: {
+            _id: joinProgram._id,
+          },
+        });
       } catch (error) {
         return resolve({
           success: false,
@@ -1227,82 +1230,51 @@ module.exports = class ProgramsHelper {
    * @returns {Object} - Details of the program under the organization.
    */
 
-  static queryForOrganizationPrograms(bodyData,queryData){
+  static queryForOrganizationPrograms(bodyData, queryData) {
     return new Promise(async (resolve, reject) => {
-      try{
-        let programDocument=[];
-        let matchQuery={};
+      try {
+        let pageNo = "";
+        let pageSize = "";
+        let searchText = "";
+        let matchQuery = {};
         let filterEmptyStringsFromArray;
 
         //if there is an empty string then remove from userids
-        if(!bodyData.filters.userId){
-          filterEmptyStringsFromArray=[];
-        }else{
-          filterEmptyStringsFromArray= bodyData.filters.userId.filter(str => str !== "");
+        if (!bodyData.filters.userId) {
+          filterEmptyStringsFromArray = [];
+        } else {
+          filterEmptyStringsFromArray = bodyData.filters.userId.filter(
+            (str) => str !== ""
+          );
         }
 
-        if(filterEmptyStringsFromArray.length > 0){
-          matchQuery={
+        if (filterEmptyStringsFromArray.length > 0) {
+          matchQuery = {
             $and: [
-              {createdFor: {$in:[bodyData.filters.orgId]} }, 
-               { owner: { $in: bodyData.filters.userId} }, 
-       ]
-       
-          
-    }
-        }else{
-
-          matchQuery = {createdFor:{$in:[bodyData.filters.orgId]}}
-
+              { createdFor: { $in: [bodyData.filters.orgId] } },
+              { owner: { $in: bodyData.filters.userId } },
+            ],
+          };
+        } else {
+          matchQuery = { createdFor: { $in: [bodyData.filters.orgId] } };
         }
-
-        let projection1 = {};
-        if (bodyData.fields && bodyData.fields.length  > 0) {
-          bodyData.fields.forEach((projectedData) => {
-            if(projectedData === "objectType"){
-              projection1["objectType"]="program"
-            }else{
-            projection1[projectedData] = 1;
-            }
-          });
-        } 
-        let limitQuery;
-        //omit the limit if there is no type 
-        if(queryData === "" || queryData === undefined){
-         limitQuery =Number.MAX_SAFE_INTEGER;
-        }else{
-          limitQuery =bodyData.limit;
-
-        }
-
-        
-       
-        programDocument.push(
-          { $match: matchQuery },
-          { $project: projection1 },
-          {$limit : limitQuery}
-
+        let programDocuments = await this.list(
+          pageNo,
+          pageSize,
+          searchText,
+          matchQuery,
+          bodyData.fields
         );
-      let programDocuments = await database.models.programs.aggregate(
-        programDocument
-      );
-      return resolve({
-        success: true,
-        message: constants.apiResponses.PROGRAM_LIST,
-        data: programDocuments,
-      });
-
-      }catch(error) {
+        return resolve(
+           programDocuments,
+        );
+      } catch (error) {
         return resolve({
           success: false,
           message: error.message,
           data: [],
         });
       }
-    })
-
+    });
   }
 };
-
- 
-
