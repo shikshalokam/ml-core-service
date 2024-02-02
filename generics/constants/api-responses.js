@@ -204,5 +204,5 @@ module.exports = {
   "FAILED_TO_CREATE_DOWNLOADABLEURL" : "Failed to generate downloadableUrl",
   "KEYS_INDEXED_SUCCESSFULLY": 'Keys indexed successfully',
   "KEYS_ALREADY_INDEXED": 'Keys already indexed',
-  "ASSETS_SUCCESSFULLY": "Assets fetched successfully "
+  "ASSETS_FETCHED_SUCCESSFULLY": "Assets fetched successfully "
 };

@@ -22,14 +22,14 @@ module.exports = class AssetsHelper {
         switch (queryData) {
           case "program":
             organizationAssets =
-              await programsHelper.queryForOrganizationPrograms(
+              await programsHelper.listOrganizationPrograms(
                 bodyData,
                 queryData
               );
             break;
           case "solution":
             organizationAssets =
-              await solutionsHelper.queryForOrganizationSolutions(
+              await solutionsHelper.listOrganizationSolutions(
                 bodyData,
                 queryData
               );
@@ -37,18 +37,18 @@ module.exports = class AssetsHelper {
             break;
           default:
             let allOrganizationProgram =
-              await programsHelper.queryForOrganizationPrograms(
+              await programsHelper.listOrganizationPrograms(
                 bodyData,
                 queryData
               );
             let allOrganizationSolutions =
-              await solutionsHelper.queryForOrganizationSolutions(
+              await solutionsHelper.listOrganizationSolutions(
                 bodyData,
                 queryData
               );
             organizationAssets = {
               success: true,
-              message: constants.apiResponses.ASSETS_SUCCESSFULLY,
+              message: constants.apiResponses.ASSETS_FETCHED_SUCCESSFULLY,
               data: {
                 data: [
                   ...allOrganizationProgram.data.data,
@@ -100,8 +100,6 @@ module.exports = class AssetsHelper {
           reqData.toUserProfile.userId &&
           checkUsersRolesIsIdentical
         ) {
-          //get Fromuser details from user Extension
-
           let typeOfAssetsToMove = reqData.assetInformation.objectType;
           let checkAssetInformation =
             reqData.hasOwnProperty("assetInformation");
@@ -143,7 +141,7 @@ module.exports = class AssetsHelper {
               updateUserSolutionsDataResult = await Promise.all(
                 updateUserSolutions
               );
-            } else {
+            } 
               if (
                 reqData.toUserProfile.roles.includes(
                   constants.common.PROGRAM_MANAGER
@@ -178,22 +176,8 @@ module.exports = class AssetsHelper {
                     userId: reqData.toUserProfile.userId,
                     externalId: reqData.toUserProfile.userName,  
                   };
-                  let filterCodes = fromUserData.platformRoles.map(
-                    (role) => role.code
-                  );
+                  let programRolesArray = await this.fetchFromUserDataPlatformRoles(fromUserData)
 
-                  let findProgramManagerQuery = {
-                    code: { $in: filterCodes },
-                  };
-
-                  let findProgramManagerId = await userRolesHelper.find(
-                    findProgramManagerQuery
-                  );
-
-                  let programRolesArray = this.createProgramRolesArray(
-                    fromUserData,
-                    findProgramManagerId
-                  );
                   //create new Touser if he is not available in the user extension
                   let createUserExtensions =
                     await userExtensionsHelper.createOrUpdate(
@@ -246,7 +230,7 @@ module.exports = class AssetsHelper {
                   }
                 }
               }
-            }
+            
           } else {
             if (
               reqData.toUserProfile.roles.includes(
@@ -321,25 +305,8 @@ module.exports = class AssetsHelper {
                     userName: reqData.toUserProfile.userName,
                   
                   };
-                  let filterCodes = fromUserData.platformRoles.map(
-                    (role) => role.code
-                  );
-
-                  let findProgramManagerQuery = {
-                    code: { $in: filterCodes },
-                  };
-
-                  let findProgramManagerId = await userRolesHelper.find(
-                    findProgramManagerQuery
-                  );
-
-                  let programRolesArray = this.createProgramRolesArray(
-                    fromUserData,
-                    findProgramManagerId
-                  );
-
-            
-                  //create new Touser if he is not available in the user extension
+                 let programRolesArray = await this.fetchFromUserDataPlatformRoles(fromUserData)
+                  //create new user if to user  not available in the user extension
                   let createUserExtensions =
                     await userExtensionsHelper.createOrUpdate(
                       [], // device data array
@@ -611,4 +578,39 @@ module.exports = class AssetsHelper {
 
     return hasRolesInFromArray && hasRolesInToArray;
   }
+  /**
+ * Query to Platform Roles for touser when user Not in UserExtension 
+ * @method
+ * @name fetchFromUserDataPlatformRoles
+ * @param {Array} fromUserData -   from array.
+ * @returns {Array} returns Array of Platform Roles to push to TOUSER
+ 
+ */
+  static fetchFromUserDataPlatformRoles(fromUserData){
+    return new Promise(async (resolve, reject) => {
+        try{
+          let filterCodes = fromUserData.platformRoles.map(
+            (role) => role.code
+          );
+
+          let findProgramManagerQuery = {
+            code: { $in: filterCodes },
+          };
+
+          let findProgramManagerId = await userRolesHelper.find(
+            findProgramManagerQuery
+          );
+
+          let programRolesArray = this.createProgramRolesArray(
+            fromUserData,
+            findProgramManagerId
+          );
+          return resolve(programRolesArray)
+        }catch(error){
+            reject(error);
+        }
+    })
+}
+
+
 };

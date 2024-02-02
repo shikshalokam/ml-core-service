@@ -2416,12 +2416,12 @@ module.exports = class SolutionsHelper {
    /**
    * List Solutions using organization id.
    * @method
-   * @name queryForOrganizationSolutions
+   * @name listOrganizationSolutions
    * @query {String} type - Assets type (program/solutions).
    * @returns {Object} - Details of the solution under the organization.
    */
 
-   static queryForOrganizationSolutions(bodyData){
+   static listOrganizationSolutions(bodyData){
 
     return new Promise(async (resolve, reject) => {
       try {

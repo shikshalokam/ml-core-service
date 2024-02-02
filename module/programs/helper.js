@@ -1225,12 +1225,12 @@ module.exports = class ProgramsHelper {
   /**
    * List Program using organization id.
    * @method
-   * @name assets
+   * @name listOrganizationPrograms
    * @query {String} type - Assets type (program/solutions).
    * @returns {Object} - Details of the program under the organization.
    */
 
-  static queryForOrganizationPrograms(bodyData, queryData) {
+  static listOrganizationPrograms(bodyData, queryData) {
     return new Promise(async (resolve, reject) => {
       try {
         let matchQuery = {};
