@@ -1233,9 +1233,6 @@ module.exports = class ProgramsHelper {
   static queryForOrganizationPrograms(bodyData, queryData) {
     return new Promise(async (resolve, reject) => {
       try {
-        let pageNo = "";
-        let pageSize = "";
-        let searchText = "";
         let matchQuery = {};
         let filterEmptyStringsFromArray;
 
@@ -1259,9 +1256,9 @@ module.exports = class ProgramsHelper {
           matchQuery = { createdFor: { $in: [bodyData.filters.orgId] } };
         }
         let programDocuments = await this.list(
-          pageNo,
-          pageSize,
-          searchText,
+          "", // for pageNo
+          "", // for pageSize
+          "", // for searchText
           matchQuery,
           bodyData.fields
         );

@@ -685,12 +685,12 @@ module.exports = class UserExtensionHelper {
        /**
    * Transfer ownership from User to ToUser based on Roles
    * @method
-   * @name findOneandUpdate
+   * @name bulkWrite
    * @param {Array} query - Array of queries to update.
    * @returns {Array} 
    */
    
-    static findOneandUpdate(query){
+    static bulkWrite(query){
         return new Promise(async (resolve, reject) => {
             try{
                 let insertProgram = await database.models.userExtension.bulkWrite(query)
@@ -721,23 +721,7 @@ module.exports = class UserExtensionHelper {
             }
         })
     }
-    /**
-   * Create a new User when toUser not available in the userExtension collection with transferred platformRoles from FromUser
-   * @method
-   * @name createOne
-   * @param {Object} data- newUserData.
-   * @returns {Array} 
-   */
-    static createOne(data){
-        return new Promise(async (resolve, reject) => {
-            try{
-               let createUserExtension=await database.models.userExtension.create(data)
-               resolve(createUserExtension)
-            }catch(error){
-                reject(error);
-            }
-        })
-    }
+  
    
 };
 

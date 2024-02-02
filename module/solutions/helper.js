@@ -2421,15 +2421,10 @@ module.exports = class SolutionsHelper {
    * @returns {Object} - Details of the solution under the organization.
    */
 
-   static queryForOrganizationSolutions(bodyData,queryData){
+   static queryForOrganizationSolutions(bodyData){
 
     return new Promise(async (resolve, reject) => {
       try {
-        let pageNo = "";
-        let pageSize = "";
-        let searchText = "";
-        let type = "";
-        let subType = "";
         let matchQuery = {};
         let filterEmptyStringsFromArray;
 
@@ -2455,12 +2450,12 @@ module.exports = class SolutionsHelper {
         }
         
         let solutionDocuments = await this.list(
-          type,
-          subType,
+          "", //for type 
+          "", // for subType
           matchQuery,
-          pageNo,
-          pageSize,
-          searchText,
+          "",// for pageNo
+          "", // for pageSize
+          "", // for searchText
           bodyData.fields
         );
         return resolve(

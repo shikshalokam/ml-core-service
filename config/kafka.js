@@ -10,7 +10,7 @@ const kafka = require("kafka-node");
 const USER_DELETE_TOPIC = process.env.USER_DELETE_TOPIC;
 const USER_DELETE_ON_OFF = process.env.USER_DELETE_ON_OFF;
 const OWNERSHIP_TRANSFER_TOPIC = process.env.OWNERSHIP_TRANSFER_TOPIC;
-const OWNERSHIP_TRANSFER_ON_OFF = process.env.USER_DELETE_ON_OFF;
+const OWNERSHIP_TRANSFER_ON_OFF = process.env.OWNERSHIP_TRANSFER_ON_OFF;
 
 /**
  * Kafka configurations.
