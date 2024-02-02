@@ -694,7 +694,7 @@ module.exports = class UserExtensionHelper {
         return new Promise(async (resolve, reject) => {
             try{
                 let insertProgram = await database.models.userExtension.bulkWrite(query)
-               resolve(insertProgram)
+                return resolve(insertProgram)
             }catch(error){
                 reject(error);
             }
@@ -715,7 +715,7 @@ module.exports = class UserExtensionHelper {
                let updateProgram =await database.models.userExtension.updateOne( 
                  query,setQuery,{upsert:true}
                 )
-               resolve(updateProgram)
+              return resolve(updateProgram)
             }catch(error){
                 reject(error);
             }

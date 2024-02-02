@@ -91,7 +91,7 @@ module.exports = class UserRolesHelper {
     return new Promise(async (resolve, reject) => {
         try{
            let findUser =await database.models.userRoles.find(query)
-           resolve(findUser)
+           return resolve(findUser)
         }catch(error){
             reject(error);
         }
