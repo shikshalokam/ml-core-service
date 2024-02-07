@@ -709,11 +709,11 @@ module.exports = class UserExtensionHelper {
    * @param {Object} setQuery Remove programRoles from an FromUser.
    * @returns {Array} 
    */
-    static updateOne( query,setQuery){
+    static updateOne( query,setQuery,arrayFilters=[]){
         return new Promise(async (resolve, reject) => {
             try{
                let updateProgram =await database.models.userExtension.updateOne( 
-                 query,setQuery,{upsert:true}
+                 query,setQuery,{arrayFilters,upsert:true}
                 )
               return resolve(updateProgram)
             }catch(error){
