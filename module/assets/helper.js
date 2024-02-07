@@ -99,7 +99,7 @@ module.exports = class AssetsHelper {
           reqData.toUserProfile.userId &&
           checkUsersRolesIsIdentical
         ) {
-          let typeOfAssetsToMove = reqData.assetInformation.objectType;
+          let typeOfAssetsToMove = reqData.assetInformation?.objectType;
           let checkAssetInformation =
             reqData.hasOwnProperty("assetInformation");
 
@@ -173,7 +173,7 @@ module.exports = class AssetsHelper {
                 //data for create new user in user Extension
                 let newCollectionForUserExtension = {
                   userId: reqData.toUserProfile.userId,
-                  externalId: reqData.toUserProfile.userName,
+                  userName: reqData.toUserProfile.userName,
                 };
                 let programRolesArray =
                   await this.fetchFromUserDataPlatformRoles(fromUserData);
