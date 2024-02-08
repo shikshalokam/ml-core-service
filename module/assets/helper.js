@@ -88,7 +88,7 @@ module.exports = class AssetsHelper {
           platformRoles: { $exists: true },
         };
 
-        let updateUserSolutionsDataResult;
+        let updateUserAssetDataResult=false;
         let checkUsersRolesIsIdentical = this.checkRolesPresence(
           reqData.fromUserProfile.roles,
           reqData.toUserProfile.roles
@@ -100,7 +100,6 @@ module.exports = class AssetsHelper {
           reqData.toUserProfile.userId &&
           checkUsersRolesIsIdentical
         ) {
-          let typeOfAssetsToMove = reqData.assetInformation?.objectType;
           let checkAssetInformation =
             reqData.hasOwnProperty("assetInformation");
 
@@ -138,9 +137,11 @@ module.exports = class AssetsHelper {
                   updateSolutionsLicense
                 ),
               ];
-              updateUserSolutionsDataResult = await Promise.all(
+              let updatedSolution = await Promise.all(
                 updateUserSolutions
               );
+
+              updatedSolution? updateUserAssetDataResult=true :  updateUserAssetDataResult=false;
             }
             if (
               reqData.toUserProfile.roles.includes(
@@ -167,7 +168,7 @@ module.exports = class AssetsHelper {
                   allAssetsData,
                   reqData
                 );
-                let updateUserExtensionProgram = await userExtensionsHelper.bulkWrite(
+                 await userExtensionsHelper.bulkWrite(
                   updateQueries
                 );
               } else {
@@ -240,8 +241,11 @@ module.exports = class AssetsHelper {
                 programFilter,
                 updatePrograms
               );
+              updatePartialPrograms?updateUserAssetDataResult=true :  updateUserAssetDataResult=false;
             }
           } else {
+            let typeOfAssetsToMove = reqData.assetInformation?.objectType;
+
             if (
               reqData.toUserProfile.roles.includes(
                 constants.common.CONTENT_CREATOR
@@ -277,9 +281,11 @@ module.exports = class AssetsHelper {
                   updateSolutionsLicense
                 ),
               ];
-              updateUserSolutionsDataResult = await Promise.all(
+              let updatedOneToOneTransferSolution = await Promise.all(
                 updateUserSolutions
               );
+              updatedOneToOneTransferSolution? updateUserAssetDataResult=true :  updateUserAssetDataResult=false;
+
             }
 
             if (
@@ -397,18 +403,20 @@ module.exports = class AssetsHelper {
                   owner: reqData.toUserProfile.userId,
                 },
               };
-              let updateOneProgram= await programsHelper.updateMany(
+
+             let updatedOneToOneTransferProgram= await programsHelper.updateMany(
                 programFilter,
                 updatePrograms
               );
+
+              updatedOneToOneTransferProgram? updateUserAssetDataResult=true :  updateUserAssetDataResult=false;
+
             }
           }
         }
 
         if (
-          updateUserSolutionsDataResult &&
-          (updateUserSolutionsDataResult[0].nModified > 0 ||
-            updateUserSolutionsDataResult[1].nModified > 0)
+          updateUserAssetDataResult
         ) {
           if (telemetryEventOnOff !== constants.common.OFF) {
             /**
