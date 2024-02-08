@@ -1274,4 +1274,31 @@ module.exports = class ProgramsHelper {
       }
     });
   }
+  /**
+     * Update program users
+     * @method
+     * @name updateMany
+     * @param {Object} query 
+     * @param {Object} update 
+     * @param {Object} options 
+     * @returns {JSON} - update program.
+    */
+
+  static updateMany(query, update, options = {}) {
+    return new Promise(async (resolve, reject) => {
+        try {
+        
+            let updatedProgramCount = await database.models.programs.updateMany(
+                query, 
+                update,
+                options
+            );
+            if( updatedProgramCount) {
+                return resolve(updatedProgramCount);
+            }
+        } catch (error) {
+            return reject(error);
+        }
+    })
+}
 };

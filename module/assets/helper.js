@@ -1,4 +1,3 @@
-
 // Dependencies
 const programsHelper = require(MODULES_BASE_PATH + "/programs/helper");
 const solutionsHelper = require(MODULES_BASE_PATH + "/solutions/helper");
@@ -6,6 +5,7 @@ const userExtensionsHelper = require(MODULES_BASE_PATH +
   "/user-extension/helper");
 const userRolesHelper = require(MODULES_BASE_PATH + "/user-roles/helper");
 const kafkaProducersHelper = require(ROOT_PATH + "/generics/kafka/producers");
+const programUsersHelper = require(MODULES_BASE_PATH + "/programUsers/helper");
 
 module.exports = class AssetsHelper {
   /**
@@ -167,7 +167,7 @@ module.exports = class AssetsHelper {
                   allAssetsData,
                   reqData
                 );
-                let updateProgram = await userExtensionsHelper.bulkWrite(
+                let updateUserExtensionProgram = await userExtensionsHelper.bulkWrite(
                   updateQueries
                 );
               } else {
@@ -221,13 +221,25 @@ module.exports = class AssetsHelper {
                       updateProgramRolesAndCreatedByFieldQuery
                     );
                   if (updateUserExtension) {
-                    let deleteProgram = await userExtensionsHelper.updateOne(
+                    let deleteserExtensionProgram = await userExtensionsHelper.updateOne(
                       deleteProgramFromUserQuery,
                       deleteProgramFromUserField
                     );
                   }
                 }
               }
+              let programFilter = {
+                owner: reqData.fromUserProfile.userId,
+              };
+              let updatePrograms = {
+                $set: {
+                  owner: reqData.toUserProfile.userId,
+                },
+              };
+              let updatePartialPrograms = await programsHelper.updateMany(
+                programFilter,
+                updatePrograms
+              );
             }
           } else {
             if (
@@ -239,7 +251,7 @@ module.exports = class AssetsHelper {
               //filter for solution updates
               let solutionFilter = {
                 author: reqData.fromUserProfile.userId,
-                _id: reqData.assetInformation.identifier,
+                _id: new ObjectId(reqData.assetInformation.identifier),
               };
               let updateSolutions = {
                 $set: {
@@ -268,111 +280,128 @@ module.exports = class AssetsHelper {
               updateUserSolutionsDataResult = await Promise.all(
                 updateUserSolutions
               );
-            } 
+            }
 
-              if (
-                reqData.toUserProfile.roles.includes(
-                  constants.common.PROGRAM_MANAGER
-                ) ||
-                reqData.toUserProfile.roles.includes(
-                  constants.common.PROGRAM_DESIGNER
-                ) && typeOfAssetsToMove === constants.common.PROGRAM
-              ) {
-                let fromUserData =
-                  await userExtensionsHelper.userExtensionDocument(
-                    fromFindQuery
-                  );
-                //get Touser details from user Extension
-                let toFindQuery = {
+            if (
+              reqData.toUserProfile.roles.includes(
+                constants.common.PROGRAM_MANAGER
+              ) ||
+              (reqData.toUserProfile.roles.includes(
+                constants.common.PROGRAM_DESIGNER
+              ) &&
+                typeOfAssetsToMove === constants.common.PROGRAM)
+            ) {
+              let fromUserData =
+                await userExtensionsHelper.userExtensionDocument(fromFindQuery);
+              //get Touser details from user Extension
+              let toFindQuery = {
+                userId: reqData.toUserProfile.userId,
+              };
+              let toUserData = await userExtensionsHelper.userExtensionDocument(
+                toFindQuery
+              );
+              let allAssetsData = fromUserData?.platformRoles;
+              if (toUserData) {
+                let updateQueries = this.generateUpdateOperations(
+                  fromUserData,
+                  toUserData,
+                  allAssetsData,
+                  reqData,
+                  checkAssetInformation
+                );
+                let updateUserExtensionProgram = await userExtensionsHelper.bulkWrite(
+                  updateQueries
+                );
+              } else {
+                //data for create user in user Extension
+                let newCollectionForUserExtension = {
                   userId: reqData.toUserProfile.userId,
+                  userName: reqData.toUserProfile.userName,
+                  updatedBy: reqData.actionBy.userId,
+                  createdBy: reqData.actionBy.userId,
                 };
-                let toUserData =
-                  await userExtensionsHelper.userExtensionDocument(toFindQuery);
-                let allAssetsData = fromUserData?.platformRoles;
-                if (toUserData) {
-                  let updateQueries = this.generateUpdateOperations(
+                let programRolesArray =
+                  await this.fetchFromUserDataPlatformRoles(
                     fromUserData,
-                    toUserData,
-                    allAssetsData,
                     reqData,
                     checkAssetInformation
                   );
-                  let updateProgram = await userExtensionsHelper.bulkWrite(
-                    updateQueries
+                //create new user if to user  not available in the user extension
+                let createUserExtensions =
+                  await userExtensionsHelper.createOrUpdate(
+                    [], // device data array
+                    newCollectionForUserExtension
                   );
-                } else {
-                  //data for create user in user Extension
-                  let newCollectionForUserExtension = {
+                if (createUserExtensions) {
+                  let updateProgramRolesAndCreatedByMatchQuery = {
                     userId: reqData.toUserProfile.userId,
-                    userName: reqData.toUserProfile.userName,
-                    updatedBy: reqData.actionBy.userId,
-                    createdBy: reqData.actionBy.userId,
                   };
-                  let programRolesArray =
-                    await this.fetchFromUserDataPlatformRoles(
-                      fromUserData,
-                      reqData,
-                      checkAssetInformation
-                    );
-                  //create new user if to user  not available in the user extension
-                  let createUserExtensions =
-                    await userExtensionsHelper.createOrUpdate(
-                      [], // device data array
-                      newCollectionForUserExtension
-                    );
-                  if (createUserExtensions) {
-                    let updateProgramRolesAndCreatedByMatchQuery = {
-                      userId: reqData.toUserProfile.userId,
+                  let updateProgramRolesAndCreatedByFieldQuery;
+                  // update and push the Roles
+                  if (programRolesArray.length > 0) {
+                    updateProgramRolesAndCreatedByFieldQuery = {
+                      $push: {
+                        platformRoles: {
+                          $each: programRolesArray,
+                        },
+                      },
                     };
-                    let updateProgramRolesAndCreatedByFieldQuery;
-                    // update and push the Roles
-                    if (programRolesArray.length > 0) {
-                      updateProgramRolesAndCreatedByFieldQuery = {
-                        $push: {
-                          platformRoles: {
-                            $each: programRolesArray,
-                          },
+                  } else {
+                    updateProgramRolesAndCreatedByFieldQuery = {
+                      $push: {
+                        platformRoles: {
+                          $each: programRolesArray,
                         },
-                      };
-                    } else {
-                      updateProgramRolesAndCreatedByFieldQuery = {
-                        $push: {
-                          platformRoles: {
-                            $each: programRolesArray,
-                          },
-                        },
-                      };
-                    }
+                      },
+                    };
+                  }
 
-                    let deleteProgramFromUserQuery = {
-                      userId: reqData.fromUserProfile.userId,
-                      'platformRole.code': programRolesArray[0].code,
-                    };
-                    let deleteProgramFromUserField = {
+                  let deleteProgramFromUserQuery = {
+                    userId: reqData.fromUserProfile.userId,
+                    "platformRole.code": programRolesArray[0].code,
+                  };
+                  let deleteProgramFromUserField = {
+                    $pull: {
                       $pull: {
-                        $pull: {
-                          "platformRoles.$[elem].programs": new ObjectId(reqData.assetInformation.identifier)
-                        },
-                      }
-                    };
-                    let arrayFilters = [{ "elem.code": programRolesArray[0].code}];
+                        "platformRoles.$[elem].programs": new ObjectId(
+                          reqData.assetInformation.identifier
+                        ),
+                      },
+                    },
+                  };
+                  let arrayFilters = [
+                    { "elem.code": programRolesArray[0].code },
+                  ];
 
-                    let updateUserExtension =
-                      await userExtensionsHelper.updateOne(
-                        updateProgramRolesAndCreatedByMatchQuery,
-                        updateProgramRolesAndCreatedByFieldQuery
-                      );
-                    if (updateUserExtension) {
-                      let deleteProgram = await userExtensionsHelper.updateOne(
-                        deleteProgramFromUserQuery,
-                        deleteProgramFromUserField,
-                        arrayFilters
-                      );
-                    }
+                  let updateUserExtension =
+                    await userExtensionsHelper.updateOne(
+                      updateProgramRolesAndCreatedByMatchQuery,
+                      updateProgramRolesAndCreatedByFieldQuery
+                    );
+                  if (updateUserExtension) {
+                    let deleteuserExtensionProgram = await userExtensionsHelper.updateOne(
+                      deleteProgramFromUserQuery,
+                      deleteProgramFromUserField,
+                      arrayFilters
+                    );
                   }
                 }
               }
-            
+
+              let programFilter = {
+                 owner: reqData.fromUserProfile.userId,
+                _id:new ObjectId(reqData.assetInformation.identifier),
+              };
+              let updatePrograms = {
+                $set: {
+                  owner: reqData.toUserProfile.userId,
+                },
+              };
+              let updateOneProgram= await programsHelper.updateMany(
+                programFilter,
+                updatePrograms
+              );
+            }
           }
         }
 
@@ -496,7 +525,8 @@ module.exports = class AssetsHelper {
               },
             });
           }
-        } else {
+        } 
+        if(!checkAssetInformation){
           bulkOperations.push({
             updateOne: {
               filter: { userId: toUserData.userId },
@@ -533,7 +563,7 @@ module.exports = class AssetsHelper {
             $push: {
               "platformRoles.$[elem].programs": {
                 $each: arrayToMove[0].programs.filter((oneProgram) =>
-                   oneProgram.equals(reqData.assetInformation.identifier)
+                  oneProgram.equals(reqData.assetInformation.identifier)
                 ),
               },
             },
@@ -620,17 +650,17 @@ module.exports = class AssetsHelper {
         let roleDetails;
         if (checkAssetInformation) {
           let checkRoleToUpdateProgram = roleCode.programs.some((programId) =>
-          programId.equals(reqData.assetInformation.identifier)
-        );
-        if(checkRoleToUpdateProgram){
-          roleDetails = {
-            roleId: roleId,
-            code: roleCode.code,
-            programs: roleCode.programs.filter((eachProgram) =>
-              eachProgram.equals(reqData.assetInformation.identifier)
-            ),
-          };
-        }
+            programId.equals(reqData.assetInformation.identifier)
+          );
+          if (checkRoleToUpdateProgram) {
+            roleDetails = {
+              roleId: roleId,
+              code: roleCode.code,
+              programs: roleCode.programs.filter((eachProgram) =>
+                eachProgram.equals(reqData.assetInformation.identifier)
+              ),
+            };
+          }
         } else {
           roleDetails = {
             roleId: roleId,
@@ -639,13 +669,16 @@ module.exports = class AssetsHelper {
           };
         }
 
-        if (roleCode.code === constants.common.PROGRAM_DESIGNER && roleDetails) {
+        if (
+          roleCode.code === constants.common.PROGRAM_DESIGNER &&
+          roleDetails
+        ) {
           roleDetails.isAPlatformRole = true;
           roleDetails.entities = [];
         }
-       if(roleDetails){
-        programRolesArray.push(roleDetails);
-       }
+        if (roleDetails) {
+          programRolesArray.push(roleDetails);
+        }
       }
     }
 
