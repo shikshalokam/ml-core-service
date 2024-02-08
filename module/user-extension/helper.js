@@ -115,8 +115,8 @@ module.exports = class UserExtensionHelper {
                             "status": "active",
                             "isDeleted": false,
                             "devices": [deviceData],
-                            "createdBy": "SYSTEM",
-                            "updatedBy": "SYSTEM"
+                            "createdBy":userDetails.createdBy?userDetails.createdBy: "SYSTEM",
+                            "updatedBy":userDetails.updatedBy? userDetails.updatedBy:"SYSTEM"
                         }
                     );
 

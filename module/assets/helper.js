@@ -1,3 +1,4 @@
+
 // Dependencies
 const programsHelper = require(MODULES_BASE_PATH + "/programs/helper");
 const solutionsHelper = require(MODULES_BASE_PATH + "/solutions/helper");
@@ -117,7 +118,7 @@ module.exports = class AssetsHelper {
               let updateSolutions = {
                 $set: {
                   author: reqData.toUserProfile.userId,
-                  creator: reqData.toUserProfile.firstname,
+                  creator: reqData.toUserProfile.firstName,
                 },
               };
               let solutionLicenseFilter = {
@@ -174,6 +175,8 @@ module.exports = class AssetsHelper {
                 let newCollectionForUserExtension = {
                   userId: reqData.toUserProfile.userId,
                   userName: reqData.toUserProfile.userName,
+                  updatedBy: reqData.actionBy.userId,
+                  createdBy: reqData.actionBy.userId,
                 };
                 let programRolesArray =
                   await this.fetchFromUserDataPlatformRoles(fromUserData);
@@ -195,10 +198,6 @@ module.exports = class AssetsHelper {
                         platformRoles: {
                           $each: programRolesArray,
                         },
-                      },
-                      $set: {
-                        updatedBy: reqData.actionBy.userId,
-                        createdBy: reqData.actionBy.userId,
                       },
                     };
                   } else {
@@ -245,7 +244,7 @@ module.exports = class AssetsHelper {
               let updateSolutions = {
                 $set: {
                   author: reqData.toUserProfile.userId,
-                  creator: reqData.toUserProfile.firstname,
+                  creator: reqData.toUserProfile.firstName,
                 },
               };
               let solutionLicenseFilter = {
@@ -269,14 +268,15 @@ module.exports = class AssetsHelper {
               updateUserSolutionsDataResult = await Promise.all(
                 updateUserSolutions
               );
-            } else {
+            } 
+
               if (
                 reqData.toUserProfile.roles.includes(
                   constants.common.PROGRAM_MANAGER
                 ) ||
                 reqData.toUserProfile.roles.includes(
                   constants.common.PROGRAM_DESIGNER
-                )
+                ) && typeOfAssetsToMove === constants.common.PROGRAM
               ) {
                 let fromUserData =
                   await userExtensionsHelper.userExtensionDocument(
@@ -305,6 +305,8 @@ module.exports = class AssetsHelper {
                   let newCollectionForUserExtension = {
                     userId: reqData.toUserProfile.userId,
                     userName: reqData.toUserProfile.userName,
+                    updatedBy: reqData.actionBy.userId,
+                    createdBy: reqData.actionBy.userId,
                   };
                   let programRolesArray =
                     await this.fetchFromUserDataPlatformRoles(
@@ -323,17 +325,13 @@ module.exports = class AssetsHelper {
                       userId: reqData.toUserProfile.userId,
                     };
                     let updateProgramRolesAndCreatedByFieldQuery;
-                    // update Created and UpdatedBy only when push the Roles
+                    // update and push the Roles
                     if (programRolesArray.length > 0) {
                       updateProgramRolesAndCreatedByFieldQuery = {
                         $push: {
                           platformRoles: {
                             $each: programRolesArray,
                           },
-                        },
-                        $set: {
-                          updatedBy: reqData.actionBy.userId,
-                          createdBy: reqData.actionBy.userId,
                         },
                       };
                     } else {
@@ -348,6 +346,7 @@ module.exports = class AssetsHelper {
 
                     let deleteProgramFromUserQuery = {
                       userId: reqData.fromUserProfile.userId,
+                      'platformRole.code': programRolesArray[0].code,
                     };
                     let deleteProgramFromUserField = {
                       $pull: {
@@ -373,7 +372,7 @@ module.exports = class AssetsHelper {
                   }
                 }
               }
-            }
+            
           }
         }
 
@@ -533,9 +532,9 @@ module.exports = class AssetsHelper {
           updateToFields = {
             $push: {
               "platformRoles.$[elem].programs": {
-                $each: arrayToMove[0].programs.filter((oneProgram) => {
-                  return oneProgram.equals(reqData.assetInformation.identifier);
-                }),
+                $each: arrayToMove[0].programs.filter((oneProgram) =>
+                   oneProgram.equals(reqData.assetInformation.identifier)
+                ),
               },
             },
           };
@@ -640,7 +639,7 @@ module.exports = class AssetsHelper {
           };
         }
 
-        if (roleCode.code === constants.common.PROGRAM_DESIGNER) {
+        if (roleCode.code === constants.common.PROGRAM_DESIGNER && roleDetails) {
           roleDetails.isAPlatformRole = true;
           roleDetails.entities = [];
         }
