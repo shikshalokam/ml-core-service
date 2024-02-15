@@ -137,7 +137,6 @@ module.exports = class FilesHelper {
         if (expireIn !== '') {
           linkExpireTime = expireIn;
         }
-
         // Create an array of promises for signed URLs
         // {sample response} : https://sunbirdstagingpublic.blob.core.windows.net/samiksha/reports/sample.pdf?sv=2020-10-02&st=2023-08-03T07%3A53%3A53Z&se=2023-08-03T08%3A53%3A53Z&sr=b&sp=w&sig=eZOHrBBH%2F55E93Sxq%2BHSrniCEmKrKc7LYnfNwz6BvWE%3D
         const signedUrlsPromises = fileNames.map(async (fileName) => {
@@ -181,6 +180,52 @@ module.exports = class FilesHelper {
         return reject({
           success: false,
           message: constants.apiResponses.FAILED_PRE_SIGNED_URL,
+          error: error
+        })
+      }
+    })
+  }
+
+   /**
+   * Upload and get Download Url for a file.
+   * @method
+   * @name upload
+   * @param {String} fileName                           - name of the file.
+   * @param {String} folderPath                         - folderPath
+   * @param {String} bucket                             - name of the bucket
+   * @param {Array} data                                - Binary Value of file to upload.
+   * @returns {JSON}                                    - Path and download Url for the file
+   */
+  static upload(fileName,folderPath,bucket,data) {
+    return new Promise(async (resolve, reject) => {
+      try {
+          // {sample response} : ttps://mentoring-prod-storage.s3.ap-south-1.amazonaws.com/mentoring-prod-storage/uploadedFiles/download.jpeg"
+          let file = folderPath && folderPath !== '' ? folderPath + fileName : fileName;
+          
+          let signedUrlResponse = await cloudClient.upload(
+            bucket,             // bucket name
+            file,               // file path
+            data,              //file content
+          );
+
+          let response = {
+              url: signedUrlResponse,
+              payload: { sourcePath: file },
+              cloudStorage: cloudStorage.toUpperCase()
+          };
+         
+
+        // Return success response with the upload path and download URLs
+        return resolve({
+            success: true,
+            message: constants.apiResponses.URL_GENERATED,
+            result: response
+        });
+        
+      } catch (error) {
+        return reject({
+          success: false,
+          message: constants.apiResponses.FAILED_TO_UPLOAD,
           error: error
         })
       }
