@@ -116,7 +116,6 @@ module.exports = class FilesHelper {
    */
 
   static preSignedUrls(fileNames, bucket, storageName = '',folderPath, expireIn = '', permission = '', addDruidFileUrlForIngestion = false) {
-    console.log(fileNames, bucket, storageName = '',folderPath,)
     return new Promise(async (resolve, reject) => {
       try {
         let actionPermission = constants.common.WRITE_PERMISSION;
@@ -138,7 +137,6 @@ module.exports = class FilesHelper {
         if (expireIn !== '') {
           linkExpireTime = expireIn;
         }
-          console.log(fileNames)
         // Create an array of promises for signed URLs
         // {sample response} : https://sunbirdstagingpublic.blob.core.windows.net/samiksha/reports/sample.pdf?sv=2020-10-02&st=2023-08-03T07%3A53%3A53Z&se=2023-08-03T08%3A53%3A53Z&sr=b&sp=w&sig=eZOHrBBH%2F55E93Sxq%2BHSrniCEmKrKc7LYnfNwz6BvWE%3D
         const signedUrlsPromises = fileNames.map(async (fileName) => {
