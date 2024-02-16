@@ -162,6 +162,58 @@ module.exports = class FilesHelper {
     })
 
   }
+  
+  /**
+   * upload and get Url and path from Cloud .
+   * @method
+   * @name upload
+   * @param {Object} payloadData      - payload of file data.
+   * @returns {JSON}                 -  path and downloadUrl of the file.
+   */
+  static upload(payloadData) {
+    return new Promise(async (resolve, reject) => {
+
+      try {
+        //  let folderName ="uploadedFiles/"
+      let folderName =process.env.CLOUD_FOLDER_NAME || "";
+
+        let downloadableUrl = await filesHelpers.upload(
+          payloadData.name,
+          folderName,
+          bucketName,
+          payloadData.data,
+        );
+        if( !downloadableUrl.success ) {
+          return resolve({
+              status : httpStatusCode['bad_request'].status,
+              message : constants.apiResponses.FAILED_TO_CREATE_DOWNLOADABLEURL,
+              result : {}
+          });
+        }
+  
+        return resolve({
+          message: constants.apiResponses.CLOUD_SERVICE_SUCCESS_MESSAGE,
+          result: downloadableUrl.result
+        })
+
+      } catch (error) {
+
+        return reject({
+          status:
+            error.status ||
+            httpStatusCode["internal_server_error"].status,
+
+          message:
+            error.message
+            || httpStatusCode["internal_server_error"].message,
+
+          errorObject: error
+        })
+
+      }
+    })
+
+  }
 }
 
 

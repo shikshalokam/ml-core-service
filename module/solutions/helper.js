@@ -661,7 +661,12 @@ module.exports = class SolutionsHelper {
 
         if (projection) {
           projection.forEach((projectedData) => {
+            if(projectedData === "objectType"){
+              projection1[projectedData] = "solution";
+
+            }else{
             projection1[projectedData] = 1;
+            }
           });
         } else {
           projection1 = {
@@ -675,11 +680,15 @@ module.exports = class SolutionsHelper {
         facetQuery["$facet"] = {};
 
         facetQuery["$facet"]["totalCount"] = [{ $count: "count" }];
-
+        
+        if (pageSize === "" && pageNo === "") {
+          facetQuery["$facet"]["data"] = [{ $skip: 0 }];
+        }else{
         facetQuery["$facet"]["data"] = [
           { $skip: pageSize * (pageNo - 1) },
           { $limit: pageSize },
         ];
+      }
 
         let projection2 = {};
 
@@ -2402,6 +2411,65 @@ module.exports = class SolutionsHelper {
         });
       }
     });
+  }
+
+   /**
+   * List Solutions using organization id.
+   * @method
+   * @name listOrganizationSolutions
+   * @query {String} type - Assets type (program/solutions).
+   * @returns {Object} - Details of the solution under the organization.
+   */
+
+   static listOrganizationSolutions(bodyData){
+
+    return new Promise(async (resolve, reject) => {
+      try {
+        let matchQuery = {};
+        let filterEmptyStringsFromArray;
+
+        //if there is an empty string then remove from userids
+        if (!bodyData.filters.userId) {
+          filterEmptyStringsFromArray = [];
+        } else {
+          filterEmptyStringsFromArray = bodyData.filters.userId.filter(
+            (str) => str !== ""
+          );
+        }
+
+        if (filterEmptyStringsFromArray.length > 0) {
+          matchQuery = {
+            $and: [
+              { createdFor: { $in: [bodyData.filters.orgId] } },
+              { author: { $in: bodyData.filters.userId } },
+              { isAPrivateProgram: false },
+            ],
+          };
+        } else {
+          matchQuery = { createdFor: { $in: [bodyData.filters.orgId] } };
+        }
+        
+        let solutionDocuments = await this.list(
+          "", //for type 
+          "", // for subType
+          matchQuery,
+          "",// for pageNo
+          "", // for pageSize
+          "", // for searchText
+          bodyData.fields
+        );
+        return resolve(
+           solutionDocuments,
+        );
+      }catch(error) {
+        return resolve({
+          success: false,
+          message: error.message,
+          data: [],
+        });
+      }
+    })
+
   }
 
   // moved this function to solutions helper to avoid circular dependency with users/helper

@@ -87,4 +87,15 @@ module.exports = class UserRolesHelper {
     });
   }
 
+  static find(query){
+    return new Promise(async (resolve, reject) => {
+        try{
+           let findUser =await database.models.userRoles.find(query)
+           return resolve(findUser)
+        }catch(error){
+            reject(error);
+        }
+    })
+}
+
 };
