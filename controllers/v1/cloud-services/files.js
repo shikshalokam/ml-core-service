@@ -5,37 +5,33 @@
  * Description :  Files Controller.
  */
 
-
 // dependencies
-let filesHelpers = require(ROOT_PATH+"/module/cloud-services/files/helper");
-
+let filesHelpers = require(ROOT_PATH + "/module/cloud-services/files/helper");
 /**
-    * Files service.
-    * @class
-*/
+ * Files service.
+ * @class
+ */
 
 module.exports = class Files {
+  /**
+   * @apiDefine errorBody
+   * @apiError {String} status 4XX,5XX
+   * @apiError {String} message Error
+   */
 
-    /**
-     * @apiDefine errorBody
-     * @apiError {String} status 4XX,5XX
-     * @apiError {String} message Error
-     */
+  /**
+   * @apiDefine successBody
+   * @apiSuccess {String} status 200
+   * @apiSuccess {String} result Data
+   */
 
-    /**
-     * @apiDefine successBody
-     * @apiSuccess {String} status 200
-     * @apiSuccess {String} result Data
-     */
+  constructor() {}
 
-    constructor() { }
+  static get name() {
+    return "files";
+  }
 
-    static get name() {
-        return "files";
-    }
-
-
-    /**
+  /**
      * @api {post} /kendra/api/v1/cloud-services/files/preSignedUrls  
      * Get signed URL.
      * @apiVersion 1.0.0
@@ -79,110 +75,145 @@ module.exports = class Files {
     }
      */
 
-    /**
-      * Get signed urls.
-      * @method
-      * @name preSignedUrls
-      * @param  {Request}  req  request body.
-      * @param  {Array}  req.body.fileNames - list of file names
-      * @param  {String}  req.body.bucket - name of the bucket  
-      * @returns {JSON} Response with status and message.
-    */
+  /**
+   * Get signed urls.
+   * @method
+   * @name preSignedUrls
+   * @param  {Request}  req  request body.
+   * @param  {Array}  req.body.fileNames - list of file names
+   * @param  {String}  req.body.bucket - name of the bucket
+   * @returns {JSON} Response with status and message.
+   */
 
-   async preSignedUrls(req) {
+  async preSignedUrls(req) {
     return new Promise(async (resolve, reject) => {
+      try {
+        let signedUrl = await filesHelpers.preSignedUrls(
+          req.body.request,
+          req.body.ref,
+          req.userDetails ? req.userDetails.userId : ""
+        );
 
-        try {
+        signedUrl["result"] = signedUrl["data"];
+        return resolve(signedUrl);
+      } catch (error) {
+        return reject({
+          status:
+            error.status || httpStatusCode["internal_server_error"].status,
 
-            let signedUrl =
-            await filesHelpers.preSignedUrls(
-                 req.body.request,
-                 req.body.ref,
-                 req.userDetails ? req.userDetails.userId : ""
-            );
+          message:
+            error.message || httpStatusCode["internal_server_error"].message,
 
-            signedUrl["result"] = signedUrl["data"];
-            return resolve(signedUrl);
+          errorObject: error,
+        });
+      }
+    });
+  }
 
-        } catch (error) {
-            
-            return reject({
-                status:
-                    error.status ||
-                    httpStatusCode["internal_server_error"].status,
+  /**
+   * @api {post} /kendra/api/v1/cloud-services/files/getDownloadableUrl
+   * Get downloadable URL.
+   * @apiVersion 1.0.0
+   * @apiGroup Gcp
+   * @apiHeader {String} X-authenticated-user-token Authenticity token
+   * @apiParamExample {json} Request:
+   * {
+   *     "filePaths": []
+   * }
+   * @apiSampleRequest /kendra/api/v1/cloud-services/files/getDownloadableUrl
+   * @apiUse successBody
+   * @apiUse errorBody
+   * @apiParamExample {json} Response:
+   * {
+   *  "status": 200,
+   *  "message": "Url's generated successfully",
+   *  "result": [{
+   *  "filePath": "5e1c28a050452374e1cf9841/e97b5582-471c-4649-8401-3cc4249359bb/cdv_photo_117.jpg",
+   *  "url": "https://storage.googleapis.com/download/storage/v1/b/sl-dev-storage/o/5e1c28a050452374e1cf9841%2Fe97b5582-471c-4649-8401-3cc4249359bb%2Fcdv_photo_117.jpg?generation=1579240054787924&alt=media"
+   * }]
+   */
 
-                message:
-                    error.message
-                    || httpStatusCode["internal_server_error"].message,
+  /**
+   * Get Downloadable URL from cloud service.
+   * @method
+   * @name getDownloadableUrl
+   * @param  {Request}  req  request body.
+   * @returns {JSON} Response with status and message.
+   */
 
-                errorObject: error
-            })
+  async getDownloadableUrl(req) {
+    return new Promise(async (resolve, reject) => {
+      try {
+        let downloadableUrl = await filesHelpers.getDownloadableUrl(
+          req.body.filePaths
+        );
+
+        return resolve(downloadableUrl);
+      } catch (error) {
+        console.log(error);
+        return reject({
+          status:
+            error.status || httpStatusCode["internal_server_error"].status,
+
+          message:
+            error.message || httpStatusCode["internal_server_error"].message,
+
+          errorObject: error,
+        });
+      }
+    });
+  }
+
+  /**
+      * Get upload the file and Downloadable URL from cloud service.
+      * @method
+      * @name upload
+      * @param  {Request}  req  request body.
+      * @returns {JSON} Response with status and message.
+       * @apiParamExample {json} Response:
+     * {
+         "message": "File uploaded successfully",
+         "status": 200,
+         "result": {
+        "url": {
+            "path": "uploadedFiles/industry.csv",
+            "downloadUrl": "https://sunbirddev.blob.core.windows.net/manage-learn-evidences/uploadedFiles/industry.csv?sv=2023-01-03&st=2024-02-15T11%3A54%3A41Z&se=2024-02-17T23%3A54%3A41Z&sr=b&sp=r&sig=LXLT8S4T2i2QUFPNLMbVMbp1fqhSznOSom4A3mh3KCk%3D"
+        },
+        "payload": {
+            "sourcePath": "uploadedFiles/industry.csv"
+        },
+        "cloudStorage": "AZURE"
         }
-    })
-   }
-
-      /**
-     * @api {post} /kendra/api/v1/cloud-services/files/getDownloadableUrl  
-     * Get downloadable URL.
-     * @apiVersion 1.0.0
-     * @apiGroup Gcp
-     * @apiHeader {String} X-authenticated-user-token Authenticity token
-     * @apiParamExample {json} Request:
-     * {
-     *     "filePaths": []
-     * }
-     * @apiSampleRequest /kendra/api/v1/cloud-services/files/getDownloadableUrl
-     * @apiUse successBody
-     * @apiUse errorBody
-     * @apiParamExample {json} Response:
-     * {
-     *  "status": 200,
-     *  "message": "Url's generated successfully",
-     *  "result": [{
-     *  "filePath": "5e1c28a050452374e1cf9841/e97b5582-471c-4649-8401-3cc4249359bb/cdv_photo_117.jpg",
-     *  "url": "https://storage.googleapis.com/download/storage/v1/b/sl-dev-storage/o/5e1c28a050452374e1cf9841%2Fe97b5582-471c-4649-8401-3cc4249359bb%2Fcdv_photo_117.jpg?generation=1579240054787924&alt=media"
-     * }]
+        }
      */
 
-    /**
-      * Get Downloadable URL from cloud service.
-      * @method
-      * @name getDownloadableUrl
-      * @param  {Request}  req  request body.
-      * @returns {JSON} Response with status and message.
-    */
+  async upload(req) {
+    return new Promise(async (resolve, reject) => {
+      try {
+        if (req.files) {
+          let uploadResponse = await filesHelpers.upload(req.files.file);
 
-    async getDownloadableUrl(req) {
-        return new Promise(async (resolve, reject) => {
+          return resolve({
+            message: constants.apiResponses.FILE_UPLOADED,
+            result: uploadResponse.result,
+          });
+        } else {
+          return reject({
+            status: httpStatusCode["bad_request"].status,
+            message: httpStatusCode["bad_request"].message,
+          });
+        }
+      } catch (error) {
+        return reject({
+          status:
+            error.status || httpStatusCode["internal_server_error"].status,
 
-            try {
+          message:
+            error.message || httpStatusCode["internal_server_error"].message,
 
-                let downloadableUrl =
-                await filesHelpers.getDownloadableUrl(
-                     req.body.filePaths
-                );
-
-                return resolve(downloadableUrl)
-
-            } catch (error) {
-
-                console.log(error);
-                return reject({
-                    status:
-                        error.status ||
-                        httpStatusCode["internal_server_error"].status,
-
-                    message:
-                        error.message
-                        || httpStatusCode["internal_server_error"].message,
-
-                    errorObject: error
-                })
-
-            }
-        })
-
-    }
-    
+          errorObject: error,
+        });
+      }
+    });
+  }
 };
-

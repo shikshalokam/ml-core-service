@@ -7,12 +7,10 @@
  */
 
 // Dependencies
-const Zip = require('adm-zip');
-const fs = require('fs');
-const {cloudClient} = require(ROOT_PATH + '/config/cloud-service');
+const Zip = require("adm-zip");
+const fs = require("fs");
+const { cloudClient } = require(ROOT_PATH + "/config/cloud-service");
 let cloudStorage = process.env.CLOUD_STORAGE_PROVIDER;
-
-       
 
 /**
  * FilesHelper
@@ -20,7 +18,6 @@ let cloudStorage = process.env.CLOUD_STORAGE_PROVIDER;
  */
 
 module.exports = class FilesHelper {
-  
   /**
    * Get downloadable url
    * @method
@@ -32,73 +29,74 @@ module.exports = class FilesHelper {
    * @return {String}             - Downloadable url link
    */
 
-  static getDownloadableUrl(filePath, bucketName, storageName = '',expireIn = '') {
+  static getDownloadableUrl(
+    filePath,
+    bucketName,
+    storageName = "",
+    expireIn = ""
+  ) {
     return new Promise(async (resolve, reject) => {
       try {
-       
-        
-        
         let noOfMinutes = constants.common.NO_OF_MINUTES;
         let linkExpireTime = constants.common.NO_OF_EXPIRY_TIME * noOfMinutes;
-       
+
         // Override cloud storage provider name if provided explicitly.
-        if (storageName !== '') {
+        if (storageName !== "") {
           cloudStorage = storageName;
         }
         // Override linkExpireTime if provided explicitly.
-        if (expireIn !== '') {
+        if (expireIn !== "") {
           linkExpireTime = expireIn;
         }
 
         if (Array.isArray(filePath) && filePath.length > 0) {
-          let result = []
+          let result = [];
 
           await Promise.all(
-            filePath.map(async element => {
+            filePath.map(async (element) => {
               let responseObj = {
-                cloudStorage : cloudStorage
-              }
-              responseObj.filePath = element
+                cloudStorage: cloudStorage,
+              };
+              responseObj.filePath = element;
               // Get the downloadable URL from the cloud client SDK.
               // {sample response} : https://sunbirdstagingpublic.blob.core.windows.net/sample-name/reports/uploadFile2.jpg?st=2023-08-05T07%3A11%3A25Z&se=2024-02-03T14%3A11%3A25Z&sp=r&sv=2018-03-28&sr=b&sig=k66FWCIJ9NjoZfShccLmml3vOq9Lt%2FDirSrSN55UclU%3D
               responseObj.url = await cloudClient.getDownloadableUrl(
                 bucketName,
                 element,
-                linkExpireTime // Link ExpireIn 
-              )
-              result.push(responseObj)
+                linkExpireTime // Link ExpireIn
+              );
+              result.push(responseObj);
             })
-          )
+          );
           return resolve({
             success: true,
             message: constants.apiResponses.URL_GENERATED,
-            result: result
-          })
+            result: result,
+          });
         } else {
-          let result
+          let result;
           // Get the downloadable URL from the cloud client SDK.
           result = await cloudClient.getDownloadableUrl(
-            bucketName,       // bucket name
-            filePath,         // resource file path
-            linkExpireTime    // Link Expire time
-          )
-      
+            bucketName, // bucket name
+            filePath, // resource file path
+            linkExpireTime // Link Expire time
+          );
+
           let responseObj = {
             filePath: filePath,
             url: result,
-            cloudStorage : cloudStorage
-          }
+            cloudStorage: cloudStorage,
+          };
           return resolve({
             success: true,
             message: constants.apiResponses.URL_GENERATED,
-            result: responseObj
-          })
-    
+            result: responseObj,
+          });
         }
       } catch (error) {
-        return reject(error)
+        return reject(error);
       }
-    })
+    });
   }
 
   /**
@@ -115,52 +113,61 @@ module.exports = class FilesHelper {
    * @returns {Array}                                   - consists of all signed urls files.
    */
 
-  static preSignedUrls(fileNames, bucket, storageName = '',folderPath, expireIn = '', permission = '', addDruidFileUrlForIngestion = false) {
+  static preSignedUrls(
+    fileNames,
+    bucket,
+    storageName = "",
+    folderPath,
+    expireIn = "",
+    permission = "",
+    addDruidFileUrlForIngestion = false
+  ) {
     return new Promise(async (resolve, reject) => {
       try {
         let actionPermission = constants.common.WRITE_PERMISSION;
         if (!Array.isArray(fileNames) || fileNames.length < 1) {
-          throw new Error('File names not given.')
+          throw new Error("File names not given.");
         }
         let noOfMinutes = constants.common.NO_OF_MINUTES;
         let linkExpireTime = constants.common.NO_OF_EXPIRY_TIME * noOfMinutes;
         // Override cloud storage provider name if provided explicitly.
-        if (storageName !== '') {
+        if (storageName !== "") {
           cloudStorage = storageName;
         }
 
         // Override actionPermission if provided explicitly.
-        if (permission !== '') {
+        if (permission !== "") {
           actionPermission = permission;
-        }        
+        }
         // Override linkExpireTime if provided explicitly.
-        if (expireIn !== '') {
+        if (expireIn !== "") {
           linkExpireTime = expireIn;
         }
 
         // Create an array of promises for signed URLs
         // {sample response} : https://sunbirdstagingpublic.blob.core.windows.net/samiksha/reports/sample.pdf?sv=2020-10-02&st=2023-08-03T07%3A53%3A53Z&se=2023-08-03T08%3A53%3A53Z&sr=b&sp=w&sig=eZOHrBBH%2F55E93Sxq%2BHSrniCEmKrKc7LYnfNwz6BvWE%3D
         const signedUrlsPromises = fileNames.map(async (fileName) => {
-          let file = folderPath && folderPath !== '' ? folderPath + fileName : fileName;
-          
+          let file =
+            folderPath && folderPath !== "" ? folderPath + fileName : fileName;
+
           let signedUrlResponse = await cloudClient.getSignedUrl(
-              bucket,             // bucket name
-              file,               // file path
-              linkExpireTime,     // expire
-              actionPermission    // read/write
+            bucket, // bucket name
+            file, // file path
+            linkExpireTime, // expire
+            actionPermission // read/write
           );
 
           let response = {
-              file: file,
-              url: signedUrlResponse,
-              payload: { sourcePath: file },
-              cloudStorage: cloudStorage.toUpperCase()
+            file: file,
+            url: signedUrlResponse,
+            payload: { sourcePath: file },
+            cloudStorage: cloudStorage.toUpperCase(),
           };
-          if ( addDruidFileUrlForIngestion ) {
+          if (addDruidFileUrlForIngestion) {
             // {sample response} : { type: 's3', uris: [ 's3://dev-mentoring/reports/cspSample.pdf' ] }
             let druidIngestionConfig = await cloudClient.getFileUrlForIngestion(
-              bucket,             // bucket name
-              file                // file path
+              bucket, // bucket name
+              file // file path
             );
             response.inputSource = druidIngestionConfig;
           }
@@ -172,20 +179,65 @@ module.exports = class FilesHelper {
 
         // Return success response with the signed URLs
         return resolve({
-            success: true,
-            message: constants.apiResponses.URL_GENERATED,
-            result: signedUrls
+          success: true,
+          message: constants.apiResponses.URL_GENERATED,
+          result: signedUrls,
         });
-        
       } catch (error) {
         return reject({
           success: false,
           message: constants.apiResponses.FAILED_PRE_SIGNED_URL,
-          error: error
-        })
+          error: error,
+        });
       }
-    })
+    });
   }
+
+  /**
+   * Upload and get Download Url for a file.
+   * @method
+   * @name upload
+   * @param {String} fileName                           - name of the file.
+   * @param {String} folderPath                         - folderPath
+   * @param {String} bucket                             - name of the bucket
+   * @param {Array} data                                - Binary Value of file to upload.
+   * @returns {JSON}                                    - Path and download Url for the file
+   */
+  static upload(fileName, folderPath, bucket, data) {
+    return new Promise(async (resolve, reject) => {
+      try {
+        // {sample response} : ttps://mentoring-prod-storage.s3.ap-south-1.amazonaws.com/mentoring-prod-storage/uploadedFiles/download.jpeg"
+        let file =
+          folderPath && folderPath !== "" ? folderPath + fileName : fileName;
+
+        let signedUrlResponse = await cloudClient.upload(
+          bucket, // bucket name
+          file, // file path
+          data //file content
+        );
+
+        let response = {
+          url: signedUrlResponse,
+          payload: { sourcePath: file },
+          cloudStorage: cloudStorage.toUpperCase(),
+        };
+
+        // Return success response with the upload path and download URLs
+        return resolve({
+          success: true,
+          message: constants.apiResponses.URL_GENERATED,
+          result: response,
+        });
+      } catch (error) {
+        return reject({
+          success: false,
+          message: constants.apiResponses.FAILED_TO_UPLOAD,
+          error: error,
+        });
+      }
+    });
+  }
+
   /**
    * Unzip file
    * @method
@@ -200,26 +252,26 @@ module.exports = class FilesHelper {
     return new Promise(async (resolve, reject) => {
       try {
         if (!fs.existsSync(`${ROOT_PATH}${process.env.ZIP_PATH}`)) {
-          fs.mkdirSync(`${ROOT_PATH}${process.env.ZIP_PATH}`)
+          fs.mkdirSync(`${ROOT_PATH}${process.env.ZIP_PATH}`);
         }
 
-        const zip = new Zip(zipFilePath)
+        const zip = new Zip(zipFilePath);
 
-        zip.extractAllTo(folderToUnZip, true)
+        zip.extractAllTo(folderToUnZip, true);
 
         if (deleteExistingZipFile) {
-          fs.unlinkSync(zipFilePath)
+          fs.unlinkSync(zipFilePath);
         }
 
         return resolve({
-          success: true
-        })
+          success: true,
+        });
       } catch (error) {
         return resolve({
-          success: false
-        })
+          success: false,
+        });
       }
-    })
+    });
   }
 
   /**
@@ -234,20 +286,20 @@ module.exports = class FilesHelper {
   static zip(existing, newFolder) {
     return new Promise(async (resolve, reject) => {
       try {
-        const zip = new Zip()
+        const zip = new Zip();
 
-        zip.addLocalFolder(existing)
-        zip.writeZip(newFolder)
+        zip.addLocalFolder(existing);
+        zip.writeZip(newFolder);
 
         return resolve({
-          success: true
-        })
+          success: true,
+        });
       } catch (error) {
         return resolve({
-          success: false
-        })
+          success: false,
+        });
       }
-    })
+    });
   }
 
   /**
@@ -265,18 +317,18 @@ module.exports = class FilesHelper {
         fs.rename(existingName, newFileName, function (err) {
           if (err) {
             return resolve({
-              success: false
-            })
+              success: false,
+            });
           } else {
             return resolve({
-              success: true
-            })
+              success: true,
+            });
           }
-        })
+        });
       } catch (error) {
-        return reject(error)
+        return reject(error);
       }
-    })
+    });
   }
 
   /**
@@ -292,26 +344,26 @@ module.exports = class FilesHelper {
     return new Promise(async (resolve, reject) => {
       try {
         if (!fs.existsSync(`${ROOT_PATH}${process.env.ZIP_PATH}`)) {
-          fs.mkdirSync(`${ROOT_PATH}${process.env.ZIP_PATH}`)
+          fs.mkdirSync(`${ROOT_PATH}${process.env.ZIP_PATH}`);
         }
 
-        let zipFileName = `${ROOT_PATH}${process.env.ZIP_PATH}/${name}`
+        let zipFileName = `${ROOT_PATH}${process.env.ZIP_PATH}/${name}`;
 
         fs.writeFile(zipFileName, data, async function (err) {
           if (err) {
             return resolve({
-              success: false
-            })
+              success: false,
+            });
           } else {
             return resolve({
-              success: true
-            })
+              success: true,
+            });
           }
-        })
+        });
       } catch (error) {
-        return reject(error)
+        return reject(error);
       }
-    })
+    });
   }
 
   /**
@@ -323,11 +375,10 @@ module.exports = class FilesHelper {
    */
 
   static removeFolder(path) {
-    _removeFolder(path)
-    return
+    _removeFolder(path);
+    return;
   }
-
-}
+};
 
 /**
  * Remove folder recursively
@@ -340,19 +391,18 @@ module.exports = class FilesHelper {
 function _removeFolder(path) {
   if (fs.existsSync(path)) {
     fs.readdirSync(path).forEach(function (file, index) {
-      var currentPath = path + '/' + file
+      var currentPath = path + "/" + file;
       if (fs.lstatSync(currentPath).isDirectory()) {
         // recurse
-        _removeFolder(currentPath)
+        _removeFolder(currentPath);
       } else {
         // delete file
-        fs.unlinkSync(currentPath)
+        fs.unlinkSync(currentPath);
       }
-    })
-    fs.rmdirSync(path)
+    });
+    fs.rmdirSync(path);
   }
 }
-
 
 /**
  * Remove file
@@ -362,8 +412,7 @@ function _removeFolder(path) {
  * @return
  */
 
-function _removeFiles(filePath){
-
+function _removeFiles(filePath) {
   if (fs.existsSync(filePath)) {
     fs.unlinkSync(filePath);
   }
