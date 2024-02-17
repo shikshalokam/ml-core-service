@@ -29,10 +29,12 @@ module.exports = class FilesHelper {
    * @param {String} referenceType    - reference type
    * @param {String} userId           - Logged in user id.
    * @param {String} templateId       - certificateTemplateId.
+   * @param {Boolean} serviceUpload     - serive Upload  {true/false}
    * @returns {Array}                 - consists of all signed urls files.
    */
 
-  static preSignedUrls(payloadData, referenceType, userId = "") {
+  static preSignedUrls(payloadData, referenceType, userId = "",serviceUpload=false) {
+
     return new Promise(async (resolve, reject) => {
       try {
         let payloadIds = Object.keys(payloadData);
@@ -60,7 +62,11 @@ module.exports = class FilesHelper {
               payloadData[payloadId].files,
               bucketName,
               cloudStorage,
-              folderPath
+              folderPath,
+              '',   //expireIn PARAMS
+              '',   //permission PARAMS
+              "",   // addDruidFileUrlForIngestion PARAMS
+             serviceUpload
             );
 
             if (!imagePayload.success) {
@@ -103,7 +109,11 @@ module.exports = class FilesHelper {
             payloadData[payloadIds[0]].files,
             bucketName,
             cloudStorage,
-            folderPath
+            folderPath,
+            '',   //expireIn PARAMS
+            '',   //permission PARAMS
+            "",   // addDruidFileUrlForIngestion PARAMS
+           serviceUpload
           );
 
           if (!imagePayload.success) {
@@ -170,55 +180,54 @@ module.exports = class FilesHelper {
   }
 
   /**
-   * upload and get Url and path from Cloud .
+   * upload file to the Cloud .
    * @method
    * @name upload
-   * @param {Object} payloadData      - payload of file data.
-   * @returns {JSON}                 -  path and downloadUrl of the file.
+   * @param {Buffer} payloadData    - Binary value of file.
+   * @param {String} folderPath         - folderPath.
+   * @param {String} fileName           - fileName.
+   * @returns {JSON}                    -  path and downloadUrl of the file.
    */
 
-  static upload(payloadData) {
+  static upload(payloadData,folderPath,fileName) {
     return new Promise(async (resolve, reject) => {
       try {
         let currentMoment = moment(new Date());
         let formattedDate = currentMoment.format("DD-MM-YYYY");
-
+        //Create public Directory if it doesn't exist
+          this.createDirectoryForUploadFile();
         if (!fs.existsSync(`${ROOT_PATH}/public/assets/${formattedDate}`)) {
           fs.mkdirSync(`${ROOT_PATH}/public/assets/${formattedDate}`);
         }
-
-        let filePathLocal = `${ROOT_PATH}/public/assets/${formattedDate}/${payloadData.name}`;
+        let localFilePath = `${ROOT_PATH}/public/assets/${formattedDate}/${fileName}`;
 
         // Use the Promise version of fs.writeFile
-        await fs.promises.writeFile(filePathLocal, payloadData.data);
-        let fileName = path.basename(filePathLocal);
+        await fs.promises.writeFile(localFilePath, payloadData);
 
         // Use fs.promises.readFile to read the file content asynchronously
-        let binaryDataOfFile = await fs.promises.readFile(filePathLocal);
+        let binaryDataOfFile = await fs.promises.readFile(localFilePath);
 
-        let folderName = process.env.CLOUD_FOLDER_NAME || "";
 
-        let downloadableUrl = await filesHelpers.upload(
-          fileName,
-          folderName,
+        let uploadFile = await filesHelpers.upload(
+          folderPath,
           bucketName,
           binaryDataOfFile
         );
+          
+       // Use fs.promises.unlink to remove the file asynchronously
+        await fs.promises.unlink(localFilePath);
 
-        if (!downloadableUrl.success) {
+        if (!uploadFile.success) {
           return resolve({
             status: httpStatusCode["bad_request"].status,
-            message: constants.apiResponses.FAILED_TO_CREATE_DOWNLOADABLEURL,
+            message: constants.apiResponses.FAILED_TO_UPLOAD,
             result: {},
           });
         }
 
-        // Use fs.promises.unlink to remove the file asynchronously
-        await fs.promises.unlink(filePathLocal);
-
         return resolve({
           message: constants.apiResponses.CLOUD_SERVICE_SUCCESS_MESSAGE,
-          result: downloadableUrl.result,
+          result: uploadFile.result,
         });
       } catch (error) {
         return reject({
@@ -233,4 +242,26 @@ module.exports = class FilesHelper {
       }
     });
   }
-};
+
+  /**
+   * create public/asstes folder if its doesn't exits.
+   * @method
+   * @name createDirectoryForUploadFile
+   */
+
+  static createDirectoryForUploadFile(){
+   
+  if (!fs.existsSync(ROOT_PATH + "/public")) {
+         fs.mkdirSync(ROOT_PATH + "/public");
+    if (!fs.existsSync(ROOT_PATH + "/public/assets")) {
+        fs.mkdirSync(ROOT_PATH + "/public/assets");
+    } 
+   } 
+else {
+      if (!fs.existsSync(ROOT_PATH + "/public/assets")) {
+        fs.mkdirSync(ROOT_PATH + "/public/assets");
+      } 
+    }
+  }
+  
+}

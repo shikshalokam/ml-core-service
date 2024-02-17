@@ -110,6 +110,7 @@ module.exports = class FilesHelper {
    * @param {Number} expireIn                           - Link expire time.
    * @param {String} permission                         - Action permission
    * @param {Boolean} addDruidFileUrlForIngestion       - Add druid injection data to response {true/false}
+   * @param {Boolean} serviceUpload                     - serive Upload  {true/false}
    * @returns {Array}                                   - consists of all signed urls files.
    */
 
@@ -120,7 +121,8 @@ module.exports = class FilesHelper {
     folderPath,
     expireIn = "",
     permission = "",
-    addDruidFileUrlForIngestion = false
+    addDruidFileUrlForIngestion = false,
+    serviceUpload=false,
   ) {
     return new Promise(async (resolve, reject) => {
       try {
@@ -149,13 +151,17 @@ module.exports = class FilesHelper {
         const signedUrlsPromises = fileNames.map(async (fileName) => {
           let file =
             folderPath && folderPath !== "" ? folderPath + fileName : fileName;
-
-          let signedUrlResponse = await cloudClient.getSignedUrl(
+          let signedUrlResponse;
+          if(!serviceUpload){
+           signedUrlResponse = await cloudClient.getSignedUrl(
             bucket, // bucket name
             file, // file path
             linkExpireTime, // expire
             actionPermission // read/write
           );
+          }else {
+            signedUrlResponse= `${process.env.CLOUD_UPLOAD_ENDPOINT}/${constants.common.UPLOAD_FILE}/?file=${file}`
+          }
 
           let response = {
             file: file,
@@ -200,34 +206,23 @@ module.exports = class FilesHelper {
    * @param {String} fileName                           - name of the file.
    * @param {String} folderPath                         - folderPath
    * @param {String} bucket                             - name of the bucket
-   * @param {Array} data                                - Binary Value of file to upload.
+   * @param {Buffer} data                                - Binary Value of file to upload.
    * @returns {JSON}                                    - Path and download Url for the file
    */
-  static upload(fileName, folderPath, bucket, data) {
+  static upload(folderPath, bucket, data) {
     return new Promise(async (resolve, reject) => {
       try {
-        // {sample response} : ttps://mentoring-prod-storage.s3.ap-south-1.amazonaws.com/mentoring-prod-storage/uploadedFiles/download.jpeg"
-        let file =
-          folderPath && folderPath !== "" ? folderPath + fileName : fileName;
 
-        let signedUrlResponse = await cloudClient.upload(
+       await cloudClient.upload(
           bucket, // bucket name
-          file, // file path
+          folderPath, // file path
           data //file content
         );
 
-        let response = {
-          url: signedUrlResponse,
-          payload: { sourcePath: file },
-          cloudStorage: cloudStorage.toUpperCase(),
-        };
-
-        // Return success response with the upload path and download URLs
+       // Return success response with the upload path and download URLs
         return resolve({
           success: true,
-          message: constants.apiResponses.URL_GENERATED,
-          result: response,
-        });
+         });
       } catch (error) {
         return reject({
           success: false,

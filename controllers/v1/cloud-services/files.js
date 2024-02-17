@@ -7,6 +7,8 @@
 
 // dependencies
 let filesHelpers = require(ROOT_PATH + "/module/cloud-services/files/helper");
+const path = require('path');
+
 /**
  * Files service.
  * @class
@@ -88,12 +90,13 @@ module.exports = class Files {
   async preSignedUrls(req) {
     return new Promise(async (resolve, reject) => {
       try {
+       
         let signedUrl = await filesHelpers.preSignedUrls(
           req.body.request,
           req.body.ref,
-          req.userDetails ? req.userDetails.userId : ""
+          req.userDetails ? req.userDetails.userId : "",
+          req.query.serviceUpload?req.query.serviceUpload:"",
         );
-
         signedUrl["result"] = signedUrl["data"];
         return resolve(signedUrl);
       } catch (error) {
@@ -165,44 +168,46 @@ module.exports = class Files {
   }
 
   /**
-      * Get upload the file and Downloadable URL from cloud service.
+      * upload the file to the cloud .
       * @method
       * @name upload
       * @param  {Request}  req  request body.
-      * @returns {JSON} Response with status and message.
-       * @apiParamExample {json} Response:
+      * @returns {JSON} Response with status .
+      * @apiParamExample {json} Response:
      * {
-         "message": "File uploaded successfully",
-         "status": 200,
-         "result": {
-        "url": {
-            "path": "uploadedFiles/industry.csv",
-            "downloadUrl": "https://sunbirddev.blob.core.windows.net/manage-learn-evidences/uploadedFiles/industry.csv?sv=2023-01-03&st=2024-02-15T11%3A54%3A41Z&se=2024-02-17T23%3A54%3A41Z&sr=b&sp=r&sig=LXLT8S4T2i2QUFPNLMbVMbp1fqhSznOSom4A3mh3KCk%3D"
-        },
-        "payload": {
-            "sourcePath": "uploadedFiles/industry.csv"
-        },
-        "cloudStorage": "AZURE"
-        }
-        }
+        "status": 200
+       }
      */
 
   async upload(req) {
     return new Promise(async (resolve, reject) => {
       try {
-        if (req.files) {
-          let uploadResponse = await filesHelpers.upload(req.files.file);
+
+        const filename = path.basename(req.query.file);
+          if(filename === req.files.file.name){
+             await filesHelpers.upload(
+             req.files.file.data,
+             req.query.file,
+             filename
+            );
 
           return resolve({
-            message: constants.apiResponses.FILE_UPLOADED,
-            result: uploadResponse.result,
+            status:
+            httpStatusCode["ok"].status,
           });
-        } else {
+
+        }else{
           return reject({
-            status: httpStatusCode["bad_request"].status,
-            message: httpStatusCode["bad_request"].message,
+            status:
+              httpStatusCode["internal_server_error"].status,
+  
+            message:
+               constants.apiResponses.FAILED_TO_VALIDATE_FILE,
+  
           });
+        
         }
+        
       } catch (error) {
         return reject({
           status:
