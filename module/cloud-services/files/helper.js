@@ -194,8 +194,6 @@ module.exports = class FilesHelper {
       try {
         let currentMoment = moment(new Date());
         let formattedDate = currentMoment.format("DD-MM-YYYY");
-        //Create public Directory if it doesn't exist
-          this.createDirectoryForUploadFile();
         if (!fs.existsSync(`${ROOT_PATH}/public/assets/${formattedDate}`)) {
           fs.mkdirSync(`${ROOT_PATH}/public/assets/${formattedDate}`);
         }
@@ -243,25 +241,6 @@ module.exports = class FilesHelper {
     });
   }
 
-  /**
-   * create public/asstes folder if its doesn't exits.
-   * @method
-   * @name createDirectoryForUploadFile
-   */
-
-  static createDirectoryForUploadFile(){
-   
-  if (!fs.existsSync(ROOT_PATH + "/public")) {
-         fs.mkdirSync(ROOT_PATH + "/public");
-    if (!fs.existsSync(ROOT_PATH + "/public/assets")) {
-        fs.mkdirSync(ROOT_PATH + "/public/assets");
-    } 
-   } 
-else {
-      if (!fs.existsSync(ROOT_PATH + "/public/assets")) {
-        fs.mkdirSync(ROOT_PATH + "/public/assets");
-      } 
-    }
-  }
+ 
   
 }

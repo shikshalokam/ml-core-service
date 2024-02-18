@@ -94,5 +94,5 @@
   USER: "User",
   USER_DELETE_MODULE: "userDelete",
   OFF: "OFF",
-  UPLOAD_FILE:"v1/cloud-services/files/upload"
+  UPLOAD_FILE:"api/cloud-services/mlcore/v1/files/upload"
 };

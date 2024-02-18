@@ -153,7 +153,6 @@ module.exports = class Files {
 
         return resolve(downloadableUrl);
       } catch (error) {
-        console.log(error);
         return reject({
           status:
             error.status || httpStatusCode["internal_server_error"].status,
@@ -184,12 +183,31 @@ module.exports = class Files {
       try {
 
         const filename = path.basename(req.query.file);
-          if(filename === req.files.file.name){
+       
+        if(req.headers['content-type']  === 'application/octet-stream'){
+
+          const binaryData =Buffer.from(req.body)
+                await filesHelpers.upload(
+                           binaryData,
+                           req.query.file,
+                           filename
+                    );
+
+            return resolve({
+                status:
+                  httpStatusCode["ok"].status,
+             });
+       
+        }
+        else{
+          const fileKey = Object.keys(req.files)[0];
+
+          if(filename === req.files[fileKey].name){
              await filesHelpers.upload(
-             req.files.file.data,
-             req.query.file,
-             filename
-            );
+                    req.files[fileKey].data,
+                    req.query.file,
+                    filename
+                  );
 
           return resolve({
             status:
@@ -207,8 +225,8 @@ module.exports = class Files {
           });
         
         }
-        
-      } catch (error) {
+        }
+       } catch (error) {
         return reject({
           status:
             error.status || httpStatusCode["internal_server_error"].status,
