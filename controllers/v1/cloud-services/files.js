@@ -201,7 +201,7 @@ module.exports = class Files {
               status: httpStatusCode["ok"].status,
             });
           }
-        } else {
+        } else if(req.headers["content-type"].split(";")[0] === "multipart/form-data") {
           const fileKey = Object.keys(req.files)[0];
           if (filename === req.files[fileKey].name) {
             await fs.promises.writeFile(localFilePath, req.files[fileKey].data);
@@ -222,7 +222,13 @@ module.exports = class Files {
               message: constants.apiResponses.FAILED_TO_VALIDATE_FILE,
             });
           }
-        }
+        } else {
+            return reject({
+                status: httpStatusCode["internal_server_error"].status,
+
+                message: constants.apiResponses.FAILED_TO_VALIDATE_FILE,
+            });
+      }
       } catch (error) {
         return reject({
           status:

@@ -12,8 +12,7 @@ let filesHelpers = require(ROOT_PATH + "/module/files/helper");
 const cloudStorage = process.env.CLOUD_STORAGE_PROVIDER;
 const bucketName = process.env.CLOUD_STORAGE_BUCKETNAME;
 const fs = require("fs");
-const path = require("path");
-const moment = require("moment-timezone");
+
 
 /**
  * FilesHelper

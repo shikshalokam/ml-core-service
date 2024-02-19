@@ -156,6 +156,11 @@ module.exports = class FilesHelper {
               payload: { sourcePath: file },
               cloudStorage: cloudStorage.toUpperCase(),
             };
+            response.downloadableUrl = await cloudClient.getDownloadableUrl(
+              bucket,
+              file,
+              linkExpireTime // Link ExpireIn
+            );
           if (!serviceUpload) {
             response.url = await cloudClient.getSignedUrl(
               bucket, // bucket name
@@ -165,11 +170,6 @@ module.exports = class FilesHelper {
             );
           } else {
             response.url = `${process.env.PUBLIC_BASE_URL}/${constants.common.UPLOAD_FILE}?file=${file}`;
-            response.downloadableUrl = await cloudClient.getDownloadableUrl(
-              bucket,
-              file,
-              linkExpireTime // Link ExpireIn
-            );
           }
 
           
@@ -202,13 +202,11 @@ module.exports = class FilesHelper {
       }
     });
   }
-
-  /**
+ /**
    * Upload and get Download Url for a file.
    * @method
    * @name upload
-   * @param {String} fileName                           - name of the file.
-   * @param {String} folderPath                         - folderPath
+   * @param {String} folderPath                         -folderPath where file will be stored
    * @param {String} bucket                             - name of the bucket
    * @param {Buffer} data                                - Binary Value of file to upload.
    * @returns {JSON}                                    - Path and download Url for the file
