@@ -122,7 +122,7 @@ module.exports = class FilesHelper {
     expireIn = "",
     permission = "",
     addDruidFileUrlForIngestion = false,
-    serviceUpload=false,
+    serviceUpload = false
   ) {
     return new Promise(async (resolve, reject) => {
       try {
@@ -151,24 +151,28 @@ module.exports = class FilesHelper {
         const signedUrlsPromises = fileNames.map(async (fileName) => {
           let file =
             folderPath && folderPath !== "" ? folderPath + fileName : fileName;
-          let signedUrlResponse;
-          if(!serviceUpload){
-           signedUrlResponse = await cloudClient.getSignedUrl(
-            bucket, // bucket name
-            file, // file path
-            linkExpireTime, // expire
-            actionPermission // read/write
-          );
-          }else {
-            signedUrlResponse= `${process.env.CLOUD_UPLOAD_ENDPOINT}/${constants.common.UPLOAD_FILE}/?file=${file}`
+            let response = {
+              file: file,
+              payload: { sourcePath: file },
+              cloudStorage: cloudStorage.toUpperCase(),
+            };
+          if (!serviceUpload) {
+            response.url = await cloudClient.getSignedUrl(
+              bucket, // bucket name
+              file, // file path
+              linkExpireTime, // expire
+              actionPermission // read/write
+            );
+          } else {
+            response.url = `${process.env.PUBLIC_BASE_URL}/${constants.common.UPLOAD_FILE}?file=${file}`;
+            response.downloadableUrl = await cloudClient.getDownloadableUrl(
+              bucket,
+              file,
+              linkExpireTime // Link ExpireIn
+            );
           }
 
-          let response = {
-            file: file,
-            url: signedUrlResponse,
-            payload: { sourcePath: file },
-            cloudStorage: cloudStorage.toUpperCase(),
-          };
+          
           if (addDruidFileUrlForIngestion) {
             // {sample response} : { type: 's3', uris: [ 's3://dev-mentoring/reports/cspSample.pdf' ] }
             let druidIngestionConfig = await cloudClient.getFileUrlForIngestion(
@@ -212,17 +216,16 @@ module.exports = class FilesHelper {
   static upload(folderPath, bucket, data) {
     return new Promise(async (resolve, reject) => {
       try {
-
-       await cloudClient.upload(
+        await cloudClient.upload(
           bucket, // bucket name
           folderPath, // file path
           data //file content
         );
 
-       // Return success response with the upload path and download URLs
+        // Return success response with the upload path and download URLs
         return resolve({
           success: true,
-         });
+        });
       } catch (error) {
         return reject({
           success: false,

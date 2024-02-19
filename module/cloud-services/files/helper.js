@@ -189,32 +189,20 @@ module.exports = class FilesHelper {
    * @returns {JSON}                    -  path and downloadUrl of the file.
    */
 
-  static upload(payloadData,folderPath,fileName) {
+  static upload(localFilePath,folderPath) {
     return new Promise(async (resolve, reject) => {
       try {
-        let currentMoment = moment(new Date());
-        let formattedDate = currentMoment.format("DD-MM-YYYY");
-        if (!fs.existsSync(`${ROOT_PATH}/public/assets/${formattedDate}`)) {
-          fs.mkdirSync(`${ROOT_PATH}/public/assets/${formattedDate}`);
-        }
-        let localFilePath = `${ROOT_PATH}/public/assets/${formattedDate}/${fileName}`;
-
-        // Use the Promise version of fs.writeFile
-        await fs.promises.writeFile(localFilePath, payloadData);
-
         // Use fs.promises.readFile to read the file content asynchronously
         let binaryDataOfFile = await fs.promises.readFile(localFilePath);
-
 
         let uploadFile = await filesHelpers.upload(
           folderPath,
           bucketName,
           binaryDataOfFile
         );
-          
        // Use fs.promises.unlink to remove the file asynchronously
         await fs.promises.unlink(localFilePath);
-
+       
         if (!uploadFile.success) {
           return resolve({
             status: httpStatusCode["bad_request"].status,
@@ -224,10 +212,12 @@ module.exports = class FilesHelper {
         }
 
         return resolve({
+          status: httpStatusCode["ok"].status,
           message: constants.apiResponses.CLOUD_SERVICE_SUCCESS_MESSAGE,
           result: uploadFile.result,
         });
       } catch (error) {
+       
         return reject({
           status:
             error.status || httpStatusCode["internal_server_error"].status,

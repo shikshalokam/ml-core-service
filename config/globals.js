@@ -112,22 +112,21 @@ module.exports = function () {
     }
   });
 
-  // Create Public/asstes for Upload File  
+  // Create Public/asstes for Upload File
 
   if (!fs.existsSync(ROOT_PATH + "/public")) {
     fs.mkdirSync(ROOT_PATH + "/public");
 
     // Ensure /public/assets directory exists
     if (!fs.existsSync(ROOT_PATH + "/public/assets")) {
-        fs.mkdirSync(ROOT_PATH + "/public/assets");
+      fs.mkdirSync(ROOT_PATH + "/public/assets");
     }
-} else {
+  } else {
     // If /public directory exists, ensure /public/assets directory exists
     if (!fs.existsSync(ROOT_PATH + "/public/assets")) {
-        fs.mkdirSync(ROOT_PATH + "/public/assets");
+      fs.mkdirSync(ROOT_PATH + "/public/assets");
     }
-}
-
+  }
   //define cache as global variable
   global.cache = require(ROOT_PATH+"/generics/helpers/cache");
 
