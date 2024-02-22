@@ -76,6 +76,7 @@ module.exports = {
   "ORGANISATIONS_LIST_FETCHED" : "Fetched organisations lists successfully",
   "FILE_UPLOADED" : "File uploaded successfully",
   "FAILED_TO_UPLOAD": "Failed to upload file",
+  "FAILED_TO_VALIDATE_FILE": "Could not validate fileName",
   "NAME_FIELD_REQUIRED" : " App name field is required",
   "APP_DETAILS_FETCHED" : "App details fetched successfully",
   "APP_DETAILS_NOT_FOUND" : "APP details not found",
@@ -204,4 +205,5 @@ module.exports = {
   "FAILED_TO_CREATE_DOWNLOADABLEURL" : "Failed to generate downloadableUrl",
   "KEYS_INDEXED_SUCCESSFULLY": 'Keys indexed successfully',
   "KEYS_ALREADY_INDEXED": 'Keys already indexed',
+  
 };

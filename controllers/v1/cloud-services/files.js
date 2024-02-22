@@ -5,37 +5,36 @@
  * Description :  Files Controller.
  */
 
-
 // dependencies
-let filesHelpers = require(ROOT_PATH+"/module/cloud-services/files/helper");
-
+let filesHelpers = require(ROOT_PATH + "/module/cloud-services/files/helper");
+const path = require("path");
+const fs = require("fs");
+const moment = require("moment-timezone");
 /**
-    * Files service.
-    * @class
-*/
+ * Files service.
+ * @class
+ */
 
 module.exports = class Files {
+  /**
+   * @apiDefine errorBody
+   * @apiError {String} status 4XX,5XX
+   * @apiError {String} message Error
+   */
 
-    /**
-     * @apiDefine errorBody
-     * @apiError {String} status 4XX,5XX
-     * @apiError {String} message Error
-     */
+  /**
+   * @apiDefine successBody
+   * @apiSuccess {String} status 200
+   * @apiSuccess {String} result Data
+   */
 
-    /**
-     * @apiDefine successBody
-     * @apiSuccess {String} status 200
-     * @apiSuccess {String} result Data
-     */
+  constructor() {}
 
-    constructor() { }
+  static get name() {
+    return "files";
+  }
 
-    static get name() {
-        return "files";
-    }
-
-
-    /**
+  /**
      * @api {post} /kendra/api/v1/cloud-services/files/preSignedUrls  
      * Get signed URL.
      * @apiVersion 1.0.0
@@ -79,110 +78,168 @@ module.exports = class Files {
     }
      */
 
-    /**
-      * Get signed urls.
-      * @method
-      * @name preSignedUrls
-      * @param  {Request}  req  request body.
-      * @param  {Array}  req.body.fileNames - list of file names
-      * @param  {String}  req.body.bucket - name of the bucket  
-      * @returns {JSON} Response with status and message.
-    */
+  /**
+   * Get signed urls.
+   * @method
+   * @name preSignedUrls
+   * @param  {Request}  req  request body.
+   * @param  {Array}  req.body.fileNames - list of file names
+   * @param  {String}  req.body.bucket - name of the bucket
+   * @returns {JSON} Response with status and message.
+   */
 
-   async preSignedUrls(req) {
+  async preSignedUrls(req) {
     return new Promise(async (resolve, reject) => {
+      try {
+        let signedUrl = await filesHelpers.preSignedUrls(
+          req.body.request,
+          req.body.ref,
+          req.userDetails ? req.userDetails.userId : "",
+          req.query.serviceUpload == "true"? true : false
+        );
+        signedUrl["result"] = signedUrl["data"];
+        return resolve(signedUrl);
+      } catch (error) {
+        return reject({
+          status:
+            error.status || httpStatusCode["internal_server_error"].status,
 
-        try {
+          message:
+            error.message || httpStatusCode["internal_server_error"].message,
 
-            let signedUrl =
-            await filesHelpers.preSignedUrls(
-                 req.body.request,
-                 req.body.ref,
-                 req.userDetails ? req.userDetails.userId : ""
-            );
+          errorObject: error,
+        });
+      }
+    });
+  }
 
-            signedUrl["result"] = signedUrl["data"];
-            return resolve(signedUrl);
+  /**
+   * @api {post} /kendra/api/v1/cloud-services/files/getDownloadableUrl
+   * Get downloadable URL.
+   * @apiVersion 1.0.0
+   * @apiGroup Gcp
+   * @apiHeader {String} X-authenticated-user-token Authenticity token
+   * @apiParamExample {json} Request:
+   * {
+   *     "filePaths": []
+   * }
+   * @apiSampleRequest /kendra/api/v1/cloud-services/files/getDownloadableUrl
+   * @apiUse successBody
+   * @apiUse errorBody
+   * @apiParamExample {json} Response:
+   * {
+   *  "status": 200,
+   *  "message": "Url's generated successfully",
+   *  "result": [{
+   *  "filePath": "5e1c28a050452374e1cf9841/e97b5582-471c-4649-8401-3cc4249359bb/cdv_photo_117.jpg",
+   *  "url": "https://storage.googleapis.com/download/storage/v1/b/sl-dev-storage/o/5e1c28a050452374e1cf9841%2Fe97b5582-471c-4649-8401-3cc4249359bb%2Fcdv_photo_117.jpg?generation=1579240054787924&alt=media"
+   * }]
+   */
 
-        } catch (error) {
-            
-            return reject({
-                status:
-                    error.status ||
-                    httpStatusCode["internal_server_error"].status,
+  /**
+   * Get Downloadable URL from cloud service.
+   * @method
+   * @name getDownloadableUrl
+   * @param  {Request}  req  request body.
+   * @returns {JSON} Response with status and message.
+   */
 
-                message:
-                    error.message
-                    || httpStatusCode["internal_server_error"].message,
+  async getDownloadableUrl(req) {
+    return new Promise(async (resolve, reject) => {
+      try {
+        let downloadableUrl = await filesHelpers.getDownloadableUrl(
+          req.body.filePaths
+        );
 
-                errorObject: error
-            })
-        }
-    })
-   }
+        return resolve(downloadableUrl);
+      } catch (error) {
+        return reject({
+          status:
+            error.status || httpStatusCode["internal_server_error"].status,
 
-      /**
-     * @api {post} /kendra/api/v1/cloud-services/files/getDownloadableUrl  
-     * Get downloadable URL.
-     * @apiVersion 1.0.0
-     * @apiGroup Gcp
-     * @apiHeader {String} X-authenticated-user-token Authenticity token
-     * @apiParamExample {json} Request:
+          message:
+            error.message || httpStatusCode["internal_server_error"].message,
+
+          errorObject: error,
+        });
+      }
+    });
+  }
+
+  /**
+      * upload the file to the cloud .
+      * @method
+      * @name upload
+      * @param  {Request}  req  request body.
+      * @returns {JSON} Response with status .
+      * @apiParamExample {json} Response:
      * {
-     *     "filePaths": []
-     * }
-     * @apiSampleRequest /kendra/api/v1/cloud-services/files/getDownloadableUrl
-     * @apiUse successBody
-     * @apiUse errorBody
-     * @apiParamExample {json} Response:
-     * {
-     *  "status": 200,
-     *  "message": "Url's generated successfully",
-     *  "result": [{
-     *  "filePath": "5e1c28a050452374e1cf9841/e97b5582-471c-4649-8401-3cc4249359bb/cdv_photo_117.jpg",
-     *  "url": "https://storage.googleapis.com/download/storage/v1/b/sl-dev-storage/o/5e1c28a050452374e1cf9841%2Fe97b5582-471c-4649-8401-3cc4249359bb%2Fcdv_photo_117.jpg?generation=1579240054787924&alt=media"
-     * }]
+        "status": 200
+       }
      */
 
-    /**
-      * Get Downloadable URL from cloud service.
-      * @method
-      * @name getDownloadableUrl
-      * @param  {Request}  req  request body.
-      * @returns {JSON} Response with status and message.
-    */
+  async upload(req) {
+    return new Promise(async (resolve, reject) => {
+      try {
+        let currentMoment = moment(new Date());
+        let formattedDate = currentMoment.format("DD-MM-YYYY");
+        if (!fs.existsSync(`${ROOT_PATH}/public/assets/${formattedDate}`)) {
+          fs.mkdirSync(`${ROOT_PATH}/public/assets/${formattedDate}`);
+        }
+        let filename = path.basename(req.query.file);
+        let localFilePath = `${ROOT_PATH}/public/assets/${formattedDate}/${filename}`;
+        let uploadStatus
+        // Use the Promise version of fs.writeFile
+        
+        if (req.headers["content-type"] === "application/octet-stream") {
+          const binaryData = Buffer.from(req.body);
+          await fs.promises.writeFile(localFilePath, binaryData);
+          uploadStatus = await filesHelpers.upload(localFilePath, req.query.file);
 
-    async getDownloadableUrl(req) {
-        return new Promise(async (resolve, reject) => {
-
-            try {
-
-                let downloadableUrl =
-                await filesHelpers.getDownloadableUrl(
-                     req.body.filePaths
-                );
-
-                return resolve(downloadableUrl)
-
-            } catch (error) {
-
-                console.log(error);
-                return reject({
-                    status:
-                        error.status ||
-                        httpStatusCode["internal_server_error"].status,
-
-                    message:
-                        error.message
-                        || httpStatusCode["internal_server_error"].message,
-
-                    errorObject: error
-                })
-
+          if(uploadStatus.status == 200){
+            return resolve({
+              status: httpStatusCode["ok"].status,
+            });
+          }
+        } else if(req.headers["content-type"].split(";")[0] === "multipart/form-data") {
+          const fileKey = Object.keys(req.files)[0];
+          if (filename === req.files[fileKey].name) {
+            await fs.promises.writeFile(localFilePath, req.files[fileKey].data);
+            uploadStatus = await filesHelpers.upload(
+              localFilePath,
+              req.query.file
+            );
+            if(uploadStatus.status == 200){
+              return resolve({
+                status: httpStatusCode["ok"].status,
+              });
             }
-        })
+            
+          } else {
+            return reject({
+              status: httpStatusCode["internal_server_error"].status,
 
-    }
-    
+              message: constants.apiResponses.FAILED_TO_VALIDATE_FILE,
+            });
+          }
+        } else {
+            return reject({
+                status: httpStatusCode["internal_server_error"].status,
+
+                message: constants.apiResponses.FAILED_TO_VALIDATE_FILE,
+            });
+      }
+      } catch (error) {
+        return reject({
+          status:
+            error.status || httpStatusCode["internal_server_error"].status,
+
+          message:
+            error.message || httpStatusCode["internal_server_error"].message,
+
+          errorObject: error,
+        });
+      }
+    });
+  }
 };
-
