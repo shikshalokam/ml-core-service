@@ -60,7 +60,7 @@ module.exports = class FormHelper {
                 },["value"]
             );
 
-            if( !forms.length > 0 ) {
+            if( !(forms.length > 0)) {
                 throw {
                     message : constants.apiResponses.FORM_NOT_FOUND,
                     status : httpStatusCode['bad_request'].status

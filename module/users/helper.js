@@ -241,7 +241,7 @@ module.exports = class UsersHelper {
           ["entityTypes.entityType"]
         );
 
-        if (!rolesData.length > 0) {
+        if (!(rolesData.length > 0)) {
           return resolve({
             message: constants.apiResponses.USER_ROLES_NOT_FOUND,
             result: [],
@@ -256,7 +256,7 @@ module.exports = class UsersHelper {
             stateCode,
             entityKey
           );
-          if (!subEntities.length > 0) {
+          if (!(subEntities.length > 0)) {
             return resolve({
               message: constants.apiResponses.ENTITY_NOT_FOUND,
               result: [],
@@ -359,7 +359,7 @@ module.exports = class UsersHelper {
           ]
         );
 
-        if (!programData.length > 0) {
+        if (!(programData.length > 0)) {
           return resolve({
             status: httpStatusCode["bad_request"].status,
             message: constants.apiResponses.PROGRAM_NOT_FOUND,
@@ -701,7 +701,7 @@ module.exports = class UsersHelper {
         );
         //total number of programs
         programCount = userRelatedPrograms.length;
-        if (!userRelatedPrograms.length > 0) {
+        if (!(userRelatedPrograms.length > 0)) {
           throw {
             message: constants.apiResponses.PROGRAM_NOT_FOUND,
           };
@@ -726,7 +726,7 @@ module.exports = class UsersHelper {
           "" // not passing pageNo
         );
 
-        if (!userRelatedProgramsData.length > 0) {
+        if (!(userRelatedProgramsData.length > 0)) {
           throw {
             message: constants.apiResponses.PROGRAM_NOT_FOUND,
           };
@@ -782,7 +782,7 @@ module.exports = class UsersHelper {
           ["_id", "entityTypes.entityType"]
         );
 
-        if (!rolesDocument.length > 0) {
+        if (!(rolesDocument.length > 0)) {
           throw {
             message: constants.apiResponses.USER_ROLES_NOT_FOUND,
           };
@@ -864,7 +864,7 @@ module.exports = class UsersHelper {
           ["entityType", "type"]
         );
 
-        if (!solutionData.length > 0) {
+        if (!(solutionData.length > 0)) {
           return resolve({
             status: httpStatusCode.bad_request.status,
             message: constants.apiResponses.SOLUTION_NOT_FOUND,
@@ -877,7 +877,7 @@ module.exports = class UsersHelper {
           ["entityTypes.entityType"]
         );
 
-        if (!rolesDocument.length > 0) {
+        if (!(rolesDocument.length > 0)) {
           throw {
             status: httpStatusCode["bad_request"].status,
             message: constants.apiResponses.USER_ROLES_NOT_FOUND,
@@ -987,7 +987,7 @@ module.exports = class UsersHelper {
             stateLocationCode,
             entityKey
           );
-          if (!subEntityTypes.length > 0) {
+          if (!(subEntityTypes.length > 0)) {
             return resolve({
               message: constants.apiResponses.ENTITY_NOT_FOUND,
               result: [],

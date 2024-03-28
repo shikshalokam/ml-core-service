@@ -214,7 +214,7 @@ module.exports = class CertificateTemplatesHelper {
             _id: baseTemplateId
           },["url"]).lean();
 
-          if ( !baseTemplateData.length > 0 || !baseTemplateData[0].url || baseTemplateData[0].url == "" ) {
+          if ( !(baseTemplateData.length > 0) || !baseTemplateData[0].url || baseTemplateData[0].url == "" ) {
             throw {
               message: constants.apiResponses.BASE_CERTIFICATE_TEMPLATE_NOT_FOUND
             }
