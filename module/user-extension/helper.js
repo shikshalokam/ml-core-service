@@ -284,7 +284,7 @@ module.exports = class UserExtensionHelper {
                 let userExtensionData =
                     await database.models.userExtension.aggregate(queryObject);
 
-                if (!userExtensionData.length > 0) {
+                if (!(userExtensionData.length > 0)) {
                     return resolve({
                         message: constants.apiResponses.USER_EXTENSION_NOT_FOUND,
                         result : {
@@ -649,7 +649,7 @@ module.exports = class UserExtensionHelper {
                    status: constants.common.ACTIVE 
                 },["components"]);
 
-                if (!programDocuments.length > 0) {
+                if (!(programDocuments.length > 0)) {
                     return resolve({
                         status: httpStatusCode.bad_request.status,
                         message: constants.apiResponses.PROGRAM_NOT_FOUND
