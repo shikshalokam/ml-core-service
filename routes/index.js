@@ -63,7 +63,7 @@ module.exports = function (app) {
                 'attachment; filename=' + result.fileNameWithPath.split('/').pop()
               );
               res.set('Content-Type', 'application/octet-stream');
-              fs.createReadStream(result.fileNameWithPath).pipe(res);
+              fs.createReadStream(result.fileNameWithPath.replace(/\.\.\//g, '')).pipe(res);
 
             } else {
 

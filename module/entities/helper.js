@@ -460,7 +460,7 @@ module.exports = class EntitiesHelper {
                     
                     let subEntities = await userService.getSubEntitiesBasedOnEntityType( entityId, entityTraversalType, subEntitiesArray )
                     
-                    if( !subEntities.length > 0 ) {
+                    if( !(subEntities.length > 0) ) {
                         return resolve({
                             data : subEntities,
                             count : 0
@@ -716,7 +716,7 @@ module.exports = class EntitiesHelper {
                     code : role
                 },["entityTypes.entityType"]);
                 
-                if( !rolesDocument.length > 0 ) {
+                if( !(rolesDocument.length > 0) ) {
                     throw {
                         status : httpStatusCode["bad_request"].status,
                         message: constants.apiResponses.USER_ROLES_NOT_FOUND
@@ -743,7 +743,7 @@ module.exports = class EntitiesHelper {
                     // form search using state location code
                     let stateLocationCode = entitiesData.data[0].code;
                     subEntities = await formService.configForStateLocation( stateLocationCode, entityKey );
-                    if( !subEntities.length > 0 ) {
+                    if( !(subEntities.length > 0)) {
                         return resolve({
                             message : constants.apiResponses.ENTITY_NOT_FOUND,
                             result : []

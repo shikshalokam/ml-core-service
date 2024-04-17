@@ -132,7 +132,7 @@ module.exports = class SolutionsHelper {
           ["name", "description", "scope", "endDate", "startDate"]
         );
 
-        if (!programData.length > 0) {
+        if (!(programData.length > 0)) {
           throw {
             message: constants.apiResponses.PROGRAM_NOT_FOUND,
           };
@@ -184,7 +184,7 @@ module.exports = class SolutionsHelper {
             }
           }
 
-          if (!entityIds.length > 0) {
+          if (!(entityIds.length > 0)) {
             throw {
               message: constants.apiResponses.ENTITIES_NOT_FOUND,
             };
@@ -287,7 +287,7 @@ module.exports = class SolutionsHelper {
           ["_id", "scope"]
         );
 
-        if (!programData.length > 0) {
+        if (!(programData.length > 0)) {
           return resolve({
             status: httpStatusCode.bad_request.status,
             message: constants.apiResponses.PROGRAM_NOT_FOUND,
@@ -298,7 +298,7 @@ module.exports = class SolutionsHelper {
           "_id",
         ]);
 
-        if (!solutionData.length > 0) {
+        if (!(solutionData.length > 0)) {
           return resolve({
             status: httpStatusCode.bad_request.status,
             message: constants.apiResponses.SOLUTION_NOT_FOUND,
@@ -355,7 +355,7 @@ module.exports = class SolutionsHelper {
                   }
                 }
 
-                if (!entityIds.length > 0) {
+                if (!(entityIds.length > 0)) {
                   return resolve({
                     status: httpStatusCode.bad_request.status,
                     message: constants.apiResponses.ENTITIES_NOT_FOUND,
@@ -374,7 +374,7 @@ module.exports = class SolutionsHelper {
                 entitiesData = entityIds;
                 // }
 
-                if (!entitiesData.length > 0) {
+                if (!(entitiesData.length > 0)) {
                   return resolve({
                     status: httpStatusCode.bad_request.status,
                     message: constants.apiResponses.SCOPE_ENTITY_INVALID,
@@ -398,7 +398,7 @@ module.exports = class SolutionsHelper {
                   ["_id", "code"]
                 );
 
-                if (!userRoles.length > 0) {
+                if (!(userRoles.length > 0)) {
                   return resolve({
                     status: httpStatusCode.bad_request.status,
                     message: constants.apiResponses.INVALID_ROLE_CODE,
@@ -473,7 +473,7 @@ module.exports = class SolutionsHelper {
           "programId",
         ]);
 
-        if (!solutionDocument.length > 0) {
+        if (!(solutionDocument.length > 0)) {
           return resolve({
             status: httpStatusCode.bad_request.status,
             message: constants.apiResponses.SOLUTION_NOT_FOUND,
@@ -492,7 +492,7 @@ module.exports = class SolutionsHelper {
             ["_id", "endDate", "startDate"]
           );
 
-          if (!programData.length > 0) {
+          if (!(programData.length > 0)) {
             throw {
               message: constants.apiResponses.PROGRAM_NOT_FOUND,
             };
@@ -878,7 +878,7 @@ module.exports = class SolutionsHelper {
               entityTypes.push(requestedDataKey);
             }
           );
-          if (!registryIds.length > 0) {
+          if (!(registryIds.length > 0)) {
             throw {
               message: constants.apiResponses.NO_LOCATION_ID_FOUND_IN_DATA,
             };
@@ -986,7 +986,7 @@ module.exports = class SolutionsHelper {
           ]
         );
 
-        if (!targetedSolutionDetails.length > 0) {
+        if (!(targetedSolutionDetails.length > 0)) {
           throw {
             status: httpStatusCode["bad_request"].status,
             message: constants.apiResponses.SOLUTION_NOT_FOUND,
@@ -1031,7 +1031,7 @@ module.exports = class SolutionsHelper {
           ["_id"]
         );
 
-        if (!solutionData.length > 0) {
+        if (!(solutionData.length > 0)) {
           return resolve({
             status: httpStatusCode.bad_request.status,
             message: constants.apiResponses.SOLUTION_NOT_FOUND,
@@ -1048,7 +1048,7 @@ module.exports = class SolutionsHelper {
             ["_id", "code"]
           );
 
-          if (!userRoles.length > 0) {
+          if (!(userRoles.length > 0)) {
             return resolve({
               status: httpStatusCode.bad_request.status,
               message: constants.apiResponses.INVALID_ROLE_CODE,
@@ -1132,7 +1132,7 @@ module.exports = class SolutionsHelper {
           ["_id", "programId", "scope.entityType"]
         );
 
-        if (!solutionData.length > 0) {
+        if (!(solutionData.length > 0)) {
           return resolve({
             status: httpStatusCode.bad_request.status,
             message: constants.apiResponses.SOLUTION_NOT_FOUND,
@@ -1145,7 +1145,7 @@ module.exports = class SolutionsHelper {
           ["scope.entities", "scope.entityType"]
         );
 
-        if (!programData.length > 0) {
+        if (!(programData.length > 0)) {
           return resolve({
             status: httpStatusCode.bad_request.status,
             message: constants.apiResponses.PROGRAM_NOT_FOUND,
@@ -1163,7 +1163,7 @@ module.exports = class SolutionsHelper {
             matchData
           );
 
-          if (!childEntities.length > 0) {
+          if (!(childEntities.length > 0)) {
             throw {
               message: constants.apiResponses.ENTITY_NOT_EXISTS_IN_PARENT,
             };
@@ -1171,7 +1171,7 @@ module.exports = class SolutionsHelper {
           checkEntityInParent = entities.filter((element) =>
             childEntities.includes(element)
           );
-          if (!checkEntityInParent.length > 0) {
+          if (!(checkEntityInParent.length > 0)) {
             throw {
               message: constants.apiResponses.ENTITY_NOT_EXISTS_IN_PARENT,
             };
@@ -1208,7 +1208,7 @@ module.exports = class SolutionsHelper {
           }
         }
 
-        if (!entityIds.length > 0) {
+        if (!(entityIds.length > 0)) {
           throw {
             message: constants.apiResponses.ENTITIES_NOT_FOUND,
           };
@@ -1270,7 +1270,7 @@ module.exports = class SolutionsHelper {
           ["_id"]
         );
 
-        if (!solutionData.length > 0) {
+        if (!(solutionData.length > 0)) {
           return resolve({
             status: httpStatusCode.bad_request.status,
             message: constants.apiResponses.SOLUTION_NOT_FOUND,
@@ -1284,7 +1284,7 @@ module.exports = class SolutionsHelper {
           ["_id", "code"]
         );
 
-        if (!userRoles.length > 0) {
+        if (!(userRoles.length > 0)) {
           return resolve({
             status: httpStatusCode.bad_request.status,
             message: constants.apiResponses.INVALID_ROLE_CODE,
@@ -1347,7 +1347,7 @@ module.exports = class SolutionsHelper {
           ["_id", "scope.entities"]
         );
 
-        if (!solutionData.length > 0) {
+        if (!(solutionData.length > 0)) {
           return resolve({
             status: httpStatusCode.bad_request.status,
             message: constants.apiResponses.SOLUTION_NOT_FOUND,
@@ -1355,7 +1355,7 @@ module.exports = class SolutionsHelper {
         }
         let entitiesData = [];
         entitiesData = solutionData[0].scope.entities;
-        if (!entitiesData.length > 0) {
+        if (!(entitiesData.length > 0)) {
           throw {
             message: constants.apiResponses.ENTITIES_NOT_FOUND,
           };
@@ -1411,7 +1411,7 @@ module.exports = class SolutionsHelper {
           isDeleted: false,
         });
 
-        if (!solutionData.length > 0) {
+        if (!(solutionData.length > 0)) {
           return resolve({
             status: httpStatusCode.bad_request.status,
             message: constants.apiResponses.SOLUTION_NOT_FOUND,
@@ -2009,7 +2009,7 @@ module.exports = class SolutionsHelper {
           ["_id", "programId", "programName"]
         );
 
-        if (!privateSolutionDetails.length > 0) {
+        if (!(privateSolutionDetails.length > 0)) {
           // Data for program and solution creation
           let programAndSolutionData = {
             type: constants.common.IMPROVEMENT_PROJECT,
@@ -2514,7 +2514,7 @@ module.exports = class SolutionsHelper {
             ["__v"]
           );
 
-          if (!checkforProgramExist.length > 0) {
+          if (!(checkforProgramExist.length > 0)) {
             return resolve({
               status: httpStatusCode["bad_request"].status,
               message: constants.apiResponses.PROGRAM_NOT_FOUND,
@@ -2629,7 +2629,7 @@ module.exports = class SolutionsHelper {
             };
             let entityDetails = await userService.locationSearch(filterData);
             let entityDocuments = entityDetails.data;
-            if (!entityDetails.success || !entityDocuments.length > 0) {
+            if (!entityDetails.success || !(entityDocuments.length > 0)) {
               return resolve({
                 status: httpStatusCode["bad_request"].status,
                 message: constants.apiResponses.ENTITY_NOT_FOUND,
@@ -2668,7 +2668,7 @@ module.exports = class SolutionsHelper {
             ]
           );
 
-          if (!solutionData.length > 0) {
+          if (!(solutionData.length > 0)) {
             return resolve({
               status: httpStatusCode["bad_request"].status,
               message: constants.apiResponses.SOLUTION_NOT_FOUND,

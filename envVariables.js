@@ -121,6 +121,10 @@ let enviromentVariables = {
       value: "ON"
     }
   },
+  PUBLIC_BASE_URL: {
+    "message" : "Public Base Url required",
+    "optional" : true,
+  },
   "VALIDATE_ENTITIES" : {
     "message" : "Requires Validate Entity Key for validating Entities",
     "optional" : false,

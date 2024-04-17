@@ -98,6 +98,7 @@
   USER: "User",
   USER_DELETE_MODULE: "userDelete",
   OFF: "OFF",
+  UPLOAD_FILE:"api/cloud-services/mlcore/v1/files/upload",
   PROGRAM_DESIGNER:"PROGRAM_DESIGNER",
   PROGRAM_MANAGER:"PROGRAM_MANAGER",
   CONTENT_CREATOR:"CONTENT_CREATOR",
