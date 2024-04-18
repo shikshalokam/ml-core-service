@@ -20,31 +20,60 @@ module.exports = class AssetsHelper {
     return new Promise(async (resolve, reject) => {
       try {
         let organizationAssets;
+        let solutionMatchQuery = { createdFor: { $in: [bodyData.filters.orgId] } };
+        let programMatchQuery = {
+          createdFor: { $in: [bodyData.filters.orgId] },
+        };
+        if (bodyData.filters.userIds) {
+          //if there is an empty string then remove from userids
+
+          let filterEmptyStringsFromArray = bodyData.filters.userIds.filter(
+            (str) => str !== ""
+          );
+          if (filterEmptyStringsFromArray.length > 0) {
+            solutionMatchQuery.author = { $in: filterEmptyStringsFromArray };
+            solutionMatchQuery.isAPrivateProgram = false;
+            programMatchQuery.owner = { $in: filterEmptyStringsFromArray };
+          }
+        }
         switch (queryData) {
           case "program":
-            organizationAssets = await programsHelper.listOrganizationPrograms(
-              bodyData,
-              queryData
+            organizationAssets = await programsHelper.list(
+              "",                // for pageNo
+              "",                // for pageSize
+              "",                // for searchText
+              programMatchQuery,
+              bodyData.fields
             );
             break;
           case "solution":
-            organizationAssets =
-              await solutionsHelper.listOrganizationSolutions(
-                bodyData,
-                queryData
-              );
-
+            organizationAssets = await solutionsHelper.list(
+              "",                //for type
+              "",                // for subType
+              solutionMatchQuery,
+              "",                // for pageNo
+              "",                // for pageSize
+              "",                // for searchText
+              bodyData.fields
+            );
             break;
           default:
-            let allOrganizationProgram =
-              await programsHelper.listOrganizationPrograms(
-                bodyData,
-                queryData
-              );
+            let allOrganizationProgram = await programsHelper.list(
+              "",               // for pageNo
+              "",               // for pageSize
+              "",               // for searchText
+              programMatchQuery,
+              bodyData.fields
+            );
             let allOrganizationSolutions =
-              await solutionsHelper.listOrganizationSolutions(
-                bodyData,
-                queryData
+              await solutionsHelper.list(
+                "",             //for type
+                "",             // for subType
+                solutionMatchQuery,
+                "",             // for pageNo
+                "",             // for pageSize
+                "",             // for searchText
+                bodyData.fields
               );
             organizationAssets = {
               success: true,
@@ -88,7 +117,7 @@ module.exports = class AssetsHelper {
           platformRoles: { $exists: true },
         };
 
-        let updateUserAssetDataResult=false;
+        let updateUserAssetDataResult = false;
         let checkUsersRolesIsIdentical = this.checkRolesPresence(
           reqData.fromUserProfile.roles,
           reqData.toUserProfile.roles
@@ -137,11 +166,11 @@ module.exports = class AssetsHelper {
                   updateSolutionsLicense
                 ),
               ];
-              let updatedSolution = await Promise.all(
-                updateUserSolutions
-              );
+              let updatedSolution = await Promise.all(updateUserSolutions);
 
-              updatedSolution? updateUserAssetDataResult=true :  updateUserAssetDataResult=false;
+              updatedSolution
+                ? (updateUserAssetDataResult = true)
+                : (updateUserAssetDataResult = false);
             }
             if (
               reqData.toUserProfile.roles.includes(
@@ -168,9 +197,7 @@ module.exports = class AssetsHelper {
                   allAssetsData,
                   reqData
                 );
-                 await userExtensionsHelper.bulkWrite(
-                  updateQueries
-                );
+                await userExtensionsHelper.bulkWrite(updateQueries);
               } else {
                 //data for create new user in user Extension
                 let newCollectionForUserExtension = {
@@ -222,10 +249,11 @@ module.exports = class AssetsHelper {
                       updateProgramRolesAndCreatedByFieldQuery
                     );
                   if (updateUserExtension) {
-                    let deleteserExtensionProgram = await userExtensionsHelper.updateOne(
-                      deleteProgramFromUserQuery,
-                      deleteProgramFromUserField
-                    );
+                    let deleteserExtensionProgram =
+                      await userExtensionsHelper.updateOne(
+                        deleteProgramFromUserQuery,
+                        deleteProgramFromUserField
+                      );
                   }
                 }
               }
@@ -241,7 +269,9 @@ module.exports = class AssetsHelper {
                 programFilter,
                 updatePrograms
               );
-              updatePartialPrograms?updateUserAssetDataResult=true :  updateUserAssetDataResult=false;
+              updatePartialPrograms
+                ? (updateUserAssetDataResult = true)
+                : (updateUserAssetDataResult = false);
             }
           } else {
             let typeOfAssetsToMove = reqData.assetInformation?.objectType;
@@ -284,8 +314,9 @@ module.exports = class AssetsHelper {
               let updatedOneToOneTransferSolution = await Promise.all(
                 updateUserSolutions
               );
-              updatedOneToOneTransferSolution? updateUserAssetDataResult=true :  updateUserAssetDataResult=false;
-
+              updatedOneToOneTransferSolution
+                ? (updateUserAssetDataResult = true)
+                : (updateUserAssetDataResult = false);
             }
 
             if (
@@ -315,9 +346,8 @@ module.exports = class AssetsHelper {
                   reqData,
                   checkAssetInformation
                 );
-                let updateUserExtensionProgram = await userExtensionsHelper.bulkWrite(
-                  updateQueries
-                );
+                let updateUserExtensionProgram =
+                  await userExtensionsHelper.bulkWrite(updateQueries);
               } else {
                 //data for create user in user Extension
                 let newCollectionForUserExtension = {
@@ -385,18 +415,19 @@ module.exports = class AssetsHelper {
                       updateProgramRolesAndCreatedByFieldQuery
                     );
                   if (updateUserExtension) {
-                    let deleteuserExtensionProgram = await userExtensionsHelper.updateOne(
-                      deleteProgramFromUserQuery,
-                      deleteProgramFromUserField,
-                      arrayFilters
-                    );
+                    let deleteuserExtensionProgram =
+                      await userExtensionsHelper.updateOne(
+                        deleteProgramFromUserQuery,
+                        deleteProgramFromUserField,
+                        arrayFilters
+                      );
                   }
                 }
               }
 
               let programFilter = {
-                 owner: reqData.fromUserProfile.userId,
-                _id:new ObjectId(reqData.assetInformation.identifier),
+                owner: reqData.fromUserProfile.userId,
+                _id: new ObjectId(reqData.assetInformation.identifier),
               };
               let updatePrograms = {
                 $set: {
@@ -404,20 +435,17 @@ module.exports = class AssetsHelper {
                 },
               };
 
-             let updatedOneToOneTransferProgram= await programsHelper.updateMany(
-                programFilter,
-                updatePrograms
-              );
+              let updatedOneToOneTransferProgram =
+                await programsHelper.updateMany(programFilter, updatePrograms);
 
-              updatedOneToOneTransferProgram? updateUserAssetDataResult=true :  updateUserAssetDataResult=false;
-
+              updatedOneToOneTransferProgram
+                ? (updateUserAssetDataResult = true)
+                : (updateUserAssetDataResult = false);
             }
           }
         }
 
-        if (
-          updateUserAssetDataResult
-        ) {
+        if (updateUserAssetDataResult) {
           if (telemetryEventOnOff !== constants.common.OFF) {
             /**
              * Telemetry Raw Event
@@ -533,8 +561,8 @@ module.exports = class AssetsHelper {
               },
             });
           }
-        } 
-        if(!checkAssetInformation){
+        }
+        if (!checkAssetInformation) {
           bulkOperations.push({
             updateOne: {
               filter: { userId: toUserData.userId },

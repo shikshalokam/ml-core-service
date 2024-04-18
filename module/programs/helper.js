@@ -1222,67 +1222,17 @@ module.exports = class ProgramsHelper {
       }
     });
   }
+  
+  
   /**
-   * List Program using organization id.
-   * @method
-   * @name listOrganizationPrograms
-   * @query {String} type - Assets type (program/solutions).
-   * @returns {Object} - Details of the program under the organization.
-   */
-
-  static listOrganizationPrograms(bodyData, queryData) {
-    return new Promise(async (resolve, reject) => {
-      try {
-        let matchQuery = {};
-        let filterEmptyStringsFromArray;
-
-        //if there is an empty string then remove from userids
-        if (!bodyData.filters.userId) {
-          filterEmptyStringsFromArray = [];
-        } else {
-          filterEmptyStringsFromArray = bodyData.filters.userId.filter(
-            (str) => str !== ""
-          );
-        }
-
-        if (filterEmptyStringsFromArray.length > 0) {
-          matchQuery = {
-            $and: [
-              { createdFor: { $in: [bodyData.filters.orgId] } },
-              { owner: { $in: bodyData.filters.userId } },
-            ],
-          };
-        } else {
-          matchQuery = { createdFor: { $in: [bodyData.filters.orgId] } };
-        }
-        let programDocuments = await this.list(
-          "", // for pageNo
-          "", // for pageSize
-          "", // for searchText
-          matchQuery,
-          bodyData.fields
-        );
-        return resolve(
-           programDocuments,
-        );
-      } catch (error) {
-        return resolve({
-          success: false,
-          message: error.message,
-          data: [],
-        });
-      }
-    });
-  }
-  /**
-     * Update program users
-     * @method
-     * @name updateMany
-     * @param {Object} query 
-     * @param {Object} update 
-     * @param {Object} options 
-     * @returns {JSON} - update program.
-    */
+  * Update program
+  * @method
+  * @name updateMany
+  * @param {Object} query 
+  * @param {Object} update 
+  * @param {Object} options 
+  * @returns {JSON} - update program.
+  */
 
   static updateMany(query, update, options = {}) {
     return new Promise(async (resolve, reject) => {

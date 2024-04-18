@@ -682,8 +682,8 @@ module.exports = class UserExtensionHelper {
         })
     }
     
-       /**
-   * Transfer ownership from User to ToUser based on Roles
+   /**
+   * bulkWrite the userExtension collection
    * @method
    * @name bulkWrite
    * @param {Array} query - Array of queries to update.
@@ -702,22 +702,21 @@ module.exports = class UserExtensionHelper {
     }
 
    /**
-   * Remove programs Roles from FromUser when we create a newUser and Transfer
+   * update the userExtension document.
    * @method
    * @name updateOne
-   * @param {Object} query findMatchQuery.
-   * @param {Object} setQuery Remove programRoles from an FromUser.
+   * @param {Object} query    - findMatchQuery.
+   * @param {Object} setQuery - setQuery.
    * @returns {Array} 
    */
+
     static updateOne( query,setQuery,arrayFilters=[]){
         return new Promise(async (resolve, reject) => {
             try{
-               let updateProgram =await database.models.userExtension.updateOne( 
-                 query,setQuery,{arrayFilters,upsert:true}
-                )
-              return resolve(updateProgram)
-            }catch(error){
-                reject(error);
+                 let updateProgram =await database.models.userExtension.updateOne(query,setQuery,{arrayFilters,upsert:true})
+                 return resolve(updateProgram)
+            } catch(error) {
+                 reject(error);
             }
         })
     }

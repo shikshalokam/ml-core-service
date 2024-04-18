@@ -662,18 +662,17 @@ module.exports = class SolutionsHelper {
         if (projection) {
           projection.forEach((projectedData) => {
             if(projectedData === "objectType"){
-              projection1[projectedData] = "solution";
-
+               projection1[projectedData] = "solution";
             }else{
-            projection1[projectedData] = 1;
+               projection1[projectedData] = 1;
             }
           });
         } else {
-          projection1 = {
-            description: 1,
-            externalId: 1,
-            name: 1,
-          };
+             projection1 = {
+               description: 1,
+               externalId: 1,
+               name: 1,
+            };
         }
 
         let facetQuery = {};
@@ -698,7 +697,6 @@ module.exports = class SolutionsHelper {
             $arrayElemAt: ["$totalCount.count", 0],
           },
         };
-
         let solutionDocuments = await database.models.solutions.aggregate([
           { $match: matchQuery },
           {
@@ -708,7 +706,6 @@ module.exports = class SolutionsHelper {
           facetQuery,
           projection2,
         ]);
-
         return resolve({
           success: true,
           message: constants.apiResponses.SOLUTIONS_LIST,
@@ -2413,64 +2410,7 @@ module.exports = class SolutionsHelper {
     });
   }
 
-   /**
-   * List Solutions using organization id.
-   * @method
-   * @name listOrganizationSolutions
-   * @query {String} type - Assets type (program/solutions).
-   * @returns {Object} - Details of the solution under the organization.
-   */
-
-   static listOrganizationSolutions(bodyData){
-
-    return new Promise(async (resolve, reject) => {
-      try {
-        let matchQuery = {};
-        let filterEmptyStringsFromArray;
-
-        //if there is an empty string then remove from userids
-        if (!bodyData.filters.userId) {
-          filterEmptyStringsFromArray = [];
-        } else {
-          filterEmptyStringsFromArray = bodyData.filters.userId.filter(
-            (str) => str !== ""
-          );
-        }
-
-        if (filterEmptyStringsFromArray.length > 0) {
-          matchQuery = {
-            $and: [
-              { createdFor: { $in: [bodyData.filters.orgId] } },
-              { author: { $in: bodyData.filters.userId } },
-              { isAPrivateProgram: false },
-            ],
-          };
-        } else {
-          matchQuery = { createdFor: { $in: [bodyData.filters.orgId] } };
-        }
-        
-        let solutionDocuments = await this.list(
-          "", //for type 
-          "", // for subType
-          matchQuery,
-          "",// for pageNo
-          "", // for pageSize
-          "", // for searchText
-          bodyData.fields
-        );
-        return resolve(
-           solutionDocuments,
-        );
-      }catch(error) {
-        return resolve({
-          success: false,
-          message: error.message,
-          data: [],
-        });
-      }
-    })
-
-  }
+  
 
   // moved this function to solutions helper to avoid circular dependency with users/helper
   /**
