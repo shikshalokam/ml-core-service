@@ -6,87 +6,90 @@ const userExtensionsHelper = require(MODULES_BASE_PATH +
 const userRolesHelper = require(MODULES_BASE_PATH + "/user-roles/helper");
 const kafkaProducersHelper = require(ROOT_PATH + "/generics/kafka/producers");
 const programUsersHelper = require(MODULES_BASE_PATH + "/programUsers/helper");
+const telemetryEventOnOff = process.env.TELEMETRY_ON_OFF;
 
 module.exports = class AssetsHelper {
   /**
-   * Get users assets based on Type .
+   * Get user's assets based on Type .
    * @method
    * @name fetchAssets
-   * @param {String} queryData -  query for type data.
-   * @param {Object} [bodyData] - request body data data.
-   * @returns {Promise} returns a promise.
+   * @param {String} typeOfAssets -  typeOfAssets(program or solution)
+   * @param {String}  orgId       -  Organization Id
+   * @param {String}  userIds     -  Array of user
+   * @param {Object} [projection]
+   * @returns {Promise}           -returns a promise.
    */
-  static fetchAssets(queryData, bodyData) {
+  static fetchAssets(typeOfAssets, orgId, userIds, projection = {}) {
     return new Promise(async (resolve, reject) => {
       try {
         let organizationAssets;
-        let solutionMatchQuery = { createdFor: { $in: [bodyData.filters.orgId] } };
-        let programMatchQuery = {
-          createdFor: { $in: [bodyData.filters.orgId] },
+        let solutionMatchQuery = {
+          createdFor: { $in: [orgId] },
         };
-        if (bodyData.filters.userIds) {
-          //if there is an empty string then remove from userids
-
-          let filterEmptyStringsFromArray = bodyData.filters.userIds.filter(
-            (str) => str !== ""
-          );
+        let programMatchQuery = {
+          createdFor: { $in: [orgId] },
+        };
+        if (userIds) {
+          //remove empty string from userids array
+          let filterEmptyStringsFromArray = userIds.filter((str) => str !== "");
           if (filterEmptyStringsFromArray.length > 0) {
             solutionMatchQuery.author = { $in: filterEmptyStringsFromArray };
             solutionMatchQuery.isAPrivateProgram = false;
             programMatchQuery.owner = { $in: filterEmptyStringsFromArray };
           }
         }
-        switch (queryData) {
+        switch (typeOfAssets) {
           case "program":
             organizationAssets = await programsHelper.list(
-              "",                // for pageNo
-              "",                // for pageSize
-              "",                // for searchText
+              "", // for pageNo
+              "", // for pageSize
+              "", // for searchText
               programMatchQuery,
-              bodyData.fields
+              projection
             );
             break;
           case "solution":
             organizationAssets = await solutionsHelper.list(
-              "",                //for type
-              "",                // for subType
+              "", //for type
+              "", // for subType
               solutionMatchQuery,
-              "",                // for pageNo
-              "",                // for pageSize
-              "",                // for searchText
-              bodyData.fields
+              "", // for pageNo
+              "", // for pageSize
+              "", // for searchText
+              projection
             );
             break;
           default:
-            let allOrganizationProgram = await programsHelper.list(
-              "",               // for pageNo
-              "",               // for pageSize
-              "",               // for searchText
-              programMatchQuery,
-              bodyData.fields
-            );
-            let allOrganizationSolutions =
+            let listAssets = [
+              await programsHelper.list(
+                "", // for pageNo
+                "", // for pageSize
+                "", // for searchText
+                programMatchQuery,
+                projection
+              ),
               await solutionsHelper.list(
-                "",             //for type
-                "",             // for subType
+                "", //for type
+                "", // for subType
                 solutionMatchQuery,
-                "",             // for pageNo
-                "",             // for pageSize
-                "",             // for searchText
-                bodyData.fields
-              );
+                "", // for pageNo
+                "", // for pageSize
+                "", // for searchText
+                projection
+              ),
+            ];
+            let listOrgAssets = await Promise.all(listAssets);
+
             organizationAssets = {
               success: true,
               message: constants.apiResponses.ASSETS_FETCHED_SUCCESSFULLY,
               data: {
                 data: [
-                  ...allOrganizationProgram.data.data,
-                  ...allOrganizationSolutions.data.data,
+                  ...listOrgAssets[0].data.data,
+                  ...listOrgAssets[1].data.data,
                 ],
               },
-              count:
-                allOrganizationProgram.data.count +
-                allOrganizationSolutions.data.count,
+              count: listOrgAssets[0].data.count + listOrgAssets[1].data.count,
             };
 
             break;
@@ -105,7 +108,7 @@ module.exports = class AssetsHelper {
    * Transfer ownership Kafka Event.
    * @method
    * @name ownershipTransfer
-   * @param {ownershipTransferEvent} - OwenerShip transfer Event message object
+   * @param {ownershipTransferEvent} - OwenerShiptransfer Event
    * @returns {Promise} success Data.
    */
   static ownershipTransfer(ownershipTransferEvent) {
@@ -118,6 +121,7 @@ module.exports = class AssetsHelper {
         };
 
         let updateUserAssetDataResult = false;
+        //Check if the users has identical Role or not, and return boolean
         let checkUsersRolesIsIdentical = this.checkRolesPresence(
           reqData.fromUserProfile.roles,
           reqData.toUserProfile.roles
@@ -132,14 +136,14 @@ module.exports = class AssetsHelper {
           let checkAssetInformation =
             reqData.hasOwnProperty("assetInformation");
 
-          //condition for if there is no object type
+          //condition for if there is no assetInformation
           if (!checkAssetInformation) {
             if (
               reqData.toUserProfile.roles.includes(
                 constants.common.CONTENT_CREATOR
               )
             ) {
-              //filter for solution updates
+              //Queries for solution updates
               let solutionFilter = {
                 author: reqData.fromUserProfile.userId,
               };
@@ -182,7 +186,7 @@ module.exports = class AssetsHelper {
             ) {
               let fromUserData =
                 await userExtensionsHelper.userExtensionDocument(fromFindQuery);
-              //get Touser details from user Extension
+              //Query get Touser details from user Extension
               let toFindQuery = {
                 userId: reqData.toUserProfile.userId,
               };
@@ -190,26 +194,30 @@ module.exports = class AssetsHelper {
                 toFindQuery
               );
               let allAssetsData = fromUserData?.platformRoles;
+
               if (toUserData) {
+                //return array of queries to update fromUser's and toUser's programRoles
                 let updateQueries = this.generateUpdateOperations(
                   fromUserData,
                   toUserData,
                   allAssetsData,
                   reqData
                 );
-                await userExtensionsHelper.bulkWrite(updateQueries);
+                await userExtensionsHelper.updateMany(updateQueries);
               } else {
-                //data for create new user in user Extension
+                //Query object to  create new user in user Extension
                 let newCollectionForUserExtension = {
                   userId: reqData.toUserProfile.userId,
                   userName: reqData.toUserProfile.userName,
                   updatedBy: reqData.actionBy.userId,
                   createdBy: reqData.actionBy.userId,
                 };
+
+                //return programRoles according to Parial or one to one transfer from fromUser
                 let programRolesArray =
                   await this.fetchFromUserDataPlatformRoles(fromUserData);
 
-                //create new Touser if he is not available in the user extension
+                //create user if he is not exits in the user extension
                 let createUserExtensions =
                   await userExtensionsHelper.createOrUpdate(
                     [],
@@ -219,24 +227,15 @@ module.exports = class AssetsHelper {
                   let updateProgramRolesAndCreatedByMatchQuery = {
                     userId: reqData.toUserProfile.userId,
                   };
-                  let updateProgramRolesAndCreatedByFieldQuery;
-                  if (programRolesArray.length > 0) {
-                    updateProgramRolesAndCreatedByFieldQuery = {
-                      $push: {
-                        platformRoles: {
-                          $each: programRolesArray,
-                        },
+
+                  let updateProgramRolesAndCreatedByFieldQuery = {
+                    $push: {
+                      platformRoles: {
+                        $each: programRolesArray,
                       },
-                    };
-                  } else {
-                    updateProgramRolesAndCreatedByFieldQuery = {
-                      $push: {
-                        platformRoles: {
-                          $each: programRolesArray,
-                        },
-                      },
-                    };
-                  }
+                    },
+                  };
+
                   let deleteProgramFromUserQuery = {
                     userId: reqData.fromUserProfile.userId,
                   };
@@ -249,11 +248,10 @@ module.exports = class AssetsHelper {
                       updateProgramRolesAndCreatedByFieldQuery
                     );
                   if (updateUserExtension) {
-                    let deleteserExtensionProgram =
-                      await userExtensionsHelper.updateOne(
-                        deleteProgramFromUserQuery,
-                        deleteProgramFromUserField
-                      );
+                    await userExtensionsHelper.updateOne(
+                      deleteProgramFromUserQuery,
+                      deleteProgramFromUserField
+                    );
                   }
                 }
               }
@@ -330,7 +328,7 @@ module.exports = class AssetsHelper {
             ) {
               let fromUserData =
                 await userExtensionsHelper.userExtensionDocument(fromFindQuery);
-              //get Touser details from user Extension
+              //Query to check toUser exits
               let toFindQuery = {
                 userId: reqData.toUserProfile.userId,
               };
@@ -339,6 +337,8 @@ module.exports = class AssetsHelper {
               );
               let allAssetsData = fromUserData?.platformRoles;
               if (toUserData) {
+                //return array of queries to update fromUser's and toUser's programRoles
+
                 let updateQueries = this.generateUpdateOperations(
                   fromUserData,
                   toUserData,
@@ -346,10 +346,9 @@ module.exports = class AssetsHelper {
                   reqData,
                   checkAssetInformation
                 );
-                let updateUserExtensionProgram =
-                  await userExtensionsHelper.bulkWrite(updateQueries);
+                await userExtensionsHelper.updateMany(updateQueries);
               } else {
-                //data for create user in user Extension
+                //Query object to  create new user in user Extension
                 let newCollectionForUserExtension = {
                   userId: reqData.toUserProfile.userId,
                   userName: reqData.toUserProfile.userName,
@@ -362,7 +361,8 @@ module.exports = class AssetsHelper {
                     reqData,
                     checkAssetInformation
                   );
-                //create new user if to user  not available in the user extension
+
+                //create new user if not exits in the user extension
                 let createUserExtensions =
                   await userExtensionsHelper.createOrUpdate(
                     [], // device data array
@@ -372,37 +372,29 @@ module.exports = class AssetsHelper {
                   let updateProgramRolesAndCreatedByMatchQuery = {
                     userId: reqData.toUserProfile.userId,
                   };
-                  let updateProgramRolesAndCreatedByFieldQuery;
-                  // update and push the Roles
-                  if (programRolesArray.length > 0) {
-                    updateProgramRolesAndCreatedByFieldQuery = {
-                      $push: {
-                        platformRoles: {
-                          $each: programRolesArray,
-                        },
+
+                  // Push Paticular program to the toUser
+                  let updateProgramRolesAndCreatedByFieldQuery = {
+                    $addToSet: {
+                      platformRoles: {
+                        $each: programRolesArray,
                       },
-                    };
-                  } else {
-                    updateProgramRolesAndCreatedByFieldQuery = {
-                      $push: {
-                        platformRoles: {
-                          $each: programRolesArray,
-                        },
-                      },
-                    };
-                  }
+                    },
+                  };
 
                   let deleteProgramFromUserQuery = {
                     userId: reqData.fromUserProfile.userId,
-                    "platformRole.code": programRolesArray[0].code,
+                    platformRoles: {
+                      $elemMatch: {
+                        code: programRolesArray[0].code,
+                      },
+                    },
                   };
                   let deleteProgramFromUserField = {
                     $pull: {
-                      $pull: {
-                        "platformRoles.$[elem].programs": new ObjectId(
-                          reqData.assetInformation.identifier
-                        ),
-                      },
+                      "platformRoles.$[elem].programs": new ObjectId(
+                        reqData.assetInformation.identifier
+                      ),
                     },
                   };
                   let arrayFilters = [
@@ -415,12 +407,11 @@ module.exports = class AssetsHelper {
                       updateProgramRolesAndCreatedByFieldQuery
                     );
                   if (updateUserExtension) {
-                    let deleteuserExtensionProgram =
-                      await userExtensionsHelper.updateOne(
-                        deleteProgramFromUserQuery,
-                        deleteProgramFromUserField,
-                        arrayFilters
-                      );
+                    await userExtensionsHelper.updateOne(
+                      deleteProgramFromUserQuery,
+                      deleteProgramFromUserField,
+                      arrayFilters
+                    );
                   }
                 }
               }
@@ -454,7 +445,7 @@ module.exports = class AssetsHelper {
             let rawEvent =
               await gen.utils.generateTelemetryEventSkeletonStructure();
             rawEvent.eid = constants.common.AUDIT;
-            rawEvent.context.channel = userDeleteEvent.context.channel;
+            rawEvent.context.channel = ownershipTransferEvent.context.channel;
             rawEvent.context.env = constants.common.USER;
             rawEvent.edata.state = constants.common.TRANSFER_STATE;
             rawEvent.edata.type = constants.common.OWNERSHIP_TRANSFER_TYPE;
@@ -492,13 +483,13 @@ module.exports = class AssetsHelper {
   }
 
   /**
-   * Get users assets based on Type .
+   * Generate Update programs Queires for fromUser and to user
    * @method
    * @name generateUpdateOperations
-   * @param {Object} fromUserData -   from userData.
-   * @param {Object} reqData - request body data data.
-   * @param {Object} toUserData - to user Data from userExtension.
-   * @param {Array} allAssetsData - PlatformRoles of from user.
+   * @param {Object} fromUserData  -   from userData.
+   * @param {Object} reqData       - request body data data.
+   * @param {Object} toUserData    - to user Data from userExtension.
+   * @param {Array}  allAssetsData - PlatformRoles of from user.
 
    * @returns {Array} returns array of queries to Update.
    */
@@ -517,12 +508,14 @@ module.exports = class AssetsHelper {
       let arrayToMove = allAssetsData.filter(
         (roleData) => roleData.code === roleCodeToUpdate
       );
+
       let toUserRoleExists = toUserData.platformRoles.some(
         (toRole) => toRole.code === roleCodeToUpdate
       );
 
+      // If role  doesn't exist in toUserData
+
       if (!toUserRoleExists) {
-        // If role code doesn't exist in toUserData, transfer the entire object
         if (checkAssetInformation) {
           let checkRoleToUpdateProgram = role.programs.some((programId) =>
             programId.equals(reqData.assetInformation.identifier)
@@ -561,8 +554,7 @@ module.exports = class AssetsHelper {
               },
             });
           }
-        }
-        if (!checkAssetInformation) {
+        } else {
           bulkOperations.push({
             updateOne: {
               filter: { userId: toUserData.userId },
@@ -596,7 +588,7 @@ module.exports = class AssetsHelper {
         let deleteProgramFromUserField;
         if (checkAssetInformation) {
           updateToFields = {
-            $push: {
+            $addToSet: {
               "platformRoles.$[elem].programs": {
                 $each: arrayToMove[0].programs.filter((oneProgram) =>
                   oneProgram.equals(reqData.assetInformation.identifier)
@@ -613,7 +605,7 @@ module.exports = class AssetsHelper {
           };
         } else {
           updateToFields = {
-            $push: {
+            $addToSet: {
               "platformRoles.$[elem].programs": {
                 $each: arrayToMove?.[0]?.programs,
               },
@@ -658,14 +650,14 @@ module.exports = class AssetsHelper {
   }
 
   /**
-   * Get users assets based on Type .
+   * Get users assets based on assetInformation .
    * @method
    * @name createProgramRolesArray
-   * @param {Object} fromUserData -   from userData.
+   * @param {Object} fromUserData         - from userData.
    * @param {String} findProgramManagerId - Id of Role.
-   * @param {Array} allAssetsData - PlatformRoles of from user.
+   * @param {Array} allAssetsData         - PlatformRoles of from user.
 
-   * @returns {Array} returns PlatformRoles array.
+   * @returns {Array} returns PlatformRoles to update in Touser.
    */
 
   static createProgramRolesArray(
@@ -725,8 +717,8 @@ module.exports = class AssetsHelper {
  * Check whether from and to user has Identical Roles.
  * @method
  * @name createProgramRolesArray
- * @param {Array} fromUserData -   from array.
- * @param {Array} toUserArray - to array.
+ * @param {Array} fromUserData  -fromUser array.
+ * @param {Array} toUserArray   - toserU array.
  * @returns {Boolean} returns true or false. 
  
  */
@@ -735,6 +727,7 @@ module.exports = class AssetsHelper {
     let rolesToCheck = [
       constants.common.PROGRAM_MANAGER,
       constants.common.PROGRAM_DESIGNER,
+      constants.common.CONTENT_CREATOR,
     ];
 
     let hasRolesInFromArray = rolesToCheck.some((role) =>
@@ -747,11 +740,11 @@ module.exports = class AssetsHelper {
     return hasRolesInFromArray && hasRolesInToArray;
   }
   /**
- * Query to Platform Roles for touser when user Not in UserExtension 
+ * Query to get Platform Roles for touser when user Not in UserExtension 
  * @method
  * @name fetchFromUserDataPlatformRoles
- * @param {Array} fromUserData -   from array.
- * @returns {Array} returns Array of Platform Roles to push to TOUSER
+ * @param {Array} fromUserData -   From user data
+ * @returns {Array} returns Array of Platform Roles to push for touser
  
  */
   static fetchFromUserDataPlatformRoles(
@@ -767,7 +760,7 @@ module.exports = class AssetsHelper {
           code: { $in: filterCodes },
         };
 
-        let findProgramManagerId = await userRolesHelper.find(
+        let findProgramManagerId = await userRolesHelper.roleDocuments(
           findProgramManagerQuery
         );
 

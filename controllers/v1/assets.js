@@ -1,9 +1,8 @@
 const assetsHelper = require(MODULES_BASE_PATH + "/assets/helper.js");
 
 module.exports = class Assets {
-  
   /**
-    * Get organisation program and solution.
+    * Get organisation Assets(program and solution).
     * @name list
     * @api {get} /kendra/api/v1/assets/list?type=program or solution.
     * @apiHeader {String} X-authenticated-user-token Authenticity token
@@ -34,7 +33,9 @@ module.exports = class Assets {
       try {
         let assestsData = await assetsHelper.fetchAssets(
           req.query.type,
-          req.body
+          req.body.filters.orgId,
+          req.body.filters.userIds,
+          req.body.fields
         );
 
         return resolve(assestsData);
@@ -48,5 +49,4 @@ module.exports = class Assets {
       }
     });
   }
-
 };

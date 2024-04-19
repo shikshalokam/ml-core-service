@@ -15,7 +15,7 @@ const userService = require(ROOT_PATH + "/generics/services/users");
 const programUsersHelper = require(MODULES_BASE_PATH + "/programUsers/helper");
 const timeZoneDifference =
   process.env.TIMEZONE_DIFFRENECE_BETWEEN_LOCAL_TIME_AND_UTC;
-const validateEntity = process.env.VALIDATE_ENTITIES
+const validateEntity = process.env.VALIDATE_ENTITIES;
 
 /**
  * SolutionsHelper
@@ -66,33 +66,32 @@ module.exports = class SolutionsHelper {
     });
   }
 
-   /**
-     * Update solution users
-     * @method
-     * @name updateMany
-     * @param {Object} query 
-     * @param {Object} update 
-     * @param {Object} options 
-     * @returns {JSON} - update solutions.
-    */
+  /**
+   * Update solution users
+   * @method
+   * @name updateMany
+   * @param {Object} query
+   * @param {Object} update
+   * @param {Object} options
+   * @returns {JSON} - update solutions.
+   */
 
-   static updateMany(query, update, options = {}) {
+  static updateMany(query, update, options = {}) {
     return new Promise(async (resolve, reject) => {
-        try {
-        
-            let updatedSolutionCount = await database.models.solutions.updateMany(
-                query, 
-                update,
-                options
-            );
-            if( updatedSolutionCount) {
-                return resolve(updatedSolutionCount);
-            }
-        } catch (error) {
-            return reject(error);
+      try {
+        let updatedSolutionCount = await database.models.solutions.updateMany(
+          query,
+          update,
+          options
+        );
+        if (updatedSolutionCount) {
+          return resolve(updatedSolutionCount);
         }
-    })
-}
+      } catch (error) {
+        return reject(error);
+      }
+    });
+  }
 
   /**
    * Create solution.
@@ -308,7 +307,7 @@ module.exports = class SolutionsHelper {
           let currentSolutionScope = JSON.parse(
             JSON.stringify(programData[0].scope)
           );
-          if(validateEntity !== constants.common.OFF) {
+          if (validateEntity !== constants.common.OFF) {
             if (Object.keys(scopeData).length > 0) {
               if (scopeData.entityType) {
                 let bodyData = { type: scopeData.entityType };
@@ -384,7 +383,6 @@ module.exports = class SolutionsHelper {
                 currentSolutionScope.entities = entitiesData;
               }
             }
-          
 
             if (scopeData.roles) {
               if (
@@ -416,11 +414,9 @@ module.exports = class SolutionsHelper {
                 }
               }
             }
-          }else{
+          } else {
             currentSolutionScope = scopeData;
           }
-            
-          
 
           let updateSolution = await database.models.solutions
             .findOneAndUpdate(
@@ -445,7 +441,7 @@ module.exports = class SolutionsHelper {
           message: constants.apiResponses.SOLUTION_UPDATED,
         });
       } catch (error) {
-      return resolve({
+        return resolve({
           success: false,
         });
       }
@@ -661,33 +657,33 @@ module.exports = class SolutionsHelper {
 
         if (projection) {
           projection.forEach((projectedData) => {
-            if(projectedData === "objectType"){
-               projection1[projectedData] = "solution";
-            }else{
-               projection1[projectedData] = 1;
+            if (projectedData === "objectType") {
+              projection1[projectedData] = "solution";
+            } else {
+              projection1[projectedData] = 1;
             }
           });
         } else {
-             projection1 = {
-               description: 1,
-               externalId: 1,
-               name: 1,
-            };
+          projection1 = {
+            description: 1,
+            externalId: 1,
+            name: 1,
+          };
         }
 
         let facetQuery = {};
         facetQuery["$facet"] = {};
 
         facetQuery["$facet"]["totalCount"] = [{ $count: "count" }];
-        
+
         if (pageSize === "" && pageNo === "") {
           facetQuery["$facet"]["data"] = [{ $skip: 0 }];
-        }else{
-        facetQuery["$facet"]["data"] = [
-          { $skip: pageSize * (pageNo - 1) },
-          { $limit: pageSize },
-        ];
-      }
+        } else {
+          facetQuery["$facet"]["data"] = [
+            { $skip: pageSize * (pageNo - 1) },
+            { $limit: pageSize },
+          ];
+        }
 
         let projection2 = {};
 
@@ -866,9 +862,9 @@ module.exports = class SolutionsHelper {
         let filterQuery = {
           isReusable: false,
           isDeleted: false,
-        }
+        };
 
-        if(validateEntity !== constants.common.OFF){
+        if (validateEntity !== constants.common.OFF) {
           Object.keys(_.omit(data, ["filter", "role"])).forEach(
             (requestedDataKey) => {
               registryIds.push(data[requestedDataKey]);
@@ -882,15 +878,17 @@ module.exports = class SolutionsHelper {
           }
 
           filterQuery["scope.roles.code"] = {
-              $in: [constants.common.ALL_ROLES, ...data.role.split(",")],
-            }
-          filterQuery["scope.entities"]= { $in: registryIds }
-          filterQuery["scope.entityType"]= { $in: entityTypes }
-        }else{
-          let userRoleInfo = _.omit(data, ['filter'])
+            $in: [constants.common.ALL_ROLES, ...data.role.split(",")],
+          };
+          filterQuery["scope.entities"] = { $in: registryIds };
+          filterQuery["scope.entityType"] = { $in: entityTypes };
+        } else {
+          let userRoleInfo = _.omit(data, ["filter"]);
           let userRoleKeys = Object.keys(userRoleInfo);
-          userRoleKeys.forEach(entities => {
-            filterQuery["scope."+entities] = {$in:userRoleInfo[entities].split(",")}
+          userRoleKeys.forEach((entities) => {
+            filterQuery["scope." + entities] = {
+              $in: userRoleInfo[entities].split(","),
+            };
           });
         }
 
@@ -2409,8 +2407,6 @@ module.exports = class SolutionsHelper {
       }
     });
   }
-
-  
 
   // moved this function to solutions helper to avoid circular dependency with users/helper
   /**
