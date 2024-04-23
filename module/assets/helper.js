@@ -30,13 +30,9 @@ module.exports = class AssetsHelper {
           createdFor: { $in: [orgId] },
         };
         if (userIds) {
-          //remove empty string from userids array
-          let filterEmptyStringsFromArray = userIds.filter((str) => str !== "");
-          if (filterEmptyStringsFromArray.length > 0) {
-            solutionMatchQuery.author = { $in: filterEmptyStringsFromArray };
-            solutionMatchQuery.isAPrivateProgram = false;
-            programMatchQuery.owner = { $in: filterEmptyStringsFromArray };
-          }
+          solutionMatchQuery.author = { $in: userIds };
+          solutionMatchQuery.isAPrivateProgram = false;
+          programMatchQuery.owner = { $in: userIds };
         }
         switch (typeOfAssets) {
           case "program":
