@@ -182,7 +182,7 @@ module.exports = class AssetsHelper {
             ) {
               let fromUserData =
                 await userExtensionsHelper.userExtensionDocument(fromFindQuery);
-              //Query get Touser details from user Extension
+              //Query to get Touser details from user Extension
               let toFindQuery = {
                 userId: reqData.toUserProfile.userId,
               };
@@ -623,7 +623,7 @@ module.exports = class AssetsHelper {
           "platformRoles.code": roleCodeToUpdate,
         };
 
-        // Create bulk write operations
+        // pushing object to update in an array for bulk write operations
         bulkOperations.push({
           updateOne: {
             filter: updateToQuery,
@@ -646,13 +646,12 @@ module.exports = class AssetsHelper {
   }
 
   /**
-   * Get users assets based on assetInformation .
+   * Get Tousers assets based on assetInformation .
    * @method
    * @name createProgramRolesArray
    * @param {Object} fromUserData         - from userData.
-   * @param {String} findProgramManagerId - Id of Role.
+   * @param {String} findProgramManagerId - Program Role Id.
    * @param {Array} allAssetsData         - PlatformRoles of from user.
-
    * @returns {Array} returns PlatformRoles to update in Touser.
    */
 
@@ -710,14 +709,13 @@ module.exports = class AssetsHelper {
   }
 
   /**
- * Check whether from and to user has Identical Roles.
- * @method
- * @name createProgramRolesArray
- * @param {Array} fromUserData  -fromUser array.
- * @param {Array} toUserArray   - toserU array.
- * @returns {Boolean} returns true or false. 
- 
- */
+   * Check whether from and to user has Identical Roles.
+   * @method
+   * @name createProgramRolesArray
+   * @param {Array} fromUserData  -fromUser array.
+   * @param {Array} toUserArray   - toserU array.
+   * @returns {Boolean} returns true or false.
+   */
 
   static checkRolesPresence(fromUserRoleArray, toUserRoleArray) {
     let rolesToCheck = [
