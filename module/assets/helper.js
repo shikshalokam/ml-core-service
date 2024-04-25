@@ -132,14 +132,14 @@ module.exports = class AssetsHelper {
           let checkAssetInformation =
             reqData.hasOwnProperty("assetInformation");
 
-          //condition for if there is no assetInformation
+          //condition for if there is no assetInformation data
           if (!checkAssetInformation) {
             if (
               reqData.toUserProfile.roles.includes(
                 constants.common.CONTENT_CREATOR
               )
             ) {
-              //Queries for solution updates
+              //Queries for one to one solution updates
               let solutionFilter = {
                 author: reqData.fromUserProfile.userId,
               };
@@ -192,7 +192,28 @@ module.exports = class AssetsHelper {
               let allAssetsData = fromUserData?.platformRoles;
 
               if (toUserData) {
-                //return array of queries to update fromUser's and toUser's programRoles
+                //return array of queries to update the programRoles from fromUser's to toUser's
+
+                /**
+                 * @responseSample
+                 * 
+                 * 
+                 * [
+                      { updateOne: {
+                             filter: { userId: '9bb884fc-8a56-4727-9522-25a7d5b8ea14' },
+                             update: { '$push': { platformRoles: [Object] } }
+                      }},
+                      {{
+                             filter: { userId: '9bb884fc-8a56-4727-9522-25a7d5b8ea15' },
+                             update: { '$pull': { platformRoles: [Object] } }
+                      }},
+                      { updateOne: { filter: [Object], update: [Object] } },
+                      { updateOne: { filter: [Object], update: [Object] } }
+                   ] 
+                 * 
+                 * 
+                 */
+
                 let updateQueries = this.generateUpdateOperations(
                   fromUserData,
                   toUserData,
@@ -210,10 +231,31 @@ module.exports = class AssetsHelper {
                 };
 
                 //return programRoles according to Parial or one to one transfer from fromUser
+                /**
+                 * @responseSample
+                 * [
+                     {
+                       roleId: 60c74aa8b81797534e9a3f11,
+                       code: 'PROGRAM_MANAGER',
+                       programs: [
+                            607d320de9cce45e22ce90c0,
+                       ]
+                      },
+                     {
+                       roleId: 60c83b247f8464532732cdc3,
+                       code: 'PROGRAM_DESIGNER',
+                       programs: [
+                          601429016a1ef53356b1d714,
+                       ],
+                       isAPlatformRole: true,
+                        entities: []
+                     }
+                   ]
+                 */
                 let programRolesArray =
                   await this.fetchFromUserDataPlatformRoles(fromUserData);
 
-                //create user if he is not exits in the user extension
+                //create user if  not exits in the user extension collection
                 let createUserExtensions =
                   await userExtensionsHelper.createOrUpdate(
                     [],
@@ -251,6 +293,7 @@ module.exports = class AssetsHelper {
                   }
                 }
               }
+              //Queries to update owner in programs Collections for ownership transfer
               let programFilter = {
                 owner: reqData.fromUserProfile.userId,
               };
@@ -276,7 +319,7 @@ module.exports = class AssetsHelper {
               ) &&
               typeOfAssetsToMove === constants.common.SOULTION
             ) {
-              //filter for solution updates
+              //filter and Queries for partial Transfer solutions
               let solutionFilter = {
                 author: reqData.fromUserProfile.userId,
                 _id: new ObjectId(reqData.assetInformation.identifier),
@@ -324,7 +367,7 @@ module.exports = class AssetsHelper {
             ) {
               let fromUserData =
                 await userExtensionsHelper.userExtensionDocument(fromFindQuery);
-              //Query to check toUser exits
+              //Query to check toUser exits on userExtension collection
               let toFindQuery = {
                 userId: reqData.toUserProfile.userId,
               };
@@ -334,7 +377,6 @@ module.exports = class AssetsHelper {
               let allAssetsData = fromUserData?.platformRoles;
               if (toUserData) {
                 //return array of queries to update fromUser's and toUser's programRoles
-
                 let updateQueries = this.generateUpdateOperations(
                   fromUserData,
                   toUserData,
@@ -342,6 +384,7 @@ module.exports = class AssetsHelper {
                   reqData,
                   checkAssetInformation
                 );
+
                 await userExtensionsHelper.updateMany(updateQueries);
               } else {
                 //Query object to  create new user in user Extension
@@ -441,7 +484,7 @@ module.exports = class AssetsHelper {
             let rawEvent =
               await gen.utils.generateTelemetryEventSkeletonStructure();
             rawEvent.eid = constants.common.AUDIT;
-            rawEvent.context.channel = ownershipTransferEvent.context.channel;
+            // rawEvent.context.channel = ownershipTransferEvent.context.channel;
             rawEvent.context.env = constants.common.USER;
             rawEvent.edata.state = constants.common.TRANSFER_STATE;
             rawEvent.edata.type = constants.common.OWNERSHIP_TRANSFER_TYPE;
@@ -488,6 +531,19 @@ module.exports = class AssetsHelper {
    * @param {Array}  allAssetsData - PlatformRoles of from user.
 
    * @returns {Array} returns array of queries to Update.
+   * @responseSample
+   * [
+           { updateOne: {
+                  filter: { userId: '9bb884fc-8a56-4727-9522-25a7d5b8ea14' },
+                  update: { '$push': { platformRoles: [Object] } }
+           }},
+           {{
+                  filter: { userId: '9bb884fc-8a56-4727-9522-25a7d5b8ea15' },
+                  update: { '$pull': { platformRoles: [Object] } }
+           }},
+           { updateOne: { filter: [Object], update: [Object] } },
+           { updateOne: { filter: [Object], update: [Object] } }
+      ] 
    */
 
   static generateUpdateOperations(
@@ -498,7 +554,6 @@ module.exports = class AssetsHelper {
     checkAssetInformation = false
   ) {
     let bulkOperations = [];
-
     fromUserData.platformRoles.forEach((role) => {
       let roleCodeToUpdate = role.code;
       let arrayToMove = allAssetsData.filter(
@@ -509,7 +564,7 @@ module.exports = class AssetsHelper {
         (toRole) => toRole.code === roleCodeToUpdate
       );
 
-      // If role  doesn't exist in toUserData
+      // If Platform role  doesn't exist in toUserData
 
       if (!toUserRoleExists) {
         if (checkAssetInformation) {
@@ -711,7 +766,7 @@ module.exports = class AssetsHelper {
   /**
    * Check whether from and to user has Identical Roles.
    * @method
-   * @name createProgramRolesArray
+   * @name checkRolesPresence
    * @param {Array} fromUserData  -fromUser array.
    * @param {Array} toUserArray   - toserU array.
    * @returns {Boolean} returns true or false.
@@ -739,8 +794,28 @@ module.exports = class AssetsHelper {
  * @name fetchFromUserDataPlatformRoles
  * @param {Array} fromUserData -   From user data
  * @returns {Array} returns Array of Platform Roles to push for touser
- 
- */
+ * @returns
+ * 
+     * 
+    * [
+          {
+            roleId: 60c74aa8b81797534e9a3f11,
+            code: 'PROGRAM_MANAGER',
+            programs: [
+              607d320de9cce45e22ce90c0,
+            ]
+          },
+          {
+            roleId: 60c83b247f8464532732cdc3,
+            code: 'PROGRAM_DESIGNER',
+            programs: [
+                601429016a1ef53356b1d714,
+            ],
+            isAPlatformRole: true,
+            entities: []
+            }
+          ]
+    */
   static fetchFromUserDataPlatformRoles(
     fromUserData,
     reqData,
@@ -758,6 +833,7 @@ module.exports = class AssetsHelper {
           findProgramManagerQuery
         );
 
+        // returns ProgramRoles array
         let programRolesArray = this.createProgramRolesArray(
           fromUserData,
           findProgramManagerId,
