@@ -47,7 +47,6 @@ module.exports = class UserRolesHelper {
         let userRolesData = await database.models.userRoles
           .find(queryObject, projection)
           .lean();
-        console.log(userRolesData);
         return resolve(userRolesData);
       } catch (error) {
         return reject(error);

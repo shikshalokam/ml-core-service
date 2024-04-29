@@ -777,27 +777,6 @@ module.exports = class UserExtensionHelper {
   }
 
   /**
-   * bulkWrite the userExtension collection
-   * @method
-   * @name updateMany
-   * @param {Array} query - Array of queries to update.
-   * @returns {Array}
-   */
-
-  static updateMany(query) {
-    return new Promise(async (resolve, reject) => {
-      try {
-        let insertProgram = await database.models.userExtension.bulkWrite(
-          query
-        );
-        return resolve(insertProgram);
-      } catch (error) {
-        reject(error);
-      }
-    });
-  }
-
-  /**
    * update the userExtension document.
    * @method
    * @name updateOne
@@ -809,12 +788,12 @@ module.exports = class UserExtensionHelper {
   static updateOne(query, setQuery, arrayFilters = []) {
     return new Promise(async (resolve, reject) => {
       try {
-        let updateProgram = await database.models.userExtension.updateOne(
+        let updatedData = await database.models.userExtension.updateOne(
           query,
           setQuery,
           { arrayFilters, upsert: true }
         );
-        return resolve(updateProgram);
+        return resolve(updatedData);
       } catch (error) {
         reject(error);
       }
