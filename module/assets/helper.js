@@ -117,6 +117,25 @@ module.exports = class AssetsHelper {
 
         let updateUserAssetDataResult = false;
         //Check if the users has identical Role or not, and return boolean
+        /**
+         * 
+         * @params reqData.fromUserProfile.roles
+         * 
+         *  [
+                "CONTENT_CREATOR",
+                "PROGRAM_MANAGER"
+            ]
+         * 
+         * @params reqData.toUserProfile.roles
+         * 
+         *  [
+                "PROGRAM_MANAGER"
+            ]
+         *
+            @returns {boolean} true or false
+         * 
+         * 
+         */
         let checkUsersRolesIsIdentical = this.checkRolesPresence(
           reqData.fromUserProfile.roles,
           reqData.toUserProfile.roles
@@ -180,14 +199,14 @@ module.exports = class AssetsHelper {
               let fromUserData =
                 await userExtensionsHelper.userExtensionDocument(fromFindQuery);
               //Query to get Touser details from user Extension
-              let toFindQuery = {
+              let findQuery = {
                 userId: reqData.toUserProfile.userId,
               };
               let toUserData = await userExtensionsHelper.userExtensionDocument(
-                toFindQuery
+                findQuery
               );
               if (toUserData) {
-                //return promise after updating program in userExtension collection
+                // updating program in userExtension collection
 
                 /**
                    * @fromUserData
@@ -239,7 +258,16 @@ module.exports = class AssetsHelper {
                   @reqBodyData - edata of Event
                   @response -promise
                */
-                this.transferPrograms(fromUserData, toUserData, reqData);
+                let transferResult = await this.handleProgramTransfer(
+                  fromUserData,
+                  toUserData,
+                  reqData
+                );
+                if (!transferResult.success) {
+                  throw {
+                    message: constants.apiResponses.PROGRAM_NOT_TRANSFERRED,
+                  };
+                }
               } else {
                 //Query object to  create new user in user Extension
                 let newCollectionForUserExtension = {
@@ -288,44 +316,43 @@ module.exports = class AssetsHelper {
                       },
                   ]
                */
-                let programRolesArray = await this.fetchPlatformRolesToTransfer(
-                  fromUserData
-                );
+                let platformRolesToUpdate =
+                  await this.fetchPlatformRolesToTransfer(fromUserData);
 
-                //create user if  not exits in the user extension collection
+                //create user if not exits in the user extension collection
                 let createUserExtensions =
                   await userExtensionsHelper.createOrUpdate(
                     [],
                     newCollectionForUserExtension
                   );
                 if (createUserExtensions) {
-                  let updateProgramRolesAndCreatedByMatchQuery = {
+                  let matchQuery = {
                     userId: reqData.toUserProfile.userId,
                   };
 
-                  let updateProgramRolesAndCreatedByFieldQuery = {
+                  let pushQuery = {
                     $push: {
                       platformRoles: {
-                        $each: programRolesArray,
+                        $each: platformRolesToUpdate,
                       },
                     },
                   };
 
-                  let deleteProgramFromUserQuery = {
+                  let fromUserMatchQuery = {
                     userId: reqData.fromUserProfile.userId,
                   };
-                  let deleteProgramFromUserField = {
+                  let setQuery = {
                     $set: { platformRoles: [] },
                   };
                   let updateUserExtension =
-                    await userExtensionsHelper.updateOne(
-                      updateProgramRolesAndCreatedByMatchQuery,
-                      updateProgramRolesAndCreatedByFieldQuery
+                    await userExtensionsHelper.updateMany(
+                      matchQuery,
+                      pushQuery
                     );
                   if (updateUserExtension) {
-                    await userExtensionsHelper.updateOne(
-                      deleteProgramFromUserQuery,
-                      deleteProgramFromUserField
+                    await userExtensionsHelper.updateMany(
+                      fromUserMatchQuery,
+                      setQuery
                     );
                   }
                 }
@@ -465,12 +492,17 @@ module.exports = class AssetsHelper {
                   @checkAssetInformation - true or false
                   @response -promise
                */
-                this.transferPrograms(
+                let transferResult = await this.handleProgramTransfer(
                   fromUserData,
                   toUserData,
                   reqData,
                   checkAssetInformation
                 );
+                if (!transferResult.success) {
+                  throw {
+                    message: constants.apiResponses.PROGRAM_NOT_TRANSFERRED,
+                  };
+                }
               } else {
                 //Query object to  create new user in user Extension
                 let newCollectionForUserExtension = {
@@ -519,55 +551,58 @@ module.exports = class AssetsHelper {
                       },
                   ]
                */
-                let programRolesArray = await this.fetchPlatformRolesToTransfer(
-                  fromUserData,
-                  reqData,
-                  checkAssetInformation
-                );
+                let platformRolesToUpdate =
+                  await this.fetchPlatformRolesToTransfer(
+                    fromUserData,
+                    reqData,
+                    checkAssetInformation
+                  );
 
                 //create new user if not exits in the user extension
-                let createUserExtensions =
+                let createUserExtension =
                   await userExtensionsHelper.createOrUpdate(
                     [], // device data array
                     newCollectionForUserExtension
                   );
-                if (createUserExtensions) {
-                  let updateProgramRolesAndCreatedByMatchQuery = {
+                if (createUserExtension) {
+                  let mactchQuery = {
                     userId: reqData.toUserProfile.userId,
                   };
 
                   // Push Paticular program to the toUser
-                  let updateProgramRolesAndCreatedByFieldQuery = {
+                  let addToSetQuery = {
                     $addToSet: {
                       platformRoles: {
-                        $each: programRolesArray,
+                        $each: platformRolesToUpdate,
                       },
                     },
                   };
 
-                  let deleteProgramFromUserQuery = {
+                  let fromUserMatchQuery = {
                     userId: reqData.fromUserProfile.userId,
                   };
-                  let deleteProgramFromUserField = {
+                  let pullQuery = {
                     $pull: {
                       "platformRoles.$[elem].programs": new ObjectId(
                         reqData.assetInformation.identifier
                       ),
                     },
                   };
-                  let arrayFilters = [
-                    { "elem.code": programRolesArray[0].code },
-                  ];
+                  let arrayFilters = {
+                    arrayFilters: [
+                      { "elem.code": platformRolesToUpdate[0].code },
+                    ],
+                  };
 
                   let updateUserExtension =
-                    await userExtensionsHelper.updateOne(
-                      updateProgramRolesAndCreatedByMatchQuery,
-                      updateProgramRolesAndCreatedByFieldQuery
+                    await userExtensionsHelper.updateMany(
+                      mactchQuery,
+                      addToSetQuery
                     );
                   if (updateUserExtension) {
-                    await userExtensionsHelper.updateOne(
-                      deleteProgramFromUserQuery,
-                      deleteProgramFromUserField,
+                    await userExtensionsHelper.updateMany(
+                      fromUserMatchQuery,
+                      pullQuery,
                       arrayFilters
                     );
                   }
@@ -641,17 +676,17 @@ module.exports = class AssetsHelper {
   }
 
   /**
-   * Transfer programs from one user to anotherUser
-   * @method
-   * @name transferPrograms
-   * @param {Object} fromUserData  -   from userData.
-   * @param {Object} reqData       - request body data data.
-   * @param {Object} toUserData    - to user Data from userExtension.
-   * @returns {Array} returns a promise
+   * Transfers programs from one user to another.
    *
+   * @param {Object} fromUserData - The user data to transfer programs from.
+   * @param {Object} toUserData   - The user data to transfer programs to.
+   * @param {Object} [reqData={}] - requesbody data.
+   * @param {boolean} [checkAssetInformation=false] - check asset information.
+   * @returns {Promise<Object>}   -A promise that resolves with an object indicating the success of the program transfer.
+   * @throws {Error}              -If an error occurs during the transfer process.
    */
 
-  static transferPrograms(
+  static handleProgramTransfer(
     fromUserData,
     toUserData,
     reqData = {},
@@ -659,12 +694,12 @@ module.exports = class AssetsHelper {
   ) {
     return new Promise(async (resolve, reject) => {
       try {
-        let bulkOperations = [];
+        let updateOperationsQueue = [];
         fromUserData.platformRoles.forEach(async (role) => {
           //Program Role code of fromUser
-          let roleCodeToUpdate = role.code;
+          let userRole = role.code;
           let toUserRoleExists = toUserData.platformRoles.some(
-            (toRole) => toRole.code === roleCodeToUpdate
+            (toRole) => toRole.code === userRole
           );
 
           // If Platform role  doesn't exist in toUserData
@@ -683,8 +718,8 @@ module.exports = class AssetsHelper {
                     eachProgram.equals(reqData.assetInformation.identifier)
                   ),
                 };
-                bulkOperations.push(
-                  await userExtensionsHelper.updateOne(
+                updateOperationsQueue.push(
+                  await userExtensionsHelper.updateMany(
                     { userId: toUserData.userId },
                     {
                       $push: {
@@ -693,7 +728,7 @@ module.exports = class AssetsHelper {
                     }
                   ),
 
-                  await userExtensionsHelper.updateOne(
+                  await userExtensionsHelper.updateMany(
                     { userId: fromUserData.userId },
                     {
                       $pull: {
@@ -702,13 +737,13 @@ module.exports = class AssetsHelper {
                         ),
                       },
                     },
-                    [{ "elem.code": roleCodeToUpdate }]
+                    { arrayFilters: [{ "elem.code": userRole }] }
                   )
                 );
               }
             } else {
-              bulkOperations.push(
-                await userExtensionsHelper.updateOne(
+              updateOperationsQueue.push(
+                await userExtensionsHelper.updateMany(
                   { userId: toUserData.userId },
                   {
                     $push: {
@@ -717,28 +752,27 @@ module.exports = class AssetsHelper {
                   }
                 ),
 
-                await userExtensionsHelper.updateOne(
+                await userExtensionsHelper.updateMany(
                   { userId: fromUserData.userId },
                   {
                     $pull: {
-                      platformRoles: { code: roleCodeToUpdate },
+                      platformRoles: { code: userRole },
                     },
                   }
                 )
               );
             }
           } else {
-            let updateToQuery = {
+            let matchQuery = {
               userId: toUserData.userId,
-              "platformRoles.code": roleCodeToUpdate,
+              "platformRoles.code": userRole,
             };
 
-            let updateProgramstoToUser;
-            let deletePrograminFromUser;
-            // check partial or one to one Transfer if programRole  exits in toUser
-
+            let addToSetQuery;
+            let pullQuery;
+            // check partial or one to one Transfer if programRole exits in toUser
             if (checkAssetInformation) {
-              updateProgramstoToUser = {
+              addToSetQuery = {
                 $addToSet: {
                   "platformRoles.$[elem].programs": {
                     $each: role.programs.filter((oneProgram) =>
@@ -747,7 +781,7 @@ module.exports = class AssetsHelper {
                   },
                 },
               };
-              deletePrograminFromUser = {
+              pullQuery = {
                 $pull: {
                   "platformRoles.$[elem].programs": new ObjectId(
                     reqData.assetInformation.identifier
@@ -755,14 +789,14 @@ module.exports = class AssetsHelper {
                 },
               };
             } else {
-              updateProgramstoToUser = {
+              addToSetQuery = {
                 $addToSet: {
                   "platformRoles.$[elem].programs": {
                     $each: role.programs,
                   },
                 },
               };
-              deletePrograminFromUser = {
+              pullQuery = {
                 $pull: {
                   "platformRoles.$[elem].programs": {
                     $in: role.programs,
@@ -771,29 +805,28 @@ module.exports = class AssetsHelper {
               };
             }
 
-            let arrayFilters = [{ "elem.code": roleCodeToUpdate }];
+            let arrayFilters = { arrayFilters: [{ "elem.code": userRole }] };
 
-            let deleteProgramFromUserQuery = {
+            let fromUserMatchQuery = {
               userId: fromUserData.userId,
-              "platformRoles.code": roleCodeToUpdate,
+              "platformRoles.code": userRole,
             };
 
-            // pushing object to update in an array for bulk write operations
-            bulkOperations.push(
-              await userExtensionsHelper.updateOne(
-                updateToQuery,
-                updateProgramstoToUser,
+            updateOperationsQueue.push(
+              await userExtensionsHelper.updateMany(
+                matchQuery,
+                addToSetQuery,
                 arrayFilters
               ),
-              await userExtensionsHelper.updateOne(
-                deleteProgramFromUserQuery,
-                deletePrograminFromUser,
+              await userExtensionsHelper.updateMany(
+                fromUserMatchQuery,
+                pullQuery,
                 arrayFilters
               )
             );
           }
         });
-        await Promise.all(bulkOperations);
+        await Promise.all(updateOperationsQueue);
         return resolve({
           message: "Program transferred Successfully",
           success: true,
@@ -805,27 +838,28 @@ module.exports = class AssetsHelper {
   }
 
   /**
-   * Get Tousers assets based on assetInformation .
+   * Retrieves platform roles to transfer based on role and assetInformation.
    * @method
-   * @name programRolesArrayToTransfer
-   * @param {Object} fromUserData         - from userData.
-   * @param {String} findProgramManagerId - Program Role Id.
-   * @param {Array} allAssetsData         - PlatformRoles of from user.
-   * @returns {Array} returns PlatformRoles to update in Touser.
+   * @name getPlatformRolesToTransfer
+   * @param {Object} fromUserData                   - User data of the from user.
+   * @param {String} userRoleData                   - UserRole's Data.
+   * @param {Array}  [reqData={}]                   - request body Data.
+   * @param {boolean} [checkAssetInformation=false] - check asset information
+   * @returns {Promise<Array>} -Returns platform roles to update in the target user.
    */
 
-  static programRolesArrayToTransfer(
+  static getPlatformRolesToTransfer(
     fromUserData,
-    userRoleId,
+    userRoleData,
     reqData = {},
     checkAssetInformation = false
   ) {
     return new Promise((resolve, reject) => {
       try {
-        let programRolesArray = [];
+        let platformRoles= [];
 
         for (let eachRole of fromUserData.platformRoles) {
-          let matchingRole = userRoleId.find(
+          let matchingRole = userRoleData.find(
             (role) => role.code === eachRole.code
           );
 
@@ -862,11 +896,11 @@ module.exports = class AssetsHelper {
               roleDetails.entities = [];
             }
             if (roleDetails) {
-              programRolesArray.push(roleDetails);
+              platformRoles.push(roleDetails);
             }
           }
         }
-        return resolve(programRolesArray);
+        return resolve(platformRoles);
       } catch (e) {
         reject(e);
       }
@@ -874,15 +908,15 @@ module.exports = class AssetsHelper {
   }
 
   /**
-   * Check whether from and to user has Identical Roles.
+   * Checks whether the from and to users have identical roles.
    * @method
    * @name checkRolesPresence
-   * @param {Array} fromUserData  -fromUser array.
-   * @param {Array} toUserArray   - toserU array.
-   * @returns {Boolean} returns true or false.
+   * @param {Array} fromUserRole  - Array of roles for the from user.
+   * @param {Array} toUserRole    - Array of roles for the to user.
+   * @returns {Promise<Boolean>}  - A promise that resolves with true if both users have identical roles, otherwise false.
    */
 
-  static checkRolesPresence(fromUserRoleArray, toUserRoleArray) {
+  static checkRolesPresence(fromUserRole, toUserRole) {
     return new Promise(async (resolve, reject) => {
       try {
         let rolesToCheck = [
@@ -892,10 +926,10 @@ module.exports = class AssetsHelper {
         ];
 
         let hasRolesInFromArray = rolesToCheck.some((role) =>
-          fromUserRoleArray.includes(role)
+          fromUserRole.includes(role)
         );
         let hasRolesInToArray = rolesToCheck.some((role) =>
-          toUserRoleArray.includes(role)
+          toUserRole.includes(role)
         );
 
         return resolve(hasRolesInFromArray && hasRolesInToArray);
@@ -905,15 +939,17 @@ module.exports = class AssetsHelper {
     });
   }
   /**
- * Query to get Platform Roles for touser when user Not in UserExtension collection
+ * Retrieves platform roles to transfer to a user when the user is not in the UserExtension collection.
  * @method
  * @name fetchPlatformRolesToTransfer
- * @param {Array} fromUserData -   From user data
- * @returns {Array} returns Array of Platform Roles to push for touser
+ * @param {Array} fromUserData            - Fromuser data
+ * @param {Object} reqBodyData            - eData of the event.
+ * @param {Boolean} checkAssetInformation - whether to check the asset information
+ * @returns {Promise<Array>} A promise that resolves with an array of platform roles to push for the touser.
  * @returns
  * 
-     * 
-    * [
+
+ * [
           {
             roleId: 60c74aa8b81797534e9a3f11,
             code: 'PROGRAM_MANAGER',
@@ -931,22 +967,22 @@ module.exports = class AssetsHelper {
             entities: []
             }
           ]
-    */
+ */
   static fetchPlatformRolesToTransfer(
     fromUserData,
-    reqBodyData,
-    checkAssetInformation
+    reqBodyData = {},
+    checkAssetInformation = false
   ) {
     return new Promise(async (resolve, reject) => {
       try {
-        let filterCodes = fromUserData.platformRoles.map((role) => role.code);
-
-        let userRoleFindQuery = {
-          code: { $in: filterCodes },
-        };
-        let userRoleData = await userRolesHelper.roleDocuments(
-          userRoleFindQuery
+        let fromUserRoleCodes = fromUserData.platformRoles.map(
+          (role) => role.code
         );
+
+        let matchQuery = {
+          code: { $in: fromUserRoleCodes },
+        };
+        let userRoleData = await userRolesHelper.roleDocuments(matchQuery);
 
         /**
          * @fromUserData
@@ -1011,13 +1047,13 @@ module.exports = class AssetsHelper {
               }
           ]
      */
-        let programRolesArray = this.programRolesArrayToTransfer(
+        let rolesToTransfer = await this.getPlatformRolesToTransfer(
           fromUserData,
           userRoleData,
           reqBodyData,
           checkAssetInformation
         );
-        return resolve(programRolesArray);
+        return resolve(rolesToTransfer);
       } catch (error) {
         reject(error);
       }

@@ -780,18 +780,19 @@ module.exports = class UserExtensionHelper {
    * update the userExtension document.
    * @method
    * @name updateOne
-   * @param {Object} query    - findMatchQuery.
+   * @param {Object} query    - matchQuery.
    * @param {Object} setQuery - setQuery.
-   * @returns {Array}
+   * @param {Object} options 
+   * @returns {Promise<Array>}
    */
 
-  static updateOne(query, setQuery, arrayFilters = []) {
+  static updateMany(query, setQuery, options) {
     return new Promise(async (resolve, reject) => {
       try {
-        let updatedData = await database.models.userExtension.updateOne(
+        let updatedData = await database.models.userExtension.updateMany(
           query,
           setQuery,
-          { arrayFilters, upsert: true }
+          options
         );
         return resolve(updatedData);
       } catch (error) {
