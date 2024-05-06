@@ -9,7 +9,7 @@ const telemetryEventOnOff = process.env.TELEMETRY_ON_OFF;
 
 module.exports = class AssetsHelper {
   /**
-   * Get user's assets based on Type .
+   * Get Organization's assets based on Type .
    * @method
    * @name fetchAssets
    * @param {String} typeOfAssets -  typeOfAssets(program or solution)
@@ -136,7 +136,7 @@ module.exports = class AssetsHelper {
          * 
          * 
          */
-        let checkUsersRolesIsIdentical = this.checkRolesPresence(
+        let checkUsersRolesIsIdentical = await this.checkRolesPresence(
           reqData.fromUserProfile.roles,
           reqData.toUserProfile.roles
         );
@@ -258,7 +258,7 @@ module.exports = class AssetsHelper {
                   @reqBodyData - edata of Event
                   @response -promise
                */
-                let transferResult = await this.handleProgramTransfer(
+                let transferResult = await this.transferPlatformRoles(
                   fromUserData,
                   toUserData,
                   reqData
@@ -270,7 +270,7 @@ module.exports = class AssetsHelper {
                 }
               } else {
                 //Query  to  add or create in user Extension collection
-                let addNewUser = {
+                let addUserExtension = {
                   userId: reqData.toUserProfile.userId,
                   userName: reqData.toUserProfile.userName,
                   updatedBy: reqData.actionBy.userId,
@@ -320,12 +320,12 @@ module.exports = class AssetsHelper {
                   await this.fetchPlatformRolesToTransfer(fromUserData);
 
                 //create user if not exits in the user extension collection
-                let createNewUser =
+                let createUserExtension =
                   await userExtensionsHelper.createOrUpdate(
                     [],
-                    addNewUser
+                    addUserExtension
                   );
-                if (createNewUser) {
+                if (createUserExtension) {
                   let matchQuery = {
                     userId: reqData.toUserProfile.userId,
                   };
@@ -384,7 +384,7 @@ module.exports = class AssetsHelper {
               ) &&
               typeOfAssetsToMove === constants.common.SOULTION
             ) {
-              //match and Set Queries for solutions partial Transfer 
+              //match and Set Queries for solutions partial Transfer
               let solutionFilter = {
                 author: reqData.fromUserProfile.userId,
                 _id: new ObjectId(reqData.assetInformation.identifier),
@@ -492,7 +492,7 @@ module.exports = class AssetsHelper {
                   @checkAssetInformation - true or false
                   @response -promise
                */
-                let transferResult = await this.handleProgramTransfer(
+                let transferResult = await this.transferPlatformRoles(
                   fromUserData,
                   toUserData,
                   reqData,
@@ -505,7 +505,7 @@ module.exports = class AssetsHelper {
                 }
               } else {
                 //Query to add or create new user in user Extension
-                let addNewUser = {
+                let addUserExtension = {
                   userId: reqData.toUserProfile.userId,
                   userName: reqData.toUserProfile.userName,
                   updatedBy: reqData.actionBy.userId,
@@ -559,12 +559,12 @@ module.exports = class AssetsHelper {
                   );
 
                 //create new user if not exits in the user extension
-                let createNewUser =
+                let createUserExtension =
                   await userExtensionsHelper.createOrUpdate(
                     [], // device data array
-                    addNewUser
+                    addUserExtension
                   );
-                if (createNewUser) {
+                if (createUserExtension) {
                   let mactchQuery = {
                     userId: reqData.toUserProfile.userId,
                   };
@@ -656,7 +656,18 @@ module.exports = class AssetsHelper {
             );
             telemetryEvent.lname = constants.common.TELEMTRY_EVENT_LOGGER;
             telemetryEvent.level = constants.common.INFO_LEVEL;
-
+            /**
+             * @telemetryEvent
+             * {
+                  timestamp: 2024-05-06T06:15:54.742Z,
+                  msg: '{"eid":"AUDIT","ets":1714976154741,"ver":"3.0","mid":"bf25ba06-4d13-4161-83b2-aec50ceb1a56","actor":{"id":"9bb884fc-8a56-4727-9522-25a7d5b8ea28","type":"User"},"context":{"channel":"","pdata":{"id":"projectservice","ver":"8.0.0","pid":"projectservice.ownerTransfer"},"env":"User","cdata":[],"rollup":{}},"object":{"id":"9bb884fc-8a56-4727-9522-25a7d5b8ea28","type":"User"},"edata":{"state":"Transfer","type":"OwnerTransferStatus","props":[]}}',
+                  lname: 'TelemetryEventLogger',
+                  tname: '',
+                 level: 'INFO',
+                  HOSTNAME: '',
+  '               application.home': ''
+                } 
+               */
             await kafkaProducersHelper.pushTelemetryEventToKafka(
               telemetryEvent
             );
@@ -677,7 +688,7 @@ module.exports = class AssetsHelper {
 
   /**
    * Transfers programs from one user to another.
-   *
+   * @method transferPlatformRoles
    * @param {Object} fromUserData - The user data to transfer programs from.
    * @param {Object} toUserData   - The user data to transfer programs to.
    * @param {Object} [reqData={}] - requesbody data.
@@ -686,7 +697,7 @@ module.exports = class AssetsHelper {
    * @throws {Error}              -If an error occurs during the transfer process.
    */
 
-  static handleProgramTransfer(
+  static transferPlatformRoles(
     fromUserData,
     toUserData,
     reqData = {},
@@ -694,7 +705,7 @@ module.exports = class AssetsHelper {
   ) {
     return new Promise(async (resolve, reject) => {
       try {
-        let updateOperationsQueue = [];
+        let updatePlatformRoleQueries = [];
         fromUserData.platformRoles.forEach(async (role) => {
           //Program Role code of fromUser
           let userRole = role.code;
@@ -718,7 +729,7 @@ module.exports = class AssetsHelper {
                     eachProgram.equals(reqData.assetInformation.identifier)
                   ),
                 };
-                updateOperationsQueue.push(
+                updatePlatformRoleQueries.push(
                   await userExtensionsHelper.updateMany(
                     { userId: toUserData.userId },
                     {
@@ -742,7 +753,7 @@ module.exports = class AssetsHelper {
                 );
               }
             } else {
-              updateOperationsQueue.push(
+              updatePlatformRoleQueries.push(
                 await userExtensionsHelper.updateMany(
                   { userId: toUserData.userId },
                   {
@@ -812,7 +823,7 @@ module.exports = class AssetsHelper {
               "platformRoles.code": userRole,
             };
 
-            updateOperationsQueue.push(
+            updatePlatformRoleQueries.push(
               await userExtensionsHelper.updateMany(
                 matchQuery,
                 addToSetQuery,
@@ -826,11 +837,13 @@ module.exports = class AssetsHelper {
             );
           }
         });
-        await Promise.all(updateOperationsQueue);
-        return resolve({
-          message: "Program transferred Successfully",
-          success: true,
-        });
+        let updatedResults = await Promise.all(updatePlatformRoleQueries);
+        if (updatedResults) {
+          return resolve({
+            message: "Program transferred Successfully",
+            success: true,
+          });
+        }
       } catch (e) {
         reject(e);
       }
@@ -845,7 +858,7 @@ module.exports = class AssetsHelper {
    * @param {String} userRoleData                   - UserRole's Data.
    * @param {Array}  [reqData={}]                   - request body Data.
    * @param {boolean} [checkAssetInformation=false] - check asset information
-   * @returns {Promise<Array>} -Returns platform roles to update in the target user.
+   * @returns {Promise<Array>}   -Returns Array of platform roles.
    */
 
   static getPlatformRolesToTransfer(
@@ -854,9 +867,9 @@ module.exports = class AssetsHelper {
     reqData = {},
     checkAssetInformation = false
   ) {
-    return new Promise((resolve, reject) => {
+    return new Promise(async (resolve, reject) => {
       try {
-        let platformRoles= [];
+        let platformRoles = [];
 
         for (let eachRole of fromUserData.platformRoles) {
           let matchingRole = userRoleData.find(
@@ -1047,13 +1060,13 @@ module.exports = class AssetsHelper {
               }
           ]
      */
-        let rolesToTransfer = await this.getPlatformRolesToTransfer(
+        let platformrolesData = await this.getPlatformRolesToTransfer(
           fromUserData,
           userRoleData,
           reqBodyData,
           checkAssetInformation
         );
-        return resolve(rolesToTransfer);
+        return resolve(platformrolesData);
       } catch (error) {
         reject(error);
       }

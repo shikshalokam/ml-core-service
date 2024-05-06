@@ -1224,7 +1224,7 @@ module.exports = class ProgramsHelper {
   }
 
   /**
-   * Update program
+   * Update program document
    * @method
    * @name updateMany
    * @param {Object} query
@@ -1236,13 +1236,13 @@ module.exports = class ProgramsHelper {
   static updateMany(query, update, options = {}) {
     return new Promise(async (resolve, reject) => {
       try {
-        let updatedProgramCount = await database.models.programs.updateMany(
+        let updatedPrograms = await database.models.programs.updateMany(
           query,
           update,
           options
         );
-        if (updatedProgramCount) {
-          return resolve(updatedProgramCount);
+        if (updatedPrograms) {
+          return resolve(updatedPrograms);
         }
       } catch (error) {
         return reject(error);
