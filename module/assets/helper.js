@@ -269,15 +269,15 @@ module.exports = class AssetsHelper {
                   };
                 }
               } else {
-                //Query object to  create new user in user Extension
-                let newCollectionForUserExtension = {
+                //Query  to  add or create in user Extension collection
+                let addNewUser = {
                   userId: reqData.toUserProfile.userId,
                   userName: reqData.toUserProfile.userName,
                   updatedBy: reqData.actionBy.userId,
                   createdBy: reqData.actionBy.userId,
                 };
 
-                //return programRoles according to Parial or one to one transfer from fromUser
+                //return platformRoles according to Parial or one to one transfer from fromUser
                 /**
                    * @fromUserData
                    *   {
@@ -320,12 +320,12 @@ module.exports = class AssetsHelper {
                   await this.fetchPlatformRolesToTransfer(fromUserData);
 
                 //create user if not exits in the user extension collection
-                let createUserExtensions =
+                let createNewUser =
                   await userExtensionsHelper.createOrUpdate(
                     [],
-                    newCollectionForUserExtension
+                    addNewUser
                   );
-                if (createUserExtensions) {
+                if (createNewUser) {
                   let matchQuery = {
                     userId: reqData.toUserProfile.userId,
                   };
@@ -384,7 +384,7 @@ module.exports = class AssetsHelper {
               ) &&
               typeOfAssetsToMove === constants.common.SOULTION
             ) {
-              //filter and Queries for partial Transfer solutions
+              //match and Set Queries for solutions partial Transfer 
               let solutionFilter = {
                 author: reqData.fromUserProfile.userId,
                 _id: new ObjectId(reqData.assetInformation.identifier),
@@ -504,8 +504,8 @@ module.exports = class AssetsHelper {
                   };
                 }
               } else {
-                //Query object to  create new user in user Extension
-                let newCollectionForUserExtension = {
+                //Query to add or create new user in user Extension
+                let addNewUser = {
                   userId: reqData.toUserProfile.userId,
                   userName: reqData.toUserProfile.userName,
                   updatedBy: reqData.actionBy.userId,
@@ -559,12 +559,12 @@ module.exports = class AssetsHelper {
                   );
 
                 //create new user if not exits in the user extension
-                let createUserExtension =
+                let createNewUser =
                   await userExtensionsHelper.createOrUpdate(
                     [], // device data array
-                    newCollectionForUserExtension
+                    addNewUser
                   );
-                if (createUserExtension) {
+                if (createNewUser) {
                   let mactchQuery = {
                     userId: reqData.toUserProfile.userId,
                   };
