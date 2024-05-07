@@ -857,14 +857,12 @@ module.exports = class SolutionsHelper {
   static queryBasedOnRoleAndLocation(data, type = "") {
     return new Promise(async (resolve, reject) => {
       try {
-        console.log("Auto targeted")
         let registryIds = [];
         let entityTypes = [];
         let filterQuery = {
           isReusable: false,
           isDeleted: false,
         };
-       console.log(data,"this is dasttsatasta")
         if (validateEntity !== constants.common.OFF) {
           Object.keys(_.omit(data, ["filter", "role"])).forEach(
             (requestedDataKey) => {
@@ -954,7 +952,6 @@ module.exports = class SolutionsHelper {
     return new Promise(async (resolve, reject) => {
       try {
         let queryData = await this.queryBasedOnRoleAndLocation(bodyData, type);
-        console.log(queryData,"this is query based on role and location");
         if (!queryData.success) {
           return resolve(queryData);
         }
@@ -981,7 +978,6 @@ module.exports = class SolutionsHelper {
             "endDate",
           ]
         );
-        console.log(targetedSolutionDetails,"this is targeted solution details");
         if (!(targetedSolutionDetails.length > 0)) {
           throw {
             status: httpStatusCode["bad_request"].status,

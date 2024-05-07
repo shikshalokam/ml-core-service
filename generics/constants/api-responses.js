@@ -130,6 +130,7 @@ module.exports = {
   "PROGRAM_NOT_UPDATED" : "Could not update program",
   "ERROR_CREATING_PROGRAM" : "Error creating program",
   "PROGRAM_NOT_FOUND" : "Program not found" ,
+  "PROGRAM_NOT_TRANSFERRED":"Program not transferred",
   "PROGRAM_EXIST" : "Program exist",
   "USER_TARGETED_PROGRAMS_FETCHED" : "Users programs fetched successfully",
   "USER_TARGETED_SOLUTIONS_FETCHED" : "Users solutions fetched successfully",

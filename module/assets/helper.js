@@ -140,12 +140,7 @@ module.exports = class AssetsHelper {
           reqData.fromUserProfile.roles,
           reqData.toUserProfile.roles
         );
-        if (
-          reqData.actionBy.userId &&
-          reqData.fromUserProfile.userId &&
-          reqData.toUserProfile.userId &&
-          checkUsersRolesIsIdentical
-        ) {
+        if (checkUsersRolesIsIdentical) {
           let checkAssetInformation =
             reqData.hasOwnProperty("assetInformation");
           //condition for if there is no assetInformation in ownershipTransferEvent
@@ -205,6 +200,7 @@ module.exports = class AssetsHelper {
               let toUserData = await userExtensionsHelper.userExtensionDocument(
                 findQuery
               );
+
               if (toUserData) {
                 // updating program in userExtension collection
 
@@ -280,15 +276,7 @@ module.exports = class AssetsHelper {
                 //return platformRoles according to Parial or one to one transfer from fromUser
                 /**
                    * @fromUserData
-                   *   {
-                         _id: 662fdbdbe53ee147322ed8ee,
-                        roles: [],
-                        status: 'active',
-                        isDeleted: false,
-                        devices: [ [] ],
-                        userProfileScreenVisitedTrack: null,
-                        ratings: [],
-                        platformRoles: [
+                   *    [
                               {
                                   roleId: 60c83b247f8464532732cdc3,
                                   code: 'PROGRAM_DESIGNER',
@@ -302,9 +290,7 @@ module.exports = class AssetsHelper {
                                   programs: [Array]
                               }
                         ],
-                       deleted: false,
-                       userId: '9bb884fc-8a56-4727-9522-25a7d5b8ea21',
-                     }
+                      
                   @response -
                    [
                      {
@@ -316,8 +302,10 @@ module.exports = class AssetsHelper {
                       },
                   ]
                */
-                let platformRolesToUpdate =
-                  await this.fetchPlatformRolesToTransfer(fromUserData);
+                let platformRolesToUpdate = await this.fetchuserRolesToTransfer(
+                  fromUserData.platformRoles,
+                  reqData
+                );
 
                 //create user if not exits in the user extension collection
                 let createUserExtension =
@@ -342,7 +330,13 @@ module.exports = class AssetsHelper {
                     userId: reqData.fromUserProfile.userId,
                   };
                   let setQuery = {
-                    $set: { platformRoles: [] },
+                    $pull: {
+                      platformRoles: {
+                        code: {
+                          $in: platformRolesToUpdate.map((role) => role.code),
+                        },
+                      },
+                    },
                   };
                   let updateUserExtension =
                     await userExtensionsHelper.updateMany(
@@ -376,7 +370,6 @@ module.exports = class AssetsHelper {
             }
           } else {
             //condition for if there is an assetInformation in ownershipTransferEvent
-
             let typeOfAssetsToMove = reqData.assetInformation.objectType;
             if (
               reqData.toUserProfile.roles.includes(
@@ -386,8 +379,8 @@ module.exports = class AssetsHelper {
             ) {
               //match and Set Queries for solutions partial Transfer
               let solutionFilter = {
-                author: reqData.fromUserProfile.userId,
                 _id: new ObjectId(reqData.assetInformation.identifier),
+                author: reqData.fromUserProfile.userId,
               };
               let updateSolutions = {
                 $set: {
@@ -420,15 +413,14 @@ module.exports = class AssetsHelper {
                 ? (updateUserAssetDataResult = true)
                 : (updateUserAssetDataResult = false);
             }
-
             if (
-              reqData.toUserProfile.roles.includes(
+              (reqData.toUserProfile.roles.includes(
                 constants.common.PROGRAM_MANAGER
               ) ||
-              (reqData.toUserProfile.roles.includes(
-                constants.common.PROGRAM_DESIGNER
-              ) &&
-                typeOfAssetsToMove === constants.common.PROGRAM)
+                reqData.toUserProfile.roles.includes(
+                  constants.common.PROGRAM_DESIGNER
+                )) &&
+              typeOfAssetsToMove === constants.common.PROGRAM
             ) {
               let fromUserData =
                 await userExtensionsHelper.userExtensionDocument(fromFindQuery);
@@ -551,12 +543,11 @@ module.exports = class AssetsHelper {
                       },
                   ]
                */
-                let platformRolesToUpdate =
-                  await this.fetchPlatformRolesToTransfer(
-                    fromUserData,
-                    reqData,
-                    checkAssetInformation
-                  );
+                let platformRolesToUpdate = await this.fetchuserRolesToTransfer(
+                  fromUserData.platformRoles,
+                  reqData,
+                  checkAssetInformation
+                );
 
                 //create new user if not exits in the user extension
                 let createUserExtension =
@@ -709,13 +700,19 @@ module.exports = class AssetsHelper {
         fromUserData.platformRoles.forEach(async (role) => {
           //Program Role code of fromUser
           let userRole = role.code;
+          // Check if user Role already exists in userExtension or not 
           let toUserRoleExists = toUserData.platformRoles.some(
             (toRole) => toRole.code === userRole
           );
 
-          // If Platform role  doesn't exist in toUserData
+          // Check user Role  exists in KafkaEvent 
 
-          if (!toUserRoleExists) {
+          let kafkaeventToUserRoles = reqData.toUserProfile.roles.some(
+            (toUserRole) => toUserRole === userRole
+          );
+          // If Platform role  doesn't exist in toUserExtensionData and exists in kafka toUserRole
+
+          if (!toUserRoleExists && kafkaeventToUserRoles) {
             // check partial or one to one Transfer if programRole not exits in toUser
             if (checkAssetInformation) {
               let checkRoleToUpdateProgram = role.programs.some((programId) =>
@@ -730,7 +727,7 @@ module.exports = class AssetsHelper {
                   ),
                 };
                 updatePlatformRoleQueries.push(
-                  await userExtensionsHelper.updateMany(
+                  userExtensionsHelper.updateMany(
                     { userId: toUserData.userId },
                     {
                       $push: {
@@ -739,7 +736,7 @@ module.exports = class AssetsHelper {
                     }
                   ),
 
-                  await userExtensionsHelper.updateMany(
+                  userExtensionsHelper.updateMany(
                     { userId: fromUserData.userId },
                     {
                       $pull: {
@@ -754,7 +751,7 @@ module.exports = class AssetsHelper {
               }
             } else {
               updatePlatformRoleQueries.push(
-                await userExtensionsHelper.updateMany(
+                userExtensionsHelper.updateMany(
                   { userId: toUserData.userId },
                   {
                     $push: {
@@ -763,7 +760,7 @@ module.exports = class AssetsHelper {
                   }
                 ),
 
-                await userExtensionsHelper.updateMany(
+                userExtensionsHelper.updateMany(
                   { userId: fromUserData.userId },
                   {
                     $pull: {
@@ -773,7 +770,9 @@ module.exports = class AssetsHelper {
                 )
               );
             }
-          } else {
+          }
+          // If Platform role  does exist in toUserExtensionData and exists in kafka toUserRole
+          if (toUserRoleExists && kafkaeventToUserRoles) {
             let matchQuery = {
               userId: toUserData.userId,
               "platformRoles.code": userRole,
@@ -824,12 +823,12 @@ module.exports = class AssetsHelper {
             };
 
             updatePlatformRoleQueries.push(
-              await userExtensionsHelper.updateMany(
+              userExtensionsHelper.updateMany(
                 matchQuery,
                 addToSetQuery,
                 arrayFilters
               ),
-              await userExtensionsHelper.updateMany(
+              userExtensionsHelper.updateMany(
                 fromUserMatchQuery,
                 pullQuery,
                 arrayFilters
@@ -854,7 +853,7 @@ module.exports = class AssetsHelper {
    * Retrieves platform roles to transfer based on role and assetInformation.
    * @method
    * @name getPlatformRolesToTransfer
-   * @param {Object} fromUserData                   - User data of the from user.
+   * @param {Array} fromUserPlatformRoleData        - User data of the from user.
    * @param {String} userRoleData                   - UserRole's Data.
    * @param {Array}  [reqData={}]                   - request body Data.
    * @param {boolean} [checkAssetInformation=false] - check asset information
@@ -862,7 +861,7 @@ module.exports = class AssetsHelper {
    */
 
   static getPlatformRolesToTransfer(
-    fromUserData,
+    fromUserPlatformRoleData,
     userRoleData,
     reqData = {},
     checkAssetInformation = false
@@ -871,12 +870,14 @@ module.exports = class AssetsHelper {
       try {
         let platformRoles = [];
 
-        for (let eachRole of fromUserData.platformRoles) {
+        for (let eachRole of fromUserPlatformRoleData) {
           let matchingRole = userRoleData.find(
             (role) => role.code === eachRole.code
           );
-
-          if (matchingRole) {
+          let kafkaeventToUserRoles = reqData.toUserProfile.roles.some(
+            (toUserRole) => toUserRole === eachRole.code
+          );
+          if (matchingRole && kafkaeventToUserRoles) {
             let roleId = matchingRole._id;
             let roleDetails;
             if (checkAssetInformation) {
@@ -952,13 +953,13 @@ module.exports = class AssetsHelper {
     });
   }
   /**
- * Retrieves platform roles to transfer to a user when the user is not in the UserExtension collection.
+ * Retrieves platform roles with userRoles to transfer to a user when the user is not in the UserExtension collection.
  * @method
- * @name fetchPlatformRolesToTransfer
+ * @name fetchuserRolesToTransfer
  * @param {Array} fromUserData            - Fromuser data
  * @param {Object} reqBodyData            - eData of the event.
  * @param {Boolean} checkAssetInformation - whether to check the asset information
- * @returns {Promise<Array>} A promise that resolves with an array of platform roles to push for the touser.
+ * @returns {Promise<Array>} A promise that resolves with an array of platform roles with userRoles to push for the touser.
  * @returns
  * 
 
@@ -981,16 +982,14 @@ module.exports = class AssetsHelper {
             }
           ]
  */
-  static fetchPlatformRolesToTransfer(
-    fromUserData,
+  static fetchuserRolesToTransfer(
+    platformRoles,
     reqBodyData = {},
     checkAssetInformation = false
   ) {
     return new Promise(async (resolve, reject) => {
       try {
-        let fromUserRoleCodes = fromUserData.platformRoles.map(
-          (role) => role.code
-        );
+        let fromUserRoleCodes = platformRoles.map((role) => role.code);
 
         let matchQuery = {
           code: { $in: fromUserRoleCodes },
@@ -998,16 +997,8 @@ module.exports = class AssetsHelper {
         let userRoleData = await userRolesHelper.roleDocuments(matchQuery);
 
         /**
-         * @fromUserData
-         *   {
-              _id: 662fdbdbe53ee147322ed8ee,
-               roles: [],
-               status: 'active',
-              isDeleted: false,
-              devices: [ [] ],
-              userProfileScreenVisitedTrack: null,
-              ratings: [],
-              platformRoles: [
+         * @platformRoles
+         *   [
                      {
                          roleId: 60c83b247f8464532732cdc3,
                          code: 'PROGRAM_DESIGNER',
@@ -1023,7 +1014,7 @@ module.exports = class AssetsHelper {
                     ],
               deleted: false,
               userId: '9bb884fc-8a56-4727-9522-25a7d5b8ea21',
-            }
+            
         * @userRoleData
             [
               {
@@ -1061,7 +1052,7 @@ module.exports = class AssetsHelper {
           ]
      */
         let platformrolesData = await this.getPlatformRolesToTransfer(
-          fromUserData,
+          platformRoles,
           userRoleData,
           reqBodyData,
           checkAssetInformation
