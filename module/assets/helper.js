@@ -131,14 +131,16 @@ module.exports = class AssetsHelper {
          *  [
                 "PROGRAM_MANAGER"
             ]
-         *
+         * @param {String} reqData.assetInformation.objectType
+            "Program" or "Soultion"
             @returns {boolean} true or false
          * 
          * 
          */
         let checkUsersRolesIsIdentical = await this.checkRolesPresence(
           reqData.fromUserProfile.roles,
-          reqData.toUserProfile.roles
+          reqData.toUserProfile.roles,
+          reqData.assetInformation.objectType
         );
         if (checkUsersRolesIsIdentical) {
           let checkAssetInformation =
@@ -927,17 +929,29 @@ module.exports = class AssetsHelper {
    * @name checkRolesPresence
    * @param {Array} fromUserRole  - Array of roles for the from user.
    * @param {Array} toUserRole    - Array of roles for the to user.
+   * @param {String} assetsType   - typeOfassets whether its program or solution
    * @returns {Promise<Boolean>}  - A promise that resolves with true if both users have identical roles, otherwise false.
    */
 
-  static checkRolesPresence(fromUserRole, toUserRole) {
+  static checkRolesPresence(fromUserRole, toUserRole, assetsType = "") {
     return new Promise(async (resolve, reject) => {
       try {
-        let rolesToCheck = [
-          constants.common.PROGRAM_MANAGER,
-          constants.common.PROGRAM_DESIGNER,
-          constants.common.CONTENT_CREATOR,
-        ];
+        let rolesToCheck = [];
+        switch (assetsType) {
+          case constants.common.PROGRAM:
+            rolesToCheck = [
+              constants.common.PROGRAM_MANAGER,
+              constants.common.PROGRAM_DESIGNER,
+            ];
+          case constants.common.SOULTION:
+            rolesToCheck = [constants.common.CONTENT_CREATOR];
+          default:
+            rolesToCheck = [
+              constants.common.PROGRAM_MANAGER,
+              constants.common.PROGRAM_DESIGNER,
+              constants.common.CONTENT_CREATOR,
+            ];
+        }
 
         let hasRolesInFromArray = rolesToCheck.some((role) =>
           fromUserRole.includes(role)
