@@ -872,7 +872,7 @@ module.exports = class AssetsHelper {
    * Retrieves platform roles to transfer based on role and assetInformation.
    * @method
    * @name getPlatformRolesToTransfer
-   * @param {Array} fromUserPlatformRoleData        - User data of the from user.
+   * @param {Array} fromUserPlatformRoleData        - fromUser's platformRoles array data .
    * @param {String} userRoleData                   - UserRole's Data.
    * @param {Array}  [reqData={}]                   - request body Data.
    * @param {boolean} [checkAssetInformation=false] - check asset information
@@ -890,6 +890,11 @@ module.exports = class AssetsHelper {
         let platformRoles = [];
 
         for (let eachRole of fromUserPlatformRoleData) {
+           // Loop only when UserRole is PM or PD instead of looping through all the roles
+           if (
+            eachRole.code === constants.common.PROGRAM_MANAGER ||
+            eachRole.code === constants.common.PROGRAM_DESIGNER
+          ) {
           let matchingRole = userRoleData.find(
             (role) => role.code === eachRole.code
           );
@@ -932,6 +937,7 @@ module.exports = class AssetsHelper {
               platformRoles.push(roleDetails);
             }
           }
+        }
         }
         return resolve(platformRoles);
       } catch (e) {
