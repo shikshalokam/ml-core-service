@@ -782,7 +782,7 @@ module.exports = class UserExtensionHelper {
    * @name updateOne
    * @param {Object} query    - matchQuery.
    * @param {Object} setQuery - setQuery.
-   * @param {Object} options 
+   * @param {Object} options
    * @returns {Promise<Array>}
    */
 
@@ -795,6 +795,45 @@ module.exports = class UserExtensionHelper {
           options
         );
         return resolve(updatedData);
+      } catch (error) {
+        reject(error);
+      }
+    });
+  }
+
+  /**
+   * Get userExtension document.
+   * @method
+   * @name find
+   * @param {Object} [filterQuery = "all"]  - matchQuery.
+   * @param {Array} [fieldsArray = "all"] - projected fields.
+   * @param {Array} [skipFields = "none"] - field not to include
+   * @returns {Promise<Array>}
+   */
+
+  static find(filterQuery = "all", fieldsArray = "all", skipFields = "none") {
+    return new Promise(async (resolve, reject) => {
+      try {
+        let queryObject = filterQuery != "all" ? filterQuery : {};
+
+        let projection = {};
+
+        if (fieldsArray != "all") {
+          fieldsArray.forEach((field) => {
+            projection[field] = 1;
+          });
+        }
+
+        if (skipFields !== "none") {
+          skipFields.forEach((field) => {
+            projection[field] = 0;
+          });
+        }
+        let userExtensionDocument = await database.models.userExtension.find(
+          queryObject,
+          projection
+        );
+        return resolve(userExtensionDocument);
       } catch (error) {
         reject(error);
       }

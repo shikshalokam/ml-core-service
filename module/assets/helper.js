@@ -110,11 +110,6 @@ module.exports = class AssetsHelper {
     return new Promise(async (resolve, reject) => {
       try {
         let reqData = ownershipTransferEvent.edata;
-        let fromFindQuery = {
-          userId: reqData.fromUserProfile.userId,
-          platformRoles: { $exists: true },
-        };
-
         let updateUserAssetDataResult = false;
         //Check if the users has identical Role or not, and return boolean
         /**
@@ -140,7 +135,7 @@ module.exports = class AssetsHelper {
         let checkUsersRolesIsIdentical = await this.checkRolesPresence(
           reqData.fromUserProfile.roles,
           reqData.toUserProfile.roles,
-          reqData.assetInformation.objectType
+          reqData.assetInformation ? reqData.assetInformation.objectType : ""
         );
         if (checkUsersRolesIsIdentical) {
           let checkAssetInformation =
@@ -193,16 +188,21 @@ module.exports = class AssetsHelper {
                 constants.common.PROGRAM_DESIGNER
               )
             ) {
-              let fromUserData =
-                await userExtensionsHelper.userExtensionDocument(fromFindQuery);
-              //Query to get Touser details from user Extension
-              let findQuery = {
-                userId: reqData.toUserProfile.userId,
-              };
-              let toUserData = await userExtensionsHelper.userExtensionDocument(
-                findQuery
+              //get from and to user details from userExtension collection
+              let usersExtesionData = await userExtensionsHelper.find({
+                userId: {
+                  $in: [
+                    reqData.fromUserProfile.userId,
+                    reqData.toUserProfile.userId,
+                  ],
+                },
+              });
+              let fromUserData = usersExtesionData.find(
+                (fromUser) => fromUser.userId === reqData.fromUserProfile.userId
               );
-
+              let toUserData = await usersExtesionData.find(
+                (toUser) => toUser.userId === reqData.toUserProfile.userId
+              );
               if (toUserData) {
                 // updating program in userExtension collection
 
@@ -275,8 +275,15 @@ module.exports = class AssetsHelper {
                   createdBy: reqData.actionBy.userId,
                 };
 
-                //return platformRoles according to Parial or one to one transfer from fromUser
-                /**
+                //create user if not exits in the user extension collection
+                let createUserExtension =
+                  await userExtensionsHelper.createOrUpdate(
+                    [],
+                    addUserExtension
+                  );
+                if (createUserExtension) {
+                  //return platformRoles according to Parial or one to one transfer from fromUser
+                  /**
                    * @fromUserData
                    *    [
                               {
@@ -304,18 +311,11 @@ module.exports = class AssetsHelper {
                       },
                   ]
                */
-                let platformRolesToUpdate = await this.fetchuserRolesToTransfer(
-                  fromUserData.platformRoles,
-                  reqData
-                );
-
-                //create user if not exits in the user extension collection
-                let createUserExtension =
-                  await userExtensionsHelper.createOrUpdate(
-                    [],
-                    addUserExtension
-                  );
-                if (createUserExtension) {
+                  let platformRolesToUpdate =
+                    await this.fetchuserRolesToTransfer(
+                      fromUserData.platformRoles,
+                      reqData
+                    );
                   let matchQuery = {
                     userId: reqData.toUserProfile.userId,
                   };
@@ -424,17 +424,24 @@ module.exports = class AssetsHelper {
                 )) &&
               typeOfAssetsToMove === constants.common.PROGRAM
             ) {
-              let fromUserData =
-                await userExtensionsHelper.userExtensionDocument(fromFindQuery);
-              //Query to check toUser exits on userExtension collection
-              let toFindQuery = {
-                userId: reqData.toUserProfile.userId,
-              };
-              let toUserData = await userExtensionsHelper.userExtensionDocument(
-                toFindQuery
+              //get from and to user details from userExtension collection
+
+              let usersExtesionData = await userExtensionsHelper.find({
+                userId: {
+                  $in: [
+                    reqData.fromUserProfile.userId,
+                    reqData.toUserProfile.userId,
+                  ],
+                },
+              });
+              let fromUserData = usersExtesionData.find(
+                (fromUser) => fromUser.userId === reqData.fromUserProfile.userId
+              );
+              let toUserData = usersExtesionData.find(
+                (toUser) => toUser.userId === reqData.toUserProfile.userId
               );
               if (toUserData) {
-                //return promise after updating program in userExtension collection
+                //return promise after updating programs in userExtension collection
                 /**
                    * @fromUserData
                    *   {
@@ -505,7 +512,16 @@ module.exports = class AssetsHelper {
                   updatedBy: reqData.actionBy.userId,
                   createdBy: reqData.actionBy.userId,
                 };
-                /**
+
+                //create new user if not exits in the user extension
+                let createUserExtension =
+                  await userExtensionsHelper.createOrUpdate(
+                    [], // device data array
+                    addUserExtension
+                  );
+
+                if (createUserExtension) {
+                  /**
                    * @fromUserData
                    *   {
                          _id: 662fdbdbe53ee147322ed8ee,
@@ -545,24 +561,17 @@ module.exports = class AssetsHelper {
                       },
                   ]
                */
-                let platformRolesToUpdate = await this.fetchuserRolesToTransfer(
-                  fromUserData.platformRoles,
-                  reqData,
-                  checkAssetInformation
-                );
-
-                //create new user if not exits in the user extension
-                let createUserExtension =
-                  await userExtensionsHelper.createOrUpdate(
-                    [], // device data array
-                    addUserExtension
-                  );
-                if (createUserExtension) {
+                  let platformRolesToUpdate =
+                    await this.fetchuserRolesToTransfer(
+                      fromUserData.platformRoles,
+                      reqData,
+                      checkAssetInformation
+                    );
                   let mactchQuery = {
                     userId: reqData.toUserProfile.userId,
                   };
 
-                  // Push Paticular program to the toUser
+                  //Set Query
                   let addToSetQuery = {
                     $addToSet: {
                       platformRoles: {
@@ -700,22 +709,28 @@ module.exports = class AssetsHelper {
       try {
         let updatePlatformRoleQueries = [];
         fromUserData.platformRoles.forEach(async (role) => {
-          //Program Role code of fromUser
+          //user Role code of fromUser
           let userRole = role.code;
-          // Check if user Role already exists in userExtension or not 
+          // Loop only when UserRole is PM or PD instead of looping through all the roles
+          if (
+            userRole === constants.common.PROGRAM_MANAGER ||
+            userRole === constants.common.PROGRAM_DESIGNER
+          ) {
+          
+          // Check if user Role already exists in userExtension collection or not
           let toUserRoleExists = toUserData.platformRoles.some(
             (toRole) => toRole.code === userRole
           );
 
-          // Check user Role  exists in KafkaEvent 
+          // Check user Role  exists in KafkaEvent
 
           let kafkaeventToUserRoles = reqData.toUserProfile.roles.some(
             (toUserRole) => toUserRole === userRole
           );
-          // If Platform role  doesn't exist in toUserExtensionData and exists in kafka toUserRole
+          // If user role  doesn't exist in toUserExtensionData and exists in kafka toUserRole
 
           if (!toUserRoleExists && kafkaeventToUserRoles) {
-            // check partial or one to one Transfer if programRole not exits in toUser
+            // check partial or one to one Transfer
             if (checkAssetInformation) {
               let checkRoleToUpdateProgram = role.programs.some((programId) =>
                 programId.equals(reqData.assetInformation.identifier)
@@ -773,7 +788,7 @@ module.exports = class AssetsHelper {
               );
             }
           }
-          // If Platform role  does exist in toUserExtensionData and exists in kafka toUserRole
+          // If user role  does exist in toUserExtensionData and exists in kafka toUserRole
           if (toUserRoleExists && kafkaeventToUserRoles) {
             let matchQuery = {
               userId: toUserData.userId,
@@ -782,7 +797,7 @@ module.exports = class AssetsHelper {
 
             let addToSetQuery;
             let pullQuery;
-            // check partial or one to one Transfer if programRole exits in toUser
+            // check partial or one to one Transfer if userRole exits in toUser
             if (checkAssetInformation) {
               addToSetQuery = {
                 $addToSet: {
@@ -837,6 +852,7 @@ module.exports = class AssetsHelper {
               )
             );
           }
+        }
         });
         let updatedResults = await Promise.all(updatePlatformRoleQueries);
         if (updatedResults) {
@@ -845,6 +861,7 @@ module.exports = class AssetsHelper {
             success: true,
           });
         }
+      
       } catch (e) {
         reject(e);
       }
