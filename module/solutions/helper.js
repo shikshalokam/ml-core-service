@@ -657,8 +657,8 @@ module.exports = class SolutionsHelper {
 
         if (projection) {
           projection.forEach((projectedData) => {
-            if (projectedData === "objectType") {
-              projection1[projectedData] = "solution";
+            if (projectedData ===  constants.common.OBEJECT_TYPE) {
+              projection1[projectedData] = constants.common.SOULTION.toLowerCase();
             } else {
               projection1[projectedData] = 1;
             }

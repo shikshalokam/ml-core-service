@@ -109,11 +109,11 @@ module.exports = class UserExtensionHelper {
           let createUserExtension = await database.models.userExtension.create({
             userId: userDetails.userId,
             externalId: userDetails.userName,
-            status: "active",
+            status: constants.common.ACTIVE,
             isDeleted: false,
             devices: [deviceData],
-            createdBy: userDetails.createdBy ? userDetails.createdBy : "SYSTEM",
-            updatedBy: userDetails.updatedBy ? userDetails.updatedBy : "SYSTEM",
+            createdBy: userDetails.createdBy ? userDetails.createdBy : constants.common.SYSTEM,
+            updatedBy: userDetails.updatedBy ? userDetails.updatedBy : constants.common.SYSTEM,
           });
 
           if (createUserExtension) {

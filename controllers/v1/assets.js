@@ -31,7 +31,7 @@ module.exports = class Assets {
   list(req) {
     return new Promise(async (resolve, reject) => {
       try {
-        let assestsData = await assetsHelper.fetchAssets(
+        let assestsData = await assetsHelper.fetchOrganizationAssets(
           req.query.type,
           req.body.filters.orgId,
           req.body.filters.userIds,
@@ -49,4 +49,5 @@ module.exports = class Assets {
       }
     });
   }
+  
 };

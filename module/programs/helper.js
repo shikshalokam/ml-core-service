@@ -449,8 +449,8 @@ module.exports = class ProgramsHelper {
 
         if (projection && projection.length > 0) {
           projection.forEach((projectedData) => {
-            if (projectedData === "objectType") {
-              projection1[projectedData] = "program";
+            if (projectedData === constants.common.OBEJECT_TYPE) {
+              projection1[projectedData] = constants.common.PROGRAM.toLowerCase();
             } else {
               projection1[projectedData] = 1;
             }
