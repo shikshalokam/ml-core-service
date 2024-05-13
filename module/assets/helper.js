@@ -246,7 +246,7 @@ module.exports = class AssetsHelper {
                 );
                 if (!transferResult.success) {
                   throw {
-                    message: constants.apiResponses.PROGRAM_NOT_TRANSFERRED,
+                    message: constants.apiResponses.PROGRAM_TRANSFER_FAILED,
                   };
                 }
               } else {
@@ -483,7 +483,7 @@ module.exports = class AssetsHelper {
                 );
                 if (!transferResult.success) {
                   throw {
-                    message: constants.apiResponses.PROGRAM_NOT_TRANSFERRED,
+                    message: constants.apiResponses.PROGRAM_TRANSFER_FAILED,
                   };
                 }
               } else {
