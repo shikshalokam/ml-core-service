@@ -130,6 +130,8 @@ module.exports = {
   "PROGRAM_NOT_UPDATED" : "Could not update program",
   "ERROR_CREATING_PROGRAM" : "Error creating program",
   "PROGRAM_NOT_FOUND" : "Program not found" ,
+  "PROGRAM_NOT_TRANSFERRED":"Program not transferred",
+  "PROGRAM_TRANSFERRED":"Program transferred Successfully",
   "PROGRAM_EXIST" : "Program exist",
   "USER_TARGETED_PROGRAMS_FETCHED" : "Users programs fetched successfully",
   "USER_TARGETED_SOLUTIONS_FETCHED" : "Users solutions fetched successfully",
@@ -205,5 +207,5 @@ module.exports = {
   "FAILED_TO_CREATE_DOWNLOADABLEURL" : "Failed to generate downloadableUrl",
   "KEYS_INDEXED_SUCCESSFULLY": 'Keys indexed successfully',
   "KEYS_ALREADY_INDEXED": 'Keys already indexed',
-  
+  "ASSETS_FETCHED_SUCCESSFULLY": "Assets fetched successfully "
 };

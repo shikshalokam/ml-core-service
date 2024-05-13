@@ -88,11 +88,21 @@
   TELEMTRY_EVENT_LOGGER: "TelemetryEventLogger",
   INFO_LEVEL: "INFO",
   DELETE_STATE: "Delete",
+  TRANSFER_STATE:"Transfer",
   USER_DELETE_TYPE: "DeleteUserStatus",
   AUDIT: "AUDIT",
   DELETE_USER: "delete-user",
+  OWNERSHIP_TRANSFER_TOPIC:"ownership-transfer",
+  OWNERSHIP_TRANSFER_TYPE:"OwnerTransferStatus",
+  OWNERSHIP_TRANSFER_MODULE:"ownerTransfer",
   USER: "User",
   USER_DELETE_MODULE: "userDelete",
   OFF: "OFF",
-  UPLOAD_FILE:"api/cloud-services/mlcore/v1/files/upload"
+  UPLOAD_FILE:"api/cloud-services/mlcore/v1/files/upload",
+  PROGRAM_DESIGNER:"PROGRAM_DESIGNER",
+  PROGRAM_MANAGER:"PROGRAM_MANAGER",
+  CONTENT_CREATOR:"CONTENT_CREATOR",
+  SOULTION:"Solution",
+  OBEJECT_TYPE:"objectType",
+  SYSTEM:"SYSTEM"
 };
