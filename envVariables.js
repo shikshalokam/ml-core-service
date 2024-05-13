@@ -130,6 +130,20 @@ let enviromentVariables = {
     "optional" : false,
     "default" : "ON"
 
+  },
+  "OWNERSHIP_TRANSFER_ON_OFF": {
+    message: "Enable/Disable ownership transfer flow",
+    optional: false,
+    default : "ON",
+  },
+  "OWNERSHIP_TRANSFER_TOPIC": {
+    message: "Required ownership transfer kafka consumer topic name",
+    optional: true,
+    requiredIf : {
+      key: "OWNERSHIP_TRANSFER_ON_OFF",
+      operator: "EQUALS",
+      value: "ON"
+    }
   }
 }
 
