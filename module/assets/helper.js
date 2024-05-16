@@ -335,19 +335,28 @@ module.exports = class AssetsHelper {
                   }
                 }
               }
-              //Queries to update owner in programs Collections for ownership transfer
-              let programFilter = {
-                owner: reqData.fromUserProfile.userId,
-              };
-              let updatePrograms = {
-                $set: {
-                  owner: reqData.toUserProfile.userId,
-                },
-              };
-              let updatePartialPrograms = await programsHelper.updateMany(
-                programFilter,
-                updatePrograms
-              );
+
+              // Condition to check and update the program only if to user has PD role
+              let updatePartialPrograms;
+              if (
+                reqData.toUserProfile.roles.includes(
+                  constants.common.PROGRAM_DESIGNER
+                )
+              ) {
+                //Queries to update owner in programs Collections for ownership transfer
+                let programFilter = {
+                  owner: reqData.fromUserProfile.userId,
+                };
+                let updatePrograms = {
+                  $set: {
+                    owner: reqData.toUserProfile.userId,
+                  },
+                };
+                updatePartialPrograms = await programsHelper.updateMany(
+                  programFilter,
+                  updatePrograms
+                );
+              }
               updatePartialPrograms
                 ? (updateUserAssetDataResult = true)
                 : (updateUserAssetDataResult = false);
@@ -590,19 +599,30 @@ module.exports = class AssetsHelper {
                 }
               }
 
-              let programFilter = {
-                owner: reqData.fromUserProfile.userId,
-                _id: new ObjectId(reqData.assetInformation.identifier),
-              };
-              let updatePrograms = {
-                $set: {
-                  owner: reqData.toUserProfile.userId,
-                },
-              };
+              // Condition to check update the program only if to user has PD role
 
-              let updatedOneToOneTransferProgram =
-                await programsHelper.updateMany(programFilter, updatePrograms);
+              let updatedOneToOneTransferProgram;
+              if (
+                reqData.toUserProfile.roles.includes(
+                  constants.common.PROGRAM_DESIGNER
+                )
+              ) {
+                let programFilter = {
+                  owner: reqData.fromUserProfile.userId,
+                  _id: new ObjectId(reqData.assetInformation.identifier),
+                };
+                let updatePrograms = {
+                  $set: {
+                    owner: reqData.toUserProfile.userId,
+                  },
+                };
 
+                updatedOneToOneTransferProgram =
+                  await programsHelper.updateMany(
+                    programFilter,
+                    updatePrograms
+                  );
+              }
               updatedOneToOneTransferProgram
                 ? (updateUserAssetDataResult = true)
                 : (updateUserAssetDataResult = false);
