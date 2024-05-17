@@ -657,8 +657,9 @@ module.exports = class SolutionsHelper {
 
         if (projection) {
           projection.forEach((projectedData) => {
-            if (projectedData ===  constants.common.OBEJECT_TYPE) {
-              projection1[projectedData] = constants.common.SOULTION.toLowerCase();
+            if (projectedData === constants.common.OBEJECT_TYPE) {
+              projection1[projectedData] =
+                constants.common.SOULTION.toLowerCase();
             } else {
               projection1[projectedData] = 1;
             }
@@ -1541,13 +1542,23 @@ module.exports = class SolutionsHelper {
         }
 
         if (getTargetedSolution) {
+          // commented out because it was having issue in listing of solutions
+          // targetedSolutions = await this.forUserRoleAndLocation(
+          //   requestedData,
+          //   solutionType,
+          //   "",
+          //   "",
+          //   constants.common.DEFAULT_PAGE_SIZE,
+          //   constants.common.DEFAULT_PAGE_NO,
+          //   search
+          // );
           targetedSolutions = await this.forUserRoleAndLocation(
             requestedData,
             solutionType,
             "",
             "",
-            constants.common.DEFAULT_PAGE_SIZE,
-            constants.common.DEFAULT_PAGE_NO,
+            "", // not passing page size
+            "", // not passing page no
             search
           );
         }
