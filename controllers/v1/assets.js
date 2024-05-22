@@ -33,8 +33,8 @@ module.exports = class Assets {
       try {
         let assestsData = await assetsHelper.fetchOrganizationAssets(
           req.query.type,
-          req.body.filters.orgId,
-          req.body.filters.userIds,
+          req.body.filters.orgId ? req.body.filters.orgId : "",
+          req.body.filters.userIds ? req.body.filters.userIds : "",
           req.body.fields
         );
 
@@ -49,5 +49,4 @@ module.exports = class Assets {
       }
     });
   }
-  
 };
