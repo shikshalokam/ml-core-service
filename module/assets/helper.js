@@ -27,12 +27,21 @@ module.exports = class AssetsHelper {
     return new Promise(async (resolve, reject) => {
       try {
         let organizationAssets;
-        let solutionMatchQuery = {
-          createdFor: { $in: [orgId] },
-        };
-        let programMatchQuery = {
-          createdFor: { $in: [orgId] },
-        };
+        let solutionMatchQuery = {};
+        let programMatchQuery = {};
+        if (!orgId && !userIds) {
+          return reject({
+            message: constants.apiResponses.FAILED_TO_FETCH_ASSETS,
+          });
+        }
+        if (orgId && orgId.length > 0) {
+          solutionMatchQuery = {
+            createdFor: { $in: [orgId] },
+          };
+          programMatchQuery = {
+            createdFor: { $in: [orgId] },
+          };
+        }
         if (userIds && userIds.length > 0) {
           solutionMatchQuery.author = { $in: userIds };
           solutionMatchQuery.isAPrivateProgram = false;
@@ -79,14 +88,19 @@ module.exports = class AssetsHelper {
               ),
             ];
             let [programAssets, solutionAssets] = await Promise.all(listAssets);
-
             organizationAssets = {
               success: true,
               message: constants.apiResponses.ASSETS_FETCHED_SUCCESSFULLY,
               data: {
                 data: [...programAssets.data.data, ...solutionAssets.data.data],
               },
-              count: programAssets.data.count + solutionAssets.data.count,
+              count:
+                (programAssets.data.count
+                  ? programAssets.data.count
+                  : constants.common.DEFAULT_COUNT) +
+                (solutionAssets.data.count
+                  ? solutionAssets.data.count
+                  : constants.common.DEFAULT_COUNT),
             };
 
             break;

@@ -5,8 +5,6 @@ module.exports = (req) => {
 
         list : function () {
             req.checkBody('filters').exists().withMessage("required filters");
-            req.checkBody('filters.orgId').exists().withMessage("required orgId");
-
         },
        
     }
