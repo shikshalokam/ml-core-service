@@ -20,7 +20,7 @@ module.exports = class AssetsHelper {
    */
   static fetchOrganizationAssets(
     typeOfAssets,
-    orgId,
+    orgId ="",
     userIds = [],
     projection = {}
   ) {
