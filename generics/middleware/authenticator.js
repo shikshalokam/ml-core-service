@@ -7,15 +7,15 @@
 
 // dependencies
 const keycloakPublicKeyPath = process.env.KEYCLOAK_PUBLIC_KEY_PATH + "/";
-const jwt = require('jsonwebtoken');
-const fs = require('fs');
+const jwt = require("jsonwebtoken");
+const fs = require("fs");
 const PEM_FILE_BEGIN_STRING = "-----BEGIN PUBLIC KEY-----";
 const PEM_FILE_END_STRING = "-----END PUBLIC KEY-----";
 
 var invalidTokenMsg = {
-  "status" : 'ERR_TOKEN_FIELD_MISSING',
-  "message" : 'Required field token is missing',
-  "currentDate" : new Date().toISOString()
+  status: "ERR_TOKEN_FIELD_MISSING",
+  message: "Required field token is missing",
+  currentDate: new Date().toISOString(),
 };
 
 var removedHeaders = [
@@ -31,11 +31,10 @@ var removedHeaders = [
   "dnt",
   "postman-token",
   "cache-control",
-  "connection"
+  "connection",
 ];
 
 module.exports = async function (req, res, next) {
-
   removedHeaders.forEach(function (e) {
     delete req.headers[e];
   });
@@ -44,23 +43,20 @@ module.exports = async function (req, res, next) {
 
   if (req.path.includes("slack")) {
     next();
-    return
+    return;
   }
 
-
-  let byPassUrlPaths = [
-    "bodh/search",
-    "bodh/request",
-    "apps/details"
-  ]
+  let byPassUrlPaths = ["bodh/search", "bodh/request", "apps/details"];
   // Allow search endpoints for non-logged in users.
 
-  await Promise.all(byPassUrlPaths.map(async function (path) {
-    if (req.path.includes(path)) {
-      next();
-      return
-    }
-  }));
+  await Promise.all(
+    byPassUrlPaths.map(async function (path) {
+      if (req.path.includes(path)) {
+        next();
+        return;
+      }
+    })
+  );
 
   let internalAccessApiPaths = [
     "/cloud-services/",
@@ -70,19 +66,26 @@ module.exports = async function (req, res, next) {
     "/forms/details",
     "/programs/list",
     "/entities/getUsersByEntityAndRole/",
-    "/entities/details"
+    "/entities/details",
+    "/assets/list",
   ];
-  
-  let performInternalAccessTokenCheck = false;
-  await Promise.all(internalAccessApiPaths.map(async function (path) {
-    if (req.path.includes(path)) {
-      performInternalAccessTokenCheck = true;
-    }
-  }));
 
-  if ( !token && performInternalAccessTokenCheck) {
-    if (req.headers["internal-access-token"] !== process.env.INTERNAL_ACCESS_TOKEN) {
-      return res.status(httpStatusCode["unauthorized"].status).send(invalidTokenMsg);
+  let performInternalAccessTokenCheck = false;
+  await Promise.all(
+    internalAccessApiPaths.map(async function (path) {
+      if (req.path.includes(path)) {
+        performInternalAccessTokenCheck = true;
+      }
+    })
+  );
+
+  if (!token && performInternalAccessTokenCheck) {
+    if (
+      req.headers["internal-access-token"] !== process.env.INTERNAL_ACCESS_TOKEN
+    ) {
+      return res
+        .status(httpStatusCode["unauthorized"].status)
+        .send(invalidTokenMsg);
     } else {
       next();
       return;
@@ -109,73 +112,84 @@ module.exports = async function (req, res, next) {
     "/admin/dbDelete",
     "/admin/dbCreate",
     "/cloud-services/storage/actions",
-    "/admin/createIndex"
+    "/admin/createIndex",
   ];
 
-  for(let path = 0; path < mandatoryInternalAccessApiPaths.length ; path++ ) {
-    if( 
-      req.path.includes(mandatoryInternalAccessApiPaths[path]) && 
+  for (let path = 0; path < mandatoryInternalAccessApiPaths.length; path++) {
+    if (
+      req.path.includes(mandatoryInternalAccessApiPaths[path]) &&
       req.headers["internal-access-token"] !== process.env.INTERNAL_ACCESS_TOKEN
     ) {
-      return res.status(httpStatusCode["unauthorized"].status).send(invalidTokenMsg);
+      return res
+        .status(httpStatusCode["unauthorized"].status)
+        .send(invalidTokenMsg);
     }
   }
 
   if (!token) {
-    return res.status(httpStatusCode["unauthorized"].status).send(invalidTokenMsg);
+    return res
+      .status(httpStatusCode["unauthorized"].status)
+      .send(invalidTokenMsg);
   }
 
   var decoded = jwt.decode(token, { complete: true });
-  if(decoded === null || decoded.header === undefined){
-    return res.status(httpStatusCode["unauthorized"].status).send(invalidTokenMsg);
+  if (decoded === null || decoded.header === undefined) {
+    return res
+      .status(httpStatusCode["unauthorized"].status)
+      .send(invalidTokenMsg);
   }
 
   const kid = decoded.header.kid;
   let cert = "";
-  let path = keycloakPublicKeyPath + kid.replace(/\.\.\//g, '');
-  
+  let path = keycloakPublicKeyPath + kid.replace(/\.\.\//g, "");
+
   if (fs.existsSync(path)) {
+    let accessKeyFile = await fs.readFileSync(path);
 
-    let accessKeyFile  = await fs.readFileSync(path);
-
-    if(accessKeyFile) {
-      if(!accessKeyFile.includes(PEM_FILE_BEGIN_STRING)){
-        cert = PEM_FILE_BEGIN_STRING+"\n"+accessKeyFile+"\n"+PEM_FILE_END_STRING;
-      }else {
+    if (accessKeyFile) {
+      if (!accessKeyFile.includes(PEM_FILE_BEGIN_STRING)) {
+        cert =
+          PEM_FILE_BEGIN_STRING +
+          "\n" +
+          accessKeyFile +
+          "\n" +
+          PEM_FILE_END_STRING;
+      } else {
         cert = fs.readFileSync(path);
-      }  
+      }
     }
 
-    jwt.verify(token, cert, { algorithms: ['sha1', 'RS256', 'HS256'] }, function (err, decode) {
-
-      if (err) {
-        return res.status(401).send(invalidTokenMsg);
-      }
-
-      if (decode !== undefined) {
-        const expiry = decode.exp;
-        const now = new Date();
-        if (now.getTime() > expiry * 1000) {
+    jwt.verify(
+      token,
+      cert,
+      { algorithms: ["sha1", "RS256", "HS256"] },
+      function (err, decode) {
+        if (err) {
           return res.status(401).send(invalidTokenMsg);
         }
 
-        req.userDetails = {
-          userToken : token,
-          id : decode.sub.split(":").pop(),
-          userId : decode.sub.split(":").pop(),
-          userName : decode.preferred_username,
-          email : decode.email,
-          firstName : decode.name
-        }
-        next();
-      
-      } else {
-        return res.status(401).send(invalidTokenMsg);
-      }
+        if (decode !== undefined) {
+          const expiry = decode.exp;
+          const now = new Date();
+          if (now.getTime() > expiry * 1000) {
+            return res.status(401).send(invalidTokenMsg);
+          }
 
-    });
+          req.userDetails = {
+            userToken: token,
+            id: decode.sub.split(":").pop(),
+            userId: decode.sub.split(":").pop(),
+            userName: decode.preferred_username,
+            email: decode.email,
+            firstName: decode.name,
+          };
+          next();
+        } else {
+          return res.status(401).send(invalidTokenMsg);
+        }
+      }
+    );
   } else {
     return res.status(401).send(invalidTokenMsg);
   }
-
 };
