@@ -123,9 +123,12 @@ module.exports = class AssetsHelper {
    * @returns {Promise} success Data.
    */
   static ownershipTransfer(ownershipTransferEvent) {
+    
     return new Promise(async (resolve, reject) => {
       try {
-        let reqData = ownershipTransferEvent.edata;
+        let reqData = ownershipTransferEvent;
+        
+//        
         let updateUserAssetDataResult = false;
         //Check if the users has identical Role or not, and return boolean
         let checkUsersRoleAreIdentical = await this.checkRolesPresence(
@@ -134,7 +137,7 @@ module.exports = class AssetsHelper {
           reqData.assetInformation ? reqData.assetInformation.objectType : "" // "Program" or "Soultion"
         );
         if (checkUsersRoleAreIdentical) {
-          let hasAssetInformation = reqData.hasOwnProperty("assetInformation");
+          let hasAssetInformation = reqData.hasOwnProperty("assetInformation"); 
           //condition for if there is no assetInformation in ownershipTransferEvent
           if (!hasAssetInformation) {
             if (
@@ -252,12 +255,14 @@ module.exports = class AssetsHelper {
                    edata of Event
                    //return
                   promise
-               */
+               */           
                 let transferResult = await this.transferPlatformRoles(
                   fromUserData,
                   toUserData,
                   reqData
                 );
+                
+             //   
                 if (!transferResult.success) {
                   throw {
                     message: constants.apiResponses.PROGRAM_TRANSFER_FAILED,
@@ -692,7 +697,7 @@ module.exports = class AssetsHelper {
           });
         } else {
           return resolve({
-            success: true,
+            success: false,
           });
         }
       } catch (error) {

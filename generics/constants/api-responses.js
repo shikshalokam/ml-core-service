@@ -208,5 +208,7 @@ module.exports = {
   "KEYS_INDEXED_SUCCESSFULLY": 'Keys indexed successfully',
   "KEYS_ALREADY_INDEXED": 'Keys already indexed',
   "ASSETS_FETCHED_SUCCESSFULLY": "Assets fetched successfully ",
-  "FAILED_TO_FETCH_ASSETS": "Failed to fetch assets"
+  "FAILED_TO_FETCH_ASSETS": "Failed to fetch assets",
+  "OWNERSHIP_TANSFER_SUCCESS":"Ownership transfered successfully",
+  "OWNERSHIP_TANSFER_FAILED":"Ownership transfered failed"
 };
