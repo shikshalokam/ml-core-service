@@ -41,5 +41,5 @@ module.exports = {
     LIST_SURVEY_SUBMISSIONS : "/v1/users/surveySubmissions",
     LIST_CREATED_STATS:'/v1/userProjects/listCreatedProjects',
     LIST_JOINED_STATS:'/v1/userProjects/listPendingProjects',
-    LIST_OBSERVATION_STATS:'/v1/users/usersObservation'
+    LIST_OBSERVATION_STATS:'/v1/observations/usersObservation'
 }

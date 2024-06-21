@@ -1151,7 +1151,7 @@ module.exports = class UsersHelper {
    * @returns {Object} - returns overall stats or targeted records based on type
    */
   static getAllStats({ userToken, type }) {
-    console.log(userToken);
+    
     return new Promise(async (resolve, reject) => {
       try {
         if (type) {
@@ -1212,7 +1212,7 @@ module.exports = class UsersHelper {
                   });
                 })
                 .catch((error) => {
-                  console.log(error);
+                  
                   throw new Error("Something went wrong...");
                 });
 
@@ -1256,6 +1256,13 @@ module.exports = class UsersHelper {
             observationInfo,
           ])
             .then((responses) => {
+              for(let response of responses){
+                
+                if(!response.success)
+                  {
+                    throw new Error('Failed API calls.')
+                  }
+              }
               const [response1, response2, response3, response4, response5] =
                 responses;
               resolve({
@@ -1269,7 +1276,7 @@ module.exports = class UsersHelper {
             });
         }
       } catch (error) {
-        console.log(error);
+        
         reject(error);
       }
     });

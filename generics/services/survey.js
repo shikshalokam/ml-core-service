@@ -445,7 +445,7 @@ const userSurveySubmissions = function( token, solutionId ) {
     })
 }
 const getObservationInfo = function (
-    {userToken,stats}
+    {userToken,stats='false'}
 ) {
     
     return new Promise(async (resolve, reject) => {
@@ -487,7 +487,7 @@ const getObservationInfo = function (
             request.get(url,options,improvementProjectCallback);
 
         } catch (error) {
-            console.log(error)
+            
             return reject(error);
         }
     })
