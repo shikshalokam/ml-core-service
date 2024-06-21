@@ -1069,7 +1069,7 @@ module.exports = class ProgramsHelper {
    * @method
    * @name getAggregate
    * @param {String} [createdBy]         - userId
-   * * @returns {Array}                  survey details.
+   * * @returns {Array}                  program details.
    */
 
   static getAggregate(createdBy) {
@@ -1124,9 +1124,9 @@ module.exports = class ProgramsHelper {
           },
         ];
 
-        let surveyUpdate = await database.models.programs.aggregate(pipeline);
-        if (surveyUpdate) {
-          return resolve(surveyUpdate);
+        let programUpdate = await database.models.programs.aggregate(pipeline);
+        if (programUpdate) {
+          return resolve(programUpdate);
         }
       } catch (error) {
         console.log(error);
