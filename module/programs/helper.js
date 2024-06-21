@@ -1023,77 +1023,37 @@ module.exports = class ProgramsHelper {
   /**
    * Program details based on user.
    * @method
-   * @name listProgramBasedOnUser
+   * @name userProgram
    * @param {String} reqesteduserId - userId .
-   * @returns {Object} - Details of the program.
+   * @param {String} stats          - condition to check bigNumber or details .
+   * @returns {Object} - Details of the program or count of the program.
    */
 
-  static userProgram(reqesteduserId, queryType = "") {
+  static userProgram(reqesteduserId, stats = "true") {
     return new Promise(async (resolve, reject) => {
       try {
-        let updateUserProgramList = []; // array to store program join and program Name details
-        let bigNumberOfUserPrograms;
-        //if the queryType is not specified
-        if (queryType != "") {
-          let programUsersIds = [];
+        if (stats === "false") {
+          //getting details of usersProgram and programJoined details
 
-          let programUserData = await programUsersHelper.programUsersDocuments(
-            { userId: reqesteduserId },
-            ["_id", "programId", "createdAt", "userId"]
-          );
-          if (programUserData.length > 0) {
-            programUsersIds = programUserData.map(function (obj) {
-              return obj.programId;
-            });
-          }
-          let ProgramFindQuery = {};
-          if (programUsersIds.length > 0) {
-            ProgramFindQuery = {
-              _id: { $in: programUsersIds },
-            };
-          }
-          let programData = await this.programDocuments(ProgramFindQuery, [
-            "_id",
-            "name",
-            "status",
-          ]);
-
-          if (!(programData.length > 0)) {
-            return resolve({
-              status: httpStatusCode.bad_request.status,
-              message: constants.apiResponses.PROGRAM_NOT_FOUND,
-            });
-          }
-
-          programData.filter((eachProgram) => {
-            programUserData.forEach((eachProgramUser) => {
-              if (
-                eachProgramUser.programId.toString() ===
-                eachProgram._id.toString()
-              ) {
-                return updateUserProgramList.push({
-                  _id: eachProgramUser.programId,
-                  userId: eachProgramUser.userId,
-                  name: eachProgram.name,
-                  createdAt: eachProgramUser.createdAt,
-                  status: eachProgram.status,
-                });
-              }
-            });
+          let updateUserProgramList = await this.getAggregate(reqesteduserId);
+          return resolve({
+            message: constants.apiResponses.PROGRAMS_FETCHED,
+            success: true,
+            data: updateUserProgramList,
           });
         } else {
-          bigNumberOfUserPrograms = await programUsersHelper.countDocuments({
+          //getting bigNumber of usersProgram list
+          let countProgram = await programUsersHelper.countDocuments({
             userId: reqesteduserId,
           });
+          return resolve({
+            message: constants.apiResponses.PROGRAMS_FETCHED,
+            success: true,
+            data: countProgram,
+          });
         }
-        return resolve({
-          message: constants.apiResponses.PROGRAMS_FETCHED,
-          success: true,
-          data:
-            queryType != "" ? updateUserProgramList : bigNumberOfUserPrograms,
-        });
       } catch (error) {
-        return resolve({
+        return reject({
           success: false,
           status: error.status
             ? error.status
@@ -1104,6 +1064,76 @@ module.exports = class ProgramsHelper {
     });
   }
 
+  /**
+   * aggregate function.
+   * @method
+   * @name getAggregate
+   * @param {String} [createdBy]         - userId
+   * * @returns {Array}                  survey details.
+   */
+
+  static getAggregate(createdBy) {
+    return new Promise(async (resolve, reject) => {
+      try {
+        const pipeline = [
+          {
+            $match: {
+              owner: createdBy,
+            },
+          },
+          {
+            $lookup: {
+              from: "programUsers",
+              let: {
+                programId: "$_id",
+                userId: "$owner",
+              },
+              pipeline: [
+                {
+                  $match: {
+                    $expr: {
+                      $and: [
+                        { $eq: ["$programId", "$$programId"] },
+                        { $eq: ["$userId", "$$userId"] },
+                      ],
+                    },
+                  },
+                },
+              ],
+              as: "programsJoined",
+            },
+          },
+          {
+            $project: {
+              name: 1,
+              _id: 1,
+              userId: 1,
+              status: 1,
+              externalId: 1,
+              programsJoined: {
+                $map: {
+                  input: "$programsJoined",
+                  as: "programsJoined",
+                  in: {
+                    _id: "$$programsJoined._id",
+                    createdAt: "$$programsJoined.createdAt",
+                  },
+                },
+              },
+            },
+          },
+        ];
+
+        let surveyUpdate = await database.models.programs.aggregate(pipeline);
+        if (surveyUpdate) {
+          return resolve(surveyUpdate);
+        }
+      } catch (error) {
+        console.log(error);
+        return reject(error);
+      }
+    });
+  }
   /**
    * Program join.
    * @method

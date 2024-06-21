@@ -179,7 +179,7 @@ module.exports = class ProgramUsersHelper {
       }
     });
   }
-    
+  
     /**
      * check if user joined a program or not and consentShared
      * @method
