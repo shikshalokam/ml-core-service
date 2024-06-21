@@ -1168,46 +1168,33 @@ module.exports = class UsersHelper {
 
               break;
             case "project":
-              let projectsStartedStatsAPICall =
-                improvementProjectService.getJoinedProjectStats({
-                  status: "started",
+              let projectsStartedByUserAPICall =
+                improvementProjectService.listProjectOverviewInfo({
+                  stats: "false",
                   userToken,
+                  userInvolvement:'creator'
                 });
 
-              let projectInProgressStatsAPICall =
-                improvementProjectService.getJoinedProjectStats({
-                  status: "inProgress",
+              let projectsConsumedByUserAPICall =
+                improvementProjectService.listProjectOverviewInfo({
+                  stats: "false",
                   userToken,
-                });
-
-              let projectSubmittedStatsAPICall =
-                improvementProjectService.getJoinedProjectStats({
-                  status: "submitted",
-                  userToken,
-                });
-
-              let projectCreatedStatsAPICall =
-                improvementProjectService.getCreatedProjectStats({
-                  userToken,
+                  userInvolvement:'consumed'
                 });
 
               Promise.all([
-                projectsStartedStatsAPICall,
-                projectInProgressStatsAPICall,
-                projectSubmittedStatsAPICall,
-                projectCreatedStatsAPICall,
+                projectsStartedByUserAPICall,
+                projectsConsumedByUserAPICall
               ])
                 .then((responses) => {
-                  const [response1, response2, response3, response4] =
+                  const [response1, response2] =
                     responses;
 
                   resolve({
                     type,
                     data:{
-                      projectsStartedList: response1.data,
-                      projectInProgressList: response2.data,
-                      projectSubmittedList: response3.data,
-                      projectCreatedList: response4.data,
+                      projectsStartedByUser: response1.data,
+                      projectsConsumedByUser: response2.data,
                     }
                   });
                 })
@@ -1221,27 +1208,18 @@ module.exports = class UsersHelper {
                 throw new Error('Invalid Type passed.')
           }
         } else {
-          let projectsStartedStatsAPICall =
-            improvementProjectService.getJoinedProjectStats({
-              status: "started",
+          let projectsStartedByUserStatsAPICall =
+            improvementProjectService.listProjectOverviewInfo({
+              stats: "true",
               userToken,
+              userInvolvement:'creator'
             });
 
-          let projectInProgressStatsAPICall =
-            improvementProjectService.getJoinedProjectStats({
-              status: "inProgress",
+          let projectsConsumedByUserStatsAPICall =
+            improvementProjectService.listProjectOverviewInfo({
+              stats: "true",
               userToken,
-            });
-
-          let projectSubmittedStatsAPICall =
-            improvementProjectService.getJoinedProjectStats({
-              status: "submitted",
-              userToken,
-            });
-
-          let projectCreatedStatsAPICall =
-            improvementProjectService.getCreatedProjectStats({
-              userToken,
+              userInvolvement:'consumed'
             });
 
           let observationInfo = surveyService.getObservationInfo({
@@ -1249,26 +1227,23 @@ module.exports = class UsersHelper {
           });
 
           Promise.all([
-            projectsStartedStatsAPICall,
-            projectInProgressStatsAPICall,
-            projectSubmittedStatsAPICall,
-            projectCreatedStatsAPICall,
+            projectsStartedByUserStatsAPICall,
+            projectsConsumedByUserStatsAPICall,
             observationInfo,
           ])
             .then((responses) => {
               for(let response of responses){
-                
                 if(!response.success)
                   {
                     throw new Error('Failed API calls.')
                   }
               }
-              const [response1, response2, response3, response4, response5] =
+              const [response1, response2, response3] =
                 responses;
               resolve({
-                projectCreatedStats: response4.data.length,
-                projectAssignedToUserStats:response1.data.length+response2.data.length+ response3.data.length,
-                observationWhichUserConsumedStats: response5.data.count,
+                projectsStartedByUser: response1.data,
+                projectsConsumedByUserStats:response2.data,
+                observationWhichUserConsumedStats: response3.data.count,
               });
             })
             .catch((error) => {

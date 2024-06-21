@@ -323,14 +323,14 @@ const projectDocuments = function (
         }
     })
 }
-const getJoinedProjectStats = function (
-    {userToken,status}
+const listProjectOverviewInfo = function (
+    {userToken,stats='false',userInvolvement}
 ) {
     
     return new Promise(async (resolve, reject) => {
         try {
             
-            const url = process.env.ML_PROJECT_SERVICE_URL + constants.endpoints.LIST_JOINED_STATS+`?status=${status}`
+            const url = process.env.ML_PROJECT_SERVICE_URL + constants.endpoints.LIST_JOINED_STATS+`?userInvolvement=${userInvolvement}&stats=${stats}`
             
             function improvementProjectCallback(err, data) {
                 
@@ -429,6 +429,6 @@ module.exports = {
     getProjectDetail : getProjectDetail,
     getTemplateDetail : getTemplateDetail,
     projectDocuments : projectDocuments,
-    getJoinedProjectStats,
+    listProjectOverviewInfo,
     getCreatedProjectStats
 }
