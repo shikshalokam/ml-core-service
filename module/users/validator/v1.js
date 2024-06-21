@@ -12,6 +12,10 @@ module.exports = (req) => {
         targetedEntity : function () {
             req.checkParams("_id").exists().withMessage("required solution id");
             req.checkBody("role").exists().withMessage("required user role");
+        },
+        getAllStats:function(){
+            req.checkQuery('type').optional().isIn(['observation', 'project', 'survey', 'program']) // If present, it must be one of these values
+            .withMessage('Invalid type. Allowed values are observation, project, survey, program.')
         }
 
     }

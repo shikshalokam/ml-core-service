@@ -23,7 +23,6 @@ const telemetryEventOnOff = process.env.TELEMETRY_ON_OFF
  */
 
 module.exports = class UsersHelper {
-
   /**
    * deleteUserPIIData function to delete users Data.
    * @method
@@ -80,12 +79,12 @@ module.exports = class UsersHelper {
    */
   static deleteUserPIIData(userDeleteEvent) {
     return new Promise(async (resolve, reject) => {
-      try{
+      try {
         let userId = userDeleteEvent.edata.userId;
         let filter = {
-            userId: userId,
-          }
-        let updateProfile =  {
+          userId: userId,
+        };
+        let updateProfile = {
           $set: {
             "userProfile.firstName": constants.common.DELETED_USER,
           },
@@ -106,31 +105,44 @@ module.exports = class UsersHelper {
         };
         let solutionFilter = {
           author: userId,
-        }
-        let updateSolutions =  {
+        };
+        let updateSolutions = {
           $set: {
-            "creator": constants.common.DELETED_USER,
+            creator: constants.common.DELETED_USER,
           },
         };
         let solutionLicenseFilter = {
           author: userId,
-          license: {$exists:true, $ne:""}
-        }
-        let updateSolutionsLicense =  {
+          license: { $exists: true, $ne: "" },
+        };
+        let updateSolutionsLicense = {
           $set: {
             "license.author": constants.common.DELETED_USER,
-            "license.creator": constants.common.DELETED_USER
+            "license.creator": constants.common.DELETED_USER,
           },
         };
-        let deleteUserPII = [programUsersHelper.updateMany(filter, updateProfile), solutionsHelper.updateMany(solutionFilter, updateSolutions), solutionsHelper.updateMany(solutionLicenseFilter, updateSolutionsLicense)]
-        let deleteUserPIIDataResult  = await Promise.all(deleteUserPII);
-        if (deleteUserPIIDataResult && (deleteUserPIIDataResult[0].nModified > 0 || deleteUserPIIDataResult[1].nModified > 0  | deleteUserPIIDataResult[2].nModified > 0)) {
-          if(telemetryEventOnOff !== constants.common.OFF){
+        let deleteUserPII = [
+          programUsersHelper.updateMany(filter, updateProfile),
+          solutionsHelper.updateMany(solutionFilter, updateSolutions),
+          solutionsHelper.updateMany(
+            solutionLicenseFilter,
+            updateSolutionsLicense
+          ),
+        ];
+        let deleteUserPIIDataResult = await Promise.all(deleteUserPII);
+        if (
+          deleteUserPIIDataResult &&
+          (deleteUserPIIDataResult[0].nModified > 0 ||
+            (deleteUserPIIDataResult[1].nModified > 0) |
+              (deleteUserPIIDataResult[2].nModified > 0))
+        ) {
+          if (telemetryEventOnOff !== constants.common.OFF) {
             /**
              * Telemetry Raw Event
              * {"eid":"","ets":1700188609568,"ver":"3.0","mid":"e55a91cd-7964-46bc-b756-18750787fb32","actor":{},"context":{"channel":"","pdata":{"id":"projectservice","pid":"manage-learn","ver":"7.0.0"},"env":"","cdata":[{"id":"adf3b621-619b-4195-a82d-d814eecdb21f","type":"Request"}],"rollup":{}},"object":{},"edata":{}}
              */
-            let rawEvent = await gen.utils.generateTelemetryEventSkeletonStructure();
+            let rawEvent =
+              await gen.utils.generateTelemetryEventSkeletonStructure();
             rawEvent.eid = constants.common.AUDIT;
             rawEvent.context.channel = userDeleteEvent.context.channel;
             rawEvent.context.env = constants.common.USER;
@@ -143,13 +155,17 @@ module.exports = class UsersHelper {
             };
             rawEvent.actor = userObject;
             rawEvent.object = userObject;
-            rawEvent.context.pdata.pid = `${process.env.ID}.${constants.common.USER_DELETE_MODULE}`
+            rawEvent.context.pdata.pid = `${process.env.ID}.${constants.common.USER_DELETE_MODULE}`;
 
-            let telemetryEvent = await gen.utils.generateTelemetryEvent(rawEvent);
+            let telemetryEvent = await gen.utils.generateTelemetryEvent(
+              rawEvent
+            );
             telemetryEvent.lname = constants.common.TELEMTRY_EVENT_LOGGER;
-            telemetryEvent.level = constants.common.INFO_LEVEL
+            telemetryEvent.level = constants.common.INFO_LEVEL;
 
-            await kafkaProducersHelper.pushTelemetryEventToKafka(telemetryEvent);
+            await kafkaProducersHelper.pushTelemetryEventToKafka(
+              telemetryEvent
+            );
           }
           return resolve({
             success: true,
@@ -527,8 +543,12 @@ module.exports = class UsersHelper {
                   data["projectId"] = importedProject._id;
                   data["type"] = constants.common.IMPROVEMENT_PROJECT;
                   // if project is having certificate pass certificateTemplateId details with solution details.
-                  if ( importedProject.certificate && importedProject.certificate.templateId ) {
-                    data["certificateTemplateId"] = importedProject.certificate.templateId;
+                  if (
+                    importedProject.certificate &&
+                    importedProject.certificate.templateId
+                  ) {
+                    data["certificateTemplateId"] =
+                      importedProject.certificate.templateId;
                   }
                   mergedData.push(data);
                   totalCount = totalCount + 1;
@@ -1059,7 +1079,7 @@ module.exports = class UsersHelper {
             userId: userId,
           },
           ["programId"],
-          "none",// not passing skip fields
+          "none", // not passing skip fields
           { updatedAt: -1 } // sort data.
         );
 
@@ -1068,7 +1088,7 @@ module.exports = class UsersHelper {
             return obj.programId;
           });
         }
-        
+
         if (programUsersIds.length > 0) {
           let findQuery = {
             _id: { $in: programUsersIds },
@@ -1083,7 +1103,7 @@ module.exports = class UsersHelper {
             findQuery,
             ["_id"]
           );
-            
+
           // get _ids to array
           if (
             programDetails.success > 0 &&
@@ -1095,7 +1115,10 @@ module.exports = class UsersHelper {
             // We can't implement sort logic in programDocuments function because userRelatedPrograms can contain prev profile programs also
             let programDetailsResponse = programDetails.data.data;
             let programsResult = _.filter(programUsersIds, (id) =>
-              _.find(programDetailsResponse, (data) => data._id.toString() === id.toString())
+              _.find(
+                programDetailsResponse,
+                (data) => data._id.toString() === id.toString()
+              )
             );
             // get all the programs ids in array
             alreadyStartedPrograms =
@@ -1116,6 +1139,140 @@ module.exports = class UsersHelper {
             : httpStatusCode["internal_server_error"].status,
           message: error.message,
         });
+      }
+    });
+  }
+    /**
+   * Get overall Stats of the User
+   * @method
+   * @name getAllStats
+   * @param {String} userToken - userToken
+   * @param {String} type - type
+   * @returns {Object} - returns overall stats or targeted records based on type
+   */
+  static getAllStats({ userToken, type }) {
+    console.log(userToken);
+    return new Promise(async (resolve, reject) => {
+      try {
+        if (type) {
+          switch (type) {
+            case "observation":
+              let observationInfo = await surveyService.getObservationInfo({
+                userToken,
+              });
+
+              resolve({
+                type: type,
+                data: observationInfo.data,
+              });
+
+              break;
+            case "project":
+              let projectsStartedStatsAPICall =
+                improvementProjectService.getJoinedProjectStats({
+                  status: "started",
+                  userToken,
+                });
+
+              let projectInProgressStatsAPICall =
+                improvementProjectService.getJoinedProjectStats({
+                  status: "inProgress",
+                  userToken,
+                });
+
+              let projectSubmittedStatsAPICall =
+                improvementProjectService.getJoinedProjectStats({
+                  status: "submitted",
+                  userToken,
+                });
+
+              let projectCreatedStatsAPICall =
+                improvementProjectService.getCreatedProjectStats({
+                  userToken,
+                });
+
+              Promise.all([
+                projectsStartedStatsAPICall,
+                projectInProgressStatsAPICall,
+                projectSubmittedStatsAPICall,
+                projectCreatedStatsAPICall,
+              ])
+                .then((responses) => {
+                  const [response1, response2, response3, response4] =
+                    responses;
+
+                  resolve({
+                    type,
+                    data:{
+                      projectsStartedList: response1.data,
+                      projectInProgressList: response2.data,
+                      projectSubmittedList: response3.data,
+                      projectCreatedList: response4.data,
+                    }
+                  });
+                })
+                .catch((error) => {
+                  console.log(error);
+                  throw new Error("Something went wrong...");
+                });
+
+              break;
+              default:
+                throw new Error('Invalid Type passed.')
+          }
+        } else {
+          let projectsStartedStatsAPICall =
+            improvementProjectService.getJoinedProjectStats({
+              status: "started",
+              userToken,
+            });
+
+          let projectInProgressStatsAPICall =
+            improvementProjectService.getJoinedProjectStats({
+              status: "inProgress",
+              userToken,
+            });
+
+          let projectSubmittedStatsAPICall =
+            improvementProjectService.getJoinedProjectStats({
+              status: "submitted",
+              userToken,
+            });
+
+          let projectCreatedStatsAPICall =
+            improvementProjectService.getCreatedProjectStats({
+              userToken,
+            });
+
+          let observationInfo = surveyService.getObservationInfo({
+            userToken,
+          });
+
+          Promise.all([
+            projectsStartedStatsAPICall,
+            projectInProgressStatsAPICall,
+            projectSubmittedStatsAPICall,
+            projectCreatedStatsAPICall,
+            observationInfo,
+          ])
+            .then((responses) => {
+              const [response1, response2, response3, response4, response5] =
+                responses;
+
+              resolve({
+                projectCreatedStats: response4.data.length,
+                projectAssignedToUserStats:response1.data.length+response2.data.length+ response3.data.length,
+                observationWhichUserConsumedStats: response5.data.length,
+              });
+            })
+            .catch((error) => {
+              console.log(error);
+              throw new Error("Something went wrong...");
+            });
+        }
+      } catch (error) {
+        console.log(error);
+        reject(error);
       }
     });
   }

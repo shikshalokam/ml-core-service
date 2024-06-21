@@ -39,4 +39,7 @@ module.exports = {
     GET_USER_SURVEY : "/v1/users/surveys",
     GET_USER_OBSERVATION : "/v1/users/observations",
     LIST_SURVEY_SUBMISSIONS : "/v1/users/surveySubmissions",
+    LIST_CREATED_STATS:'/v1/userProjects/listCreatedProjects',
+    LIST_JOINED_STATS:'/v1/userProjects/listPendingProjects',
+    LIST_OBSERVATION_STATS:'/v1/userOverview/listObservationInfo'
 }
