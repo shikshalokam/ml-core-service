@@ -445,14 +445,13 @@ const userSurveySubmissions = function( token, solutionId ) {
     })
 }
 const getObservationInfo = function (
-    {userToken}
+    {userToken,stats}
 ) {
     
     return new Promise(async (resolve, reject) => {
         try {
             
-            const url = process.env.ML_SURVEY_SERVICE_URL + constants.endpoints.LIST_OBSERVATION_STATS
-            
+            const url = process.env.ML_SURVEY_SERVICE_URL + constants.endpoints.LIST_OBSERVATION_STATS+`?stats=${stats}`
             function improvementProjectCallback(err, data) {
                 
                 let result = {

@@ -1245,7 +1245,7 @@ module.exports = class UsersHelper {
             });
 
           let observationInfo = surveyService.getObservationInfo({
-            userToken,
+            userToken,stats:'true'
           });
 
           Promise.all([
@@ -1258,16 +1258,14 @@ module.exports = class UsersHelper {
             .then((responses) => {
               const [response1, response2, response3, response4, response5] =
                 responses;
-
               resolve({
                 projectCreatedStats: response4.data.length,
                 projectAssignedToUserStats:response1.data.length+response2.data.length+ response3.data.length,
-                observationWhichUserConsumedStats: response5.data.length,
+                observationWhichUserConsumedStats: response5.data.count,
               });
             })
             .catch((error) => {
-              console.log(error);
-              throw new Error("Something went wrong...");
+              reject(error)
             });
         }
       } catch (error) {
