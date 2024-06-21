@@ -153,6 +153,32 @@ module.exports = class ProgramUsersHelper {
             }
         });
     }
+
+    /**
+   * Get programUsers document Count based on filtered data provided.
+   * @method
+   * @name countDocuments
+   * @param {Object} [findQuery = "all"] -filter data.
+   * @returns {Array} - Count of Survey.
+   */
+
+  static countDocuments(findQuery = "all") {
+    return new Promise(async (resolve, reject) => {
+      try {
+        let queryObject = {};
+        if (findQuery != "all") {
+          queryObject = _.merge(queryObject, findQuery);
+        }
+        let countDocuments = await database.models.programUsers
+          .countDocuments(queryObject)
+          .lean();
+
+        return resolve(countDocuments);
+      } catch (error) {
+        return reject(error);
+      }
+    });
+  }
     
     /**
      * check if user joined a program or not and consentShared
