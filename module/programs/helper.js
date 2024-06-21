@@ -5,6 +5,7 @@
  * Description : Programs related helper functionality.
  */
 
+
 // Dependencies
 
 const userRolesHelper = require(MODULES_BASE_PATH + "/user-roles/helper");
@@ -450,7 +451,8 @@ module.exports = class ProgramsHelper {
         if (projection && projection.length > 0) {
           projection.forEach((projectedData) => {
             if (projectedData === constants.common.OBEJECT_TYPE) {
-              projection1[projectedData] = constants.common.PROGRAM.toLowerCase();
+              projection1[projectedData] =
+                constants.common.PROGRAM.toLowerCase();
             } else {
               projection1[projectedData] = 1;
             }
@@ -1006,6 +1008,92 @@ module.exports = class ProgramsHelper {
           message: constants.apiResponses.PROGRAMS_FETCHED,
           success: true,
           data: programData[0],
+        });
+      } catch (error) {
+        return resolve({
+          success: false,
+          status: error.status
+            ? error.status
+            : httpStatusCode["internal_server_error"].status,
+          message: error.message,
+        });
+      }
+    });
+  }
+
+  /**
+   * Program details based on user.
+   * @method
+   * @name listProgramBasedOnUser
+   * @param {String} reqesteduserId - userId .
+   * @returns {Object} - Details of the program.
+   */
+
+  static listProgramBasedOnUser(reqesteduserId,queryType="") {
+    return new Promise(async (resolve, reject) => {
+      try {
+        let programUsersIds = [];
+
+        let programUserData = await programUsersHelper.programUsersDocuments(
+          { userId: reqesteduserId },
+          ["_id", "programId", "createdAt", "userId"]
+        );
+        if (!(programUserData.length > 0)) {
+          return resolve({
+            status: httpStatusCode.bad_request.status,
+            message: constants.apiResponses.PROGRAM_NOT_FOUND,
+          });
+        }
+        let updateUserProgramList =  []; // array to store program join and program Name details
+        if(queryType !="" ){
+
+        if (programUserData.length > 0) {
+          programUsersIds = programUserData.map(function (obj) {
+            return obj.programId;
+          });
+        }
+        let ProgramFindQuery = {};
+        if (programUsersIds.length > 0) {
+          ProgramFindQuery = {
+            _id: { $in: programUsersIds },
+          };
+        }
+        let programData = await this.programDocuments(ProgramFindQuery, [
+          "_id",
+          "name",
+          "status",
+        ]);
+
+        if (!(programData.length > 0)) {
+          return resolve({
+            status: httpStatusCode.bad_request.status,
+            message: constants.apiResponses.PROGRAM_NOT_FOUND,
+          });
+        }
+
+       
+        
+        programData.filter((eachProgram)=>{
+            programUserData.forEach((eachProgramUser)=>{
+                if( eachProgramUser.programId.toString() === eachProgram._id.toString() ){
+                 return (updateUserProgramList.push({
+                    _id: eachProgramUser.programId,
+                    userId: eachProgramUser.userId,
+                    name: eachProgram.name,
+                    createdAt: eachProgramUser.createdAt,
+                    status: eachProgram.status,
+                }))
+                }
+            }
+          )
+        })
+
+      }
+
+        return resolve({
+          message: constants.apiResponses.PROGRAMS_FETCHED,
+          success: true,
+          data: queryType !="" ?updateUserProgramList:programUserData.length,
         });
       } catch (error) {
         return resolve({

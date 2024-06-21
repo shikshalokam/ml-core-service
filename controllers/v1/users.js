@@ -291,74 +291,6 @@ module.exports = class Users extends Abstract {
     });
   }
 
-
-
-  /**
-   * @api {post} /kendra/api/v1/users/userDelete
-   * @apiVersion 1.0.0
-   * @apiName User solutions
-   * @apiGroup Users
-   * @apiHeader {String} X-authenticated-user-token Authenticity token
-   * @apiSampleRequest /kendra/api/v1/users/userDelete
-   * @apiParamExample {json} Request-Body:
-   * {
-    
-
-    "organisationId": "<organisationId>",
-    "userId": "19d81ef7-36ce-41fe-ae2d-c8365d977be4",
-    "suggested_users": [
-    	{
-    		"role": "ORG_ADMIN",
-    		"users": ["<orgAdminUserId>"]
-    	},
-    	{
-    		"role": "CONTENT_CREATOR",
-    		"users": ["<contentCreatorUserId>"]
-    	},
-    	{
-    		"role": "COURSE_MENTOR",
-    		"users": ["<courseMentorUserId>"]
-    	}
-    ],
-    "action": "delete-user",
-    "iteration": 1
-
-  }
-   * @apiUse successBody
-   * @apiUse errorBody
-   * @apiParamExample {json} Response:
-   * {
-     "status": 200,
-    }
-   **/
-
-  /**
-   * User delete flow.
-   * @method
-   * @name solutions
-   * @param  {req}  - requested data.
-   * @returns {json} status.
-   */
-
-  userDelete(req) {
-    return new Promise(async (resolve, reject) => {
-      try {
-        let request={}
-        request['edata'] =req.body
-        let deletedUser = await usersHelper.deleteUserPIIData(request);
-        return resolve(deletedUser);
-      } catch (error) {
-        return reject({
-          status:
-            error.status || httpStatusCode["internal_server_error"].status,
-
-          message:
-            error.message || httpStatusCode["internal_server_error"].message,
-        });
-      }
-    });
-  }
-
   /**
       * @api {post} /kendra/api/v1/users/programs?page=:page&limit=:limit&search=:search 
       * Program List
@@ -624,6 +556,37 @@ module.exports = class Users extends Abstract {
           message:
             error.message || httpStatusCode.internal_server_error.message,
           errorObject: error,
+        });
+      }
+    });
+  }
+
+  /**
+   * Targeted solutions for  user
+   * @method
+   * @name targetedUserOverView
+   * @param {Object} req - requested data.
+   * @param {Object} req.body - requested body data.
+   * @returns {Array} list Targeted solutions for  user ot big Numbers.
+   */
+
+  targetedUserOverView(req) {
+    return new Promise(async (resolve, reject) => {
+      try {
+        let userOverview = await usersHelper.targetedUserOverView(
+          req.userDetails.userToken,
+          req.userDetails.userId,
+          req.query.type ? req.query.type : ""
+        );
+        userOverview["result"] = userOverview.data
+        return resolve(userOverview)
+      } catch (error) {
+        return reject({
+          status:
+            error.status || httpStatusCode["internal_server_error"].status,
+
+          message:
+            error.message || httpStatusCode["internal_server_error"].message,
         });
       }
     });
