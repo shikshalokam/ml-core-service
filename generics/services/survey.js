@@ -445,7 +445,7 @@ const userSurveySubmissions = function( token, solutionId ) {
     })
 }
 const getObservationInfo = function (
-    {userToken,stats='false'}
+    userToken,stats='false'
 ) {
     
     return new Promise(async (resolve, reject) => {
@@ -502,5 +502,5 @@ module.exports = {
     userSurveys : userSurveys,
     userObservations: userObservations,
     userSurveySubmissions: userSurveySubmissions,
-    getObservationInfo
+    getObservationInfo:getObservationInfo
 };

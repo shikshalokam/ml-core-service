@@ -586,12 +586,12 @@
      }
 
            /**
-     * @api {get} /kendra/api/v1/users/listStats List All Stats
+     * @api {get} /kendra/api/v1/users/userOverview List All Stats
      * @apiVersion 1.0.0
      * @apiName List All Stats
      * @apiGroup Users
      * @apiHeader {String} X-authenticated-user-token Authenticity token
-     * @apiSampleRequest /kendra/api/v1/users/listStats
+     * @apiSampleRequest /kendra/api/v1/users/userOverview
      * @apiUse successBody
      * @apiUse errorBody
      * @apiParamExample {json} Response:
@@ -600,13 +600,13 @@
       /**
     * List All Stats
     * @method
-    * @name listStats
+    * @name userOverview
     * @param {Object} req - requested data.
     * @param {String} req.query.type - requested type
     * @returns {Object} list of stats of the user using overall program 
     */
  
-     async listStats(req) {
+     async userOverview(req) {
         return new Promise(async (resolve, reject) => {
           try {
             

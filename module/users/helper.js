@@ -1157,9 +1157,7 @@ module.exports = class UsersHelper {
         if (type) {
           switch (type) {
             case "observation":
-              let observationInfo = await surveyService.getObservationInfo({
-                userToken,
-              });
+              let observationInfo = await surveyService.getObservationInfo(userToken);
 
               resolve({
                 type: type,
@@ -1222,9 +1220,7 @@ module.exports = class UsersHelper {
               userInvolvement:'consumed'
             });
 
-          let observationInfo = surveyService.getObservationInfo({
-            userToken,stats:'true'
-          });
+          let observationInfo = surveyService.getObservationInfo(userToken,'true');
 
           Promise.all([
             projectsStartedByUserStatsAPICall,

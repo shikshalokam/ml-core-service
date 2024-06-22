@@ -429,6 +429,6 @@ module.exports = {
     getProjectDetail : getProjectDetail,
     getTemplateDetail : getTemplateDetail,
     projectDocuments : projectDocuments,
-    listProjectOverviewInfo,
-    getCreatedProjectStats
+    listProjectOverviewInfo : listProjectOverviewInfo,
+    getCreatedProjectStats : getCreatedProjectStats
 }
