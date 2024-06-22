@@ -1021,18 +1021,18 @@ module.exports = class ProgramsHelper {
   }
 
   /**
-   * Program details based on user.
+   * Program details or cound o programs based on user.
    * @method
    * @name userProgram
    * @param {String} reqesteduserId - userId .
-   * @param {String} stats          - condition to check bigNumber or details .
-   * @returns {Object} - Details of the program or count of the program.
+   * @param {String} stats          - condition to check stats or details .
+   * @returns {Object}              - Details of the program or count of the program.
    */
 
-  static userProgram(reqesteduserId, stats = "true") {
+  static userProgram(reqesteduserId, stats = true) {
     return new Promise(async (resolve, reject) => {
       try {
-        if (stats === "false") {
+        if (stats === false) {
           //getting details of usersProgram and programJoined details
 
           let updateUserProgramList = await this.getAggregate(reqesteduserId);
@@ -1069,7 +1069,7 @@ module.exports = class ProgramsHelper {
    * @method
    * @name getAggregate
    * @param {String} [createdBy]         - userId
-   * * @returns {Array}                  program details.
+   * @returns {Array}                    -program details.
    */
 
   static getAggregate(createdBy) {

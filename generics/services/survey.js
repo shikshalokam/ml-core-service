@@ -153,11 +153,11 @@ var assignedSurveys = function ( token,search = "",filter = "", surveyReportPage
   * @returns {Promise} returns a promise.
 */
 
-var listSurveyBasedOnUserId = function ( token,queryType="") {
+var userSurveyOverView = function ( token,stats =true) {
 
     let listSurveyUrl = 
     process.env.ML_SURVEY_SERVICE_URL +
-    constants.endpoints.GET_SURVEY_BASEDON_USERID + "?type=" + queryType;    
+    constants.endpoints.GET_SURVEY_BASEDON_USERID + "?stats=" + stats;    
      return new Promise(async (resolve, reject) => {
         try {
 
@@ -510,5 +510,5 @@ module.exports = {
     userSurveys : userSurveys,
     userObservations: userObservations,
     userSurveySubmissions: userSurveySubmissions,
-    listSurveyBasedOnUserId:listSurveyBasedOnUserId
+    userSurveyOverView:userSurveyOverView
 };

@@ -159,7 +159,7 @@ module.exports = class ProgramUsersHelper {
    * @method
    * @name countDocuments
    * @param {Object} [findQuery = "all"] -filter data.
-   * @returns {Array} - Count of Survey.
+   * @returns {Promise<Number>}          - Count of Survey.
    */
 
   static countDocuments(findQuery = "all") {
