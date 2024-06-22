@@ -1166,39 +1166,15 @@ module.exports = class UsersHelper {
 
               break;
             case "project":
-              let projectsStartedByUserAPICall =
-                improvementProjectService.listProjectOverviewInfo({
+              let projectInfo =
+                await improvementProjectService.listProjectOverviewInfo({
                   stats: "false",
-                  userToken,
-                  userInvolvement:'creator'
+                  userToken
                 });
 
-              let projectsConsumedByUserAPICall =
-                improvementProjectService.listProjectOverviewInfo({
-                  stats: "false",
-                  userToken,
-                  userInvolvement:'consumed'
-                });
-
-              Promise.all([
-                projectsStartedByUserAPICall,
-                projectsConsumedByUserAPICall
-              ])
-                .then((responses) => {
-                  const [response1, response2] =
-                    responses;
-
-                  resolve({
-                    type,
-                    data:{
-                      projectsStartedByUser: response1.data,
-                      projectsConsumedByUser: response2.data,
-                    }
-                  });
-                })
-                .catch((error) => {
-                  
-                  throw new Error("Something went wrong...");
+                resolve({
+                  type: type,
+                  data: projectInfo.data,
                 });
 
               break;
@@ -1206,24 +1182,16 @@ module.exports = class UsersHelper {
                 throw new Error('Invalid Type passed.')
           }
         } else {
-          let projectsStartedByUserStatsAPICall =
-            improvementProjectService.listProjectOverviewInfo({
-              stats: "true",
-              userToken,
-              userInvolvement:'creator'
-            });
 
           let projectsConsumedByUserStatsAPICall =
             improvementProjectService.listProjectOverviewInfo({
               stats: "true",
-              userToken,
-              userInvolvement:'consumed'
+              userToken
             });
 
           let observationInfo = surveyService.getObservationInfo(userToken,'true');
 
           Promise.all([
-            projectsStartedByUserStatsAPICall,
             projectsConsumedByUserStatsAPICall,
             observationInfo,
           ])
@@ -1234,12 +1202,11 @@ module.exports = class UsersHelper {
                     throw new Error('Failed API calls.')
                   }
               }
-              const [response1, response2, response3] =
+              const [response1, response2] =
                 responses;
               resolve({
-                projectsStartedByUser: response1.data,
-                projectsConsumedByUserStats:response2.data,
-                observationWhichUserConsumedStats: response3.data.count,
+                projectsConsumedByUserStats:response1.data,
+                observationWhichUserConsumedStats: response2.data.count,
               });
             })
             .catch((error) => {
