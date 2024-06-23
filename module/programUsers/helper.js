@@ -225,7 +225,7 @@ module.exports = class ProgramUsersHelper {
    * @returns {Object}              - Details of the program or count of the program.
    */
 
-  static userProgram(reqesteduserId, stats = true) {
+  static userProgram(reqesteduserId, stats ) {
     return new Promise(async (resolve, reject) => {
       try {
         if (stats === false) {
