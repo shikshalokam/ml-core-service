@@ -1150,71 +1150,138 @@ module.exports = class UsersHelper {
    * @param {String} type - type
    * @returns {Object} - returns overall stats or targeted records based on type
    */
-  static getAllStats({ userToken, type }) {
+  // static getAllStats({ userToken, type }) {
     
+  //   return new Promise(async (resolve, reject) => {
+  //     try {
+  //       if (type) {
+  //         switch (type) {
+  //           case "observation":
+  //             let observationInfo = await surveyService.getObservationInfo(userToken);
+
+  //             resolve({
+  //               type: type,
+  //               data: observationInfo.data,
+  //             });
+
+  //             break;
+  //           case "project":
+  //             let projectInfo =
+  //               await improvementProjectService.listProjectOverviewInfo({
+  //                 stats: "false",
+  //                 userToken
+  //               });
+
+  //               resolve({
+  //                 type: type,
+  //                 data: projectInfo.data,
+  //               });
+
+  //             break;
+  //             default:
+  //               throw new Error('Invalid Type passed.')
+  //         }
+  //       } else {
+
+  //         let projectsConsumedByUserStatsAPICall =
+  //           improvementProjectService.listProjectOverviewInfo({
+  //             stats: "true",
+  //             userToken
+  //           });
+
+  //         let observationInfo = surveyService.getObservationInfo(userToken,'true');
+
+  //         Promise.all([
+  //           projectsConsumedByUserStatsAPICall,
+  //           observationInfo,
+  //         ])
+  //           .then((responses) => {
+  //             for(let response of responses){
+  //               if(!response.success)
+  //                 {
+  //                   throw new Error('Failed API calls.')
+  //                 }
+  //             }
+  //             const [response1, response2] =
+  //               responses;
+  //             resolve({
+  //               projectsConsumedByUserStats:response1.data,
+  //               observationWhichUserConsumedStats: response2.data.count,
+  //             });
+  //           })
+  //           .catch((error) => {
+  //             reject(error)
+  //           });
+  //       }
+  //     } catch (error) {
+        
+  //       reject(error);
+  //     }
+  //   });
+  // }
+  static getAllStats({ userId,userToken, type }) {
     return new Promise(async (resolve, reject) => {
       try {
         if (type) {
+          let userOverview;
           switch (type) {
-            case "observation":
-              let observationInfo = await surveyService.getObservationInfo(userToken);
-
-              resolve({
-                type: type,
-                data: observationInfo.data,
-              });
-
+            case constants.common.OBSERVATION:
+              userOverview = await surveyService.getObservationInfo(userToken);
               break;
-            case "project":
-              let projectInfo =
+            case constants.common.PROJECT:
+              userOverview =
                 await improvementProjectService.listProjectOverviewInfo({
                   stats: "false",
-                  userToken
+                  userToken,
                 });
-
-                resolve({
-                  type: type,
-                  data: projectInfo.data,
-                });
-
               break;
-              default:
-                throw new Error('Invalid Type passed.')
+            case constants.common.SURVEY:
+              userOverview = await surveyService.userSurveyOverView(
+                userToken,
+                false
+              );
+              break;
+            case constants.common.PROGRAM.toLowerCase():
+              userOverview = await programsHelper.userProgram(userId, false);
+              break;
+            default:
+              throw new Error("Invalid Type passed.");
           }
+          return resolve({
+            success: true,
+            message: `${type} ${constants.apiResponses.FETCH_SUCCESS}`,
+            data: userOverview.data,
+          });
         } else {
-
-          let projectsConsumedByUserStatsAPICall =
+          let [
+            improvementProjectServiceCount,
+            observationCount,
+            programCount,
+            suveyCount,
+          ] = await Promise.all([
             improvementProjectService.listProjectOverviewInfo({
               stats: "true",
-              userToken
-            });
+              userToken,
+            }),
+            surveyService.getObservationInfo(userToken, "true"),
+            programsHelper.userProgram(userId, true),
+            surveyService.userSurveyOverView(userToken, true),
+          ]);
 
-          let observationInfo = surveyService.getObservationInfo(userToken,'true');
+         let listOfBigNumbers = {
+            improvementProjectServiceCount: improvementProjectServiceCount.data,
+            observationCount: observationCount.data.count,
+            programCount: programCount.data,
+            suveyCount: suveyCount.data,
+          };
 
-          Promise.all([
-            projectsConsumedByUserStatsAPICall,
-            observationInfo,
-          ])
-            .then((responses) => {
-              for(let response of responses){
-                if(!response.success)
-                  {
-                    throw new Error('Failed API calls.')
-                  }
-              }
-              const [response1, response2] =
-                responses;
-              resolve({
-                projectsConsumedByUserStats:response1.data,
-                observationWhichUserConsumedStats: response2.data.count,
-              });
-            })
-            .catch((error) => {
-              reject(error)
-            });
+          return resolve({
+            success: true,
+            message: constants.apiResponses.SOLUTION_TARGETED_ENTITY,
+            data: listOfBigNumbers,
+          });
         }
       } catch (error) {
-        
         reject(error);
       }
     });
