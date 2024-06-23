@@ -450,8 +450,7 @@ module.exports = class ProgramsHelper {
         if (projection && projection.length > 0) {
           projection.forEach((projectedData) => {
             if (projectedData === constants.common.OBEJECT_TYPE) {
-              projection1[projectedData] =
-                constants.common.PROGRAM.toLowerCase();
+              projection1[projectedData] = constants.common.PROGRAM.toLowerCase();
             } else {
               projection1[projectedData] = 1;
             }
@@ -1020,7 +1019,6 @@ module.exports = class ProgramsHelper {
     });
   }
 
- 
   /**
    * Program join.
    * @method
