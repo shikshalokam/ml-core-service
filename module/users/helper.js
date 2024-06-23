@@ -1222,7 +1222,6 @@ module.exports = class UsersHelper {
   static getAllStats({ userId,userToken, type }) {
     return new Promise(async (resolve, reject) => {
       try {
-        if (type) {
           let userOverview;
           switch (type) {
             case constants.common.OBSERVATION:
@@ -1245,42 +1244,36 @@ module.exports = class UsersHelper {
               userOverview = await programsHelper.userProgram(userId, false);
               break;
             default:
-              throw new Error("Invalid Type passed.");
+              let [
+                improvementProjectServiceCount,
+                observationCount,
+                programCount,
+                suveyCount,
+              ] = await Promise.all([
+                improvementProjectService.listProjectOverviewInfo({
+                  stats: "true",
+                  userToken,
+                }),
+                surveyService.getObservationInfo(userToken, "true"),
+                programsHelper.userProgram(userId, true),
+                surveyService.userSurveyOverView(userToken, true),
+              ]);
+    
+             let listOfBigNumbers = {
+                improvementProjectServiceCount: improvementProjectServiceCount.data,
+                observationCount: observationCount.data.count,
+                programCount: programCount.data,
+                suveyCount: suveyCount.data,
+              };
+    
+              userOverview = {data:listOfBigNumbers};
           }
           return resolve({
             success: true,
-            message: `${type} ${constants.apiResponses.FETCH_SUCCESS}`,
+            message: `data ${constants.apiResponses.FETCH_SUCCESS}`,
             data: userOverview.data,
           });
-        } else {
-          let [
-            improvementProjectServiceCount,
-            observationCount,
-            programCount,
-            suveyCount,
-          ] = await Promise.all([
-            improvementProjectService.listProjectOverviewInfo({
-              stats: "true",
-              userToken,
-            }),
-            surveyService.getObservationInfo(userToken, "true"),
-            programsHelper.userProgram(userId, true),
-            surveyService.userSurveyOverView(userToken, true),
-          ]);
 
-         let listOfBigNumbers = {
-            improvementProjectServiceCount: improvementProjectServiceCount.data,
-            observationCount: observationCount.data.count,
-            programCount: programCount.data,
-            suveyCount: suveyCount.data,
-          };
-
-          return resolve({
-            success: true,
-            message: constants.apiResponses.SOLUTION_TARGETED_ENTITY,
-            data: listOfBigNumbers,
-          });
-        }
       } catch (error) {
         reject(error);
       }
