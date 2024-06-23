@@ -1241,7 +1241,7 @@ module.exports = class UsersHelper {
               );
               break;
             case constants.common.PROGRAM.toLowerCase():
-              userOverview = await programsHelper.userProgram(userId, false);
+              userOverview = await programUsersHelper.userProgram(userId, false);
               break;
             default:
               let [
@@ -1255,7 +1255,7 @@ module.exports = class UsersHelper {
                   userToken,
                 }),
                 surveyService.getObservationInfo(userToken, "true"),
-                programsHelper.userProgram(userId, true),
+                programUsersHelper.userProgram(userId, true),
                 surveyService.userSurveyOverView(userToken, true),
               ]);
     
