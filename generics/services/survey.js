@@ -500,6 +500,54 @@ const userSurveySubmissions = function( token, solutionId ) {
         }
     })
 }
+const getObservationInfo = function (
+    userToken,stats='false'
+) {
+    
+    return new Promise(async (resolve, reject) => {
+        try {
+            
+            const url = process.env.ML_SURVEY_SERVICE_URL + constants.endpoints.LIST_OBSERVATION_STATS+`?stats=${stats}`
+            function improvementProjectCallback(err, data) {
+                
+                let result = {
+                    success : true
+                };
+
+                if (err) {
+                    
+                    result.success = false;
+                } else {
+
+                    let response = data.body;
+                    if( response.status === httpStatusCode['ok'].status) {
+                        result["data"] = response.result;
+                    } else {
+                        result.success = false;
+                    }
+                }
+                
+                return resolve(result);
+            }
+
+            const options = {
+                headers : {
+                    "content-type": "application/json",
+                    "internal-access-token": process.env.INTERNAL_ACCESS_TOKEN,
+                    "x-authenticated-user-token" : userToken
+                },
+                json : {
+                }
+            };
+            
+            request.get(url,options,improvementProjectCallback);
+
+        } catch (error) {
+            
+            return reject(error);
+        }
+    })
+}
 
 
 module.exports = {
@@ -510,5 +558,6 @@ module.exports = {
     userSurveys : userSurveys,
     userObservations: userObservations,
     userSurveySubmissions: userSurveySubmissions,
+    getObservationInfo:getObservationInfo,
     userSurveyOverView:userSurveyOverView
 };
