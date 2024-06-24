@@ -24,7 +24,6 @@ module.exports = {
     SUNBIRD_USER_SEARCH :"/users/search",
     GET_USER_ASSIGNED_OBSERVATION : "/v1/observations/userAssigned",
     GET_USER_ASSIGNED_SURVEY : "/v1/surveys/userAssigned",
-    GET_SURVEY_BASEDON_USERID : "/v1/surveys/userSurvey",
     GET_USER_ASSIGNED_PROJECT : "/v1/userProjects/userAssigned",
     IMPORTED_PROJECT : "/v1/userProjects/importedProjects",
     GET_PROJECT_DETAILS : "/v1/userProjects/details",
@@ -40,6 +39,7 @@ module.exports = {
     GET_USER_SURVEY : "/v1/users/surveys",
     GET_USER_OBSERVATION : "/v1/users/observations",
     LIST_SURVEY_SUBMISSIONS : "/v1/users/surveySubmissions",
-    LIST_JOINED_STATS:'/v1/userProjects/userProjects',
-    LIST_OBSERVATION_STATS:'/v1/observations/usersObservation'
+    LIST_JOINED_STATS:'/v1/userProjects/overview',
+    LIST_OBSERVATION_STATS:'/v1/observations/overview',
+    GET_SURVEY_BASEDON_USERID : "/v1/surveys/overview",
 }

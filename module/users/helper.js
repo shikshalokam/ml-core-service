@@ -1146,102 +1146,34 @@ module.exports = class UsersHelper {
    * Get overall Stats of the User
    * @method
    * @name getAllStats
+   * @param {String} userId - userId
    * @param {String} userToken - userToken
    * @param {String} type - type
    * @returns {Object} - returns overall stats or targeted records based on type
    */
-  // static getAllStats({ userToken, type }) {
-    
-  //   return new Promise(async (resolve, reject) => {
-  //     try {
-  //       if (type) {
-  //         switch (type) {
-  //           case "observation":
-  //             let observationInfo = await surveyService.getObservationInfo(userToken);
-
-  //             resolve({
-  //               type: type,
-  //               data: observationInfo.data,
-  //             });
-
-  //             break;
-  //           case "project":
-  //             let projectInfo =
-  //               await improvementProjectService.listProjectOverviewInfo({
-  //                 stats: "false",
-  //                 userToken
-  //               });
-
-  //               resolve({
-  //                 type: type,
-  //                 data: projectInfo.data,
-  //               });
-
-  //             break;
-  //             default:
-  //               throw new Error('Invalid Type passed.')
-  //         }
-  //       } else {
-
-  //         let projectsConsumedByUserStatsAPICall =
-  //           improvementProjectService.listProjectOverviewInfo({
-  //             stats: "true",
-  //             userToken
-  //           });
-
-  //         let observationInfo = surveyService.getObservationInfo(userToken,'true');
-
-  //         Promise.all([
-  //           projectsConsumedByUserStatsAPICall,
-  //           observationInfo,
-  //         ])
-  //           .then((responses) => {
-  //             for(let response of responses){
-  //               if(!response.success)
-  //                 {
-  //                   throw new Error('Failed API calls.')
-  //                 }
-  //             }
-  //             const [response1, response2] =
-  //               responses;
-  //             resolve({
-  //               projectsConsumedByUserStats:response1.data,
-  //               observationWhichUserConsumedStats: response2.data.count,
-  //             });
-  //           })
-  //           .catch((error) => {
-  //             reject(error)
-  //           });
-  //       }
-  //     } catch (error) {
-        
-  //       reject(error);
-  //     }
-  //   });
-  // }
   static getAllStats({ userId,userToken, type }) {
     return new Promise(async (resolve, reject) => {
       try {
-          let userOverview;
+          let overview;
           switch (type) {
             case constants.common.OBSERVATION:
-              userOverview = await surveyService.getObservationInfo(userToken);
+              overview = await surveyService.getObservationInfo(userToken);
               break;
             case constants.common.PROJECT:
-              userOverview =
+              overview =
                 await improvementProjectService.listProjectOverviewInfo({
                   stats: "false",
                   userToken,
                 });
               break;
             case constants.common.SURVEY:
-              userOverview = await surveyService.userSurveyOverView(
+              overview = await surveyService.userSurveyOverView(
                 userToken,
                 false
               );
               break;
             case constants.common.PROGRAM.toLowerCase():
-              userOverview = await programUsersHelper.userProgram(userId, false);
+              overview = await programUsersHelper.userProgram(userId, false);
               break;
             default:
               let [
@@ -1266,12 +1198,12 @@ module.exports = class UsersHelper {
                 suveyCount: suveyCount.data,
               };
     
-              userOverview = {data:listOfBigNumbers};
+              overview = {data:listOfBigNumbers};
           }
           return resolve({
             success: true,
             message: `data ${constants.apiResponses.FETCH_SUCCESS}`,
-            data: userOverview.data,
+            data: overview.data,
           });
 
       } catch (error) {
