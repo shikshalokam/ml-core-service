@@ -153,7 +153,33 @@ module.exports = class ProgramUsersHelper {
             }
         });
     }
-    
+
+    /**
+   * Get programUsers document Count based on filtered data provided.
+   * @method
+   * @name countDocuments
+   * @param {Object} [findQuery = "all"] -filter data.
+   * @returns {Promise<Number>}          - Count of Survey.
+   */
+
+  static countDocuments(findQuery = "all") {
+    return new Promise(async (resolve, reject) => {
+      try {
+        let queryObject = {};
+        if (findQuery != "all") {
+          queryObject = _.merge(queryObject, findQuery);
+        }
+        let countDocuments = await database.models.programUsers
+          .countDocuments(queryObject)
+          .lean();
+
+        return resolve(countDocuments);
+      } catch (error) {
+        return reject(error);
+      }
+    });
+  }
+  
     /**
      * check if user joined a program or not and consentShared
      * @method
@@ -189,4 +215,106 @@ module.exports = class ProgramUsersHelper {
             }
         });
     }
+
+     /**
+   * Program details or cound o programs based on user.
+   * @method
+   * @name userProgram
+   * @param {String} reqesteduserId - userId .
+   * @param {String} stats          - condition to check stats or details .
+   * @returns {Object}              - Details of the program or count of the program.
+   */
+
+  static userProgram(reqesteduserId, stats ) {
+    return new Promise(async (resolve, reject) => {
+      try {
+        if (stats === false) {
+          //getting details of usersProgram and programJoined details
+
+          let updateUserProgramList = await this.getAggregate(reqesteduserId);
+          return resolve({
+            message: constants.apiResponses.PROGRAMS_FETCHED,
+            success: true,
+            data: updateUserProgramList,
+          });
+        } else {
+          //getting bigNumber of usersProgram list
+          let countProgram = await this.countDocuments({
+            userId: reqesteduserId,
+          });
+          return resolve({
+            message: constants.apiResponses.PROGRAMS_FETCHED,
+            success: true,
+            data: countProgram,
+          });
+        }
+      } catch (error) {
+        return reject({
+          success: false,
+          status: error.status
+            ? error.status
+            : httpStatusCode["internal_server_error"].status,
+          message: error.message,
+        });
+      }
+    });
+  }
+
+  /**
+   * aggregate function.
+   * @method
+   * @name getAggregate
+   * @param {String} [createdBy]         - userId
+   * @returns {Array}                    -program details.
+   */
+
+  static getAggregate(createdBy) {
+    return new Promise(async (resolve, reject) => {
+      try {
+        const pipeline = [
+          {
+            $match: {
+            userId: createdBy,
+            },
+          },
+          {
+            $lookup: {
+              from: 'programs',
+              localField: 'programId',
+              foreignField: '_id',
+              as: 'programs'
+            }
+          },
+          {
+            $project: {
+              _id: 1,
+              userId: 1,
+              createdAt:1,
+              programId:1,
+              programsDetails: {
+                $map: {
+                  input: "$programs",
+                  as: "programs",
+                  in: {
+                    _id: "$$programs._id",
+                    status: "$$programs.status",
+                    name: "$$programs.name",
+                    externalId: "$$programs.externalId",
+                  },
+                },
+              },
+            },
+          },
+        ];
+
+        let programUpdate = await database.models.programUsers.aggregate(pipeline);
+        if (programUpdate) {
+          return resolve(programUpdate);
+        }
+      } catch (error) {
+        console.log(error);
+        return reject(error);
+      }
+    });
+  }
 }

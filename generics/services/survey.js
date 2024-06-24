@@ -143,6 +143,62 @@ var assignedSurveys = function ( token,search = "",filter = "", surveyReportPage
 }
 
 /**
+  * List of user assigned surveys.
+  * @function
+  * @name listSurveyBasedOnUserId
+  * @param {String} token - logged in user token.
+  * @param {String} [search = ""] - search data.
+  * @param {String} [filter = ""] - filter key.
+  * @param {Array} - solutionIds - survey solutionIds
+  * @returns {Promise} returns a promise.
+*/
+
+var userSurveyOverView = function ( token,stats =true) {
+
+    let listSurveyUrl = 
+    process.env.ML_SURVEY_SERVICE_URL +
+    constants.endpoints.GET_SURVEY_BASEDON_USERID + "?stats=" + stats;    
+     return new Promise(async (resolve, reject) => {
+        try {
+
+            function assessmentCallback(err, data) {
+
+                let result = {
+                    success : true
+                };
+
+                if (err) {
+                    result.success = false;
+                } else {
+                    
+                    let response = JSON.parse(data.body);
+                    if( response.status === httpStatusCode['ok'].status ) {
+                        result["data"] = response.result;
+                    } else {
+                        result.success = false;
+                    }
+                }
+
+                return resolve(result);
+            }
+
+            const options = {
+                headers : {
+                    "content-type": "application/json",
+                    "x-authenticated-user-token" : token,
+                    "internal-access-token" : process.env.INTERNAL_ACCESS_TOKEN 
+                },
+            };
+
+            request.get(listSurveyUrl,options,assessmentCallback)
+
+        } catch (error) {
+            return reject(error);
+        }
+    })
+
+}
+/**
   * Get questions from solution.
   * @function
   * @name getQuestions
@@ -502,5 +558,6 @@ module.exports = {
     userSurveys : userSurveys,
     userObservations: userObservations,
     userSurveySubmissions: userSurveySubmissions,
-    getObservationInfo:getObservationInfo
+    getObservationInfo:getObservationInfo,
+    userSurveyOverView:userSurveyOverView
 };
