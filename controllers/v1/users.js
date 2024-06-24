@@ -600,13 +600,13 @@
       /**
     * List All Stats
     * @method
-    * @name userOverview
+    * @name overview
     * @param {Object} req - requested data.
     * @param {String} req.query.type - requested type
     * @returns {Object} list of stats of the user using overall program 
     */
  
-      async userOverview(req) {
+      async overview(req) {
         return new Promise(async (resolve, reject) => {
           try {
             let allStats = await usersHelper.getAllStats({
