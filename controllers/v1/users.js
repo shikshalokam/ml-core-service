@@ -603,6 +603,7 @@
     * @name overview
     * @param {Object} req - requested data.
     * @param {String} req.query.type - requested type
+    * @param {String} req.query.requestPdf - requestPdf value
     * @returns {Object} list of stats of the user using overall program 
     */
  
@@ -613,6 +614,7 @@
               userId: req.userDetails.userId,
               userToken: req.userDetails.userToken,
               type: req.query.type,
+              requestPdf:req.query.requestPdf == 'true' ? true : false
             });
     
             return resolve({  result: allStats });

@@ -42,4 +42,5 @@ module.exports = {
     LIST_JOINED_STATS:'/v1/userProjects/overview',
     LIST_OBSERVATION_STATS:'/v1/observations/overview',
     GET_SURVEY_BASEDON_USERID : "/v1/surveys/overview",
+    GET_STATS_REPORT: "/v1/core/statsReport",
 }
