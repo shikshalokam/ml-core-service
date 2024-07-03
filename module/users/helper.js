@@ -1200,7 +1200,6 @@ module.exports = class UsersHelper {
               };
     
               overview = {data:listOfBigNumbers};
-              overview.pdfGenerated = false;
               if(requestPdf)
               {
                 let reportData = await reportService.generateStatsReport(overview,userToken);
