@@ -17,6 +17,7 @@ const programUsersHelper = require(MODULES_BASE_PATH + "/programUsers/helper");
 const surveyService = require(ROOT_PATH + "/generics/services/survey");
 const kafkaProducersHelper = require(ROOT_PATH + "/generics/kafka/producers");
 const telemetryEventOnOff = process.env.TELEMETRY_ON_OFF
+const reportService = require(ROOT_PATH + "/generics/services/reports");
 /**
  * UsersHelper
  * @class
@@ -1151,7 +1152,7 @@ module.exports = class UsersHelper {
    * @param {String} type - type
    * @returns {Object} - returns overall stats or targeted records based on type
    */
-  static getAllStats({ userId,userToken, type }) {
+  static getAllStats({ userId,userToken, type, requestPdf }) {
     return new Promise(async (resolve, reject) => {
       try {
           let overview;
@@ -1199,11 +1200,20 @@ module.exports = class UsersHelper {
               };
     
               overview = {data:listOfBigNumbers};
+              if(requestPdf)
+              {
+                let reportData = await reportService.generateStatsReport(overview,userToken);
+                if(!reportData.success){
+                  reject('PDF generation failed.');
+                }
+                overview.pdfUrl = reportData.data;
+              }
           }
           return resolve({
             success: true,
             message: `data ${constants.apiResponses.FETCH_SUCCESS}`,
             data: overview.data,
+            pdfUrl:overview.pdfUrl
           });
 
       } catch (error) {
