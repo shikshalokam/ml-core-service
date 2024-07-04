@@ -177,9 +177,6 @@ module.exports = class AssetsHelper {
             }
             if (
               reqData.toUserProfile.roles.includes(
-                constants.common.PROGRAM_MANAGER
-              ) ||
-              reqData.toUserProfile.roles.includes(
                 constants.common.PROGRAM_DESIGNER
               )
             ) {
@@ -421,12 +418,9 @@ module.exports = class AssetsHelper {
                 : (updateUserAssetDataResult = false);
             }
             if (
-              (reqData.toUserProfile.roles.includes(
-                constants.common.PROGRAM_MANAGER
-              ) ||
-                reqData.toUserProfile.roles.includes(
-                  constants.common.PROGRAM_DESIGNER
-                )) &&
+              reqData.toUserProfile.roles.includes(
+                constants.common.PROGRAM_DESIGNER
+              ) &&
               assetTypeToTransfer === constants.common.PROGRAM
             ) {
               //get from and to user details from userExtension collection
@@ -724,11 +718,8 @@ module.exports = class AssetsHelper {
         fromUserData.platformRoles.forEach(async (role) => {
           //user Role code of fromUser
           let userRole = role.code;
-          // Loop only when UserRole is PM or PD instead of looping through all the roles
-          if (
-            userRole === constants.common.PROGRAM_MANAGER ||
-            userRole === constants.common.PROGRAM_DESIGNER
-          ) {
+          // Loop only when UserRole is  PD instead of looping through all the roles
+          if (userRole === constants.common.PROGRAM_DESIGNER) {
             // Check if user Role already exists in userExtension collection or not
             let toUserRoleExists = toUserData.platformRoles.some(
               (toRole) => toRole.code === userRole
@@ -885,7 +876,8 @@ module.exports = class AssetsHelper {
    * @name getPlatformRolesToTransfer
    * @param {Array} fromUserPlatformRoleData        - fromUser's platformRoles array data .
    * @param {String} userRoleData                   - UserRole's Data.
-   * @param {Array}  [reqData={}]                   - request body Data.
+   * @param {Array}  [reqData={}]                   - userRole === constants.common.PROGRAM_MANAGER ||
+request body Data.
    * @param {boolean} [hasAssetInformation=false] - check asset information
    * @returns {Promise<Array>}   -Returns Array of platform roles.
    */
@@ -901,11 +893,8 @@ module.exports = class AssetsHelper {
         let platformRoles = [];
 
         for (let eachRole of fromUserPlatformRoleData) {
-          // Loop only when UserRole is PM or PD instead of looping through all the roles
-          if (
-            eachRole.code === constants.common.PROGRAM_MANAGER ||
-            eachRole.code === constants.common.PROGRAM_DESIGNER
-          ) {
+          // Loop only when UserRole is  PD instead of looping through all the roles
+          if (eachRole.code === constants.common.PROGRAM_DESIGNER) {
             let matchingRole = userRoleData.find(
               (role) => role.code === eachRole.code
             );
@@ -973,15 +962,11 @@ module.exports = class AssetsHelper {
         let rolesToCheck = [];
         switch (assetsType) {
           case constants.common.PROGRAM:
-            rolesToCheck = [
-              constants.common.PROGRAM_MANAGER,
-              constants.common.PROGRAM_DESIGNER,
-            ];
+            rolesToCheck = [constants.common.PROGRAM_DESIGNER];
           case constants.common.SOULTION:
             rolesToCheck = [constants.common.CONTENT_CREATOR];
           default:
             rolesToCheck = [
-              constants.common.PROGRAM_MANAGER,
               constants.common.PROGRAM_DESIGNER,
               constants.common.CONTENT_CREATOR,
             ];
