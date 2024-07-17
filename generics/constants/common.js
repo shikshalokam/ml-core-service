@@ -106,4 +106,5 @@
   OBEJECT_TYPE:"objectType",
   SYSTEM:"SYSTEM",
   DEFAULT_COUNT:0,
+  G_CLOUD:"gcloud",
 };
