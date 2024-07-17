@@ -63,7 +63,8 @@ module.exports = class FilesHelper {
               responseObj.url = await cloudClient.getDownloadableUrl(
                 bucketName,
                 element,
-                linkExpireTime // Link ExpireIn
+                linkExpireTime, // Link ExpireIn
+                constants.common.READ_PERMISSION   //read/write permission
               );
               result.push(responseObj);
             })
@@ -79,7 +80,8 @@ module.exports = class FilesHelper {
           result = await cloudClient.getDownloadableUrl(
             bucketName, // bucket name
             filePath, // resource file path
-            linkExpireTime // Link Expire time
+            linkExpireTime, // Link Expire time
+            constants.common.READ_PERMISSION   //read/write permission
           );
 
           let responseObj = {
@@ -156,11 +158,13 @@ module.exports = class FilesHelper {
               payload: { sourcePath: file },
               cloudStorage: cloudStorage.toUpperCase(),
             };
+       if (process.env.CLOUD_STORAGE_PROVIDER !== constants.common.G_CLOUD) {
             response.downloadableUrl = await cloudClient.getDownloadableUrl(
               bucket,
               file,
               linkExpireTime // Link ExpireIn
             );
+         }
           if (!serviceUpload) {
             response.url = await cloudClient.getSignedUrl(
               bucket, // bucket name

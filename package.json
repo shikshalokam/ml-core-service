@@ -28,7 +28,7 @@
     "chai-http": "^4.3.0",
     "cheerio": "^1.0.0-rc.12",
     "cli-table": "^0.3.1",
-    "client-cloud-services": "^3.0.6",
+    "client-cloud-services": "^3.0.7",
     "commander": "^2.20.0",
     "cors": "^2.8.4",
     "csvtojson": "^2.0.10",
