@@ -627,6 +627,9 @@ module.exports = class UserExtensionHelper {
         return new Promise(async (resolve, reject) => {
             try {
                 
+                 if (role) {
+                    role = gen.utils.normalizeToLower(role);
+                }
                 const userInformation = await this.userExtensionDocument
                 (
                     { 

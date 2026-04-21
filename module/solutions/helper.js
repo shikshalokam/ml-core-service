@@ -2079,7 +2079,7 @@ module.exports = class SolutionsHelper {
 
         let userInformation = await userExtensionsHelperV2.userExtensionDocument({
             userId: userId,
-            "platformRoles.code" : { $in : ["PROGRAM_MANAGER","PROGRAM_DESIGNER"]},
+            "platformRoles.code" : { $in : ["program_manager","program_designer"] },
             status: constants.common.ACTIVE,
             isDeleted: false
         }, { _id: 1, "platformRoles.programs" :1});
