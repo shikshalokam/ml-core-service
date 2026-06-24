@@ -194,6 +194,11 @@ let enviromentVariables = {
     "message" : "Required timezone difference between local time and UTC",
     "optional" : true,
     "default": "+05:30"
+  },
+  "NORMALISED_FIELDS" : {
+    "message" : "Required comma-separated fields to lowercase-normalise",
+    "optional" : false,
+    "default" : "roles"
   }
 }
 

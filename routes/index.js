@@ -8,6 +8,7 @@
 // dependencies
 const authenticator = require(ROOT_PATH + "/generics/middleware/authenticator");
 const pagination = require(ROOT_PATH + "/generics/middleware/pagination");
+const normaliseFields = require(ROOT_PATH + "/generics/middleware/normaliseFields");
 const fs = require("fs");
 const inputValidator = require(ROOT_PATH + "/generics/middleware/validator");
 const dataSetUpload = require(ROOT_PATH + "/generics/middleware/dataSetUpload");
@@ -17,6 +18,7 @@ module.exports = function (app) {
   app.use(authenticator);
   app.use(dataSetUpload);
   app.use(pagination);
+  app.use(normaliseFields);
 
   var router = async function (req, res, next) {
 
